@@ -2,6 +2,8 @@
 
 [Overleaf](https://www.overleaf.com/1371261441kstvywbbsnnj) с описанием методов.
 
+[Вот тут](https://drive.google.com/drive/folders/1hHdr_dfAqzp0rkvezxsspZzXDuLQY4IY?usp=sharing) примеры работы token-level методов на задачах QA и MT.
+
 * `main.py`: для запуска методов uncertainty, `visualization.ipynb`: для генерации табличек с результатами
 
 * `notebooks/CPMI_decoding_examples.ipynb`: примеры декодирования и оценки неопределенности с помощью CPMI [[1]](#1); примеры оценки неопределенности с помощью 5 методов из статьи Semantic Uncertanty [[2]](#2). Ноутбук плохо отображается в гитхабе, можно вместо этого смотреть в [колабе](https://colab.research.google.com/drive/1ZX0F-DSuo8WKNHewD7GZIq-4eI_kKiX4?usp=sharing).
