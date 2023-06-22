@@ -4,7 +4,31 @@
 
 [Вот тут](https://drive.google.com/drive/folders/1hHdr_dfAqzp0rkvezxsspZzXDuLQY4IY?usp=sharing) примеры работы token-level методов на задачах QA и MT.
 
-* `main.py`: для запуска методов uncertainty, `visualization.ipynb`: для генерации табличек с результатами
+* `main.py`: для запуска методов uncertainty
+* `visualization.ipynb`: для генерации табличек с результатами
+
+## Web application
+
+### Installation
+```
+cd app && npm install && cd ../
+```
+
+### Starting the model server
+
+```
+python -m app.service
+```
+
+### Starting the web application server
+
+```
+node app/index.js
+```
+
+Once both servers are up and running, the chat model will be available at <http://localhost:3001/>.
+
+----
 
 ## Старое
 
