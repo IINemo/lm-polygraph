@@ -39,7 +39,7 @@ if __name__ == '__main__':
             args.model,
             device=device,
         )
-        dataset = Dataset(
+        dataset = Dataset.from_csv(
             args.dataset,
             'question', 'answer',
             batch_size=args.batch_size,

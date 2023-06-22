@@ -14,7 +14,7 @@ class MaxProbabilitySeq(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         log_likelihoods = stats['greedy_log_likelihoods']
-        return np.array([-np.mean(l) for l in log_likelihoods])
+        return np.array([-np.mean(np.exp(l)) for l in log_likelihoods])
 
 
 class MaxProbabilityToken(Estimator):
@@ -26,4 +26,4 @@ class MaxProbabilityToken(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         log_likelihoods = stats['greedy_log_likelihoods']
-        return np.concatenate([-np.array(l[:-1]) for l in log_likelihoods])
+        return np.concatenate([-np.exp(np.array(l[:-1])) for l in log_likelihoods])

@@ -77,7 +77,7 @@ class UEManager:
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
         stats = [s for e in estimators for s in e.stats_dependencies] + \
-                [s for m in generation_metrics for s in m.stats_dependencies]
+                [s for m in generation_metrics for s in m.stats_dependencies] + ['greedy_tokens', 'greedy_texts']
         self.stat_calculators: List[StatCalculator] = _order_calculators(stats)
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)

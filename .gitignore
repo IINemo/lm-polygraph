@@ -1,3 +1,8 @@
+.idea
+app/node_modules
+app/.env
+app/uploads/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
