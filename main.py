@@ -82,7 +82,7 @@ if __name__ == '__main__':
                 ExponentialAttentionEntropyToken(coef=0.8),
                 ExponentialAttentionRecursiveToken(coef=0.9),
                 ExponentialAttentionRecursiveToken(coef=0.8),
-                SemanticEntropyToken(model.tokenizer, args.cache_path),
+                SemanticEntropyToken(model.model_path, args.cache_path),
             ],
             [
                 RougeMetric('rouge1'),

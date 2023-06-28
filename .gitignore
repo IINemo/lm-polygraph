@@ -2,6 +2,7 @@
 app/node_modules
 !app/node_modules/openai
 !app/node_modules/openai/dist/*
+*/.DStore
 
 app/.env
 app/uploads/*

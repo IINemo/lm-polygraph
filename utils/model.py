@@ -17,7 +17,8 @@ class Model:
     @staticmethod
     def from_pretrained(model_path: str, device: str = 'cpu'):
         model = AutoModelForCausalLM.from_pretrained(model_path, max_length=256).to(device)
-        tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
+                                                  model_max_length=256)
         model.eval()
         return Model(model, tokenizer, model_path)
 

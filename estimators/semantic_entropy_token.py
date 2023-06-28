@@ -56,11 +56,12 @@ def split_classes(
 
 
 class SemanticEntropyToken(Estimator):
-    def __init__(self, tokenizer: AutoTokenizer,
+    def __init__(self, tokenizer_path: str,
                  tokenizer_save_path: str,
                  semantic_bert_path: str = 'sentence-transformers/bert-base-nli-mean-tokens',
                  batch_size: int = 10):
         super().__init__(['greedy_log_probs'], 'token')
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, padding_side="left", add_bos_token=True)
         tokens = [tokenizer.decode([i]) for i in range(len(tokenizer))]
         tokenizer_classes_path = os.path.join(tokenizer_save_path,
                                               tokenizer.name_or_path.split('/')[-1] + '_classes.npy')

@@ -1,28 +1,21 @@
 import numpy as np
+import argparse
 
 from typing import Optional, Dict, Tuple, List
 
 from flask import Flask, request, abort
 from utils.model import Model
-from estimators import *
 from utils.manager import UEManager
 from utils.processor import Processor
 from utils.dataset import Dataset
+
+from app.parsers import parse_model, parse_ue_method, Estimator, normalize
 
 app = Flask(__name__)
 
 model: Optional[Model] = None
 ue_methods: Dict[str, Estimator] = {}
-
-
-def create_method(method_name: str) -> Estimator:
-    match method_name:
-        case 'Maximum probability':
-            return MaxProbabilityToken()
-        case 'Entropy':
-            return EntropyToken()
-        case _:
-            raise Exception(f'Unknown method: {method_name}')
+cache_path: str = '/Users/ekaterinafadeeva/cache'
 
 
 class ResultProcessor(Processor):
@@ -44,26 +37,28 @@ class ResultProcessor(Processor):
 def generate():
     data = request.get_json()
     print(f'Request data: {data}')
+    model_path = parse_model(data['model'])
 
     global model
-    if model is None or model.model_path != data['model']:
-        model = Model.from_pretrained(data['model'])
+    if model is None or model.model_path != model_path:
+        model = Model.from_pretrained(model_path)
 
     ue_method_name = data['ue']
     text = data['messages'][0]['content']
 
     if ue_method_name not in ue_methods.keys():
-        ue_methods[ue_method_name] = create_method(ue_method_name)
+        ue_methods[ue_method_name] = parse_ue_method(ue_method_name, model_path, cache_path)
 
     dataset = Dataset([text], [''], batch_size=1)
     processor = ResultProcessor()
-    man = UEManager(dataset, model, [ue_methods[ue_method_name]], [], [], [processor])
+    method = ue_methods[ue_method_name]
+    man = UEManager(dataset, model, [method], [], [], [processor])
     man()
 
     if len(processor.ue_estimations) != 1:
         abort(500,
               description=f'Internal: expected single uncertainty estimator, got: {processor.ue_estimations.keys()}')
-    uncertainty = [-x for x in processor.ue_estimations[next(iter(processor.ue_estimations.keys()))]]
+    uncertainty = [normalize(method, x) for x in processor.ue_estimations[next(iter(processor.ue_estimations.keys()))]]
     print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
     print(' Uncertainty: {}'.format(uncertainty))
     tokens = []
@@ -77,4 +72,9 @@ def generate():
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5000)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=5239)
+    parser.add_argument("--cache-path", type=str, default='/Users/ekaterinafadeeva/cache')
+    args = parser.parse_args()
+    cache_path = args.cache_path
+    app.run(host='localhost', port=args.port)
