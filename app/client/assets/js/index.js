@@ -8,7 +8,57 @@ const regenerateResponseButton = document.getElementById('regenerate-response-bu
 const promptInput = document.getElementById('prompt-input');
 const modelSelect = document.getElementById('model-select');
 const ueSelect = document.getElementById('ue-select');
+const levelSelect = document.getElementById('level-select');
 const responseList = document.getElementById('response-list');
+
+var lookup = {
+   'token-level': [
+        'Maximum Probability',
+        'Normalized Maximum Probability',
+        'Entropy',
+        'Mutual Information',
+        'Conditional Mutual Information',
+        'Attention Entropy',
+        'Attention Recursive Entropy',
+        'Exponential Attention Entropy',
+        'Exponential Attention Recursive Entropy',
+        'Semantic Entropy'
+   ],
+   'sequence-level': [
+        'Maximum Probability',
+        'Normalized Maximum Probability',
+        'Entropy',
+        'Mutual Information',
+        'Conditional Mutual Information',
+        'Attention Entropy',
+        'Attention Recursive Entropy',
+        'Exponential Attention Entropy',
+        'Exponential Attention Recursive Entropy',
+        'P(True)',
+        'P(Uncertainty)',
+        'Predictive Entropy Sampling',
+        'Normalized Predictive Entropy Sampling',
+        'Lexical Similarity Rouge-1',
+        'Lexical Similarity Rouge-2',
+        'Lexical Similarity Rouge-L',
+        'Lexical Similarity Rouge-BLEU',
+        'Semantic Entropy',
+        'Adaptive Sampling Predictive Entropy',
+        'Adaptive Sampling Semantic Entropy'
+   ]
+};
+
+levelSelect.addEventListener("change", function() {
+    var level = levelSelect.value;
+    ueSelect.innerHTML = "";
+    for (i = 0; i < lookup[level].length; i++) {
+        let option = document.createElement("option");
+        option.setAttribute('value', level + ', ' + lookup[level][i]);
+        let optionText = document.createTextNode(lookup[level][i]);
+        option.appendChild(optionText);
+        ueSelect.appendChild(option);
+    }
+});
 
 modelSelect.addEventListener("change", function() {
     fileInput.style.display = "none";
@@ -126,7 +176,10 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
     try {
         const model = modelSelect.value;
-        const ue = ueSelect.value;
+        const level = levelSelect.value;
+        var ue = Array.prototype.slice.call(document.querySelectorAll('#ue-select option:checked'),0).map(function(v,i,a) {
+            return v.value;
+        });
         // Send a POST request to the API with the prompt in the request body
         const response = await fetch(API_URL + 'get-prompt-result', {
             method: 'POST',
@@ -134,7 +187,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
             body: JSON.stringify({
                 prompt,
                 model,
-                ue
+                ue,
+                level
             })
         });
         if (!response.ok) {

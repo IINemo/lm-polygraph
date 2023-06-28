@@ -43,24 +43,31 @@ def generate():
     if model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path)
 
-    ue_method_name = data['ue']
+    ue_method_names = data['ue']
     text = data['messages'][0]['content']
 
-    if ue_method_name not in ue_methods.keys():
-        ue_methods[ue_method_name] = parse_ue_method(ue_method_name, model_path, cache_path)
+    level = 'token' if 'token-level' in ue_method_names[0] else 'sequence'
+
+    for ue_method_name in ue_method_names:
+        if ue_method_name not in ue_methods.keys():
+            ue_methods[ue_method_name] = parse_ue_method(ue_method_name, model_path, cache_path)
 
     dataset = Dataset([text], [''], batch_size=1)
     processor = ResultProcessor()
-    method = ue_methods[ue_method_name]
-    man = UEManager(dataset, model, [method], [], [], [processor])
+    methods = [ue_methods[ue_method_name] for ue_method_name in ue_method_names]
+    man = UEManager(dataset, model, methods, [], [], [processor])
     man()
 
-    if len(processor.ue_estimations) != 1:
+    if len(processor.ue_estimations) != len(ue_method_names):
         abort(500,
               description=f'Internal: expected single uncertainty estimator, got: {processor.ue_estimations.keys()}')
-    uncertainty = [normalize(method, x) for x in processor.ue_estimations[next(iter(processor.ue_estimations.keys()))]]
     print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
-    print(' Uncertainty: {}'.format(uncertainty))
+    uncertainties = []
+    for method in methods:
+        uncertainties.append([normalize(method, x) for x in processor.ue_estimations[level, str(method)]])
+        print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
+    uncertainties = np.array(uncertainties).reshape(len(methods), len(uncertainties[0]))
+    uncertainty = np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
     tokens = []
     for t in processor.stats['greedy_tokens'][0][:-1]:
         tokens.append(model.tokenizer.decode([t]))

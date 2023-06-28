@@ -18,7 +18,7 @@ app.use('/', express.static(__dirname + '/client')); // Serves resources from cl
 
 app.post('/get-prompt-result', async (req, res) => {
     // Get the prompt from the request body
-    const {prompt, model, ue} = req.body;
+    const {prompt, model, ue, level} = req.body;
 
     // Check if prompt is present in the request
     if (!prompt) {
@@ -47,7 +47,7 @@ app.post('/get-prompt-result', async (req, res) => {
         let response = '';
         let started_border = false;
         let uncertainty_thrs = 0.2;
-        let token_level = ue.includes('token-level');
+        let token_level = (level == 'token-level');
         for (let i = 0; i < generation.length; i++) {
             if (!token_level || uncertainty[i] >= uncertainty_thrs) {
                 response += generation[i];

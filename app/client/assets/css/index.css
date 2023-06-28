@@ -168,7 +168,18 @@ select {
     color: white;
 }
 
+#level-select-container {
+    color: white;
+}
+
 #ue-select-container select {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+}
+
+#level-select-container select {
     background: transparent;
     border: none;
     outline: none;
@@ -179,7 +190,15 @@ select {
     background: rgba(32,33,35,.8);
 }
 
+#level-select-container select option:not(:checked) {
+    background: rgba(32,33,35,.8);
+}
+
 #ue-select-container select option {
+    background: rgba(32,33,35,.5);
+}
+
+#level-select-container select option {
     background: rgba(32,33,35,.5);
 }
 

@@ -34,40 +34,18 @@
             <option value="Llama 13b"> Llama 13b </option>
         </select>
     </div>
+    <div id="level-select-container">
+        <label for="level-select">Select level:</label>
+        <select id="level-select">
+            <option value="" disabled selected>Select level</option>
+            <option value="token-level"> token-level </option>
+            <option value="sequence-level"> sequence-level </option>
+        </select>
+    </div>
     <div id="ue-select-container">
         <label for="ue-select">Select uncertainty estimation method:</label>
-        <select id="ue-select">
-            <option value="token-level, Maximum Probability" selected> token-level, Maximum Probability </option>
-            <option value="token-level, Normalized Maximum Probability"> token-level, Normalized Maximum Probability </option>
-            <option value="token-level, Entropy"> token-level, Entropy </option>
-            <option value="token-level, Mutual Information"> token-level, Mutual Information </option>
-            <option value="token-level, Conditional Mutual Information"> token-level, Conditional Mutual Information </option>
-            <option value="token-level, Attention Entropy"> token-level, Attention Entropy </option>
-            <option value="token-level, Attention Recursive Entropy"> token-level, Attention Recursive Entropy </option>
-            <option value="token-level, Exponential Attention Entropy"> token-level, Exponential Attention Entropy </option>
-            <option value="token-level, Exponential Attention Recursive Entropy"> token-level, Exponential Attention Recursive Entropy </option>
-            <option value="token-level, Semantic Entropy"> token-level, Semantic Entropy </option>
-
-            <option value="sequence-level, Maximum Probability"> sequence-level, Maximum Probability </option>
-            <option value="sequence-level, Normalized Maximum Probability"> sequence-level, Normalized Maximum Probability </option>
-            <option value="sequence-level, Entropy"> sequence-level, Entropy </option>
-            <option value="sequence-level, Mutual Information"> sequence-level, Mutual Information </option>
-            <option value="sequence-level, Conditional Mutual Information"> sequence-level, Conditional Mutual Information </option>
-            <option value="sequence-level, Attention Entropy"> sequence-level, Attention Entropy </option>
-            <option value="sequence-level, Attention Recursive Entropy"> sequence-level, Attention Recursive Entropy </option>
-            <option value="sequence-level, Exponential Attention Entropy"> sequence-level, Exponential Attention Entropy </option>
-            <option value="sequence-level, Exponential Attention Recursive Entropy"> sequence-level, Exponential Attention Recursive Entropy </option>
-            <option value="sequence-level, P(True)"> sequence-level, P(True) </option>
-            <option value="sequence-level, P(Uncertainty)"> sequence-level, P(Uncertainty) </option>
-            <option value="sequence-level, Predictive Entropy Sampling"> sequence-level, Predictive Entropy Sampling </option>
-            <option value="sequence-level, Normalized Predictive Entropy Sampling"> sequence-level, Normalized Predictive Entropy Sampling </option>
-            <option value="sequence-level, Lexical Similarity Rouge-1"> sequence-level, Lexical Similarity Rouge-1 </option>
-            <option value="sequence-level, Lexical Similarity Rouge-2"> sequence-level, Lexical Similarity Rouge-2 </option>
-            <option value="sequence-level, Lexical Similarity Rouge-L"> sequence-level, Lexical Similarity Rouge-L </option>
-            <option value="sequence-level, Lexical Similarity Rouge-BLEU"> sequence-level, Lexical Similarity Rouge-BLUE </option>
-            <option value="sequence-level, Semantic Entropy"> sequence-level, Semantic Entropy </option>
-            <option value="sequence-level, Adaptive Sampling Predictive Entropy"> sequence-level, Adaptive Sampling Predictive Entropy </option>
-            <option value="sequence-level, Adaptive Sampling Semantic Entropy"> sequence-level, Adaptive Sampling Semantic Entropy </option>
+        <select id="ue-select" multiple="multiple" size="2">
+            <option value="" disabled selected>Please select level</option>
         </select>
     </div>
     <div id="input-container">
