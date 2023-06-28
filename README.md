@@ -16,6 +16,8 @@ cd app && npm install && cd ../
 
 ### Starting the model server
 
+Requires python3.10
+
 ```
 python -m app.service
 ```
