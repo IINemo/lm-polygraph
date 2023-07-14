@@ -27,23 +27,34 @@ class GreedyProbsCalculator(StatCalculator):
                 output_attentions=True,
             )
             logits = torch.stack(out.scores, dim=1).log_softmax(-1)
-            attentions = out.attentions
+            if model.model_type == "Seq2SeqLM":
+                attentions = out.decoder_attentions
+            elif model.model_type == "CausalLM":
+                attentions = out.attentions
             sequences = out.sequences
 
         cut_logits = []
         cut_sequences = []
         cut_texts = []
         for i in range(len(texts)):
-            seq = sequences[i, batch['input_ids'].shape[1]:].cpu()
+            if model.model_type == "CausalLM":
+                seq = sequences[i, batch['input_ids'].shape[1]:].cpu()
+            else:
+                seq = sequences[i, :].cpu()
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):
                 if seq[j] == model.tokenizer.eos_token_id:
                     length = j + 1
                     text_length = j
                     break
-            cut_sequences.append(seq[:length].tolist())
-            cut_logits.append(logits[i, :length, :].cpu().numpy())
-            cut_texts.append(model.tokenizer.decode(seq[:text_length]))
+                    
+            if model.model_type == "CausalLM":
+                cut_sequences.append(seq[:length].tolist())
+                cut_texts.append(model.tokenizer.decode(seq[:text_length]))
+            else:
+                cut_sequences.append(seq[1:length].tolist())
+                cut_texts.append(model.tokenizer.decode(seq[1:text_length]))
+            cut_logits.append(logits[i, :length, :].cpu().numpy())    
 
         attn_mask = []
         for i in range(len(texts)):
@@ -59,6 +70,9 @@ class GreedyProbsCalculator(StatCalculator):
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
+            if (log_probs.shape[0] == (len(tokens)+1)) and (model.model_type == "Seq2SeqLM"):
+                #rare case for Seq2Seq output
+                log_probs = log_probs[:-1]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 

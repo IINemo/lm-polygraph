@@ -2,25 +2,35 @@ import torch
 
 from typing import List, Dict
 from dataclasses import dataclass
-from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM
-
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig
 
 @dataclass
 class Model:
     model: AutoModelForCausalLM
     tokenizer: AutoTokenizer
     model_path: str
+    model_type: str
 
     def device(self):
         return self.model.device
 
     @staticmethod
     def from_pretrained(model_path: str, device: str = 'cpu'):
-        model = AutoModelForCausalLM.from_pretrained(model_path, max_length=256).to(device)
+        config = AutoConfig.from_pretrained(model_path)
+        if any(["CausalLM" in architecture for architecture in config.architectures]):
+            model_type = "CausalLM"
+            model = AutoModelForCausalLM.from_pretrained(model_path, max_length=256).to(device)
+        elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
+                  for architecture in config.architectures]):
+            model_type = "Seq2SeqLM"
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256).to(device)
+        else:
+            raise ValueError(f'Model {model_path} is not adopted for the sequence generation task')
+            
         tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
                                                   model_max_length=256)
         model.eval()
-        return Model(model, tokenizer, model_path)
+        return Model(model, tokenizer, model_path, model_type)
 
     @staticmethod
     def load(model_path: str, tokenizer_path: str, device: str = 'cpu'):

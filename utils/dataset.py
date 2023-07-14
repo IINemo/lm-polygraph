@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from typing import Iterable, Tuple, List
 
@@ -15,6 +16,11 @@ class Dataset:
 
     def __len__(self):
         return (len(self.x) + self.batch_size - 1) // self.batch_size
+    
+    def select(self, indices: List[int]):
+        self.x = np.array(self.x)[indices].tolist()
+        self.y = np.array(self.y)[indices].tolist()
+        return self
 
     @staticmethod
     def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int):
