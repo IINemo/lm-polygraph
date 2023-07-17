@@ -237,6 +237,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     try {
         const model = modelSelect.value;
         const level = levelSelect.value;
+        const type = typeSelect.value;
+        const ensPath = ensPathInput.value;
+
         var ue = Array.prototype.slice.call(document.querySelectorAll('#ue-select option:checked'),0).map(function(v,i,a) {
             return v.value;
         });
@@ -248,7 +251,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
                 prompt,
                 model,
                 ue,
-                level
+                level,
+                type,
+                ensPath
             })
         });
         if (!response.ok) {
