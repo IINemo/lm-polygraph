@@ -6,34 +6,129 @@ let uniqueIdToRetry = null;
 const submitButton = document.getElementById('submit-button');
 const regenerateResponseButton = document.getElementById('regenerate-response-button');
 const promptInput = document.getElementById('prompt-input');
-const modelSelect = document.getElementById('model');
-const tokUeSelect = document.getElementById('tokue');
-const seqUeSelect = document.getElementById('seque');
+const modelSelect = document.getElementById('model-select');
+const ueSelect = document.getElementById('ue-select');
+const levelSelect = document.getElementById('level-select');
 const responseList = document.getElementById('response-list');
-const selectContainer = document.getElementById('select-container');
-const modal = document.getElementById("modal");
-const settingsButton = document.getElementById("settings-button");
-const span = document.getElementsByClassName("close")[0];
+const typeSelect = document.getElementById('ue-type-select');
+const ensPathInput = document.getElementById('ensemble-path-input');
 
-var temperature = 1.0;
-var topk = 1;
-var topp = 1.0;
-var do_sample = false;
-var num_beams = 1;
+const modelSelectCont = document.getElementById('model-select-container');
+const ensPathInputCont = document.getElementById('ensemble-path-input-container');
 
-settingsButton.onclick = function() {
-  modal.style.display = "block";
+var single_lookup = {
+   'token-level': [
+        'Maximum Probability',
+        'Normalized Maximum Probability',
+        'Entropy',
+        'Mutual Information',
+        'Conditional Mutual Information',
+        'Attention Entropy',
+        'Attention Recursive Entropy',
+        'Exponential Attention Entropy',
+        'Exponential Attention Recursive Entropy',
+        'Semantic Entropy'
+   ],
+   'sequence-level': [
+        'Maximum Probability',
+        'Normalized Maximum Probability',
+        'Entropy',
+        'Mutual Information',
+        'Conditional Mutual Information',
+        'Attention Entropy',
+        'Attention Recursive Entropy',
+        'Exponential Attention Entropy',
+        'Exponential Attention Recursive Entropy',
+        'P(True)',
+        'P(Uncertainty)',
+        'Predictive Entropy Sampling',
+        'Normalized Predictive Entropy Sampling',
+        'Lexical Similarity Rouge-1',
+        'Lexical Similarity Rouge-2',
+        'Lexical Similarity Rouge-L',
+        'Lexical Similarity Rouge-BLEU',
+        'Semantic Entropy',
+        'Adaptive Sampling Predictive Entropy',
+        'Adaptive Sampling Semantic Entropy'
+   ]
+};
+
+var ensemble_lookup = {
+   'token-level': [
+       'EP-T-total-uncertainty',
+       'EP-T-data-uncertainty',
+       'EP-T-mutual-information',
+       'EP-T-rmi',
+       'EP-T-epkl',
+       'EP-T-epkl-tu',
+       'EP-T-entropy-top5',
+       'EP-T-entropy-top10',
+       'EP-T-entropy-top15',
+       'PE-T-total-uncertainty',
+       'PE-T-data-uncertainty',
+       'PE-T-mutual-information',
+       'PE-T-rmi',
+       'PE-T-epkl',
+       'PE-T-epkl-tu',
+       'PE-T-entropy-top5',
+       'PE-T-entropy-top10',
+       'PE-T-entropy-top15'
+   ],
+   'sequence-level': [
+       'EP-S-total-uncertainty',
+       'EP-S-rmi',
+       'EP-S-rmi-abs',
+       'PE-S-total-uncertainty',
+       'PE-S-rmi',
+       'PE-S-rmi-abs',
+   ]
+};
+
+function refreshUEMethods() {
+    var level = levelSelect.value;
+    var ueType = typeSelect.value;
+
+    if (ueType == 'single') {
+        lookup = single_lookup
+    } else {
+        lookup = ensemble_lookup
+    }
+
+    ueSelect.innerHTML = "";
+    for (i = 0; i < lookup[level].length; i++) {
+        let option = document.createElement("option");
+        option.setAttribute('value', level + ', ' + lookup[level][i]);
+        let optionText = document.createTextNode(lookup[level][i]);
+        option.appendChild(optionText);
+        ueSelect.appendChild(option);
+    }
 }
 
-span.onclick = function() {
-  modal.style.display = "none";
-}
+levelSelect.addEventListener("change", refreshUEMethods)
 
-window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
-}
+typeSelect.addEventListener("change", function() {
+    var type = typeSelect.value;
+
+    if (type == 'single') {
+        ensPathInputCont.style.display = "none"
+        modelSelectCont.style.display = "block"
+    } else {
+        ensPathInputCont.style.display = "block"
+        modelSelectCont.style.display = "none"
+    }
+
+    refreshUEMethods();
+})
+
+modelSelect.addEventListener("change", function() {
+    fileInput.style.display = "none";
+    promptInput.style.display = 'block';
+});
+
+ueSelect.addEventListener("change", function() {
+    fileInput.style.display = "none";
+    promptInput.style.display = 'block';
+});
 
 let isGeneratingResponse = false;
 
@@ -58,70 +153,18 @@ function generateUniqueId() {
     return `id-${timestamp}-${hexadecimalString}`;
 }
 
-function updateTemp() {
-    var value = document.getElementById("temp-slider-value").value;
-    var logValue = document.getElementById("temp-value");
-    var logScaleValue = Math.max(Math.round(100 * (Math.pow(2, value / 25) - 1)) / 100, 0.01);
-    logValue.innerHTML = logScaleValue;
-    temperature = logScaleValue;
-}
 
-function updateTopk() {
-    var value = document.getElementById("topk-slider-value").value;
-    topk = value;
-}
-
-function updateTopp() {
-    var value = document.getElementById("topp-slider-value").value;
-    var logValue = document.getElementById("topp-value");
-    logValue.innerHTML = value;
-    topp = value;
-}
-
-function updateDoSample() {
-    var value = document.getElementById("do-sample-slider-value").value;
-    do_sample = value;
-}
-
-function updateNumBeams() {
-    num_beams = value;
-}
-
-function addResponse(selfFlag, desc, prompt) {
+function addResponse(selfFlag, prompt) {
     const uniqueId = generateUniqueId();
-    html = `
+    const html = `
             <div class="response-container ${selfFlag ? 'my-question' : 'chatgpt-response'}">
-                    <div class="desc-container">
-                        ${desc}
-                    </div>
-                    <img class="avatar-image" src="assets/img/${selfFlag ? 'me' : 'model'}.png" alt="avatar"/>
-                    <div class="prompt-content" id="${uniqueId}">
-                       ${prompt}
-                    </div>
+                <img class="avatar-image" src="assets/img/${selfFlag ? 'me' : 'model'}.png" alt="avatar"/>
+                <div class="prompt-content" id="${uniqueId}">${prompt}</div>
             </div>
         `
-    if (selfFlag) {
-        html = `<div class="total-response-my-question">` + html + `</div>`
-    }
-    else {
-        html = `<div class="total-response-chatgpt-response">` + html  + `</div>`
-    }
     responseList.insertAdjacentHTML('beforeend', html);
     responseList.scrollTop = responseList.scrollHeight;
     return uniqueId;
-}
-
-function dropDown(event) {
-    event.target.parentElement.children[1].classList.remove("d-none");
-    document.getElementById("overlay").classList.remove("d-none");
-}
-
-function hide(event) {
-    var items = document.getElementsByClassName('menu');
-    for (let i = 0; i < items.length; i++) {
-        items[i].classList.add("d-none");
-    }
-    document.getElementById("overlay").classList.add("d-none");
 }
 
 function loader(element) {
@@ -163,23 +206,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     // Get the prompt input
     const prompt = _promptToRetry ?? promptInput.textContent;
 
-    const model = modelSelect.__vue__.modelSelected;
-    const tok_ue = tokUeSelect.__vue__.tokueSelected;
-    const seq_ue = seqUeSelect.__vue__.sequeSelected;
-
-    let tok_str = "None";
-    if (tok_ue.length > 0) {
-        tok_str = tok_ue.join(', ');
-    }
-    let seq_str = "None";
-    if (seq_ue.length > 0) {
-        seq_str = seq_ue.join(', ');
-    }
-    const modeldesc = model;
-    const tokdesc = 'token-level: ' + tok_str;
-    const seqdesc = 'sequence-level: ' + seq_str;
-    const desc = `${modeldesc}<br>${tokdesc}<br>${seqdesc}`;
-
     // If a response is already being generated or the prompt is empty, return
     if (isGeneratingResponse || !prompt) {
         return;
@@ -193,11 +219,11 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
     if (!_uniqueIdToRetry) {
         // Add the prompt to the response list
-        addResponse(true, ``, `<div>${prompt}</div>`, );
+        addResponse(true, `<div>${prompt}</div>`);
     }
 
     // Get a unique ID for the response element
-    const uniqueId = _uniqueIdToRetry ?? addResponse(false, desc);
+    const uniqueId = _uniqueIdToRetry ?? addResponse(false);
 
     // Get the response element
     const responseElement = document.getElementById(uniqueId);
@@ -208,14 +234,12 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     // Set isGeneratingResponse to true
     isGeneratingResponse = true;
 
-    var ensemblePathInput = document.getElementById('ensemble-path-input');
-    var ensembles = [];
-    if (ensemblePathInput && ensemblePathInput.files) {
-        for (var i = 0; i < ensemblePathInput.files.length; i++)
-            ensembles.push(ensemblePathInput.files[i].name);
-    }
-
     try {
+        const model = modelSelect.value;
+        const level = levelSelect.value;
+        var ue = Array.prototype.slice.call(document.querySelectorAll('#ue-select option:checked'),0).map(function(v,i,a) {
+            return v.value;
+        });
         // Send a POST request to the API with the prompt in the request body
         const response = await fetch(API_URL + 'get-prompt-result', {
             method: 'POST',
@@ -223,14 +247,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
             body: JSON.stringify({
                 prompt,
                 model,
-                ensembles,
-                tok_ue,
-                seq_ue,
-                temperature,
-                topp,
-                topk,
-                do_sample,
-                num_beams
+                ue,
+                level
             })
         });
         if (!response.ok) {
@@ -267,10 +285,10 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     }
 }
 
+
 submitButton.addEventListener("click", () => {
     getGPTResult();
 });
-
 regenerateResponseButton.addEventListener("click", () => {
     regenerateGPTResult();
 });
