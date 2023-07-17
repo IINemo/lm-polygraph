@@ -124,12 +124,10 @@ typeSelect.addEventListener("change", function() {
 })
 
 modelSelect.addEventListener("change", function() {
-    fileInput.style.display = "none";
     promptInput.style.display = 'block';
 });
 
 ueSelect.addEventListener("change", function() {
-    fileInput.style.display = "none";
     promptInput.style.display = 'block';
 });
 
