@@ -1,3 +1,4 @@
 from .rouge import RougeMetric
 from .wer_tokenwise import WERTokenwiseMetric
-from .bart_score import BartScoreSeqMetric, BartScoreTokenwiseMetric
+from .model_score import ModelScoreSeqMetric, ModelScoreTokenwiseMetric
+from .bart_score import BartScoreSeqMetric

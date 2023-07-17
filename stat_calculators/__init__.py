@@ -6,6 +6,7 @@ from .stat_calculator import StatCalculator, register
 from .sample import SamplingGenerationCalculator
 from .adapted_sample import AdaptedSamplingGenerationCalculator
 from .bart_score import BartScoreCalculator
+from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
 
 register(GreedyProbsCalculator())
@@ -16,4 +17,5 @@ register(PromptCalculator('Do you know the correct answer to the question: "{q}"
 register(SamplingGenerationCalculator())
 register(AdaptedSamplingGenerationCalculator())
 register(BartScoreCalculator())
+register(ModelScoreCalculator())
 register(EmbeddingsCalculator())

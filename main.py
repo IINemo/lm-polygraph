@@ -6,7 +6,7 @@ from utils.manager import UEManager
 from utils.dataset import Dataset
 from utils.model import Model
 from utils.processor import Logger
-from generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreTokenwiseMetric, BartScoreSeqMetric
+from generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetric, ModelScoreSeqMetric, ModelScoreTokenwiseMetric
 from estimators import *
 from ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
@@ -111,7 +111,8 @@ if __name__ == '__main__':
                 RougeMetric('rougeL'),
                 BartScoreSeqMetric('rh'),
                 #WERTokenwiseMetric(),
-                #BartScoreTokenwiseMetric('rh'),
+                ModelScoreSeqMetric('model_rh'),
+                ModelScoreTokenwiseMetric('model_rh'),
             ],
             [
                 ReversedPairsProportion(),
