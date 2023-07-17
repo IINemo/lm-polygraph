@@ -52,7 +52,7 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
 
 class MahalanobisDistanceSeq(Estimator):
     def __init__(self, embeddings_type: str = "decoder"):
-        super().__init__(['embeddings'], 'sequence')
+        super().__init__(['embeddings', 'train_embeddings'], 'sequence')
         self.centroid = None
         self.sigma_inv = None
         self.embeddings_type = embeddings_type

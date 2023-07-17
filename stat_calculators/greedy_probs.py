@@ -3,6 +3,7 @@ import numpy as np
 
 from typing import Dict, List
 
+from stat_calculators.embeddings import get_embeddings_from_output
 from stat_calculators.stat_calculator import StatCalculator
 from utils.model import Model
 
@@ -11,7 +12,7 @@ class GreedyProbsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
                           'greedy_log_probs', 'greedy_tokens',
-                          'greedy_texts', 'attention', 'greedy_log_likelihoods'], [])
+                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'embeddings'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
@@ -25,6 +26,7 @@ class GreedyProbsCalculator(StatCalculator):
                 max_length=256,
                 min_length=2,
                 output_attentions=True,
+                output_hidden_states=True,
             )
             logits = torch.stack(out.scores, dim=1).log_softmax(-1)
             if model.model_type == "Seq2SeqLM":
@@ -32,6 +34,7 @@ class GreedyProbsCalculator(StatCalculator):
             elif model.model_type == "CausalLM":
                 attentions = out.attentions
             sequences = out.sequences
+            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
 
         cut_logits = []
         cut_sequences = []
@@ -67,8 +70,20 @@ class GreedyProbsCalculator(StatCalculator):
             tokens = cut_sequences[i]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
-
-        return {
+            
+        if model.model_type == "CausalLM":
+            embeddings_dict = {
+                'embeddings_decoder': embeddings_decoder,
+            }
+        elif model.model_type == "Seq2SeqLM":
+            embeddings_dict = {
+                'embeddings_encoder': embeddings_encoder,
+                'embeddings_decoder': embeddings_decoder,
+            }
+        else:
+            raise NotImplementedError
+        
+        result_dict = {
             'input_texts': texts,
             'input_tokens': inp_tokens,
             'greedy_log_probs': cut_logits,
@@ -77,3 +92,6 @@ class GreedyProbsCalculator(StatCalculator):
             'attention': attn_mask,
             'greedy_log_likelihoods': ll,
         }
+        result_dict.update(embeddings_dict)
+
+        return result_dict

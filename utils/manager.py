@@ -106,6 +106,12 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
                 
+            for stat_calculator in self.stat_calculators:
+                new_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                for stat, stat_value in new_stats.items():
+                    if stat in batch_stats.keys():
+                        continue
+                    batch_stats[stat] = stat_value
             try:
                 for stat_calculator in self.stat_calculators:
                     new_stats = stat_calculator(batch_stats, inp_texts, self.model)
@@ -164,6 +170,9 @@ class UEManager:
         train_embeddings_decoder = []
         train_embeddings_encoder = []
         if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]):
+            for stat_calculator in self.stat_calculators:
+                if isinstance(stat_calculator, EmbeddingsCalculator):
+                    embeddings_calculator = stat_calculator
             for inp_texts, target_texts in tqdm(self.train_data):
                 target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
                                  for text in target_texts]
@@ -176,15 +185,14 @@ class UEManager:
                 ]:
                     self.stats[key] += val
                     batch_stats[key] = val
-                for stat_calculator in self.stat_calculators:
-                    if isinstance(stat_calculator, EmbeddingsCalculator):
-                        batch_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                batch_stats = embeddings_calculator(batch_stats, inp_texts, self.model)
                 train_embeddings_decoder.append(batch_stats["embeddings_decoder"])
                 if "embeddings_encoder" in batch_stats.keys():
                     train_embeddings_encoder.append(batch_stats["embeddings_encoder"])
             train_embeddings_decoder = torch.cat(train_embeddings_decoder)
             if len(train_embeddings_encoder):
                 train_embeddings_encoder = torch.cat(train_embeddings_encoder)
+            self.stat_calculators.remove(embeddings_calculator)
         return train_embeddings_decoder, train_embeddings_encoder
 
     def save(self, save_path: str):
