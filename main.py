@@ -1,3 +1,4 @@
+import copy
 import torch
 import transformers
 import argparse
@@ -14,7 +15,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str,
                         default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
+    parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
+    parser.add_argument("--use_density_based_ue", type=bool, default=True)
+    parser.add_argument("--subsample_train_dataset", type=int, default=50)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -39,30 +44,45 @@ if __name__ == '__main__':
             args.model,
             device=device,
         )
-        train_dataset = Dataset.from_csv(
-            args.dataset,
-            'question', 'answer',
-            batch_size=args.batch_size,
-        )
-        train_dataset.select(list(range(10)))
-        
         
         dataset = Dataset.from_csv(
             args.dataset,
             'question', 'answer',
             batch_size=args.batch_size,
         )
-        dataset.select(list(range(1000, 1100)))
+                        
+        if args.use_density_based_ue:
+            if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
+                train_dataset = Dataset.from_csv(
+                    args.train_dataset,
+                    'question', 'answer',
+                    batch_size=args.batch_size,
+                )
+            else:
+                X_train, X_test, y_train, y_test = dataset.train_test_split(
+                    test_size=0.9,
+                    seed=seed,
+                    split="eval"
+                )
+                train_dataset = Dataset(x=X_train, y=y_train, batch_size=args.batch_size)
+                
+            if args.subsample_train_dataset != -1:
+                train_dataset.subsample(args.subsample_train_dataset, seed=seed)
         
-        if model.model_type == "Seq2SeqLM":
-            density_based_ue = [
-                MahalanobisDistanceSeq("encoder"),
-                MahalanobisDistanceSeq("decoder"),
-            ]
+            if model.model_type == "Seq2SeqLM":
+                density_based_ue = [
+                    MahalanobisDistanceSeq("encoder"),
+                    MahalanobisDistanceSeq("decoder"),
+                ]
+            else:
+                density_based_ue = [
+                    MahalanobisDistanceSeq("decoder"),
+                ]
         else:
-            density_based_ue = [
-                MahalanobisDistanceSeq("decoder"),
-            ]
+            density_based_ue = []
+            
+        if args.subsample_eval_dataset != -1:
+            dataset.subsample(args.subsample_eval_dataset, seed=seed)
             
         man = UEManager(
             train_dataset,
