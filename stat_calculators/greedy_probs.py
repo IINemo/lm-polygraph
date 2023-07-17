@@ -25,6 +25,12 @@ class GreedyProbsCalculator(StatCalculator):
                 max_length=256,
                 min_length=2,
                 output_attentions=True,
+                temperature=model.parameters.temperature,
+                top_k=model.parameters.topk,
+                top_p=model.parameters.topp,
+                do_sample=model.parameters.do_sample,
+                num_beams=model.parameters.num_beams,
+                num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1).log_softmax(-1)
             attentions = out.attentions

@@ -22,68 +22,74 @@ def normalize(est: Estimator, val: float) -> float:
     return min(1, max(0, (high - val) / (high - low)))
 
 
-def parse_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
+def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
     match method_name:
-        case "token-level, Maximum Probability":
-            return MaxProbabilityToken()
-        case "token-level, Normalized Maximum Probability":
-            return MaxProbabilityNormalizedToken()
-        case "token-level, Entropy":
-            return EntropyToken()
-        case "token-level, Mutual Information":
-            return MutualInformationToken()
-        case "token-level, Conditional Mutual Information":
-            return ConditionalMutualInformationToken(tau=0.0656, lambd=3.599)
-        case "token-level, Attention Entropy":
-            return AttentionEntropyToken()
-        case "token-level, Attention Recursive Entropy":
-            return AttentionRecursiveToken()
-        case "token-level, Exponential Attention Entropy":
-            return ExponentialAttentionEntropyToken(0.8)
-        case "token-level, Exponential Attention Recursive Entropy":
-            return ExponentialAttentionEntropyToken(0.8)
-        case "token-level, Semantic Entropy":
-            return SemanticEntropyToken(model_path, cache_path)
-        case "sequence-level, Maximum Probability":
+        case "Maximum Probability":
             return MaxProbabilitySeq()
-        case "sequence-level, Normalized Maximum Probability":
+        case "Normalized Maximum Probability":
             return MaxProbabilityNormalizedSeq()
-        case "sequence-level, Entropy":
+        case "Entropy":
             return EntropySeq()
-        case "sequence-level, Mutual Information":
+        case "Mutual Information":
             return MutualInformationSeq()
-        case "sequence-level, Conditional Mutual Information":
+        case "Conditional Mutual Information":
             return ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599)
-        case "sequence-level, Attention Entropy":
+        case "Attention Entropy":
             return AttentionEntropySeq()
-        case "sequence-level, Attention Recursive Entropy":
+        case "Attention Recursive Entropy":
             return AttentionRecursiveSeq()
-        case "sequence-level, Exponential Attention Entropy":
+        case "Exponential Attention Entropy":
             return ExponentialAttentionEntropySeq(0.8)
-        case "sequence-level, Exponential Attention Recursive Entropy":
+        case "Exponential Attention Recursive Entropy":
             return ExponentialAttentionRecursiveSeq(0.8)
-        case "sequence-level, P(True)":
+        case "P(True)":
             return PTrue()
-        case "sequence-level, P(Uncertainty)":
+        case "P(Uncertainty)":
             return PUncertainty()
-        case "sequence-level, Predictive Entropy Sampling":
+        case "Predictive Entropy Sampling":
             return PredictiveEntropy()
-        case "sequence-level, Normalized Predictive Entropy Sampling":
+        case "Normalized Predictive Entropy Sampling":
             return LengthNormalizedPredictiveEntropy()
-        case "sequence-level, Lexical Similarity Rouge-1":
+        case "Lexical Similarity Rouge-1":
             return LexicalSimilarity(metric='rouge1')
-        case "sequence-level, Lexical Similarity Rouge-2":
+        case "Lexical Similarity Rouge-2":
             return LexicalSimilarity(metric='rouge2')
-        case "sequence-level, Lexical Similarity Rouge-L":
+        case "Lexical Similarity Rouge-L":
             return LexicalSimilarity(metric='rougeL')
-        case "sequence-level, Lexical Similarity Rouge-BLEU":
+        case "Lexical Similarity Rouge-BLEU":
             return LexicalSimilarity(metric='BLEU')
-        case "sequence-level, Semantic Entropy":
+        case "Semantic Entropy":
             return SemanticEntropy()
-        case "sequence-level, Adaptive Sampling Predictive Entropy":
+        case "Adaptive Sampling Predictive Entropy":
             return PredictiveEntropyAdaptedSampling()
-        case "sequence-level, Adaptive Sampling Semantic Entropy":
+        case "Adaptive Sampling Semantic Entropy":
             return SemanticEntropyAdaptedSampling()
+        case _:
+            raise Exception(f'Unknown method: {method_name}')
+
+
+def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
+    match method_name:
+        case "Maximum Probability":
+            return MaxProbabilityToken()
+        case "Normalized Maximum Probability":
+            return MaxProbabilityNormalizedToken()
+        case "Entropy":
+            return EntropyToken()
+        case "Mutual Information":
+            return MutualInformationToken()
+        case "Conditional Mutual Information":
+            return ConditionalMutualInformationToken(tau=0.0656, lambd=3.599)
+        case "Attention Entropy":
+            return AttentionEntropyToken()
+        case "Attention Recursive Entropy":
+            return AttentionRecursiveToken()
+        case "Exponential Attention Entropy":
+            return ExponentialAttentionEntropyToken(0.8)
+        case "Exponential Attention Recursive Entropy":
+            return ExponentialAttentionEntropyToken(0.8)
+        case "Semantic Entropy":
+            return SemanticEntropyToken(model_path, cache_path)
         case _:
             raise Exception(f'Unknown method: {method_name}')
 

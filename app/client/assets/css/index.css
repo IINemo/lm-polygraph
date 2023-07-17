@@ -10,6 +10,11 @@ body {
     margin: 0;
 }
 
+.response-container {
+  width: 100%;
+  display: flex;
+}
+
 select {
     max-width: 100%;
     text-overflow: ellipsis;
@@ -23,78 +28,216 @@ select {
 }
 
 /* Style for each response element in the list */
-#response-list .response-container {
+.response-container {
     margin-bottom: 10px;
     color: white;
     font-size: 1rem;
-    display: flex;
     word-break: break-word;
 }
 
-#response-list .response-container, #bottom-container {
-    padding: 15px 10%;
+.desc-container {
+    color: rgb(190, 190, 190);
+    font-size: 0.7rem;
+    width: 20%;
 }
 
-@media (pointer:none), (pointer:coarse) {
-    #response-list .response-container, #bottom-container {
-        padding: 15px;
-    }
-    .ai-image {
-        max-width: 100%;
-    }
+#input-container {
+    padding: 15px 20%;
 }
-#response-list .response-container .avatar-image {
+
+.avatar-image {
     width: 30px;
     height: 30px;
     margin-right: 15px;
 }
 
-#response-list .response-container .response-content {
+.response-content {
     display: flex;
     flex-direction: column;
 }
 
-#response-list .response-container pre {
+.response-container pre {
     max-width: 100%;
     margin: 0 !important;
     white-space: break-spaces;
 }
 
-#response-list .response-container .prompt-content {
+.prompt-content {
     background: transparent !important;
     color: white;
     padding: 0 !important;
+}
+
+.total-response-my-question .prompt-content {
+    margin-top: 10px;
+}
+
+.total-response-chatgpt-response .prompt-content {
+    margin-top: 5px;
 }
 
 #response-list .response-container .prompt-content * {
     white-space: pre-wrap;
 }
 
-#whisper-file {
-    color: white;
-}
-
 #response-list .response-container .prompt-content p:first-child {
     margin-top: 0;
+    font-size: 1rem;
+}
+
+.settings-button {
+    background-color: rgba(68, 70, 84, 1.0);
+    width: 40px;
+    height: 40px;
+    border: none;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 20% auto;
+    padding: 20px;
+    width: 30%;
+    text-align: left;
+    align-items: center;
+}
+
+.temp-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.topk-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.topp-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.do-sample-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.num-beams-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.temp-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.topk-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.topp-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.do-sample-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.num-beams-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .chatgpt-response {
     background-color: rgba(68, 70, 84, 1);
 }
 
-.my-question {
+.total-response-my-question {
+    margin-top: 10px;
     background-color: rgba(52, 53, 65, 1);
+    border: 5px solid rgba(52, 53, 65, 1);
 }
+
+.total-response-chatgpt-response {
+    margin-top: 10px;
+}
+
+.chatgpt-response {
+    background-color: rgba(68, 70, 84, 1);
+}
+
 /* Change background color of the input container */
 #input-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px;
     background-color: rgba(64, 65, 79, 1);
     border-color: rgba(32,33,35,.5);
     border-radius: 5px;
     margin-top: 10px;
+    padding: 15px 20%;
 }
 
 /* Style for the prompt input */
@@ -127,6 +270,7 @@ select {
     flex-direction: row;
     justify-content: center;
     margin-bottom: 10px;
+    padding: 15px 20%;
 }
 
 #regenerate-response-button {
@@ -137,6 +281,7 @@ select {
     border-radius: 4px;
     padding: 10px 20px;
     cursor: pointer;
+    padding: 15px 20%;
 }
 
 .loading {
@@ -145,61 +290,73 @@ select {
     pointer-events: none;
 }
 
-#model-select-container {
-    color: white;
+#select-container {
+    display: flex;
+    align-items: flex-end;
+    padding: 15px 20%;
 }
 
-#model-select-container select {
+#model {
+    color: rgba(32,33,35,.5);
+    flex: 1;
+}
+
+#seque {
+    color: rgba(32,33,35,.5);
+    flex: 1;
+}
+
+#tokue {
+    color: rgba(32,33,35,.5);
+    width: 35%;
+}
+
+#model select {
     background: transparent;
     border: none;
     outline: none;
     color: white;
 }
 
-#model-select-container select option:not(:checked) {
+#model select option:not(:checked) {
     background: rgba(32,33,35,.8);
 }
 
-#model-select-container select option {
+#model select option {
     background: rgba(32,33,35,.5);
 }
 
-#ue-select-container {
-    color: white;
-}
-
-#level-select-container {
-    color: white;
-}
-
-#ue-select-container select {
+#seque select {
     background: transparent;
     border: none;
     outline: none;
     color: white;
 }
 
-#level-select-container select {
+#tokue select {
     background: transparent;
     border: none;
     outline: none;
-    color: white;
 }
 
-#ue-select-container select option:not(:checked) {
+#seque select option:not(:checked) {
     background: rgba(32,33,35,.8);
 }
 
-#level-select-container select option:not(:checked) {
+#tokue select option:not(:checked) {
     background: rgba(32,33,35,.8);
 }
 
-#ue-select-container select option {
+#seque select option {
     background: rgba(32,33,35,.5);
 }
 
-#level-select-container select option {
+#tokue select option {
     background: rgba(32,33,35,.5);
+}
+
+.hidden {
+    display: none;
 }
 
 .ai-image {

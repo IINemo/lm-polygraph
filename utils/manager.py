@@ -67,6 +67,7 @@ class UEManager:
             generation_metrics: List[GenerationMetric],
             ue_metrics: List[UEMetric],
             processors: List[Processor],
+            ignore_exceptions: bool = True
     ):
         self.model: Model = model
         self.data: Dataset = data
@@ -86,6 +87,7 @@ class UEManager:
         self.stats: Dict[str, List] = defaultdict(list)
 
         self.processors = processors
+        self.ignore_exceptions = ignore_exceptions
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         for inp_texts, target_texts in tqdm(self.data):
@@ -109,8 +111,11 @@ class UEManager:
                             continue
                         batch_stats[stat] = stat_value
             except Exception as e:
-                sys.stderr.write(f'Caught exception while calculating stats: {e}')
-                continue
+                if self.ignore_exceptions:
+                    sys.stderr.write(f'Caught exception while calculating stats: {e}')
+                    continue
+                else:
+                    raise e
 
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for estimator in self.estimators:

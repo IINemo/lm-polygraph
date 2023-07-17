@@ -4,12 +4,15 @@ from typing import List, Dict
 from dataclasses import dataclass
 from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM
 
+from utils.generation_parameters import GenerationParameters
+
 
 @dataclass
 class Model:
     model: AutoModelForCausalLM
     tokenizer: AutoTokenizer
     model_path: str
+    parameters: GenerationParameters = GenerationParameters()
 
     def device(self):
         return self.model.device
