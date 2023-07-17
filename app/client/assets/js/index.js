@@ -87,20 +87,23 @@ var ensemble_lookup = {
 function refreshUEMethods() {
     var level = levelSelect.value;
     var ueType = typeSelect.value;
+    var lookup
 
     if (ueType == 'single') {
         lookup = single_lookup
     } else {
         lookup = ensemble_lookup
     }
-
-    ueSelect.innerHTML = "";
-    for (i = 0; i < lookup[level].length; i++) {
-        let option = document.createElement("option");
-        option.setAttribute('value', level + ', ' + lookup[level][i]);
-        let optionText = document.createTextNode(lookup[level][i]);
-        option.appendChild(optionText);
-        ueSelect.appendChild(option);
+    
+    if (typeof lookup[level] !== "undefined") {
+        ueSelect.innerHTML = "";
+        for (i = 0; i < lookup[level].length; i++) {
+            let option = document.createElement("option");
+            option.setAttribute('value', level + ', ' + lookup[level][i]);
+            let optionText = document.createTextNode(lookup[level][i]);
+            option.appendChild(optionText);
+            ueSelect.appendChild(option);
+        }
     }
 }
 
