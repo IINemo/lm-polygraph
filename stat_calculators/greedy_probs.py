@@ -40,20 +40,15 @@ class GreedyProbsCalculator(StatCalculator):
             if model.model_type == "CausalLM":
                 seq = sequences[i, batch['input_ids'].shape[1]:].cpu()
             else:
-                seq = sequences[i, :].cpu()
+                seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):
                 if seq[j] == model.tokenizer.eos_token_id:
                     length = j + 1
                     text_length = j
-                    break
-                    
-            if model.model_type == "CausalLM":
-                cut_sequences.append(seq[:length].tolist())
-                cut_texts.append(model.tokenizer.decode(seq[:text_length]))
-            else:
-                cut_sequences.append(seq[1:length].tolist())
-                cut_texts.append(model.tokenizer.decode(seq[1:text_length]))
+                    break 
+            cut_sequences.append(seq[:length].tolist())
+            cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())    
 
         attn_mask = []
@@ -70,9 +65,6 @@ class GreedyProbsCalculator(StatCalculator):
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
-            if (log_probs.shape[0] == (len(tokens)+1)) and (model.model_type == "Seq2SeqLM"):
-                #rare case for Seq2Seq output
-                log_probs = log_probs[:-1]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 

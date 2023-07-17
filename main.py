@@ -110,9 +110,9 @@ if __name__ == '__main__':
                 RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
                 BartScoreSeqMetric('rh'),
-                #WERTokenwiseMetric(),
                 ModelScoreSeqMetric('model_rh'),
                 ModelScoreTokenwiseMetric('model_rh'),
+                #WERTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
