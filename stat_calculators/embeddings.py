@@ -24,11 +24,11 @@ def get_embeddings_from_output(
     if model_type == "CausalLM":
         if not all_layers:
             hidden_layer = -1
-            input_tokens_hs = out.hidden_states[0][hidden_layer]
-            generated_tokens_hs = torch.cat([h[hidden_layer] for h in out.hidden_states[1:]], dim=1)
+            input_tokens_hs = output.hidden_states[0][hidden_layer]
+            generated_tokens_hs = torch.cat([h[hidden_layer] for h in output.hidden_states[1:]], dim=1)
         else:
-            input_tokens_hs = out.hidden_states[0].mean(axis=0)
-            generated_tokens_hs = torch.cat([h.mean(axis=0) for h in out.hidden_states[1:]], dim=1)
+            input_tokens_hs = output.hidden_states[0].mean(axis=0)
+            generated_tokens_hs = torch.cat([h.mean(axis=0) for h in output.hidden_states[1:]], dim=1)
         batch_embeddings_decoder = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1).mean(axis=1)
         batch_embeddings = None
     elif model_type == "Seq2SeqLM":
