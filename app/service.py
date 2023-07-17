@@ -10,7 +10,7 @@ from utils.manager import UEManager
 from utils.processor import Processor
 from utils.dataset import Dataset
 
-from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, normalize
+from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, normalize, parse_ensemble
 
 app = Flask(__name__)
 
@@ -61,8 +61,8 @@ def generate():
     )
 
     if data['model'] == 'Ensemble':
-        print('Ensemble model from paths:', data['ensembles'])
-        raise Exception('Not implemented')  # TODO: implement ensembles
+        model_path = data['path']
+        model = parse_ensemble(data['path'])
     else:
         model_path = parse_model(data['model'])
     global model
@@ -113,7 +113,7 @@ def generate():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5239)
-    parser.add_argument("--cache-path", type=str, default='/Users/ekaterinafadeeva/cache')
+    parser.add_argument("--cache-path", type=str, default='/Users/romanvashurin/cache')
     args = parser.parse_args()
     cache_path = args.cache_path
     app.run(host='localhost', port=args.port)

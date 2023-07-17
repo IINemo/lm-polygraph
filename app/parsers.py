@@ -1,8 +1,11 @@
 import json
 import sys
-import numpy as np
 
+from pathlib import Path
+
+import numpy as np
 from estimators import *
+from utils.ensemble_generator import EnsembleGenerator
 
 UE_BOUNDS_FILEPATH = 'utils/ue_bounds.json'
 
@@ -118,3 +121,17 @@ def parse_model(model: str) -> str:
             return 'openlm-research/open_llama_13b'
         case _:
             raise Exception(f'Unknown model: {model}')
+
+
+def parse_ensemble(path: str) -> EnsembleGenerator:
+    path = Path(path) 
+
+    model_paths = [model_dir for model_dir in path.iterdir()]
+
+    # TODO: implement devices for models
+    devices = ['cpu'] * (len(model_paths) - 1)
+
+    ensemble_model = EnsembleGenerator.from_pretrained(model_paths[0])
+    ensemble_model.add_ensemble_models(model_paths[1:], devices)
+
+    return ensemble_model

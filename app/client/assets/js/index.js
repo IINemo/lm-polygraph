@@ -244,6 +244,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
         var ue = Array.prototype.slice.call(document.querySelectorAll('#ue-select option:checked'),0).map(function(v,i,a) {
             return v.value;
         });
+
         // Send a POST request to the API with the prompt in the request body
         const response = await fetch(API_URL + 'get-prompt-result', {
             method: 'POST',
