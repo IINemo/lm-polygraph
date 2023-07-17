@@ -52,7 +52,7 @@ if __name__ == '__main__':
             'question', 'answer',
             batch_size=args.batch_size,
         )
-        dataset.select(list(range(1000, 1010)))
+        dataset.select(list(range(1000, 1100)))
         
         if model.model_type == "Seq2SeqLM":
             density_based_ue = [
@@ -109,7 +109,7 @@ if __name__ == '__main__':
                 RougeMetric('rouge1'),
                 RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
-                #BartScoreSeqMetric('rh'),
+                BartScoreSeqMetric('rh'),
                 #WERTokenwiseMetric(),
                 #BartScoreTokenwiseMetric('rh'),
             ],

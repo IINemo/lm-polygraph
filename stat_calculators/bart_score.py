@@ -8,8 +8,9 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from utils.model import Model
 
 
-def _batch_tokens(tokens_list: List[List[int]], model: Model):
-    max_len = max(len(tokens) for tokens in tokens_list)
+def _batch_tokens(tokens_list: List[List[int]], model: Model, max_len: int = None):
+    if max_len is None:
+        max_len = max(len(tokens) for tokens in tokens_list)
     tokens = torch.from_numpy(pad_sequences(
         tokens_list, maxlen=max_len, padding='pre', truncating='pre',
         value=model.tokenizer.pad_token_id))
@@ -34,10 +35,26 @@ class BartScoreCalculator(StatCalculator):
                     encoded_src = _batch_tokens([s + t for s, t in zip(src_list, tgt_list)], model)
                     src_tokens = encoded_src['input_ids'].to(model.device())
                     src_mask = encoded_src['attention_mask'].to(model.device())
-                    logits = model.model(
-                        input_ids=src_tokens,
-                        attention_mask=src_mask,
-                    ).logits
+                    if model.model_type == "CausalLM":
+                        logits = model.model(
+                            input_ids=src_tokens,
+                            attention_mask=src_mask,
+                        ).logits
+                    else:
+                        max_len = max(max(len(s) for s in src_list), max(len(t) for t in tgt_list))
+                        encoded_src = _batch_tokens(src_list, model, max_len=max_len)
+                        encoded_tgt = _batch_tokens(tgt_list, model, max_len=max_len)
+                        
+                        src_tokens = encoded_src['input_ids'].to(model.device())
+                        tgt_tokens = encoded_tgt['input_ids'].long().to(model.device())
+                        src_mask = encoded_src['attention_mask'].to(model.device())
+                        
+                        logits = model.model(
+                            input_ids=src_tokens,
+                            attention_mask=src_mask,
+                            labels=tgt_tokens
+                        ).logits
+                        
                     for j, sample_logits in enumerate(logits):
                         score_list.append([])
                         for token_i, logits_i in enumerate(range(len(logits) - len(tgt_list[j]) - 1, len(logits) - 1)):

@@ -168,7 +168,7 @@ class UEManager:
 
         return self.metrics
     
-    def extract_train_embeddings(self) -> torch.FloatTensor:
+    def extract_train_embeddings(self) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_embeddings_decoder = []
         train_embeddings_encoder = []
         if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]):
