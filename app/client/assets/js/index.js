@@ -54,7 +54,14 @@ var single_lookup = {
 };
 
 var ensemble_lookup = {
-   'token-level': [
+   'token-level': [],
+   'sequence-level': [
+       'EP-S-total-uncertainty',
+       'EP-S-rmi',
+       'EP-S-rmi-abs',
+       'PE-S-total-uncertainty',
+       'PE-S-rmi',
+       'PE-S-rmi-abs',
        'EP-T-total-uncertainty',
        'EP-T-data-uncertainty',
        'EP-T-mutual-information',
@@ -73,14 +80,6 @@ var ensemble_lookup = {
        'PE-T-entropy-top5',
        'PE-T-entropy-top10',
        'PE-T-entropy-top15'
-   ],
-   'sequence-level': [
-       'EP-S-total-uncertainty',
-       'EP-S-rmi',
-       'EP-S-rmi-abs',
-       'PE-S-total-uncertainty',
-       'PE-S-rmi',
-       'PE-S-rmi-abs',
    ]
 };
 

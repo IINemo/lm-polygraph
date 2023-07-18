@@ -33,7 +33,10 @@ class GreedyProbsCalculator(StatCalculator):
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1).log_softmax(-1)
-            attentions = out.attentions
+            if out.__class__.__name__ == 'GreedySearchEncoderDecoderOutput':
+                attentions = out.decoder_attentions
+            else:
+                attentions = out.attentions
             sequences = out.sequences
 
         cut_logits = []

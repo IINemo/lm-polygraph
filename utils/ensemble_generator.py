@@ -40,6 +40,16 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             self._models_list = list(models)
 
     @property
+    def tokenizer(self):
+        if hasattr(self, '_tokenizer'):
+            return self._tokenizer
+        return None
+
+    @tokenizer.setter
+    def tokenizer(self, value = None):
+        self._tokenizer = value
+
+    @property
     def models(self):
         return [self] + self._models_list
 
@@ -55,7 +65,7 @@ class EnsembleGenerator(T5ForConditionalGeneration):
 
     @property
     def mc(self):
-        if self._mc is not None:
+        if hasattr(self, '_mc') and self._mc is not None:
             return self._mc
         return False
 

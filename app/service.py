@@ -62,12 +62,13 @@ def generate():
 
     if data['model'] == 'Ensemble':
         model_path = data['path']
-        model = parse_ensemble(data['path'])
+        model, ensemble_model = parse_ensemble(data['path'])
     else:
         model_path = parse_model(data['model'])
     global model
     if model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path)
+        ensemble_model = None
     model.parameters = parameters
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
@@ -84,9 +85,13 @@ def generate():
 
     dataset = Dataset([text], [''], batch_size=1)
     processor = ResultProcessor()
+
     tok_methods = [tok_ue_methods[ue_method_name] for ue_method_name in tok_ue_method_names]
     seq_methods = [seq_ue_methods[ue_method_name] for ue_method_name in seq_ue_method_names]
-    man = UEManager(dataset, model, tok_methods + seq_methods, [], [], [processor], ignore_exceptions=False)
+    man = UEManager(dataset, model, tok_methods + seq_methods, [], [],
+                    [processor],
+                    ensemble_model=ensemble_model,
+                    ignore_exceptions=False)
     man()
 
     if len(processor.ue_estimations) != len(tok_methods) + len(seq_methods):

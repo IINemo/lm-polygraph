@@ -4,8 +4,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from transformers import AutoTokenizer, T5ForConditionalGeneration
+
 from estimators import *
 from utils.ensemble_generator import EnsembleGenerator
+from utils.model import Model
 
 UE_BOUNDS_FILEPATH = 'utils/ue_bounds.json'
 
@@ -67,6 +70,8 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return PredictiveEntropyAdaptedSampling()
         case "Adaptive Sampling Semantic Entropy":
             return SemanticEntropyAdaptedSampling()
+        case "sequence-level, EP-T-total-uncertainty":
+            return EPTtu()
         case _:
             raise Exception(f'Unknown method: {method_name}')
 
@@ -127,11 +132,16 @@ def parse_ensemble(path: str) -> EnsembleGenerator:
     path = Path(path) 
 
     model_paths = [model_dir for model_dir in path.iterdir()]
-
+    
     # TODO: implement devices for models
     devices = ['cpu'] * (len(model_paths) - 1)
 
-    ensemble_model = EnsembleGenerator.from_pretrained(model_paths[0])
-    ensemble_model.add_ensemble_models(model_paths[1:], devices)
+    model = Model.from_pretrained(model_paths[0])
 
-    return ensemble_model
+    ensemble_model = EnsembleGenerator.from_pretrained(model_paths[0]).eval()
+    models = [T5ForConditionalGeneration.from_pretrained(path).eval() for path in model_paths[1:]]
+    ensemble_model.add_ensemble_models(models, devices)
+    
+    ensemble_model.tokenizer = AutoTokenizer.from_pretrained(model_paths[0], padding_side="left", add_bos_token=True, model_max_length=256)
+
+    return model, ensemble_model
