@@ -51,7 +51,6 @@ def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level
 def generate():
     data = request.get_json()
     print(f'Request data: {data}')
-    model_path = parse_model(data['model'])
 
     parameters = GenerationParameters(
         temperature=float(data['parameters']['temperature']),
@@ -61,11 +60,15 @@ def generate():
         num_beams=int(data['parameters']['num_beams']),
     )
 
+    if data['model'] == 'Ensemble':
+        print('Ensemble model from paths:', data['ensembles'])
+        raise Exception('Not implemented')  # TODO: implement ensembles
+    else:
+        model_path = parse_model(data['model'])
     global model
     if model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path)
-    if model.parameters != parameters:
-        model.parameters = parameters
+    model.parameters = parameters
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
     seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []

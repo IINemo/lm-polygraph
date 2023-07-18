@@ -18,7 +18,7 @@ app.use('/', express.static(__dirname + '/client')); // Serves resources from cl
 
 app.post('/get-prompt-result', async (req, res) => {
     // Get the prompt from the request body
-    const {prompt, model, tok_ue, seq_ue, temperature, topk, topp, do_sample, num_beams} = req.body;
+    const {prompt, model, ensembles, tok_ue, seq_ue, temperature, topk, topp, do_sample, num_beams} = req.body;
 
     // Check if prompt is present in the request
     if (!prompt) {
@@ -32,6 +32,7 @@ app.post('/get-prompt-result', async (req, res) => {
 
         const result = await openai.createChatCompletion({
             model: model,
+            ensembles: ensembles,
             tok_ue: tok_ue,
             seq_ue: seq_ue,
             parameters: {

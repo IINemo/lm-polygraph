@@ -9,12 +9,9 @@
     <link rel="stylesheet" href="./assets/css/index.css">
     <link rel="icon" href="favicon.ico"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description"
-          content="Experience OpenAI API with this simple web application"/>
 </head>
 </html>
   <body>
-
 
 <div id="response-list">
 </div>
@@ -27,102 +24,28 @@
 
     <div id="select-container">
 
-        <div id="model">
-          <treeselect v-model="value" :multiple="false" :options="options" placeholder="Select model"/>
+        <div id="model" class="model">
+          <div class="ensemble-options">
+            <label class="ensemble-directory" v-if="modelSelected.includes('Ensemble')" for="ensemble-path-input"
+                   style="color: black; font-size: 14px">
+                Choose directory with ensemble models:</label>
+            <input v-if="modelSelected.includes('Ensemble')" v-model="value"
+                   id="ensemble-path-input" class="ensemble-path-input"
+                   type="file" webkitdirectory="true" directory>
+          </div>
+          <treeselect v-model="modelSelected" :multiple="false" :options="options" :clear-on-select="false"
+                      placeholder="Select model"></treeselect>
         </div>
-        <script>
-        // register the component
-        Vue.component('treeselect', VueTreeselect.Treeselect)
-
-        new Vue({
-          el: '#model',
-          data: {
-            value: 'Bloomz 560M',
-            options: [
-                { id: 'Ensemble', label: 'Ensemble'},
-                { id: 'Dolly 3b', label: 'Dolly 3b'},
-                { id: 'Dolly 7b', label: 'Dolly 7b'},
-                { id: 'Dolly 12b', label: 'Dolly 12b'},
-                { id: 'Bloomz 560M', label: 'Bloomz 560M'},
-                { id: 'Bloomz 3b', label: 'Bloomz 3b'},
-                { id: 'Bloomz 7b', label: 'Bloomz 7b'},
-                { id: 'Falcon 7b', label: 'Falcon 7b'},
-                { id: 'Llama 3b', label: 'Llama 3b'},
-                { id: 'Llama 7b', label: 'Llama 7b'},
-                { id: 'Llama 13b', label: 'Llama 13b'}
-            ],
-          },
-        })
-        </script>
 
         <div id="seque">
-          <treeselect
-                  v-model="value"
-                  :multiple="true"
-                  :options="options"
-                  placeholder="Select sequence-level estimators"
-          />
+          <treeselect v-model="sequeSelected" :multiple="true" :options="computedOptions"
+                  placeholder="Select sequence-level estimators"></treeselect>
         </div>
-        <script>
-        // register the component
-        Vue.component('treeselect', VueTreeselect.Treeselect)
-
-        new Vue({
-          el: '#seque',
-          data: {
-            value: [],
-            options: [
-            { id: 'Maximum Probability', label: 'Maximum Probability'},
-            { id: 'Normalized Maximum Probability', label: 'Normalized Maximum Probability'},
-            { id: 'Entropy', label: 'Entropy'},
-            { id: 'Mutual Information', label: 'Mutual Information'},
-            { id: 'Conditional Mutual Information', label: 'Conditional Mutual Information'},
-            { id: 'Attention Entropy', label: 'Attention Entropy'},
-            { id: 'Attention Recursive Entropy', label: 'Attention Recursive Entropy'},
-            { id: 'Exponential Attention Entropy', label: 'Exponential Attention Entropy'},
-            { id: 'Exponential Attention Recursive Entropy', label: 'Exponential Attention Recursive Entropy'},
-            { id: 'P(True)', label: 'P(True)'},
-            { id: 'P(Uncertainty)', label: 'P(Uncertainty)'},
-            { id: 'Predictive Entropy Sampling', label: 'Predictive Entropy Sampling'},
-            { id: 'Normalized Predictive Entropy Sampling', label: 'Normalized Predictive Entropy Sampling'},
-            { id: 'Lexical Similarity Rouge-1', label: 'Lexical Similarity Rouge-1'},
-            { id: 'Lexical Similarity Rouge-2', label: 'Lexical Similarity Rouge-2'},
-            { id: 'Lexical Similarity Rouge-L', label: 'Lexical Similarity Rouge-L'},
-            { id: 'Lexical Similarity Rouge-BLEU', label: 'Lexical Similarity Rouge-BLEU'},
-            { id: 'Semantic Entropy', label: 'Semantic Entropy'},
-            { id: 'Adaptive Sampling Predictive Entropy', label: 'Adaptive Sampling Predictive Entropy'},
-            { id: 'Adaptive Sampling Semantic Entropy', label: 'Adaptive Sampling Semantic Entropy'}
-            ],
-          },
-        })
-        </script>
 
         <div id="tokue">
-          <treeselect v-model="value" :multiple="true" :options="options" placeholder="Select token-level estimators"/>
+          <treeselect v-model="tokueSelected" :multiple="true" :options="computedOptions"
+                      placeholder="Select token-level estimators"></treeselect>
         </div>
-        <script>
-        // register the component
-        Vue.component('treeselect', VueTreeselect.Treeselect)
-
-        new Vue({
-          el: '#tokue',
-          data: {
-            value: [],
-            options: [
-            { id: 'Maximum Probability', label: 'Maximum Probability'},
-            { id: 'Normalized Maximum Probability', label: 'Normalized Maximum Probability'},
-            { id: 'Entropy', label: 'Entropy'},
-            { id: 'Mutual Information', label: 'Mutual Information'},
-            { id: 'Conditional Mutual Information', label: 'Conditional Mutual Information'},
-            { id: 'Attention Entropy', label: 'Attention Entropy'},
-            { id: 'Attention Recursive Entropy', label: 'Attention Recursive Entropy'},
-            { id: 'Exponential Attention Entropy', label: 'Exponential Attention Entropy'},
-            { id: 'Exponential Attention Recursive Entropy', label: 'Exponential Attention Recursive Entropy'},
-            { id: 'Semantic Entropy', label: 'Semantic Entropy'}
-            ],
-          },
-        })
-        </script>
 
         <div>
           <button class="settings-button" id="settings-button" style="padding:10px">
@@ -130,7 +53,7 @@
           </button>
             <div class="modal" id="modal">
               <div class="modal-content" id="modal-content">
-                <span class="close" id="close">&times;</span>
+                  <span class="close" id="close">&times;</span>
                   <div class="temp-input" id="temp-input">
                         <label class="temp-label"> temperature:</label>
                         <div class="temp-slider">
@@ -179,6 +102,7 @@
         <button id="submit-button"></button>
     </div>
 </div>
+<script src="./assets/js/select.js"></script>
 <script src="./assets/js/highlight.min.js"></script>
 <script src="./assets/js/showdown.min.js"></script>
 <script src="./assets/js/index.js"></script>

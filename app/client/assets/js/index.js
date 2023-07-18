@@ -163,9 +163,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     // Get the prompt input
     const prompt = _promptToRetry ?? promptInput.textContent;
 
-    const model = modelSelect.__vue__.value;
-    const tok_ue = tokUeSelect.__vue__.value;
-    const seq_ue = seqUeSelect.__vue__.value;
+    const model = modelSelect.__vue__.modelSelected;
+    const tok_ue = tokUeSelect.__vue__.tokueSelected;
+    const seq_ue = seqUeSelect.__vue__.sequeSelected;
 
     let tok_str = "None";
     if (tok_ue.length > 0) {
@@ -208,6 +208,13 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     // Set isGeneratingResponse to true
     isGeneratingResponse = true;
 
+    var ensemblePathInput = document.getElementById('ensemble-path-input');
+    var ensembles = [];
+    if (ensemblePathInput && ensemblePathInput.files) {
+        for (var i = 0; i < ensemblePathInput.files.length; i++)
+            ensembles.push(ensemblePathInput.files[i].name);
+    }
+
     try {
         // Send a POST request to the API with the prompt in the request body
         const response = await fetch(API_URL + 'get-prompt-result', {
@@ -216,6 +223,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
             body: JSON.stringify({
                 prompt,
                 model,
+                ensembles,
                 tok_ue,
                 seq_ue,
                 temperature,
@@ -262,6 +270,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 submitButton.addEventListener("click", () => {
     getGPTResult();
 });
+
 regenerateResponseButton.addEventListener("click", () => {
     regenerateGPTResult();
 });

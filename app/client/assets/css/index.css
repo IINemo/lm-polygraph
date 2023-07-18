@@ -20,6 +20,15 @@ select {
     text-overflow: ellipsis;
 }
 
+.model {
+    width: 30%;
+}
+
+.ensemble-options {
+    background: white;
+    border-radius: 5px;
+}
+
 /* Remove border color from the response list container */
 #response-list {
     border: none;
