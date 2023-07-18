@@ -84,6 +84,8 @@ def parse_ue_method(method_name: str, model_path: str, cache_path: str) -> Estim
             return PredictiveEntropyAdaptedSampling()
         case "sequence-level, Adaptive Sampling Semantic Entropy":
             return SemanticEntropyAdaptedSampling()
+        case "sequence-level, Mahalanobis Distance":
+            return MahalanobisDistanceSeq()
         case _:
             raise Exception(f'Unknown method: {method_name}')
 
@@ -110,5 +112,11 @@ def parse_model(model: str) -> str:
             return 'openlm-research/open_llama_7b'
         case 'Llama 13b':
             return 'openlm-research/open_llama_13b'
+        case 'BART Large CNN':
+            return 'facebook/bart-large-cnn'
+        case 'T5 XL NQ':
+            return 'google/t5-xl-ssm-nq'
+        case 'Flan T5 XL':
+            return 'google/flan-t5-xl'
         case _:
             raise Exception(f'Unknown model: {model}')

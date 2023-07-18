@@ -40,8 +40,9 @@ def generate():
     model_path = parse_model(data['model'])
 
     global model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if model is None or model.model_path != model_path:
-        model = Model.from_pretrained(model_path)
+        model = Model.from_pretrained(model_path, device=device)
 
     ue_method_names = data['ue']
     text = data['messages'][0]['content']
