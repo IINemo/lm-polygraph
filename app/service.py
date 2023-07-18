@@ -1,5 +1,6 @@
 import numpy as np
 import argparse
+import torch
 
 from typing import Optional, Dict, Tuple, List
 
@@ -69,13 +70,7 @@ def generate():
         print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
     uncertainties = np.array(uncertainties).reshape(len(methods), len(uncertainties[0]))
     uncertainty = np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
-    tokens = []
-    for t in processor.stats['greedy_tokens'][0][:-1]:
-        tokens.append(model.tokenizer.decode([t]))
-    if len(tokens) > 0:
-        tokens[0] = tokens[0].lstrip()
-        tokens[-1] = tokens[-1].rstrip()
-
+    tokens = model.tokenizer.batch_decode(processor.stats['greedy_tokens'], skip_special_tokens=True)    
     return {'generation': tokens, 'uncertainty': uncertainty}
 
 

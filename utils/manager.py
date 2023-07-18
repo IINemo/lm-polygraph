@@ -62,13 +62,13 @@ def _delete_nans(ue, metric):
 class UEManager:
     def __init__(
             self,
-            train_data: Dataset,
             data: Dataset,
             model: Model,
             estimators: List[Estimator],
             generation_metrics: List[GenerationMetric],
             ue_metrics: List[UEMetric],
             processors: List[Processor],
+            train_data: Dataset = None,
     ):
         self.model: Model = model
         self.train_data: Dataset = train_data

@@ -118,5 +118,7 @@ def parse_model(model: str) -> str:
             return 'google/t5-xl-ssm-nq'
         case 'Flan T5 XL':
             return 'google/flan-t5-xl'
+        case 'OPT 2.7b':
+            return 'facebook/opt-2.7b'
         case _:
             raise Exception(f'Unknown model: {model}')

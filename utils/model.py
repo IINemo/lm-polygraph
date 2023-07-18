@@ -16,10 +16,10 @@ class Model:
 
     @staticmethod
     def from_pretrained(model_path: str, device: str = 'cpu'):
-        config = AutoConfig.from_pretrained(model_path)
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
-            model = AutoModelForCausalLM.from_pretrained(model_path, max_length=256).to(device)
+            model = AutoModelForCausalLM.from_pretrained(model_path, max_length=256, trust_remote_code=True).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
@@ -29,7 +29,12 @@ class Model:
             
         tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
                                                   model_max_length=256)
+        
         model.eval()
+        
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token 
+            
         return Model(model, tokenizer, model_path, model_type)
 
     @staticmethod
@@ -40,5 +45,8 @@ class Model:
         return Model(model, tokenizer, model_path)
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+        if ("falcon" in self.model.config._name_or_path) or ("llama" in self.model.config._name_or_path):
+            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt', return_token_type_ids=False)
+        else:
+            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
         return tokenized
