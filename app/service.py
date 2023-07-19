@@ -6,16 +6,18 @@ from typing import Optional, Dict, Tuple, List
 
 from flask import Flask, request, abort
 from utils.model import Model
+from utils.generation_parameters import GenerationParameters
 from utils.manager import UEManager
 from utils.processor import Processor
 from utils.dataset import Dataset
 
-from app.parsers import parse_model, parse_ue_method, Estimator, normalize
+from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, normalize
 
 app = Flask(__name__)
 
 model: Optional[Model] = None
-ue_methods: Dict[str, Estimator] = {}
+tok_ue_methods: Dict[str, Estimator] = {}
+seq_ue_methods: Dict[str, Estimator] = {}
 cache_path: str = '/Users/ekaterinafadeeva/cache'
 
 
@@ -34,44 +36,77 @@ class ResultProcessor(Processor):
         self.ue_estimations = batch_estimations
 
 
-@app.route('/chat/completions', methods=['GET', 'POST'])
-def generate():
-    data = request.get_json()
-    print(f'Request data: {data}')
-    model_path = parse_model(data['model'])
-
-    global model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if model is None or model.model_path != model_path:
-        model = Model.from_pretrained(model_path, device=device)
-
-    ue_method_names = data['ue']
-    text = data['messages'][0]['content']
-
-    level = 'token' if 'token-level' in ue_method_names[0] else 'sequence'
-
-    for ue_method_name in ue_method_names:
-        if ue_method_name not in ue_methods.keys():
-            ue_methods[ue_method_name] = parse_ue_method(ue_method_name, model_path, cache_path)
-
-    dataset = Dataset([text], [''], batch_size=1)
-    processor = ResultProcessor()
-    methods = [ue_methods[ue_method_name] for ue_method_name in ue_method_names]
-    man = UEManager(dataset, model, methods, [], [], [processor])
-    man()
-
-    if len(processor.ue_estimations) != len(ue_method_names):
-        abort(500,
-              description=f'Internal: expected single uncertainty estimator, got: {processor.ue_estimations.keys()}')
-    print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
+def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level: str):
+    if len(methods) == 0:
+        return []
     uncertainties = []
     for method in methods:
         uncertainties.append([normalize(method, x) for x in processor.ue_estimations[level, str(method)]])
         print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
-    uncertainties = np.array(uncertainties).reshape(len(methods), len(uncertainties[0]))
-    uncertainty = np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
+    uncertainties = np.array(uncertainties)
+    uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
+    return np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
+
+
+@app.route('/chat/completions', methods=['GET', 'POST'])
+def generate():
+    data = request.get_json()
+    print(f'Request data: {data}')
+
+    parameters = GenerationParameters(
+        temperature=float(data['parameters']['temperature']),
+        topk=int(data['parameters']['topk']),
+        topp=float(data['parameters']['topp']),
+        do_sample=(data['parameters']['do_sample'] == 'on'),
+        num_beams=int(data['parameters']['num_beams']),
+    )
+
+    if data['model'] == 'Ensemble':
+        print('Ensemble model from paths:', data['ensembles'])
+        raise Exception('Not implemented')  # TODO: implement ensembles
+    else:
+        model_path = parse_model(data['model'])
+    global model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if model is None or model.model_path != model_path:
+        model = Model.from_pretrained(model_path, device=device)
+        model = Model.from_pretrained(model_path)
+    model.parameters = parameters
+
+    tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
+    seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
+    text = data['messages'][0]['content']
+
+    for ue_method_name in tok_ue_method_names:
+        if ue_method_name not in tok_ue_methods.keys():
+            tok_ue_methods[ue_method_name] = parse_tok_ue_method(ue_method_name, model_path, cache_path)
+
+    for ue_method_name in seq_ue_method_names:
+        if ue_method_name not in seq_ue_methods.keys():
+            seq_ue_methods[ue_method_name] = parse_seq_ue_method(ue_method_name, model_path, cache_path)
+
+    dataset = Dataset([text], [''], batch_size=1)
+    processor = ResultProcessor()
+    tok_methods = [tok_ue_methods[ue_method_name] for ue_method_name in tok_ue_method_names]
+    seq_methods = [seq_ue_methods[ue_method_name] for ue_method_name in seq_ue_method_names]
+    man = UEManager(dataset, model, tok_methods + seq_methods, [], [], [processor], ignore_exceptions=False)
+    man()
+
+    if len(processor.ue_estimations) != len(tok_methods) + len(seq_methods):
+        abort(500,
+              description=f'Internal: expected {len(tok_methods) + len(seq_methods)} estimations, '
+                          f'got: {processor.ue_estimations.keys()}')
+    print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
+
+    tok_uncertainty = _get_uncertainty(processor, tok_methods, 'token')
+    seq_uncertainty = _get_uncertainty(processor, seq_methods, 'sequence')
     tokens = model.tokenizer.batch_decode(processor.stats['greedy_tokens'], skip_special_tokens=True)    
-    return {'generation': tokens, 'uncertainty': uncertainty}
+
+    return {
+        'generation': tokens,
+        'token_uncertainty': tok_uncertainty,
+        'sequence_uncertainty': seq_uncertainty,
+    }
 
 
 if __name__ == '__main__':

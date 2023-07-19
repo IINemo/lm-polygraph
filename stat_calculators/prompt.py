@@ -9,7 +9,7 @@ from utils.model import Model
 
 class PromptCalculator(StatCalculator):
     def __init__(self, prompt: str, expected: str, method: str):
-        super().__init__([method], ['greedy_texts'])
+        super().__init__([method], ['greedy_texts', 'sample_texts'])
         self.method = method
         self.prompt = prompt
         self.expected = expected
@@ -20,7 +20,9 @@ class PromptCalculator(StatCalculator):
         expected_token = expected_tokens[0]
 
         answers = dependencies['greedy_texts']
-        inp_texts = [self.prompt.format(q=text, a=ans) for text, ans in zip(texts, answers)]
+        samples = dependencies['sample_texts']
+        inp_texts = [self.prompt.format(q=text, s=', '.join(sample), a=ans)
+                     for text, ans, sample in zip(texts, answers, samples)]
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():

@@ -69,6 +69,7 @@ class UEManager:
             ue_metrics: List[UEMetric],
             processors: List[Processor],
             train_data: Dataset = None,
+            ignore_exceptions: bool = True
     ):
         self.model: Model = model
         self.train_data: Dataset = train_data
@@ -89,6 +90,7 @@ class UEManager:
         self.stats: Dict[str, List] = defaultdict(list)
 
         self.processors = processors
+        self.ignore_exceptions = ignore_exceptions
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         
@@ -120,8 +122,11 @@ class UEManager:
                             continue
                         batch_stats[stat] = stat_value
             except Exception as e:
-                sys.stderr.write(f'Caught exception while calculating stats: {e}')
-                continue
+                if self.ignore_exceptions:
+                    sys.stderr.write(f'Caught exception while calculating stats: {e}')
+                    continue
+                else:
+                    raise e
 
             if len(train_embeddings_decoder):
                 batch_stats["train_embeddings_decoder"] = train_embeddings_decoder
