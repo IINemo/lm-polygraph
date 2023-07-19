@@ -17,4 +17,5 @@ from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
 from .semantic_entropy_adapted_sampling import SemanticEntropyAdaptedSampling
 from .predictive_entropy_adapted_sampling import PredictiveEntropyAdaptedSampling
-from .ensemble_token_measures import EPTtu
+from .ensemble_token_measures import EPTtu, EPTdu, EPTmi, EPTrmi, EPTepkl, EPTepkltu, EPTent5, EPTent10, EPTent15, PETtu, PETdu, PETmi, PETrmi, PETepkl, PETepkltu, PETent5, PETent10, PETent15
+from .ensemble_sequence_measures import EPStu, EPSrmi, EPSrmiabs, PEStu, PESrmi, PESrmiabs

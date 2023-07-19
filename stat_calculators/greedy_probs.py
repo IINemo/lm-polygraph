@@ -33,7 +33,8 @@ class GreedyProbsCalculator(StatCalculator):
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1).log_softmax(-1)
-            if out.__class__.__name__ == 'GreedySearchEncoderDecoderOutput':
+            if (out.__class__.__name__ == 'GreedySearchEncoderDecoderOutput') or \
+               (out.__class__.__name__ == 'GreedySearchEncoderDecoderOutput'):
                 attentions = out.decoder_attentions
             else:
                 attentions = out.attentions
@@ -43,6 +44,8 @@ class GreedyProbsCalculator(StatCalculator):
         cut_sequences = []
         cut_texts = []
         for i in range(len(texts)):
+            # TODO: Only works for decoder-only models
+            # Adapt for enc-dec ones.
             seq = sequences[i, batch['input_ids'].shape[1]:].cpu()
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):

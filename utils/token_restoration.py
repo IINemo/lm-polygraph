@@ -161,8 +161,6 @@ def collect_token_level_uncertainties(
     if aggregate_models:
         num_models = len(model_output['models_scores'][0])
         models_sequence_scores = torch.zeros(batch_size, num_models, beam_size, seq_len)
-        models_top1_diversity = torch.zeros(batch_size, beam_size, seq_len)
-        models_var_diversity = torch.full((batch_size, beam_size, seq_len), torch.nan)
 
     if 'sequences_scores' not in model_output:
         sequence_scores = torch.zeros(batch_size, beam_size, seq_len)
@@ -202,12 +200,8 @@ def collect_token_level_uncertainties(
                         for i, model_logits in enumerate(model_output['models_scores'][_iter]):
                             model_logits = model_logits.reshape(batch_size, beam_size, vocab_size)
                             model_posterior = model_logits[obs_id, beam_id].cpu().exp()
-                            models_top1s.append(model_posterior.argmax().item())
-                            models_vars.append((model_posterior - posterior).norm(p=2) ** 2)
                             models_sequence_scores[obs_id, i, seq_i, _iter] = \
                                model_logits[obs_id, beam_id, token] 
-                        models_top1_diversity[obs_id, seq_i, _iter] = len(set(models_top1s))
-                        models_var_diversity[obs_id, seq_i, _iter] = torch.stack(models_vars).sum()
 
                     entropies = {}
                     entropies['entropy'] = entropy(posterior)
@@ -231,8 +225,6 @@ def collect_token_level_uncertainties(
         models_sequence_scores = models_sequence_scores.sum(dim=-1).to(device) / seq_penalty
         token_level_uncertainties['log_probas'] = models_sequence_scores
         token_level_uncertainties['probas'] = models_sequence_scores.exp()
-        token_level_uncertainties['top1_diversity'] = models_top1_diversity[models_top1_diversity != 0.0].mean()
-        token_level_uncertainties['var_diversity'] = models_var_diversity[~models_var_diversity.isnan()].mean()
 
     beam_scores = model_output['sequences_scores'].reshape(batch_size, beam_size)
     entropy_s = entropy(beam_scores.exp().cpu().detach().numpy(), axis=-1)    

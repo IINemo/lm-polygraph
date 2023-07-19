@@ -49,7 +49,7 @@ var single_lookup = {
         'Lexical Similarity Rouge-BLEU',
         'Semantic Entropy',
         'Adaptive Sampling Predictive Entropy',
-        'Adaptive Sampling Semantic Entropy'
+        'Adaptive Sampling Semantic Entropy',
    ]
 };
 

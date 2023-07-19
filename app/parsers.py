@@ -72,6 +72,52 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return SemanticEntropyAdaptedSampling()
         case "sequence-level, EP-T-total-uncertainty":
             return EPTtu()
+        case "sequence-level, EP-T-data-uncertainty":
+            return EPTdu()
+        case "sequence-level, EP-T-mutual-information":
+            return EPTmi()
+        case "sequence-level, EP-T-rmi":
+            return EPTrmi()
+        case "sequence-level, EP-T-epkl":
+            return EPTepkl()
+        case "sequence-level, EP-T-epkl-tu":
+            return EPTepkltu()
+        case "sequence-level, EP-T-entropy-top5":
+            return EPTent5()
+        case "sequence-level, EP-T-entropy-top10":
+            return EPTent10()
+        case "sequence-level, EP-T-entropy-top15":
+            return EPTent15()
+        case "sequence-level, PE-T-total-uncertainty":
+            return PETtu()
+        case "sequence-level, PE-T-data-uncertainty":
+            return PETdu()
+        case "sequence-level, PE-T-mutual-information":
+            return PETmi()
+        case "sequence-level, PE-T-rmi":
+            return PETrmi()
+        case "sequence-level, PE-T-epkl":
+            return PETepkl()
+        case "sequence-level, PE-T-epkl-tu":
+            return PETepkltu()
+        case "sequence-level, PE-T-entropy-top5":
+            return PETent5()
+        case "sequence-level, PE-T-entropy-top10":
+            return PETent10()
+        case "sequence-level, PE-T-entropy-top15":
+            return PETent15()
+        case "sequence-level, EP-S-total-uncertainty":
+            return EPStu()
+        case "sequence-level, EP-S-rmi":
+            return EPSrmi()
+        case "sequence-level, EP-S-rmi-abs":
+            return EPSrmiabs()
+        case "sequence-level, PE-S-total-uncertainty":
+            return PEStu()
+        case "sequence-level, PE-S-rmi":
+            return PESrmi()
+        case "sequence-level, PE-S-rmi-abs":
+            return PESrmiabs()
         case _:
             raise Exception(f'Unknown method: {method_name}')
 
@@ -104,25 +150,25 @@ def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> E
 
 def parse_model(model: str) -> str:
     match model:
-        case 'Dolly 3b':
+        case "Dolly 3b":
             return 'databricks/dolly-v2-3b'
-        case 'Dolly 7b':
+        case "Dolly 7b":
             return 'databricks/dolly-v2-7b'
-        case 'Dolly 12b':
+        case "Dolly 12b":
             return 'databricks/dolly-v2-12b'
-        case 'Bloomz 560M':
+        case "Bloomz 560M":
             return 'bigscience/bloomz-560m'
-        case 'Bloomz 3b':
+        case "Bloomz 3b":
             return 'bigscience/bloomz-3b'
-        case 'Bloomz 7b':
+        case "Bloomz 7b":
             return 'bigscience/bloomz-7b1'
-        case 'Falcon 7b':
+        case "Falcon 7b":
             return 'tiiuae/falcon-7b'
-        case 'Llama 3b':
+        case "Llama 3b":
             return 'openlm-research/open_llama_3b'
-        case 'Llama 7b':
+        case "Llama 7b":
             return 'openlm-research/open_llama_7b'
-        case 'Llama 13b':
+        case "Llama 13b":
             return 'openlm-research/open_llama_13b'
         case _:
             raise Exception(f'Unknown model: {model}')
