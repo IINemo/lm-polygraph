@@ -60,13 +60,12 @@ def generate():
         num_beams=int(data['parameters']['num_beams']),
     )
 
+    global model
     if data['model'] == 'Ensemble':
-        model_path = data['path']
-        model, ensemble_model = parse_ensemble(data['path'])
+        model_path = data['ensembles']
+        model, ensemble_model = parse_ensemble(model_path)
     else:
         model_path = parse_model(data['model'])
-    global model
-    if model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path)
         ensemble_model = None
     model.parameters = parameters

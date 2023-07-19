@@ -18,7 +18,7 @@ app.use('/', express.static(__dirname + '/client')); // Serves resources from cl
 
 app.post('/get-prompt-result', async (req, res) => {
     // Get the prompt from the request body
-    const {prompt, model, ue, level, type, ensPath} = req.body;
+    const {prompt, model, ensembles, tok_ue, seq_ue, temperature, topk, topp, do_sample, num_beams} = req.body;
 
     // Check if prompt is present in the request
     if (!prompt) {
@@ -32,32 +32,40 @@ app.post('/get-prompt-result', async (req, res) => {
 
         const result = await openai.createChatCompletion({
             model: model,
-            ue: ue,
-            type: type,
-            path: ensPath,
+            ensembles: ensembles,
+            tok_ue: tok_ue,
+            seq_ue: seq_ue,
+            parameters: {
+                temperature: temperature,
+                topk: topk,
+                topp: topp,
+                do_sample: do_sample,
+                num_beams: num_beams,
+            },
             messages: [
                 { role: "user", content: prompt }
             ]
         })
         let generation = result.data.generation;
-        let uncertainty = result.data.uncertainty;
+        let tok_uncertainty = result.data.token_uncertainty;
+        let seq_uncertainty = result.data.sequence_uncertainty;
 
         console.log('Model output:')
         console.log('  generation: ' + generation)
-        console.log('  uncertainty: ' + uncertainty);
+        console.log('  token uncertainty: ' + tok_uncertainty);
+        console.log('  sequence uncertainty: ' + seq_uncertainty);
 
         let response = '';
         let started_border = false;
         let uncertainty_thrs = 0.2;
-        let token_level = (level == 'token-level');
         for (let i = 0; i < generation.length; i++) {
-            if (!token_level || uncertainty[i] >= uncertainty_thrs) {
+            if (tok_uncertainty[i] >= uncertainty_thrs || tok_uncertainty.length == 0) {
                 response += generation[i];
                 continue;
             }
             const white = 100;
-            const green = white + Math.floor((255 - white) * uncertainty[i]);
-            const red = white + Math.floor((255 - white) * (1 - uncertainty[i]));
+            const green = white + Math.floor((255 - white) * tok_uncertainty[i]);
+            const red = white + Math.floor((255 - white) * (1 - tok_uncertainty[i]));
             const color = 'rgb(' + red + ', ' + green + ', ' + white + ')';
             for (let j = 0; j < generation[i].length - generation[i].trimLeft().length; j++) {
                 response += ' ';
@@ -72,7 +80,7 @@ app.post('/get-prompt-result', async (req, res) => {
                 if (generation[i].slice(-1) == ' ' || i + 1 == generation.length || (
                         i + 1 < generation.length &&
                         (generation[i + 1][0] == ' ' ||
-                         uncertainty[i + 1] >= uncertainty_thrs))) {
+                         tok_uncertainty[i + 1] >= uncertainty_thrs))) {
                     right_border = true;
                     started_border = false;
                 }
@@ -92,21 +100,22 @@ app.post('/get-prompt-result', async (req, res) => {
             }
         }
 
-        if (!token_level) {
+        if (seq_uncertainty.length != 0) {
             const white = 100;
-            const green = white + Math.floor((255 - white) * uncertainty[0]);
-            const red = white + Math.floor((255 - white) * (1 - uncertainty[0]));
+            const green = white + Math.floor((255 - white) * seq_uncertainty[0]);
+            const red = white + Math.floor((255 - white) * (1 - seq_uncertainty[0]));
             const color = 'rgb(' + red + ', ' + green + ', ' + white + ')';
-            response += '\n<span style="color: rgb(178, 190, 181)">Uncertainty: </span>';
+            response += '<div style="line-height:1%;"><br></div><span style="color: rgb(178, 190, 181)">Confidence: </span>';
             response += '<span style="background-color:' + color + ';border-radius:10px;padding: 3px;">';
-            response += Math.round(uncertainty[0] * 100) + '%';
+            response += Math.round(seq_uncertainty[0] * 100) + '%';
             response += '</span>';
         }
 
-        if (generation.length != 0) {
-            response += '\n<span style="color: rgb(178, 190, 181); font-size: 12px">Uncertainty estimation: ' + ue + '</span>';
-            response += '\n<span style="color: rgb(178, 190, 181); font-size: 12px">Model: ' + model + '</span>';
-        }
+//        if (generation.length != 0) {
+//            response += '\n<span style="color: rgb(178, 190, 181); font-size: 12px">Model: ' + model + '</span>';
+//            response += '\n<span style="color: rgb(178, 190, 181); font-size: 12px">Token-level uncertainty: ' + tok_ue + '</span>';
+//            response += '\n<span style="color: rgb(178, 190, 181); font-size: 12px">Sequence-level uncertainty: ' + seq_ue + '</span>';
+//        }
 
         return res.send(response);
     } catch (error) {

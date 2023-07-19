@@ -70,53 +70,53 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return PredictiveEntropyAdaptedSampling()
         case "Adaptive Sampling Semantic Entropy":
             return SemanticEntropyAdaptedSampling()
-        case "sequence-level, EP-T-total-uncertainty":
+        case "EP-T-total-uncertainty":
             return EPTtu()
-        case "sequence-level, EP-T-data-uncertainty":
+        case "EP-T-data-uncertainty":
             return EPTdu()
-        case "sequence-level, EP-T-mutual-information":
+        case "EP-T-mutual-information":
             return EPTmi()
-        case "sequence-level, EP-T-rmi":
+        case "EP-T-rmi":
             return EPTrmi()
-        case "sequence-level, EP-T-epkl":
+        case "EP-T-epkl":
             return EPTepkl()
-        case "sequence-level, EP-T-epkl-tu":
+        case "EP-T-epkl-tu":
             return EPTepkltu()
-        case "sequence-level, EP-T-entropy-top5":
+        case "EP-T-entropy-top5":
             return EPTent5()
-        case "sequence-level, EP-T-entropy-top10":
+        case "EP-T-entropy-top10":
             return EPTent10()
-        case "sequence-level, EP-T-entropy-top15":
+        case "EP-T-entropy-top15":
             return EPTent15()
-        case "sequence-level, PE-T-total-uncertainty":
+        case "PE-T-total-uncertainty":
             return PETtu()
-        case "sequence-level, PE-T-data-uncertainty":
+        case "PE-T-data-uncertainty":
             return PETdu()
-        case "sequence-level, PE-T-mutual-information":
+        case "PE-T-mutual-information":
             return PETmi()
-        case "sequence-level, PE-T-rmi":
+        case "PE-T-rmi":
             return PETrmi()
-        case "sequence-level, PE-T-epkl":
+        case "PE-T-epkl":
             return PETepkl()
-        case "sequence-level, PE-T-epkl-tu":
+        case "PE-T-epkl-tu":
             return PETepkltu()
-        case "sequence-level, PE-T-entropy-top5":
+        case "PE-T-entropy-top5":
             return PETent5()
-        case "sequence-level, PE-T-entropy-top10":
+        case "PE-T-entropy-top10":
             return PETent10()
-        case "sequence-level, PE-T-entropy-top15":
+        case "PE-T-entropy-top15":
             return PETent15()
-        case "sequence-level, EP-S-total-uncertainty":
+        case "EP-S-total-uncertainty":
             return EPStu()
-        case "sequence-level, EP-S-rmi":
+        case "EP-S-rmi":
             return EPSrmi()
-        case "sequence-level, EP-S-rmi-abs":
+        case "EP-S-rmi-abs":
             return EPSrmiabs()
-        case "sequence-level, PE-S-total-uncertainty":
+        case "PE-S-total-uncertainty":
             return PEStu()
-        case "sequence-level, PE-S-rmi":
+        case "PE-S-rmi":
             return PESrmi()
-        case "sequence-level, PE-S-rmi-abs":
+        case "PE-S-rmi-abs":
             return PESrmiabs()
         case _:
             raise Exception(f'Unknown method: {method_name}')

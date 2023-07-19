@@ -68,7 +68,7 @@ class UEManager:
             generation_metrics: List[GenerationMetric],
             ue_metrics: List[UEMetric],
             processors: List[Processor],
-            ignore_exceptions: bool = True
+            ignore_exceptions: bool = True,
             ensemble_model: Optional[EnsembleGenerator] = None
     ):
         self.model: Model = model
