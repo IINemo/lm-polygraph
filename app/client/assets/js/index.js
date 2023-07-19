@@ -209,11 +209,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     isGeneratingResponse = true;
 
     var ensemblePathInput = document.getElementById('ensemble-path-input');
-//    var ensembles = [];
-//    if (ensemblePathInput && ensemblePathInput.files) {
-//        for (var i = 0; i < ensemblePathInput.files.length; i++)
-//            ensembles.push(ensemblePathInput.files[i].name);
-//    }
     var ensembles
     if (ensemblePathInput) {
         var ensembles = ensemblePathInput.value
