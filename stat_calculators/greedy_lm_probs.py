@@ -16,7 +16,10 @@ class GreedyLMProbsCalculator(StatCalculator):
         batch = model.tokenize([model.tokenizer.decode(t) for t in tokens])
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
-            logprobs = model.model(**batch).logits.log_softmax(-1)
+            if model.model_type == "Seq2SeqLM":
+                logprobs = model.model(**batch, decoder_input_ids=batch["input_ids"]).logits.log_softmax(-1)
+            else:
+                logprobs = model.model(**batch).logits.log_softmax(-1)
         greedy_lm_log_probs = []
         greedy_lm_ll = []
         for i in range(len(tokens)):
