@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True)
-    parser.add_argument("--subsample_train_dataset", type=int, default=100)
+    parser.add_argument("--subsample_train_dataset", type=int, default=1000)
     parser.add_argument("--subsample_eval_dataset", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
