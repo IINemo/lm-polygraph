@@ -43,7 +43,17 @@ new Vue({
                 return toOptions([
                     'EP-S-total-uncertainty', 'EP-S-rmi', 'EP-S-rmi-abs', 'PE-S-total-uncertainty',
                     'PE-S-rmi', 'PE-S-rmi-abs']);
-            } else {
+            } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
+                return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
+                    'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
+                    'Attention Recursive Entropy', 'Exponential Attention Entropy',
+                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(Uncertainty)',
+                    'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
+                    'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
+                    'Lexical Similarity Rouge-BLEU', 'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
+                    'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance', 'Mahalanobis Distance - Encoder']);
+            }
+            else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
                     'Attention Recursive Entropy', 'Exponential Attention Entropy',

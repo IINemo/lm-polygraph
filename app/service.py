@@ -70,7 +70,6 @@ def generate():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path, device=device)
-        model = Model.from_pretrained(model_path)
     model.parameters = parameters
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []

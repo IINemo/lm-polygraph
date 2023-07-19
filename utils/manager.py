@@ -174,7 +174,7 @@ class UEManager:
     def extract_train_embeddings(self) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_embeddings_decoder = []
         train_embeddings_encoder = []
-        if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]):
+        if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]) and (self.train_data is not None):
             for stat_calculator in self.stat_calculators:
                 if isinstance(stat_calculator, EmbeddingsCalculator):
                     embeddings_calculator = stat_calculator

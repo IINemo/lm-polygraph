@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausa
 
 from utils.generation_parameters import GenerationParameters
 
+
 @dataclass
 class Model:
     model: AutoModelForCausalLM
