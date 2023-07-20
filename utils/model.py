@@ -30,12 +30,11 @@ class Model:
             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256).to(device)
         else:
             raise ValueError(f'Model {model_path} is not adopted for the sequence generation task')
-            
+
         tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
                                                   model_max_length=256)
         
         model.eval()
-        
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token 
             

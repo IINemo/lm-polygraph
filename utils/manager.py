@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from utils.dataset import Dataset
 from utils.model import Model
+from utils.ensemble_generator import EnsembleGenerator
 from utils.processor import Processor
 from generation_metrics.generation_metric import GenerationMetric
 from ue_metrics.ue_metric import UEMetric
@@ -70,9 +71,11 @@ class UEManager:
             processors: List[Processor],
             train_data: Dataset = None,
             ignore_exceptions: bool = True
+            ensemble_model: Optional[EnsembleGenerator] = None
     ):
         self.model: Model = model
         self.train_data: Dataset = train_data
+        self.ensemble_model = ensemble_model
         self.data: Dataset = data
         self.estimators: List[Estimator] = estimators
         self.generation_metrics: List[GenerationMetric] = generation_metrics
@@ -98,7 +101,6 @@ class UEManager:
         for inp_texts, target_texts in tqdm(self.data):
             target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
                              for text in target_texts]
-
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ('input_texts', inp_texts),
@@ -108,6 +110,8 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
                 
+            batch_stats['generation_params'] = {}
+            batch_stats['ensemble_model'] = self.ensemble_model
             try:
                 for stat_calculator in self.stat_calculators:
                     new_stats = stat_calculator(batch_stats, inp_texts, self.model)
@@ -132,7 +136,6 @@ class UEManager:
                 e = estimator(batch_stats).tolist()
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
-
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
                 m = generation_metric(batch_stats, target_texts=target_texts, target_tokens=target_tokens).tolist()
@@ -142,7 +145,6 @@ class UEManager:
             for key in ['greedy_texts', 'greedy_tokens']:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
-
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 

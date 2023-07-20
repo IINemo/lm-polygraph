@@ -35,6 +35,7 @@ class GreedyProbsCalculator(StatCalculator):
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+
             if model.model_type == "Seq2SeqLM":
                 attentions = out.decoder_attentions
             elif model.model_type == "CausalLM":

@@ -42,7 +42,11 @@ new Vue({
             if (newModel === 'Ensemble') {
                 return toOptions([
                     'EP-S-total-uncertainty', 'EP-S-rmi', 'EP-S-rmi-abs', 'PE-S-total-uncertainty',
-                    'PE-S-rmi', 'PE-S-rmi-abs']);
+                    'PE-S-rmi', 'PE-S-rmi-abs', 'EP-T-total-uncertainty', 'EP-T-data-uncertainty', 'EP-T-mutual-information',
+                    'EP-T-rmi', 'EP-T-epkl', 'EP-T-epkl-tu', 'EP-T-entropy-top5', 'EP-T-entropy-top10',
+                    'EP-T-entropy-top15', 'PE-T-total-uncertainty', 'PE-T-data-uncertainty',
+                    'PE-T-mutual-information', 'PE-T-rmi', 'PE-T-epkl', 'PE-T-epkl-tu',
+                    'PE-T-entropy-top5', 'PE-T-entropy-top10', 'PE-T-entropy-top15']);
             } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
@@ -53,8 +57,7 @@ new Vue({
                     'Lexical Similarity Rouge-BLEU', 'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
                     'Adaptive Sampling Semantic Entropy', 
                     'Mahalanobis Distance', 'Mahalanobis Distance - Encoder', 'RDE', 'RDE - Encoder']);
-            }
-            else {
+            } else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
                     'Attention Recursive Entropy', 'Exponential Attention Entropy',
@@ -83,12 +86,7 @@ new Vue({
             }
             this.model = newModel;
             if (newModel === 'Ensemble') {
-                return toOptions([
-                    'EP-T-total-uncertainty', 'EP-T-data-uncertainty', 'EP-T-mutual-information',
-                    'EP-T-rmi', 'EP-T-epkl', 'EP-T-epkl-tu', 'EP-T-entropy-top5', 'EP-T-entropy-top10',
-                    'EP-T-entropy-top15', 'PE-T-total-uncertainty', 'PE-T-data-uncertainty',
-                    'PE-T-mutual-information', 'PE-T-rmi', 'PE-T-epkl', 'PE-T-epkl-tu',
-                    'PE-T-entropy-top5', 'PE-T-entropy-top10', 'PE-T-entropy-top15']);
+                return toOptions([]);
             } else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',

@@ -29,8 +29,7 @@
                    style="color: black; font-size: 14px">
                 Choose directory with ensemble models:</label>
             <input v-if="modelSelected.includes('Ensemble')" v-model="value"
-                   id="ensemble-path-input" class="ensemble-path-input"
-                   type="file" webkitdirectory="true" directory>
+                   id="ensemble-path-input" class="ensemble-path-input">
           </div>
           <treeselect v-model="modelSelected" :multiple="false" :options="options" :clear-on-select="false"
                       placeholder="Select model"></treeselect>
