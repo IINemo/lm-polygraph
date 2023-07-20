@@ -17,10 +17,10 @@ if __name__ == '__main__':
                         default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
-    parser.add_argument("--use_density_based_ue", type=bool, default=True)
+    parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--density_based_params_path", type=str, default="/home/jovyan/projects/lm-polygraph/workdir")
-    parser.add_argument("--subsample_train_dataset", type=int, default=100)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=100)
+    parser.add_argument("--subsample_train_dataset", type=int, default=10)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -83,6 +83,7 @@ if __name__ == '__main__':
                     RDESeq("decoder", parameters_path=f"{args.density_based_params_path}/rde_decoder/{args.model.split('/')[-1]}"),
                 ]
         else:
+            train_dataset = None
             density_based_ue = []
             
         if args.subsample_eval_dataset != -1:
@@ -93,49 +94,49 @@ if __name__ == '__main__':
             model,
             [
                 MaxProbabilitySeq(),
-                MaxProbabilityNormalizedSeq(),
+                # MaxProbabilityNormalizedSeq(),
                 EntropySeq(),
-                MutualInformationSeq(),
-                ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599),
-                AttentionEntropySeq(),
-                AttentionRecursiveSeq(),
-                ExponentialAttentionEntropySeq(coef=0.9),
-                ExponentialAttentionEntropySeq(coef=0.8),
-                ExponentialAttentionRecursiveSeq(coef=0.9),
-                ExponentialAttentionRecursiveSeq(coef=0.8),
-                PTrue(),
-                PUncertainty(),
-                PredictiveEntropy(),
-                LengthNormalizedPredictiveEntropy(),
-                LexicalSimilarity(metric='rouge1'),
-                LexicalSimilarity(metric='rouge2'),
-                LexicalSimilarity(metric='rougeL'),
-                LexicalSimilarity(metric='BLEU'),
-                SemanticEntropy(),
-                PredictiveEntropyAdaptedSampling(),
-                SemanticEntropyAdaptedSampling(),
+#                 MutualInformationSeq(),
+#                 ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599),
+#                 AttentionEntropySeq(),
+#                 AttentionRecursiveSeq(),
+#                 ExponentialAttentionEntropySeq(coef=0.9),
+#                 ExponentialAttentionEntropySeq(coef=0.8),
+#                 ExponentialAttentionRecursiveSeq(coef=0.9),
+#                 ExponentialAttentionRecursiveSeq(coef=0.8),
+#                 PTrue(),
+#                 PUncertainty(),
+#                 PredictiveEntropy(),
+#                 LengthNormalizedPredictiveEntropy(),
+#                 LexicalSimilarity(metric='rouge1'),
+#                 LexicalSimilarity(metric='rouge2'),
+#                 LexicalSimilarity(metric='rougeL'),
+#                 LexicalSimilarity(metric='BLEU'),
+#                 SemanticEntropy(),
+#                 PredictiveEntropyAdaptedSampling(),
+#                 SemanticEntropyAdaptedSampling(),
 
-                MaxProbabilityToken(),
-                MaxProbabilityNormalizedToken(),
-                EntropyToken(),
-                MutualInformationToken(),
-                ConditionalMutualInformationToken(tau=0.0656, lambd=3.599),
-                AttentionEntropyToken(),
-                AttentionRecursiveToken(),
-                ExponentialAttentionEntropyToken(coef=0.9),
-                ExponentialAttentionEntropyToken(coef=0.8),
-                ExponentialAttentionRecursiveToken(coef=0.9),
-                ExponentialAttentionRecursiveToken(coef=0.8),
-                SemanticEntropyToken(model.model_path, args.cache_path),
+#                 MaxProbabilityToken(),
+#                 MaxProbabilityNormalizedToken(),
+                 EntropyToken(),
+#                 MutualInformationToken(),
+#                 ConditionalMutualInformationToken(tau=0.0656, lambd=3.599),
+#                 AttentionEntropyToken(),
+#                 AttentionRecursiveToken(),
+#                 ExponentialAttentionEntropyToken(coef=0.9),
+#                 ExponentialAttentionEntropyToken(coef=0.8),
+#                 ExponentialAttentionRecursiveToken(coef=0.9),
+#                 ExponentialAttentionRecursiveToken(coef=0.8),
+#                 SemanticEntropyToken(model.model_path, args.cache_path),
             ] + density_based_ue,
             [
                 RougeMetric('rouge1'),
                 RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
-                BartScoreSeqMetric('rh'),
-                ModelScoreSeqMetric('model_rh'),
-                ModelScoreTokenwiseMetric('model_rh'),
-                WERTokenwiseMetric(),
+                # BartScoreSeqMetric('rh'),
+                # ModelScoreSeqMetric('model_rh'),
+                # ModelScoreTokenwiseMetric('model_rh'),
+                # WERTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),

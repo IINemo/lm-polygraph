@@ -18,5 +18,6 @@ class EntropyCalculator(StatCalculator):
         for s_lp in logprobs:
             entropies.append([])
             for lp in s_lp:
-                entropies[-1].append(-np.mean(np.array(lp) * np.exp(lp)))
+                mask = ~np.isinf(lp)
+                entropies[-1].append(-np.mean(np.array(lp[mask]) * np.exp(lp[mask])))
         return {'entropy': entropies}
