@@ -70,7 +70,7 @@ class UEManager:
             ue_metrics: List[UEMetric],
             processors: List[Processor],
             train_data: Dataset = None,
-            ignore_exceptions: bool = True
+            ignore_exceptions: bool = True,
             ensemble_model: Optional[EnsembleGenerator] = None
     ):
         self.model: Model = model

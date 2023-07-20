@@ -7,23 +7,22 @@ import torch
 import torch.distributed as dist
 from torch import nn
 from transformers import BartForConditionalGeneration, T5ForConditionalGeneration
-from transformers.generation_beam_search import BeamScorer, BeamSearchScorer
-from transformers.generation_logits_process import (
+from transformers.generation.beam_search import BeamScorer, BeamSearchScorer
+from transformers.generation.logits_process import (
     LogitsProcessorList,
     MinLengthLogitsProcessor,
 )
-from transformers.generation_stopping_criteria import (
+from transformers.generation.stopping_criteria import (
     StoppingCriteriaList,
     validate_stopping_criteria,
 )
-from transformers.generation_utils import (
+from transformers.generation.utils import (
     BeamSearchOutput,
     BeamSearchDecoderOnlyOutput,
     SampleOutput,
     SampleDecoderOnlyOutput,
     ModelOutput,
 )
-from transformers.pytorch_utils import torch_int_div
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
@@ -530,7 +529,7 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                 next_token_scores, 2 * num_beams, dim=1, largest=True, sorted=True
             )
 
-            next_indices = torch_int_div(next_tokens, vocab_size)
+            next_indices = torch.div(next_tokens, vocab_size, rounding_mode="floor")
             next_tokens = next_tokens % vocab_size
 
             # stateless
