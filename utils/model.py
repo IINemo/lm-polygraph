@@ -29,7 +29,7 @@ class Model:
             model_type = "Seq2SeqLM"
             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256).to(device)
         else:
-            raise ValueError(f'Model {model_path} is not adopted for the sequence generation task')
+            raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
 
         tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
                                                   model_max_length=256)

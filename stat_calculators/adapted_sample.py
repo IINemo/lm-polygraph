@@ -49,10 +49,11 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
     sequences = [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
+            input_len = batch['input_ids'].shape[1] if model.model_type == "CausalLM" else 0
             logits_processor = EraseHypothesesLogitsProcessor(
                 hyps_to_erase=[tokens[k] for tokens in sample_tokens],
                 hyps_logprobs=[log_p[k] for log_p in sample_log_p],
-                input_len=batch['input_ids'].shape[1],
+                input_len=input_len,
             )
             out = model.model.generate(
                 **batch,
