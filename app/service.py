@@ -47,6 +47,19 @@ def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level
     uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
     return np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
 
+def add_spaces_to_tokens(tokenizer, stats, tokens):
+    curr_len = 0
+    tokens_with_spaces = []
+    sequence = tokenizer.batch_decode(stats['greedy_tokens'], skip_special_tokens=True)[0]
+    for token in tokens:
+        if ((len(token)+curr_len) < len(sequence)) and (sequence[len(token)+curr_len]) == " ":
+            tokens_with_spaces.append(token + " ")
+            curr_len += 1
+        else:
+            tokens_with_spaces.append(token)
+        curr_len += len(token)
+    return tokens_with_spaces
+
 
 @app.route('/chat/completions', methods=['GET', 'POST'])
 def generate():
@@ -62,22 +75,19 @@ def generate():
     )
     global model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    model_path = parse_model(data['model'])
+    ensemble_model = None
     if data['model'] == 'Ensemble':
         model_path = data['ensembles']
         model, ensemble_model = parse_ensemble(model_path, device=device)
-    else:
-        model_path = parse_model(data['model'])
+    elif model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path, device=device)
-        ensemble_model = None    
     model.parameters = parameters
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
     seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
     text = data['messages'][0]['content']
 
-    tok_ue_methods = {}
-    seq_ue_methods = {}
     for ue_method_name in tok_ue_method_names:
         if ue_method_name not in tok_ue_methods.keys():
             tok_ue_methods[ue_method_name] = parse_tok_ue_method(ue_method_name, model_path, cache_path)
@@ -85,12 +95,13 @@ def generate():
     for ue_method_name in seq_ue_method_names:
         if ue_method_name not in seq_ue_methods.keys():
             seq_ue_methods[ue_method_name] = parse_seq_ue_method(ue_method_name, model_path, cache_path)
-
+            
     dataset = Dataset([text], [''], batch_size=1)
     processor = ResultProcessor()
 
     tok_methods = [tok_ue_methods[ue_method_name] for ue_method_name in tok_ue_method_names]
     seq_methods = [seq_ue_methods[ue_method_name] for ue_method_name in seq_ue_method_names]
+    
     man = UEManager(dataset, model, tok_methods + seq_methods, [], [],
                     [processor],
                     ensemble_model=ensemble_model,
@@ -105,7 +116,15 @@ def generate():
 
     tok_uncertainty = _get_uncertainty(processor, tok_methods, 'token')
     seq_uncertainty = _get_uncertainty(processor, seq_methods, 'sequence')
-    tokens = model.tokenizer.batch_decode(processor.stats['greedy_tokens'], skip_special_tokens=True)    
+    tokens = []
+    for t in processor.stats['greedy_tokens'][0][:-1]:
+        tokens.append(model.tokenizer.decode([t]))        
+    if len(tokens) > 0:
+        tokens[0] = tokens[0].lstrip()
+        tokens[-1] = tokens[-1].rstrip()
+       
+    if model.model_type == "Seq2SeqLM":
+        tokens = add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
 
     return {
         'generation': tokens,
