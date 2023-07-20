@@ -112,6 +112,14 @@ class UEManager:
                 
             batch_stats['generation_params'] = {}
             batch_stats['ensemble_model'] = self.ensemble_model
+            
+            for stat_calculator in self.stat_calculators:
+                new_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                for stat, stat_value in new_stats.items():
+                    if stat in batch_stats.keys():
+                        continue
+                    batch_stats[stat] = stat_value
+                        
             try:
                 for stat_calculator in self.stat_calculators:
                     new_stats = stat_calculator(batch_stats, inp_texts, self.model)

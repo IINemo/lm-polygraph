@@ -60,17 +60,16 @@ def generate():
         do_sample=(data['parameters']['do_sample'] == 'on'),
         num_beams=int(data['parameters']['num_beams']),
     )
-
     global model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     if data['model'] == 'Ensemble':
         model_path = data['ensembles']
-        model, ensemble_model = parse_ensemble(model_path)
+        model, ensemble_model = parse_ensemble(model_path, device=device)
     else:
         model_path = parse_model(data['model'])
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if model is None or model.model_path != model_path:
         model = Model.from_pretrained(model_path, device=device)
-        ensemble_model = None
+        ensemble_model = None    
     model.parameters = parameters
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []

@@ -190,13 +190,13 @@ def parse_model(model: str) -> str:
             raise Exception(f'Unknown model: {model}')
 
 
-def parse_ensemble(path: str) -> EnsembleGenerator:
+def parse_ensemble(path: str, device: str = 'cpu') -> EnsembleGenerator:
     path = Path(path) 
 
     model_paths = [model_dir for model_dir in path.iterdir()]
     
     # TODO: implement devices for models
-    devices = ['cpu'] * (len(model_paths) - 1)
+    devices = [device] * (len(model_paths) - 1)
 
     model = Model.from_pretrained(model_paths[0])
 

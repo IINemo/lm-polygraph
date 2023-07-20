@@ -45,9 +45,11 @@ class SamplingGenerationCalculator(StatCalculator):
         log_probs = [[] for _ in range(len(texts))]
         tokens = [[] for _ in range(len(texts))]
         texts = [[] for _ in range(len(texts))]
+        if model.model_type == "Seq2SeqLM":
+            sequences = [seq[1:] for seq in sequences]
         for i in range(len(logits)):
             log_prob, toks = 0, []
-            inp_size = len(batch['input_ids'][int(i / self.samples_n)])
+            inp_size = len(batch['input_ids'][int(i / self.samples_n)]) if model.model_type == "CausalLM" else 0
             for j in range(len(sequences[i]) - inp_size):
                 cur_token = sequences[i][j + inp_size].item()
                 log_prob += max(logits[i][j][cur_token].item(), -10)
@@ -57,7 +59,6 @@ class SamplingGenerationCalculator(StatCalculator):
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
             texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
-
         return {
             'sample_log_probs': log_probs,
             'sample_tokens': tokens,
