@@ -51,7 +51,8 @@ new Vue({
                     'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
                     'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
                     'Lexical Similarity Rouge-BLEU', 'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
-                    'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance', 'Mahalanobis Distance - Encoder']);
+                    'Adaptive Sampling Semantic Entropy', 
+                    'Mahalanobis Distance', 'Mahalanobis Distance - Encoder', 'RDE', 'RDE - Encoder']);
             }
             else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
@@ -61,7 +62,7 @@ new Vue({
                     'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
                     'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
                     'Lexical Similarity Rouge-BLEU', 'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
-                    'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance']);
+                    'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance', 'RDE']);
             }
         }
     }

@@ -76,6 +76,8 @@ def generate():
     seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
     text = data['messages'][0]['content']
 
+    tok_ue_methods = {}
+    seq_ue_methods = {}
     for ue_method_name in tok_ue_method_names:
         if ue_method_name not in tok_ue_methods.keys():
             tok_ue_methods[ue_method_name] = parse_tok_ue_method(ue_method_name, model_path, cache_path)

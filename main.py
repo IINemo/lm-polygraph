@@ -60,7 +60,7 @@ if __name__ == '__main__':
                 )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
-                    test_size=0.9,
+                    test_size=0.7,
                     seed=seed,
                     split="eval"
                 )
@@ -73,10 +73,13 @@ if __name__ == '__main__':
                 density_based_ue = [
                     MahalanobisDistanceSeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_encoder/{args.model.split('/')[-1]}"),
                     MahalanobisDistanceSeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_decoder/{args.model.split('/')[-1]}"),
+                    RDESeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_encoder/{args.model.split('/')[-1]}"),
+                    RDESeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_decoder/{args.model.split('/')[-1]}"),
                 ]
             else:
                 density_based_ue = [
                     MahalanobisDistanceSeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_decoder/{args.model.split('/')[-1]}"),
+                    RDESeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_decoder/{args.model.split('/')[-1]}"),
                 ]
         else:
             density_based_ue = []

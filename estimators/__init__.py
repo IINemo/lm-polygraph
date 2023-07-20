@@ -18,3 +18,4 @@ from .semantic_entropy_token import SemanticEntropyToken
 from .semantic_entropy_adapted_sampling import SemanticEntropyAdaptedSampling
 from .predictive_entropy_adapted_sampling import PredictiveEntropyAdaptedSampling
 from .mahalanobis_distance import MahalanobisDistanceSeq
+from .rde import RDESeq
