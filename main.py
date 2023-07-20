@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--density_based_params_path", type=str, default="/home/jovyan/projects/lm-polygraph/workdir")
     parser.add_argument("--subsample_train_dataset", type=int, default=10)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=10)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -133,10 +133,10 @@ if __name__ == '__main__':
                 RougeMetric('rouge1'),
                 RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
-                # BartScoreSeqMetric('rh'),
-                # ModelScoreSeqMetric('model_rh'),
-                # ModelScoreTokenwiseMetric('model_rh'),
-                # WERTokenwiseMetric(),
+                BartScoreSeqMetric('rh'),
+                ModelScoreSeqMetric('model_rh'),
+                ModelScoreTokenwiseMetric('model_rh'),
+                WERTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
