@@ -47,7 +47,7 @@ def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level
     uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
     return np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
 
-def add_spaces_to_tokens(tokenizer, stats, tokens):
+def _add_spaces_to_tokens(tokenizer, stats, tokens):
     curr_len = 0
     tokens_with_spaces = []
     sequence = tokenizer.batch_decode(stats['greedy_tokens'], skip_special_tokens=True)[0]
@@ -60,6 +60,17 @@ def add_spaces_to_tokens(tokenizer, stats, tokens):
         curr_len += len(token)
     return tokens_with_spaces
 
+def _align_tokenwise_uncertainty(tokens, uncertainties):
+    uncertainties_grouped = np.zeros_like(uncertainties)
+    word_len = 0 
+    for i, token in enumerate(tokens):
+        uncertainties_grouped[i] = uncertainties[i]
+        if (" " in token) or ((word_len > 0) and ((len(tokens) - 1) == i)):
+            uncertainties_grouped[i-word_len: i+1] = np.min(uncertainties_grouped[i-word_len: i+1])
+            word_len = 0
+        else:
+            word_len += 1
+    return uncertainties_grouped.tolist()
 
 @app.route('/chat/completions', methods=['GET', 'POST'])
 def generate():
@@ -126,7 +137,10 @@ def generate():
         tokens[-1] = tokens[-1].rstrip()
        
     if model.model_type == "Seq2SeqLM":
-        tokens = add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        print(tokens, tok_uncertainty)
+        tok_uncertainty = _align_tokenwise_uncertainty(tokens, tok_uncertainty)
+        print(tokens, tok_uncertainty)
 
     return {
         'generation': tokens,

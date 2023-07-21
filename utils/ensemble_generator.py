@@ -6,7 +6,7 @@ from scipy.stats import entropy
 import torch
 import torch.distributed as dist
 from torch import nn
-from transformers import BartForConditionalGeneration, T5ForConditionalGeneration
+from transformers import BartForConditionalGeneration, T5ForConditionalGeneration, AutoModelForCausalLM, AutoModelForSeq2SeqLM
 from transformers.generation.beam_search import BeamScorer, BeamSearchScorer
 from transformers.generation.logits_process import (
     LogitsProcessorList,
@@ -562,7 +562,8 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
             
-            model_kwargs["past"] = None
+            if "past" not in model_kwargs.keys():
+                model_kwargs["past"] = None
             if model_kwargs["past"] is not None:
                 model_kwargs["past"] = self._reorder_cache(
                     model_kwargs["past"], beam_idx
