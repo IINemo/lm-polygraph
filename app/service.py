@@ -138,9 +138,7 @@ def generate():
        
     if model.model_type == "Seq2SeqLM":
         tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-        print(tokens, tok_uncertainty)
         tok_uncertainty = _align_tokenwise_uncertainty(tokens, tok_uncertainty)
-        print(tokens, tok_uncertainty)
 
     return {
         'generation': tokens,
