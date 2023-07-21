@@ -24,7 +24,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         generation_params = dependencies['generation_params']
 
-        max_length = generation_params.get('generation_max_length', None)
+        max_length = generation_params.get('generation_max_length', 256)#None)
         min_length = generation_params.get('generation_min_length', 2)
         num_return_sequences = generation_params.get('num_return_sequences', 5)
         

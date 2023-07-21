@@ -561,6 +561,8 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
+            
+            model_kwargs["past"] = None
             if model_kwargs["past"] is not None:
                 model_kwargs["past"] = self._reorder_cache(
                     model_kwargs["past"], beam_idx
