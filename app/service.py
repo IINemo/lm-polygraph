@@ -62,6 +62,8 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 def _align_tokenwise_uncertainty(tokens, uncertainties):
+    if len(uncertainties) == 0:
+        return []
     uncertainties_grouped = np.zeros_like(uncertainties)
     word_len = 0 
     for i, token in enumerate(tokens):

@@ -1,4 +1,5 @@
 import warnings
+import inspect
 from dataclasses import dataclass
 from typing import Optional, Union, Dict, Any, List, Tuple
 from scipy.stats import entropy
@@ -250,28 +251,30 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                 UserWarning,
             )
         pad_token_id = (
-            pad_token_id if pad_token_id is not None else self.config.pad_token_id
+            pad_token_id if pad_token_id is not None else self.generation_config.pad_token_id
         )
         eos_token_id = (
-            eos_token_id if eos_token_id is not None else self.config.eos_token_id
+            eos_token_id if eos_token_id is not None else self.generation_config.eos_token_id
         )
+        if isinstance(eos_token_id, int):
+            eos_token_id = [eos_token_id]
         output_scores = (
-            output_scores if output_scores is not None else self.config.output_scores
+            output_scores if output_scores is not None else self.generation_config.output_scores
         )
         output_attentions = (
             output_attentions
             if output_attentions is not None
-            else self.config.output_attentions
+            else self.generation_config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
             if output_hidden_states is not None
-            else self.config.output_hidden_states
+            else self.generation_config.output_hidden_states
         )
         return_dict_in_generate = (
             return_dict_in_generate
             if return_dict_in_generate is not None
-            else self.config.return_dict_in_generate
+            else self.generation_config.return_dict_in_generate
         )
 
         batch_size = len(beam_scorer._beam_hyps)
@@ -429,6 +432,7 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                 model_next_token_scores = nn.functional.log_softmax(
                     model_next_token_logits, dim=-1
                 )  # (batch_size * num_beams, vocab_size)
+
                 models_next_token_logits.append(model_next_token_scores)
                 models_next_token_probas.append(
                     model_next_token_scores.exp()
@@ -562,11 +566,11 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
             
-            if "past" not in model_kwargs.keys():
-                model_kwargs["past"] = None
-            if model_kwargs["past"] is not None:
-                model_kwargs["past"] = self._reorder_cache(
-                    model_kwargs["past"], beam_idx
+            #if "past" not in model_kwargs.keys():
+            #    model_kwargs["past"] = None
+            if model_kwargs["past_key_values"] is not None:
+                model_kwargs["past_key_values"] = self._reorder_cache(
+                    model_kwargs["past_key_values"], beam_idx
                 )
 
             if return_dict_in_generate and output_scores:
@@ -617,6 +621,7 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                     cross_attentions=cross_attentions,
                     decoder_hidden_states=decoder_hidden_states,
                 )
+            # TODO: This here needs to change for decoder-only ensembles in the future
             else:
                 return BeamSearchDecoderOnlyOutput(
                     sequences=sequence_outputs["sequences"],
@@ -643,6 +648,7 @@ class EnsembleGenerator(T5ForConditionalGeneration):
         output_scores: Optional[bool] = None,
         return_dict_in_generate: Optional[bool] = None,
         synced_gpus: Optional[bool] = False,
+        streamer: Optional["BaseStreamer"] = None,
         **model_kwargs,
     ) -> Union[SampleOutput, torch.LongTensor]:
         r"""
@@ -757,15 +763,18 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             )
             stopping_criteria = validate_stopping_criteria(stopping_criteria, max_length)
         logits_warper = logits_warper if logits_warper is not None else LogitsProcessorList()
-        pad_token_id = pad_token_id if pad_token_id is not None else self.config.pad_token_id
-        eos_token_id = eos_token_id if eos_token_id is not None else self.config.eos_token_id
-        output_scores = output_scores if output_scores is not None else self.config.output_scores
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        pad_token_id = pad_token_id if pad_token_id is not None else self.generation_config.pad_token_id
+        eos_token_id = eos_token_id if eos_token_id is not None else self.generation_config.eos_token_id
+        if isinstance(eos_token_id, int):
+            eos_token_id = [eos_token_id]
+        eos_token_id_tensor = torch.tensor(eos_token_id).to(input_ids.device) if eos_token_id is not None else None
+        output_scores = output_scores if output_scores is not None else self.generation_config.output_scores
+        output_attentions = output_attentions if output_attentions is not None else self.generation_config.output_attentions
         output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+            output_hidden_states if output_hidden_states is not None else self.generation_config.output_hidden_states
         )
         return_dict_in_generate = (
-            return_dict_in_generate if return_dict_in_generate is not None else self.config.return_dict_in_generate
+            return_dict_in_generate if return_dict_in_generate is not None else self.generation_config.return_dict_in_generate
         )
 
         # init attention / hidden states / scores tuples
@@ -783,10 +792,10 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             )
 
         # keep track of which sequences are already finished
-        unfinished_sequences = input_ids.new(input_ids.shape[0]).fill_(1)
-        cur_len = input_ids.shape[-1]
+        unfinished_sequences = torch.ones(input_ids.shape[0], dtype=torch.long, device=input_ids.device)
 
         this_peer_finished = False  # used by synced_gpus only
+
         encoder_outputs = model_kwargs.pop("encoder_outputs")
         calculate_entropies = getattr(self, "calculate_entropies", True)
         
@@ -816,9 +825,9 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             num_models = len(self.models)
         
         self.models_beam_logits_iter = None
+
         # auto-regressive generation
         while True:
-
             if synced_gpus:
                 # Under synced_gpus the `forward` call must continue until all gpus complete their sequence.
                 # The following logic allows an early break if all peers finished generating their sequence
@@ -867,7 +876,6 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                     ))
 
                     if synced_gpus and this_peer_finished:
-                        cur_len = cur_len + 1
                         continue  # don't waste resources running the code we don't need
 
                 torch.manual_seed(self.base_seed)
@@ -881,7 +889,6 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                     ))
 
                     if synced_gpus and this_peer_finished:
-                        cur_len = cur_len + 1
                         continue  # don't waste resources running the code we don't need
 
             for outputs in models_outputs:
@@ -989,7 +996,8 @@ class EnsembleGenerator(T5ForConditionalGeneration):
 
             # update generated ids, model inputs, and length for next step
             input_ids = torch.cat([input_ids, next_tokens[:, None]], dim=-1)
-
+            if streamer is not None:
+                streamer.put(next_tokens.cpu())
             token_models_beam_logits = torch.stack(models_next_token_logits)
             token_models_beam_logits = torch.gather(token_models_beam_logits, -1,
                                                     next_tokens.repeat((num_models), 1).unsqueeze(-1))
@@ -1000,18 +1008,23 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
-            cur_len = cur_len + 1
 
             # if eos_token was found in one sentence, set sentence to finished
-            if eos_token_id is not None:
-                unfinished_sequences = unfinished_sequences.mul((next_tokens != eos_token_id).long())
+            if eos_token_id_tensor is not None:
+                unfinished_sequences = unfinished_sequences.mul(
+                    next_tokens.tile(eos_token_id_tensor.shape[0], 1).ne(eos_token_id_tensor.unsqueeze(1)).prod(dim=0)
+                )
 
-            # stop when each sentence is finished, or if we exceed the maximum length
-            if unfinished_sequences.max() == 0 or stopping_criteria(input_ids, scores):
-                if not synced_gpus:
-                    break
-                else:
+                # stop when each sentence is finished
+                if unfinished_sequences.max() == 0:
                     this_peer_finished = True
+
+            # stop if we exceed the maximum length
+            if stopping_criteria(input_ids, scores):
+                this_peer_finished = True
+
+            if this_peer_finished and not synced_gpus:
+                break
 
         if return_dict_in_generate:
             if self.config.is_encoder_decoder:
@@ -1029,6 +1042,7 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                     decoder_hidden_states=decoder_hidden_states,
                 )
             else:
+                # TODO: Same as with beam search, need to add GPT support
                 return SampleDecoderOnlyOutput(
                     sequences=input_ids,
                     scores=scores,
@@ -1050,6 +1064,10 @@ class EnsembleGenerator(T5ForConditionalGeneration):
         if self.mc:        
             # 1. get encoders
             encoder = self.get_encoder()
+            # Compatibility with Accelerate big model inference: we need the encoder to outputs stuff on the same device
+        # as the inputs.
+            if hasattr(encoder, "_hf_hook"):
+                encoder._hf_hook.io_same_device = True
 
             # 2. prepare encoder args and encoder kwargs from model kwargs
             irrelevant_prefix = ["decoder_", "cross_attn", "use_cache"]
@@ -1058,6 +1076,13 @@ class EnsembleGenerator(T5ForConditionalGeneration):
                 for argument, value in model_kwargs.items()
                 if not any(argument.startswith(p) for p in irrelevant_prefix)
             }
+
+            encoder_signature = set(inspect.signature(encoder.forward).parameters)
+            encoder_accepts_wildcard = "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+            if not encoder_accepts_wildcard:
+                encoder_kwargs = {
+                    argument: value for argument, value in encoder_kwargs.items() if argument in encoder_signature
+                }
 
             # 3. make sure that encoder returns `ModelOutput`
             model_input_name = (
@@ -1072,28 +1097,72 @@ class EnsembleGenerator(T5ForConditionalGeneration):
             torch.manual_seed(self.base_seed)
             model_kwargs["encoder_outputs"]: List[ModelOutput] = outs
         else:
-            # 2. prepare encoder args and encoder kwargs from model kwargs
-            irrelevant_prefix = ["decoder_", "cross_attn", "use_cache"]
-            encoder_kwargs = {
-                argument: value
-                for argument, value in model_kwargs.items()
-                if not any(argument.startswith(p) for p in irrelevant_prefix)
-            }
-
-            # 3. make sure that encoder returns `ModelOutput`
-            model_input_name = (
-                model_input_name if model_input_name is not None else self.main_input_name
-            )
-            encoder_kwargs["return_dict"] = True
-            encoder_kwargs[model_input_name] = inputs_tensor
             model_kwargs["encoder_outputs"]: List[ModelOutput] = []
             for model in self.models:
-                encoder = model.get_encoder()
+                # 1. get encoder
+                encoder = self.get_encoder()
+                # Compatibility with Accelerate big model inference: we need the encoder to outputs stuff on the same device
+                # as the inputs.
+                if hasattr(encoder, "_hf_hook"):
+                    encoder._hf_hook.io_same_device = True
+                # 2. prepare encoder args and encoder kwargs from model kwargs
+                irrelevant_prefix = ["decoder_", "cross_attn", "use_cache"]
+                encoder_kwargs = {
+                    argument: value
+                    for argument, value in model_kwargs.items()
+                    if not any(argument.startswith(p) for p in irrelevant_prefix)
+                }
+                encoder_signature = set(inspect.signature(encoder.forward).parameters)
+                encoder_accepts_wildcard = "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+                if not encoder_accepts_wildcard:
+                    encoder_kwargs = {
+                        argument: value for argument, value in encoder_kwargs.items() if argument in encoder_signature
+                    }
+
+                # 3. make sure that encoder returns `ModelOutput`
+                model_input_name = (
+                    model_input_name if model_input_name is not None else self.main_input_name
+                )
+                encoder_kwargs["return_dict"] = True
+                encoder_kwargs[model_input_name] = inputs_tensor
+
                 encoder_kwargs[model_input_name].to(model.device)
                 encoder_kwargs = {k: v.to(model.device) for k, v in encoder_kwargs.items() if hasattr(v, 'to')}
                 model_kwargs["encoder_outputs"].append(encoder(**encoder_kwargs))
 
         return model_kwargs
+
+    @staticmethod
+    def _expand_inputs_for_generation(
+        expand_size: int = 1,
+        is_encoder_decoder: bool = False,
+        input_ids: Optional[torch.LongTensor] = None,
+        **model_kwargs,
+    ) -> Tuple[torch.LongTensor, Dict[str, Any]]:
+        """Expands tensors from [batch_size, ...] to [batch_size * expand_size, ...]"""
+
+        def _expand_dict_for_generation(dict_to_expand):
+            for key in dict_to_expand:
+                if dict_to_expand[key] is not None and isinstance(dict_to_expand[key], torch.Tensor):
+                    dict_to_expand[key] = dict_to_expand[key].repeat_interleave(expand_size, dim=0)
+            return dict_to_expand
+
+        if input_ids is not None:
+            input_ids = input_ids.repeat_interleave(expand_size, dim=0)
+
+        model_kwargs = _expand_dict_for_generation(model_kwargs)
+
+        if is_encoder_decoder:
+            if model_kwargs.get("encoder_outputs") is None:
+                raise ValueError("If `is_encoder_decoder` is True, make sure that `encoder_outputs` is defined.")
+            encoder_outputs_expanded = []
+            for output in enumerate(model_kwargs["encoder_outputs"]):
+                encoder_outputs_expanded.append(
+                    _expand_dict_for_generation(output)
+                )
+            model_kwargs["encoder_outputs"] = encoder_outputs_expanded
+            
+        return input_ids, model_kwargs
 
     @staticmethod
     def _expand_inputs_for_generation(
