@@ -1,16 +1,17 @@
 import numpy as np
 import torch
 import sys
-import os
 
 from collections import defaultdict
-from typing import List, Set, Dict, Tuple, Optional
+from typing import List, Set, Dict, Tuple, Optional, Union
 from tqdm import tqdm
+from dataclasses import dataclass
 
 from utils.dataset import Dataset
 from utils.model import Model
 from utils.ensemble_generator import EnsembleGenerator
 from utils.processor import Processor
+from utils.normalize import normalize_ue
 from generation_metrics.generation_metric import GenerationMetric
 from ue_metrics.ue_metric import UEMetric
 from estimators.estimator import Estimator
@@ -60,6 +61,25 @@ def _delete_nans(ue, metric):
     return new_ue, new_metric
 
 
+@dataclass
+class UncertaintyOutput:
+    generation_text: str
+    generation_tokens: List[int]
+    confidence: Union[List[float], float]
+
+
+def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str, target_text: str = ''):
+    man = UEManager(Dataset([input_text], [target_text], batch_size=1), model,
+                    [estimator], [], [], [], ignore_exceptions=False, verbose=False)
+    man()
+    ue = man.estimations[estimator.level, str(estimator)]
+    if estimator.level == 'sequence':
+        ue = normalize_ue(estimator, ue[0])
+    else:
+        ue = [normalize_ue(estimator, i) for i in ue]
+    return UncertaintyOutput(man.stats['greedy_texts'][0], man.stats['greedy_tokens'][0], ue)
+
+
 class UEManager:
     def __init__(
             self,
@@ -71,7 +91,8 @@ class UEManager:
             processors: List[Processor],
             train_data: Dataset = None,
             ignore_exceptions: bool = True,
-            ensemble_model: Optional[EnsembleGenerator] = None
+            ensemble_model: Optional[EnsembleGenerator] = None,
+            verbose: bool = True,
     ):
         self.model: Model = model
         self.train_data: Dataset = train_data
@@ -94,11 +115,14 @@ class UEManager:
 
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
+        self.verbose = verbose
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
-        
+
         train_embeddings_decoder, train_embeddings_encoder = self.extract_train_embeddings()
-        for inp_texts, target_texts in tqdm(self.data):
+        if self.verbose:
+            self.data = tqdm(self.data)
+        for inp_texts, target_texts in self.data:
             target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
                              for text in target_texts]
             batch_stats: Dict[str, np.ndarray] = {}
@@ -109,10 +133,10 @@ class UEManager:
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
-                
+
             batch_stats['generation_params'] = {}
             batch_stats['ensemble_model'] = self.ensemble_model
-                        
+
             try:
                 for stat_calculator in self.stat_calculators:
                     new_stats = stat_calculator(batch_stats, inp_texts, self.model)
@@ -131,7 +155,7 @@ class UEManager:
                 batch_stats["train_embeddings_decoder"] = train_embeddings_decoder
             if len(train_embeddings_encoder):
                 batch_stats["train_embeddings_encoder"] = train_embeddings_encoder
-            
+
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for estimator in self.estimators:
                 e = estimator(batch_stats).tolist()
@@ -167,11 +191,12 @@ class UEManager:
             processor.on_eval(self.metrics)
 
         return self.metrics
-    
+
     def extract_train_embeddings(self) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_embeddings_decoder = []
         train_embeddings_encoder = []
-        if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]) and (self.train_data is not None):
+        if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]) and (
+                self.train_data is not None):
             for stat_calculator in self.stat_calculators:
                 if isinstance(stat_calculator, EmbeddingsCalculator):
                     embeddings_calculator = stat_calculator

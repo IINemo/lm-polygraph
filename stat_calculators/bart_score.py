@@ -12,17 +12,26 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from utils.model import Model
 
+
 class BartScoreCalculator(StatCalculator):
     def __init__(self, device='cuda:0', max_length=1024, checkpoint='facebook/bart-large-cnn'):
         super().__init__(['rh'],
                          ['greedy_tokens', 'input_tokens'])
-        # Set up model
         self.device = device
         self.max_length = max_length
-        self.tokenizer = BartTokenizer.from_pretrained(checkpoint)
-        self.model = BartForConditionalGeneration.from_pretrained(checkpoint)
+        self.checkpoint = checkpoint
+        self.device = device
+
+        self.tokenizer = None
+        self.model = None
+        self.loss_fct = None
+        self.lsm = None
+
+    def _setup(self):
+        self.tokenizer = BartTokenizer.from_pretrained(self.checkpoint)
+        self.model = BartForConditionalGeneration.from_pretrained(self.checkpoint)
         self.model.eval()
-        self.model.to(device)
+        self.model.to(self.device)
 
         # Set up loss
         self.loss_fct = nn.NLLLoss(reduction='none', ignore_index=self.model.config.pad_token_id)
@@ -32,10 +41,14 @@ class BartScoreCalculator(StatCalculator):
         """ Load model from paraphrase finetuning """
         if path is None:
             path = 'models/bart.pth'
+        if self.model is None:
+            self._setup()
         self.model.load_state_dict(torch.load(path, map_location=self.device))
 
     def score(self, srcs, tgts, batch_size=4):
         """ Score a batch of examples """
+        if self.model is None:
+            self._setup()
         score_list = []
         for i in range(0, len(srcs), batch_size):
             src_list = srcs[i: i + batch_size]
@@ -83,6 +96,8 @@ class BartScoreCalculator(StatCalculator):
         return score_list
 
     def multi_ref_score(self, srcs, tgts: List[List[str]], agg="mean", batch_size=4):
+        if self.model is None:
+            self._setup()
         # Assert we have the same number of references
         ref_nums = [len(x) for x in tgts]
         if len(set(ref_nums)) > 1:
@@ -104,6 +119,8 @@ class BartScoreCalculator(StatCalculator):
 
     def test(self, batch_size=3):
         """ Test """
+        if self.model is None:
+            self._setup()
         src_list = [
             'This is a very good idea. Although simple, but very insightful.',
             'Can I take a look?',
@@ -117,12 +134,14 @@ class BartScoreCalculator(StatCalculator):
         ]
 
         print(self.score(src_list, tgt_list, batch_size))
-        
+
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+        if self.model is None:
+            self._setup()
         srcs, tgts = dependencies['greedy_texts'], dependencies['target_texts']
         self.device = model.device()
         self.model.to(self.device)
-                
+
         scores = {
             'rh': self.score(srcs, tgts)
         }

@@ -10,8 +10,9 @@ from utils.generation_parameters import GenerationParameters
 from utils.manager import UEManager
 from utils.processor import Processor
 from utils.dataset import Dataset
+from utils.normalize import normalize_ue
 
-from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, normalize, parse_ensemble
+from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
 app = Flask(__name__)
 
@@ -41,7 +42,7 @@ def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level
         return []
     uncertainties = []
     for method in methods:
-        uncertainties.append([normalize(method, x) for x in processor.ue_estimations[level, str(method)]])
+        uncertainties.append([normalize_ue(method, x) for x in processor.ue_estimations[level, str(method)]])
         print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
     uncertainties = np.array(uncertainties)
     uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
