@@ -12,6 +12,7 @@ from generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetr
 from estimators import *
 from ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str,
@@ -19,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--density_based_params_path", type=str, default="/home/jovyan/projects/lm-polygraph/workdir")
     parser.add_argument("--subsample_train_dataset", type=int, default=10)
     parser.add_argument("--subsample_eval_dataset", type=int, default=-1)
@@ -148,6 +150,7 @@ if __name__ == '__main__':
                 Logger(),
             ],
             train_data=train_dataset,
+            ignore_exceptions=args.ignore_exceptions,
         )
         man()
         man.save(args.save_path + f'_seed{seed}')
