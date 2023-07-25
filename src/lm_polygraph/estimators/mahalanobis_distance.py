@@ -83,9 +83,9 @@ class MahalanobisDistanceSeq(Estimator):
             if self.parameters_path is not None:
                 if not os.path.exists(f"{self.parameters_path}"):
                     splitted_path = str(self.parameters_path).split('/')
-                    for interm_path in ['/'.join(splitted_path[:i]) for i in range(len(splitted_path))]:
-                        if not os.path.exists(interm_path):
-                            os.mkdir(interm_path)
+                    for intermediate_path in ['/'.join(splitted_path[:i]) for i in range(len(splitted_path))]:
+                        if not os.path.exists(intermediate_path) and len(intermediate_path):
+                            os.mkdir(intermediate_path)
                 torch.save(self.centroid, f"{self.parameters_path}/centroid.pt")
 
         if self.sigma_inv is None:
