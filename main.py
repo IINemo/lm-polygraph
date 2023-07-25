@@ -1,4 +1,5 @@
 import copy
+import os
 import torch
 import transformers
 import argparse
@@ -45,8 +46,8 @@ if __name__ == '__main__':
             args.model,
             device=device,
         )
-        
-        dataset = Dataset.from_csv(
+
+        dataset = Dataset.load(
             args.dataset,
             'question', 'answer',
             batch_size=args.batch_size,
@@ -54,7 +55,7 @@ if __name__ == '__main__':
                         
         if args.use_density_based_ue:
             if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
-                train_dataset = Dataset.from_csv(
+                train_dataset = Dataset.load(
                     args.train_dataset,
                     'question', 'answer',
                     batch_size=args.batch_size,

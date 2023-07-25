@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.model_selection import train_test_split
+from datasets import load_dataset
 
 from typing import Iterable, Tuple, List
 
@@ -46,3 +48,16 @@ class Dataset:
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
         return Dataset(x, y, batch_size)
+
+    @staticmethod
+    def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int):
+        dataset = load_dataset(csv_path)
+        x = dataset[x_column].tolist()
+        y = dataset[y_column].tolist()
+        return Dataset(x, y, batch_size)
+
+    @staticmethod
+    def load(csv_path, *args, **kwargs):
+        if os.path.exists(csv_path):
+            return Dataset.from_csv(csv_path, *args, **kwargs)
+        return Dataset.from_datasets(csv_path, *args, **kwargs)
