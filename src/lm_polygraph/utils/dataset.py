@@ -55,9 +55,8 @@ class Dataset:
     @staticmethod
     def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str):
         dataset: DatasetDict = load_dataset(csv_path)['test']
-        x = dataset[x_column].tolist()
-        x = [prompt.strip() + " " + text for text in x]
-        y = dataset[y_column].tolist()
+        x = [prompt.strip() + " " + text for text in dataset[x_column]]
+        y = dataset[y_column]
         return Dataset(x, y, batch_size)
 
     @staticmethod
