@@ -36,6 +36,8 @@ if __name__ == '__main__':
     parser.add_argument("--cache_path", type=str,
                         default='/home/esfadeeva/data')
     parser.add_argument("--prompt", type=str, default='')
+    parser.add_argument("--input_column", type=str, default='question')
+    parser.add_argument("--output_column", type=str, default='answer')
     args = parser.parse_args()
 
     if args.seed is None or len(args.seed) == 0:
@@ -56,7 +58,8 @@ if __name__ == '__main__':
 
         dataset = Dataset.load(
             args.dataset,
-            'question', 'answer',
+            args.input_column,
+            args.output_column,
             batch_size=args.batch_size,
             prompt=args.prompt
         )
@@ -65,7 +68,8 @@ if __name__ == '__main__':
             if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
                 train_dataset = Dataset.load(
                     args.train_dataset,
-                    'question', 'answer',
+                    args.input_column,
+                    args.output_column,
                     batch_size=args.batch_size,
                     prompt=args.prompt
                 )
