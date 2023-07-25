@@ -81,8 +81,13 @@ class MahalanobisDistanceSeq(Estimator):
         if self.centroid is None:
             self.centroid = stats[f'train_embeddings_{self.embeddings_type}'].mean(dim=0)
             if self.parameters_path is not None:
-                torch.save(self.centroid, f"{self.full_path}/centroid.pt")
-                
+                if not os.path.exists(f"{self.parameters_path}"):
+                    splitted_path = str(self.parameters_path).split('/')
+                    for interm_path in ['/'.join(splitted_path[:i]) for i in range(len(splitted_path))]:
+                        if not os.path.exists(interm_path):
+                            os.mkdir(interm_path)
+                torch.save(self.centroid, f"{self.parameters_path}/centroid.pt")
+
         if self.sigma_inv is None:
             train_labels = np.zeros(stats[f'train_embeddings_{self.embeddings_type}'].shape[0])
             self.sigma_inv, _ = compute_inv_covariance(

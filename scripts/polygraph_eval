@@ -34,7 +34,8 @@ if __name__ == '__main__':
     parser.add_argument("--save_path", type=str,
                         default='/home/petrakov/emnlp/lm-polygraph/workdir/save')
     parser.add_argument("--cache_path", type=str,
-                        default='/home/petrakov/emnlp/lm-polygraph/workdir')
+                        default='/home/esfadeeva/data')
+    parser.add_argument("--prompt", type=str, default='')
     args = parser.parse_args()
 
     if args.seed is None or len(args.seed) == 0:
@@ -57,6 +58,7 @@ if __name__ == '__main__':
             args.dataset,
             'question', 'answer',
             batch_size=args.batch_size,
+            prompt=args.prompt
         )
 
         if args.use_density_based_ue:
@@ -65,7 +67,8 @@ if __name__ == '__main__':
                     args.train_dataset,
                     'question', 'answer',
                     batch_size=args.batch_size,
-                 )
+                    prompt=args.prompt
+                )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
                     test_size=0.7,

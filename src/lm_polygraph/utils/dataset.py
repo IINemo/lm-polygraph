@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.model_selection import train_test_split
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
 
 from typing import Iterable, Tuple, List
 
@@ -46,21 +46,18 @@ class Dataset:
         self.select(indices)
 
     @staticmethod
-    def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int):
+    def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
         csv = pd.read_csv(csv_path)
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
         return Dataset(x, y, batch_size)
 
     @staticmethod
-    def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
-        kwargs["data"] = kwargs.get("data", {})
-        dataset = load_dataset(csv_path, **kwargs["data"])
-        if "split" in kwargs.keys():
-            dataset = dataset[kwargs["split"]]
-        max_size = kwargs.get("max_size", len(dataset[x_column]))
-        x = dataset[x_column][:max_size]
-        y = dataset[y_column][:max_size]
+    def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str):
+        dataset: DatasetDict = load_dataset(csv_path)['test']
+        x = dataset[x_column].tolist()
+        x = [prompt.strip() + " " + text for text in x]
+        y = dataset[y_column].tolist()
         return Dataset(x, y, batch_size)
 
     @staticmethod
