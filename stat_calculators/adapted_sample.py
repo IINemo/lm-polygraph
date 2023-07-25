@@ -79,8 +79,7 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
 class AdaptedSamplingGenerationCalculator(StatCalculator):
     def __init__(self, samples_n: int = 10):
         self.samples_n = samples_n
-        super().__init__(['adapted_sample_log_probs
-                          ', 'adapted_sample_log_probs_gen',
+        super().__init__(['adapted_sample_log_probs', 'adapted_sample_log_probs_gen',
                           'adapted_sample_tokens', 'adapted_sample_texts'],
                          ['sample_log_probs', 'sample_tokens', 'sample_texts'])
 
@@ -95,8 +94,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             [samples_ll[:(self.samples_n + 1) // 2] for samples_ll in dependencies['sample_log_probs']]  # p'
 
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
-        batch = {k: v.to(model.device()) for k, 
-                 in batch.items()}
+        batch = {k: v.to(model.device()) for k, v in batch.items()}
 
         n_importance_samples = self.samples_n // 2
         importance_sequences, logits, importance_logits = gen_samples(
