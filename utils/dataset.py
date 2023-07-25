@@ -1,8 +1,29 @@
+import os
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from datasets import load_dataset
 
 from typing import Iterable, Tuple, List
+
+def create_dataset(args, dataset_name_or_path, text_column="question", label_columns="answer"):
+    if os.path.exists(dataset_name_or_path):
+        train_dataset = Dataset.from_csv(
+            dataset_name_or_path,
+            text_column, label_columns,
+            batch_size=args.batch_size,
+        )
+    elif "c4" in dataset_name_or_path:
+        train_dataset = load_dataset(dataset_name_or_path, data_files="en/c4-train.00000-of-01024.json.gz")["train"]
+        train_dataset = Dataset(x=train_dataset[text_column][:100_000], 
+                                y=train_dataset[label_columns][:100_000], 
+                                batch_size=args.batch_size)
+    else:
+        train_dataset = load_dataset(dataset_name_or_path)["train"]
+        train_dataset = Dataset(x=train_dataset[text_column], 
+                                y=train_dataset[label_columns], 
+                                batch_size=args.batch_size)
+    return train_dataset
 
 
 class Dataset:
@@ -37,7 +58,10 @@ class Dataset:
     
     def subsample(self, size: int, seed: int):
         np.random.seed(seed)
-        indices = np.random.choice(len(self.x), size, replace=False)
+        if len(self.x) < size:
+            indices = list(range(len(self.x)))
+        else:
+            indices = np.random.choice(len(self.x), size, replace=False)
         self.select(indices)
 
     @staticmethod
