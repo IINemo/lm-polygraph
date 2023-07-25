@@ -26,6 +26,7 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
                         self.hyps_to_erase[i][j]:
                     equal = False
                     break
+            print(i, len(input_ids), len(self.hyps_to_erase))  # 2 8 2
             if len(input_ids[i]) - self.input_len >= len(self.hyps_to_erase[i]):
                 equal = False
             if equal:
@@ -35,7 +36,10 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
                 if a < b - 1e-5:
                     scores[i][next_token] = -10000
                 else:
-                    scores[i][next_token] = b + math.log(math.exp(a - b) - 1)
+                    if a - b >= 100:  # b + log(e^{a-b} - 1) ~ b + log(e^{a-b}) = b + a - b = a
+                        scores[i][next_token] = a
+                    else:
+                        scores[i][next_token] = b + math.log(math.exp(a - b) - 1)
                 self.hyps_logprobs[i] -= a
         scores = scores.log_softmax(-1)
         scores = torch.nan_to_num(scores, nan=-10000)
@@ -75,7 +79,8 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
 class AdaptedSamplingGenerationCalculator(StatCalculator):
     def __init__(self, samples_n: int = 10):
         self.samples_n = samples_n
-        super().__init__(['adapted_sample_log_probs', 'adapted_sample_log_probs_gen',
+        super().__init__(['adapted_sample_log_probs
+                          ', 'adapted_sample_log_probs_gen',
                           'adapted_sample_tokens', 'adapted_sample_texts'],
                          ['sample_log_probs', 'sample_tokens', 'sample_texts'])
 
@@ -90,7 +95,8 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             [samples_ll[:(self.samples_n + 1) // 2] for samples_ll in dependencies['sample_log_probs']]  # p'
 
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
-        batch = {k: v.to(model.device()) for k, v in batch.items()}
+        batch = {k: v.to(model.device()) for k, 
+                 in batch.items()}
 
         n_importance_samples = self.samples_n // 2
         importance_sequences, logits, importance_logits = gen_samples(

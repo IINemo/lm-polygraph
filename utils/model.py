@@ -2,7 +2,7 @@ import torch
 
 from typing import List, Dict
 from dataclasses import dataclass
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, BartForConditionalGeneration
 
 from utils.generation_parameters import GenerationParameters
 
@@ -28,6 +28,9 @@ class Model:
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256).to(device)
+        elif any(["BartModel" in architecture for architecture in config.architectures]):
+            model_type = "CausalLM"
+            model = BartForCausalLM.from_pretrained(model_path, max_length=256).to(device)
         else:
             raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
 
