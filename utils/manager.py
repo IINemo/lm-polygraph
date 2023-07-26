@@ -11,7 +11,7 @@ from utils.dataset import Dataset
 from utils.model import Model
 from utils.ensemble_generator import EnsembleGenerator
 from utils.processor import Processor
-from utils.normalize import normalize_ue
+from utils.normalize import normalize_from_bounds
 from generation_metrics.generation_metric import GenerationMetric
 from ue_metrics.ue_metric import UEMetric
 from estimators.estimator import Estimator
@@ -71,12 +71,11 @@ class UncertaintyOutput:
 def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str, target_text: str = ''):
     man = UEManager(Dataset([input_text], [target_text], batch_size=1), model,
                     [estimator], [], [], [], ignore_exceptions=False, verbose=False)
-    man()
     ue = man.estimations[estimator.level, str(estimator)]
     if estimator.level == 'sequence':
-        ue = normalize_ue(estimator, ue[0])
+        ue = normalize_from_bounds(estimator, ue[0])
     else:
-        ue = [normalize_ue(estimator, i) for i in ue]
+        ue = [normalize_from_bounds(estimator, i) for i in ue]
     return UncertaintyOutput(man.stats['greedy_texts'][0], man.stats['greedy_tokens'][0], ue)
 
 
