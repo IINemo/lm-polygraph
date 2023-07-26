@@ -8,7 +8,13 @@ from estimators import *
 UE_BOUNDS_FILEPATH = 'utils/ue_bounds.json'
 
 
-def normalize_ue(est: Estimator, val: float) -> float:
+def has_norm_bound(est: Estimator) -> bool:
+    with open(UE_BOUNDS_FILEPATH, 'r') as f:
+        ue_bounds = json.load(f)
+    return str(est) in ue_bounds.keys()
+
+
+def normalize_from_bounds(est: Estimator, val: float) -> float:
     if np.isnan(val):
         return 1
     with open(UE_BOUNDS_FILEPATH, 'r') as f:
