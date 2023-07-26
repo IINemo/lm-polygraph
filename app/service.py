@@ -20,6 +20,7 @@ model: Optional[Model] = None
 tok_ue_methods: Dict[str, Estimator] = {}
 seq_ue_methods: Dict[str, Estimator] = {}
 cache_path: str = '/Users/ekaterinafadeeva/cache'
+device: str = 'cpu'
 
 
 class ResultProcessor(Processor):
@@ -101,7 +102,6 @@ def generate():
         num_beams=int(data['parameters']['num_beams']),
     )
     global model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ensemble_model = None
     if data['model'] == 'Ensemble':
         model_path = data['ensembles']
@@ -168,7 +168,12 @@ def generate():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5239)
+    parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--cache-path", type=str, default='/Users/romanvashurin/cache')
     args = parser.parse_args()
     cache_path = args.cache_path
+    if args.device is not None:
+        device = args.device
+    elif torch.cuda.is_available():
+        device = 'cuda:0'
     app.run(host='localhost', port=args.port)
