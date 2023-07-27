@@ -1,4 +1,4 @@
-# Uncertainty estimation for LLMs.
+# Uncertainty estimation for LLMs
 
 ## Usage examples
 
