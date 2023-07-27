@@ -10,8 +10,9 @@ from utils.generation_parameters import GenerationParameters
 from utils.manager import UEManager
 from utils.processor import Processor
 from utils.dataset import Dataset
+from utils.normalize import normalize_from_bounds, has_norm_bound
 
-from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, normalize, parse_ensemble
+from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
 app = Flask(__name__)
 
@@ -19,9 +20,9 @@ model: Optional[Model] = None
 tok_ue_methods: Dict[str, Estimator] = {}
 seq_ue_methods: Dict[str, Estimator] = {}
 cache_path: str = '/Users/ekaterinafadeeva/cache'
-density_based_names = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
-                       "RDE", "RDE - encoder"]
-
+density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
+                                  "RDE", "RDE - encoder"]
+device: str = 'cpu'
 
 class ResultProcessor(Processor):
     def __init__(self):
@@ -38,23 +39,34 @@ class ResultProcessor(Processor):
         self.ue_estimations = batch_estimations
 
 
-def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level: str):
+def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
     if len(methods) == 0:
         return []
-    uncertainties = []
+    uncertainties, normalized_uncertainties = [], []
+    normalization = 'bounds'
     for method in methods:
-        uncertainties.append([normalize(method, x) for x in processor.ue_estimations[level, str(method)]])
+        uncertainties.append([])
+        normalized_uncertainties.append([])
+        for x in processor.ue_estimations[level, str(method)]:
+            uncertainties[-1].append(x)
+            if not has_norm_bound(method):
+                normalization = 'none'
+            normalized_uncertainties[-1].append(normalize_from_bounds(method, x))
         print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
+    if normalization != 'none':
+        uncertainties = normalized_uncertainties
     uncertainties = np.array(uncertainties)
     uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
-    return np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
+    ue_list = np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
+    return ue_list, normalization
+
 
 def _add_spaces_to_tokens(tokenizer, stats, tokens):
     curr_len = 0
     tokens_with_spaces = []
     sequence = tokenizer.batch_decode(stats['greedy_tokens'], skip_special_tokens=True)[0]
     for token in tokens:
-        if ((len(token)+curr_len) < len(sequence)) and (sequence[len(token)+curr_len]) == " ":
+        if ((len(token) + curr_len) < len(sequence)) and (sequence[len(token) + curr_len]) == " ":
             tokens_with_spaces.append(token + " ")
             curr_len += 1
         else:
@@ -62,17 +74,21 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
         curr_len += len(token)
     return tokens_with_spaces
 
+
 def _align_tokenwise_uncertainty(tokens, uncertainties):
+    if len(uncertainties) == 0:
+        return []
     uncertainties_grouped = np.zeros_like(uncertainties)
-    word_len = 0 
+    word_len = 0
     for i, token in enumerate(tokens):
         uncertainties_grouped[i] = uncertainties[i]
         if (" " in token) or ((word_len > 0) and ((len(tokens) - 1) == i)):
-            uncertainties_grouped[i-word_len: i+1] = np.min(uncertainties_grouped[i-word_len: i+1])
+            uncertainties_grouped[i - word_len: i + 1] = np.min(uncertainties_grouped[i - word_len: i + 1])
             word_len = 0
         else:
             word_len += 1
     return uncertainties_grouped.tolist()
+
 
 @app.route('/chat/completions', methods=['GET', 'POST'])
 def generate():
@@ -87,7 +103,6 @@ def generate():
         num_beams=int(data['parameters']['num_beams']),
     )
     global model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ensemble_model = None
     if data['model'] == 'Ensemble':
         model_path = data['ensembles']
@@ -110,13 +125,13 @@ def generate():
     for ue_method_name in seq_ue_method_names:
         if (ue_method_name not in seq_ue_methods.keys()) or (ue_method_name in density_based_names):
             seq_ue_methods[ue_method_name] = parse_seq_ue_method(ue_method_name, model_path, cache_path)
-            
+
     dataset = Dataset([text], [''], batch_size=1)
     processor = ResultProcessor()
 
     tok_methods = [tok_ue_methods[ue_method_name] for ue_method_name in tok_ue_method_names]
     seq_methods = [seq_ue_methods[ue_method_name] for ue_method_name in seq_ue_method_names]
-    
+
     man = UEManager(dataset, model, tok_methods + seq_methods, [], [],
                     [processor],
                     ensemble_model=ensemble_model,
@@ -129,15 +144,15 @@ def generate():
                           f'got: {processor.ue_estimations.keys()}')
     print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
 
-    tok_uncertainty = _get_uncertainty(processor, tok_methods, 'token')
-    seq_uncertainty = _get_uncertainty(processor, seq_methods, 'sequence')
+    tok_uncertainty, tok_norm = _get_uncertainty(processor, tok_methods, 'token')
+    seq_uncertainty, seq_norm = _get_uncertainty(processor, seq_methods, 'sequence')
     tokens = []
     for t in processor.stats['greedy_tokens'][0][:-1]:
-        tokens.append(model.tokenizer.decode([t]))        
+        tokens.append(model.tokenizer.decode([t]))
     if len(tokens) > 0:
         tokens[0] = tokens[0].lstrip()
         tokens[-1] = tokens[-1].rstrip()
-       
+
     if model.model_type == "Seq2SeqLM":
         tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
         tok_uncertainty = _align_tokenwise_uncertainty(tokens, tok_uncertainty)
@@ -146,13 +161,20 @@ def generate():
         'generation': tokens,
         'token_uncertainty': tok_uncertainty,
         'sequence_uncertainty': seq_uncertainty,
+        'token_normalization': tok_norm,
+        'sequence_normalization': seq_norm,
     }
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5239)
+    parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--cache-path", type=str, default='/Users/romanvashurin/cache')
     args = parser.parse_args()
     cache_path = args.cache_path
+    if args.device is not None:
+        device = args.device
+    elif torch.cuda.is_available():
+        device = 'cuda:0'
     app.run(host='localhost', port=args.port)

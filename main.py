@@ -1,11 +1,12 @@
 import os
 import copy
+import os
 import torch
 import transformers
 import argparse
 
 from utils.manager import UEManager
-from utils.dataset import Dataset, create_dataset
+from utils.dataset import Dataset
 from utils.model import Model
 from utils.processor import Logger
 from generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetric, ModelScoreSeqMetric, ModelScoreTokenwiseMetric
@@ -21,9 +22,9 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--density_based_params_path", type=str, default="/home/jovyan/projects/lm-polygraph/workdir")
-    parser.add_argument("--subsample_background_train_dataset", type=int, default=10000)
-    parser.add_argument("--subsample_train_dataset", type=int, default=1000)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=1000)
+    parser.add_argument("--subsample_background_train_dataset", type=int, default=100)
+    parser.add_argument("--subsample_train_dataset", type=int, default=10)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -48,8 +49,8 @@ if __name__ == '__main__':
             args.model,
             device=device,
         )
-        
-        dataset = Dataset.from_csv(
+
+        dataset = Dataset.load(
             args.dataset,
             'question', 'answer',
             batch_size=args.batch_size,
@@ -57,7 +58,11 @@ if __name__ == '__main__':
                         
         if args.use_density_based_ue:
             if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
-                train_dataset = create_dataset(args, args.train_dataset)
+                train_dataset = Dataset.load(
+                    args.train_dataset,
+                    'question', 'answer',
+                    batch_size=args.batch_size,
+                 )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
                     test_size=0.7,
@@ -65,7 +70,14 @@ if __name__ == '__main__':
                     split="eval"
                 )
                 train_dataset = Dataset(x=X_train, y=y_train, batch_size=args.batch_size)
-            background_train_dataset = create_dataset(args, args.background_train_dataset, text_column="text", label_columns="url")
+            background_train_dataset = Dataset.load(
+                    args.background_train_dataset,
+                    'text', 'url',
+                    batch_size=args.batch_size,
+                    data={"data_files": "en/c4-train.00000-of-01024.json.gz"},
+                    max_size=100_000,
+                    split="train",
+            )
                 
             if args.subsample_train_dataset != -1:
                 train_dataset.subsample(args.subsample_train_dataset, seed=seed)  
