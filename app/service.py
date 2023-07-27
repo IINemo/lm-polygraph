@@ -41,7 +41,7 @@ class ResultProcessor(Processor):
 
 def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
     if len(methods) == 0:
-        return []
+        return [], 'none'
     uncertainties, normalized_uncertainties = [], []
     normalization = 'bounds'
     for method in methods:
@@ -55,6 +55,7 @@ def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level
         print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
     if normalization != 'none':
         uncertainties = normalized_uncertainties
+
     uncertainties = np.array(uncertainties)
     uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
     ue_list = np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []

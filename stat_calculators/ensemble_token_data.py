@@ -3,9 +3,9 @@ from functools import partial
 
 import torch
 import numpy as np
+from transformers import PreTrainedModel
 
 from stat_calculators.stat_calculator import StatCalculator
-from utils.ensemble_generator import EnsembleGenerator
 from utils.token_restoration import collect_sample_token_level_uncertainties, \
                                     collect_token_level_uncertainties, \
                                     get_collect_fn
@@ -17,7 +17,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
-                       model: EnsembleGenerator) -> Dict[str, np.ndarray]:
+                       model: PreTrainedModel) -> Dict[str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
 
@@ -28,7 +28,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
         min_length = generation_params.get('generation_min_length', 2)
         num_return_sequences = generation_params.get('num_return_sequences', 5)
         
-        ensemble_model = dependencies['ensemble_model']
+        ensemble_model = dependencies['ensemble_model'].model
 
         device = ensemble_model.device
 
@@ -39,19 +39,6 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
             ]
             kwargs["decoder_start_token_id"] = model_config.decoder_start_token_id
 
-        #base_keys = ["entropy", "entropy_s", "entropy_s_u",
-        #             "scores_unbiased", "beam_weights", "weights"]
-        #base_keys = {
-        #    key: None
-        #    for key in base_keys + [f"entropy_top{k}" for k in TOP_K]
-        #}
-        #base_keys.update({"probas": None,
-        #                  "log_probas": None})
-
-        #ep_token_level_scores = copy(base_keys)
-        #pe_token_level_scores = copy(base_keys) 
-
-        
         ensembling_mode = generation_params.get("ensembling_mode", "pe")
         ensemble_model.ensembling_mode = ensembling_mode
 

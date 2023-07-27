@@ -9,7 +9,6 @@ from dataclasses import dataclass
 
 from utils.dataset import Dataset
 from utils.model import Model
-from utils.ensemble_generator import EnsembleGenerator
 from utils.processor import Processor
 from utils.normalize import normalize_from_bounds
 from generation_metrics.generation_metric import GenerationMetric
@@ -91,7 +90,7 @@ class UEManager:
             train_data: Dataset = None,
             background_train_data: Dataset = None,
             ignore_exceptions: bool = True,
-            ensemble_model: Optional[EnsembleGenerator] = None,
+            ensemble_model: Optional[Model] = None,
             verbose: bool = True,
     ):
         self.model: Model = model
