@@ -1,8 +1,9 @@
-# Uncertainty for LLMs.
+# Uncertainty estimation for LLMs.
 
-[PDF](https://www.overleaf.com/1371261441kstvywbbsnnj) with descriptions of uncertainty methods.
+## Usage examples
 
-[Examples of token-level uncertainty estimations](https://drive.google.com/drive/folders/1hHdr_dfAqzp0rkvezxsspZzXDuLQY4IY?usp=sharing).
+* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/example.ipynb): examples of library usage
+* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
 
 ## Benchmarks
 
@@ -25,11 +26,6 @@ Parameters:
 Use `visualization_tables.ipynb` to generate the summarizing tables for an experiment.
 
 The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found [here](https://drive.google.com/drive/folders/1bQlvPRZHdZvdpAyBQ_lQiXLq9t5whTfi?usp=sharing).
-
-## Usage examples
-
-* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/example.ipynb): examples of library usage
-* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
 
 ## Web application
 
