@@ -122,9 +122,8 @@ class WhiteboxModel(Model):
         return WhiteboxModel(model, tokenizer, model_path)
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        if ("falcon" in self.model.config._name_or_path) or ("llama" in self.model.config._name_or_path):
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
-                                       return_token_type_ids=False)
+        if ("falcon" in self.model.config._name_or_path.lower()) or ("llama" in self.model.config._name_or_path.lower()):
+            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt', return_token_type_ids=False)
         else:
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
         return tokenized
