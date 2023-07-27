@@ -26,7 +26,6 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
                         self.hyps_to_erase[i][j]:
                     equal = False
                     break
-            print(i, len(input_ids), len(self.hyps_to_erase))  # 2 8 2
             if len(input_ids[i]) - self.input_len >= len(self.hyps_to_erase[i]):
                 equal = False
             if equal:

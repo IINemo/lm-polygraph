@@ -2,7 +2,7 @@ import torch
 
 from typing import List, Dict
 from dataclasses import dataclass
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, BartForConditionalGeneration
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM
 
 from utils.generation_parameters import GenerationParameters
 
