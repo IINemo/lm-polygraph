@@ -19,6 +19,8 @@ model: Optional[Model] = None
 tok_ue_methods: Dict[str, Estimator] = {}
 seq_ue_methods: Dict[str, Estimator] = {}
 cache_path: str = '/Users/ekaterinafadeeva/cache'
+density_based_names = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
+                       "RDE", "RDE - encoder"]
 
 
 class ResultProcessor(Processor):
@@ -102,11 +104,11 @@ def generate():
     text = data['messages'][0]['content']
 
     for ue_method_name in tok_ue_method_names:
-        if ue_method_name not in tok_ue_methods.keys():
+        if (ue_method_name not in tok_ue_methods.keys()) or (ue_method_name in density_based_names):
             tok_ue_methods[ue_method_name] = parse_tok_ue_method(ue_method_name, model_path, cache_path)
 
     for ue_method_name in seq_ue_method_names:
-        if ue_method_name not in seq_ue_methods.keys():
+        if (ue_method_name not in seq_ue_methods.keys()) or (ue_method_name in density_based_names):
             seq_ue_methods[ue_method_name] = parse_seq_ue_method(ue_method_name, model_path, cache_path)
             
     dataset = Dataset([text], [''], batch_size=1)
