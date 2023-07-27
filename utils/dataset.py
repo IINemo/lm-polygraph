@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import os
@@ -5,7 +6,6 @@ from sklearn.model_selection import train_test_split
 from datasets import load_dataset
 
 from typing import Iterable, Tuple, List
-
 
 class Dataset:
     def __init__(self, x: List[str], y: List[str], batch_size: int):
@@ -39,7 +39,10 @@ class Dataset:
     
     def subsample(self, size: int, seed: int):
         np.random.seed(seed)
-        indices = np.random.choice(len(self.x), size, replace=False)
+        if len(self.x) < size:
+            indices = list(range(len(self.x)))
+        else:
+            indices = np.random.choice(len(self.x), size, replace=False)
         self.select(indices)
 
     @staticmethod
@@ -50,10 +53,14 @@ class Dataset:
         return Dataset(x, y, batch_size)
 
     @staticmethod
-    def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int):
-        dataset = load_dataset(csv_path)
-        x = dataset[x_column].tolist()
-        y = dataset[y_column].tolist()
+    def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
+        kwargs["data"] = kwargs.get("data", {})
+        dataset = load_dataset(csv_path, **kwargs["data"])
+        if "split" in kwargs.keys():
+            dataset = dataset[kwargs["split"]]
+        max_size = kwargs.get("max_size", len(dataset[x_column]))
+        x = dataset[x_column][:max_size]
+        y = dataset[y_column][:max_size]
         return Dataset(x, y, batch_size)
 
     @staticmethod

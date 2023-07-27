@@ -111,7 +111,7 @@ def aggregate(x, aggregation_method, axis):
 
 class EmbeddingsCalculator(StatCalculator):
     def __init__(self):
-        super().__init__(['train_embeddings'], [])
+        super().__init__(['train_embeddings', 'background_train_embeddings'], [])
         self.hidden_layer = -1
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
@@ -122,7 +122,7 @@ class EmbeddingsCalculator(StatCalculator):
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,
-                max_length=256,
+                max_new_tokens=256,
                 min_length=2,
                 output_attentions=True,
                 output_hidden_states=True,

@@ -23,7 +23,7 @@ class GreedyProbsCalculator(StatCalculator):
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,
-                max_length=256,
+                max_new_tokens=256,
                 min_length=2,
                 output_attentions=True,
                 output_hidden_states=True,
