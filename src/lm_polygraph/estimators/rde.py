@@ -76,6 +76,11 @@ class RDESeq(Estimator):
             self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42)
             X_pca_train = self.pca.fit_transform(stats[f'train_embeddings_{self.embeddings_type}'].cpu().detach().numpy())            
             if self.parameters_path is not None:
+                if not os.path.exists(f"{self.parameters_path}"):
+                    splitted_path = str(self.parameters_path).split('/')
+                    for intermediate_path in ['/'.join(splitted_path[:i + 1]) for i in range(len(splitted_path))]:
+                        if not os.path.exists(intermediate_path) and len(intermediate_path) > 0:
+                            os.mkdir(intermediate_path)
                 self.save_pca()
                 
         if self.MCD is None:
