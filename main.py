@@ -13,6 +13,7 @@ from generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetr
 from estimators import *
 from ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str,
@@ -21,6 +22,7 @@ if __name__ == '__main__':
     parser.add_argument("--background_train_dataset", type=str, default="allenai/c4")
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--density_based_params_path", type=str, default="/home/jovyan/projects/lm-polygraph/workdir")
     parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
     parser.add_argument("--subsample_train_dataset", type=int, default=100)
@@ -112,49 +114,48 @@ if __name__ == '__main__':
             model,
             [
                 MaxProbabilitySeq(),
-#                 MaxProbabilityNormalizedSeq(),
-#                 EntropySeq(),
-#                 MutualInformationSeq(),
-#                 ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599),
-#                 AttentionEntropySeq(),
-#                 AttentionRecursiveSeq(),
-#                 ExponentialAttentionEntropySeq(coef=0.9),
-#                 ExponentialAttentionEntropySeq(coef=0.8),
-#                 ExponentialAttentionRecursiveSeq(coef=0.9),
-#                 ExponentialAttentionRecursiveSeq(coef=0.8),
-#                 PTrue(),
-#                 PUncertainty(),
-#                 PredictiveEntropy(),
-#                 LengthNormalizedPredictiveEntropy(),
-#                 LexicalSimilarity(metric='rouge1'),
-#                 LexicalSimilarity(metric='rouge2'),
-#                 LexicalSimilarity(metric='rougeL'),
-#                 LexicalSimilarity(metric='BLEU'),
-#                 SemanticEntropy(),
-#                 PredictiveEntropyAdaptedSampling(),
-#                 SemanticEntropyAdaptedSampling(),
-
-#                 MaxProbabilityToken(),
-#                 MaxProbabilityNormalizedToken(),
-#                 EntropyToken(),
-#                 MutualInformationToken(),
-#                 ConditionalMutualInformationToken(tau=0.0656, lambd=3.599),
-#                 AttentionEntropyToken(),
-#                 AttentionRecursiveToken(),
-#                 ExponentialAttentionEntropyToken(coef=0.9),
-#                 ExponentialAttentionEntropyToken(coef=0.8),
-#                 ExponentialAttentionRecursiveToken(coef=0.9),
-#                 ExponentialAttentionRecursiveToken(coef=0.8),
-#                 SemanticEntropyToken(model.model_path, args.cache_path),
+                MaxProbabilityNormalizedSeq(),
+                EntropySeq(),
+                MutualInformationSeq(),
+                ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599),
+                AttentionEntropySeq(),
+                AttentionRecursiveSeq(),
+                ExponentialAttentionEntropySeq(coef=0.9),
+                ExponentialAttentionEntropySeq(coef=0.8),
+                ExponentialAttentionRecursiveSeq(coef=0.9),
+                ExponentialAttentionRecursiveSeq(coef=0.8),
+                # PTrue(),  # FIXME Exception: Got different number of metrics for PTrue and Rouge_rouge1: 44 and 11
+                # PUncertainty(),  # FIXME Exception: Got different number of metrics for PUncertainty and Rouge_rouge1: 44 and 11
+                PredictiveEntropy(),
+                LengthNormalizedPredictiveEntropy(),
+                LexicalSimilarity(metric='rouge1'),
+                LexicalSimilarity(metric='rouge2'),
+                LexicalSimilarity(metric='rougeL'),
+                LexicalSimilarity(metric='BLEU'),
+                SemanticEntropy(),
+                # PredictiveEntropyAdaptedSampling(),  # FIXME i out of bounds: if len(input_ids[i]) - self.input_len >= len(self.hyps_to_erase[i])
+                # SemanticEntropyAdaptedSampling(),  # lm-polygraph/stat_calculators/adapted_sample.py", line 30, in call
+                MaxProbabilityToken(),
+                MaxProbabilityNormalizedToken(),
+                EntropyToken(),
+                MutualInformationToken(),
+                ConditionalMutualInformationToken(tau=0.0656, lambd=3.599),
+                AttentionEntropyToken(),
+                AttentionRecursiveToken(),
+                ExponentialAttentionEntropyToken(coef=0.9),
+                ExponentialAttentionEntropyToken(coef=0.8),
+                ExponentialAttentionRecursiveToken(coef=0.9),
+                ExponentialAttentionRecursiveToken(coef=0.8),
+                SemanticEntropyToken(model.model_path, args.cache_path),
             ] + density_based_ue,
             [
                 RougeMetric('rouge1'),
                 RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
-                # BartScoreSeqMetric('rh'),
-                # ModelScoreSeqMetric('model_rh'),
-                # ModelScoreTokenwiseMetric('model_rh'),
-                # WERTokenwiseMetric(),
+                BartScoreSeqMetric('rh'),
+                ModelScoreSeqMetric('model_rh'),
+                ModelScoreTokenwiseMetric('model_rh'),
+                WERTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
@@ -165,6 +166,7 @@ if __name__ == '__main__':
                 Logger(),
             ],
             train_data=train_dataset,
+            ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
         )
         man()

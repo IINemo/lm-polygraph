@@ -148,6 +148,7 @@ class UEManager:
             except Exception as e:
                 if self.ignore_exceptions:
                     sys.stderr.write(f'Caught exception while calculating stats: {e}')
+                    print(f'Caught exception while calculating stats: {e}')
                     continue
                 else:
                     raise e

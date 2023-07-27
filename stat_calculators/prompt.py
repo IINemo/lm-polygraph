@@ -17,7 +17,9 @@ class PromptCalculator(StatCalculator):
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
         expected_tokens = model.tokenizer([self.expected])['input_ids'][0]
         if model.model_type == "Seq2SeqLM":
-            expected_tokens = [t for t in expected_tokens if t!=model.tokenizer.eos_token_id]            
+            expected_tokens = [t for t in expected_tokens if t!=model.tokenizer.eos_token_id]
+        if "bart" in model.model_path:
+            expected_tokens = [t for t in expected_tokens if t!=model.tokenizer.eos_token_id and t!=model.tokenizer.bos_token_id]
         assert len(expected_tokens) == 1
         expected_token = expected_tokens[0]
 

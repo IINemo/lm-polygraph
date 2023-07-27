@@ -5,6 +5,11 @@ app/node_modules
 */.DStore
 workdir/
 
+*.npy
+*.csv
+models--*/
+test.man_seed*
+
 app/.env
 app/uploads/*
 

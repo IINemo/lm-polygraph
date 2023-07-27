@@ -35,7 +35,10 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
                 if a < b - 1e-5:
                     scores[i][next_token] = -10000
                 else:
-                    scores[i][next_token] = b + math.log(math.exp(a - b) - 1)
+                    if a - b >= 100:  # b + log(e^{a-b} - 1) ~ b + log(e^{a-b}) = b + a - b = a
+                        scores[i][next_token] = a
+                    else:
+                        scores[i][next_token] = b + math.log(math.exp(a - b) - 1)
                 self.hyps_logprobs[i] -= a
         scores = scores.log_softmax(-1)
         scores = torch.nan_to_num(scores, nan=-10000)
