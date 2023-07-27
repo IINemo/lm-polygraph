@@ -72,13 +72,13 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "Adaptive Sampling Semantic Entropy":
             return SemanticEntropyAdaptedSampling()
         case "Mahalanobis Distance":
-            return MahalanobisDistanceSeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_decoder_1/{model_path.split('/')[-1]}", normalize=True)
+            return MahalanobisDistanceSeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_decoder/{model_path.split('/')[-1]}", normalize=True)
         case "Mahalanobis Distance - Encoder":
-            return MahalanobisDistanceSeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_encoder_1/{model_path.split('/')[-1]}", normalize=True)
+            return MahalanobisDistanceSeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_encoder/{model_path.split('/')[-1]}", normalize=True)
         case "RDE":
-            return RDESeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_decoder_1/{model_path.split('/')[-1]}", normalize=True)
+            return RDESeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_decoder/{model_path.split('/')[-1]}", normalize=True)
         case "RDE - Encoder":
-            return RDESeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_encoder_1/{model_path.split('/')[-1]}", normalize=True)        
+            return RDESeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_encoder/{model_path.split('/')[-1]}", normalize=True)        
         case "EP-T-total-uncertainty":
             return EPTtu()
         case "EP-T-data-uncertainty":
