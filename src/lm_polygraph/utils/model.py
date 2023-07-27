@@ -93,23 +93,21 @@ class WhiteboxModel(Model):
         config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
-            model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs)
+            model = AutoModelForCausalLM.from_pretrained(model_path, max_length=1024, trust_remote_code=True).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
-            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256, **kwargs)
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=1024).to(device)
         elif any(["BartModel" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
-            model = BartForCausalLM.from_pretrained(model_path, max_length=256, **kwargs)
+            model = BartForCausalLM.from_pretrained(model_path, max_length=1024).to(device)
         else:
             raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
         if not kwargs.get('load_in_8bit', False) and not kwargs.get('load_in_4bit', False):
             model = model.to(device)
 
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True, model_max_length=256)
-
+        tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
+                                                  model_max_length=1024)
         model.eval()
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token

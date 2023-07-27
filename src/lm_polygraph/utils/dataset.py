@@ -54,9 +54,40 @@ class Dataset:
 
     @staticmethod
     def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str):
+        if 'trivia_qa' in csv_path.lower():
+            dataset: DatasetDict = load_dataset(csv_path, 'rc.nocontext')
         dataset: DatasetDict = load_dataset(csv_path)['test']
-        x = [prompt.strip() + " " + text for text in dataset[x_column]]
-        y = dataset[y_column]
+        # In this case this is a NMT dataset
+        if 'translation' in dataset.column_names:
+            x, y = [], []
+            for inst in dataset['translation']:
+                x.append(inst[x_column])
+                y.append(inst[y_column])
+        # For COQA dataset
+        elif 'coqa' in csv_path.lower():
+            x, y = [], []
+            for inst in dataset:
+                for question, answer in zip(inst['questions'], inst['answers']['input_text']):
+                    x.append(f'Story:\n{inst["story"]}\n\nQuestion:\n{question}\n\nAnswer:\n')
+                    y.append(answer)
+        # For Babi_QA dataset
+        elif 'babi_qa' in csv_path.lower():
+            x, y = [], []
+            prompt = 'Answer the question given a context. Output only the full name of the location.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\n'
+            for inst in dataset:
+                inst = inst['story']
+                context = ''
+                for text, answer in zip(inst['text'], inst['answer']):
+                    if answer == '':
+                        context += text + ' '
+                    else:
+                        input = prompt + f'Context:\n{context.strip()}\n\nQuestion:\n{text}'
+                        x.append(input)
+                        y.append(answer)
+        # Otherwise, it is a standard one (e.g. summarization)
+        else:
+            x = [prompt.strip() + " " + text for text in dataset[x_column]]
+            y = dataset[y_column]
         return Dataset(x, y, batch_size)
 
     @staticmethod
