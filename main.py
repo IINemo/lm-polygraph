@@ -124,8 +124,8 @@ if __name__ == '__main__':
                 ExponentialAttentionEntropySeq(coef=0.8),
                 ExponentialAttentionRecursiveSeq(coef=0.9),
                 ExponentialAttentionRecursiveSeq(coef=0.8),
-                PTrue(),
-                PUncertainty(),
+                # PTrue(),  # FIXME Exception: Got different number of metrics for PTrue and Rouge_rouge1: 44 and 11
+                # PUncertainty(),  # FIXME Exception: Got different number of metrics for PUncertainty and Rouge_rouge1: 44 and 11
                 PredictiveEntropy(),
                 LengthNormalizedPredictiveEntropy(),
                 LexicalSimilarity(metric='rouge1'),
@@ -133,7 +133,8 @@ if __name__ == '__main__':
                 LexicalSimilarity(metric='rougeL'),
                 LexicalSimilarity(metric='BLEU'),
                 SemanticEntropy(),
-
+                # PredictiveEntropyAdaptedSampling(),  # FIXME i out of bounds: if len(input_ids[i]) - self.input_len >= len(self.hyps_to_erase[i])
+                # SemanticEntropyAdaptedSampling(),  # lm-polygraph/stat_calculators/adapted_sample.py", line 30, in call
                 MaxProbabilityToken(),
                 MaxProbabilityNormalizedToken(),
                 EntropyToken(),
