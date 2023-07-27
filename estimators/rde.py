@@ -22,6 +22,29 @@ def load_array(filename):
         array = np.load(f)
     return array
 
+
+def MCD_covariance(X, y=None, label=None, seed=42):
+    try:
+        if label is None:
+            cov = MinCovDet(random_state=seed).fit(X)
+        else:
+            cov = MinCovDet(random_state=seed).fit(X[y==label])
+    except:
+        print("****************Try fitting covariance with support_fraction=0.9 **************")
+        try:
+            if label is None:
+                cov = MinCovDet(random_state=seed, support_fraction=0.9).fit(X)
+            else:
+                cov = MinCovDet(random_state=seed, support_fraction=0.9).fit(X[y==label])
+        except:
+            print("****************Try fitting covariance with support_fraction=1.0 **************")
+            if label is None:
+                cov = MinCovDet(random_state=seed, support_fraction=1.0).fit(X)
+            else:
+                cov = MinCovDet(random_state=seed, support_fraction=1.0).fit(X[y==label])
+    return cov
+        
+
 class RDESeq(Estimator):
     def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
         super().__init__(['embeddings', 'train_embeddings'], 'sequence')
@@ -55,8 +78,10 @@ class RDESeq(Estimator):
                 self.save_pca()
                 
         if self.MCD is None:
-            self.MCD = MinCovDet(random_state=42).fit(X_pca_train)
+            self.MCD = MCD_covariance(X_pca_train)
             if self.parameters_path is not None:
+                if not os.path.exists(f"{self.parameters_path}"):
+                    os.mkdir(self.parameters_path)
                 self.save_mcd()
                 
         X_pca_test = self.pca.transform(embeddings.cpu().detach().numpy())

@@ -89,12 +89,14 @@ class UEManager:
             ue_metrics: List[UEMetric],
             processors: List[Processor],
             train_data: Dataset = None,
+            background_train_data: Dataset = None,
             ignore_exceptions: bool = True,
             ensemble_model: Optional[EnsembleGenerator] = None,
             verbose: bool = True,
     ):
         self.model: Model = model
         self.train_data: Dataset = train_data
+        self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
         self.data: Dataset = data
         self.estimators: List[Estimator] = estimators
@@ -119,6 +121,7 @@ class UEManager:
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
 
         train_embeddings_decoder, train_embeddings_encoder = self.extract_train_embeddings()
+        background_train_embeddings_decoder, background_train_embeddings_encoder = self.extract_train_embeddings(background=True, remove_calculator=True)
         if self.verbose:
             self.data = tqdm(self.data)
         for inp_texts, target_texts in self.data:
@@ -154,7 +157,11 @@ class UEManager:
                 batch_stats["train_embeddings_decoder"] = train_embeddings_decoder
             if len(train_embeddings_encoder):
                 batch_stats["train_embeddings_encoder"] = train_embeddings_encoder
-
+            if len(background_train_embeddings_decoder):
+                batch_stats["background_train_embeddings_decoder"] = background_train_embeddings_decoder
+            if len(background_train_embeddings_encoder):
+                batch_stats["background_train_embeddings_encoder"] = background_train_embeddings_encoder
+            
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for estimator in self.estimators:
                 e = estimator(batch_stats).tolist()
@@ -190,16 +197,19 @@ class UEManager:
             processor.on_eval(self.metrics)
 
         return self.metrics
-
-    def extract_train_embeddings(self) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+    
+    def extract_train_embeddings(self, background: bool=False, remove_calculator: bool=False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_embeddings_decoder = []
         train_embeddings_encoder = []
-        if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]) and (
-                self.train_data is not None):
+        if background:
+            data = self.background_train_data 
+        else:
+            data = self.train_data 
+        if any([isinstance(stat_calculator, EmbeddingsCalculator) for stat_calculator in self.stat_calculators]) and (data is not None):
             for stat_calculator in self.stat_calculators:
                 if isinstance(stat_calculator, EmbeddingsCalculator):
                     embeddings_calculator = stat_calculator
-            for inp_texts, target_texts in tqdm(self.train_data):
+            for inp_texts, target_texts in tqdm(data):
                 target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
                                  for text in target_texts]
 
@@ -218,7 +228,8 @@ class UEManager:
             train_embeddings_decoder = torch.cat(train_embeddings_decoder)
             if len(train_embeddings_encoder):
                 train_embeddings_encoder = torch.cat(train_embeddings_encoder)
-            self.stat_calculators.remove(embeddings_calculator)
+            if remove_calculator:
+                self.stat_calculators.remove(embeddings_calculator)
         return train_embeddings_decoder, train_embeddings_encoder
 
     def save(self, save_path: str):
