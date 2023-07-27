@@ -7,7 +7,7 @@ from scipy.stats import entropy
 import torch
 import torch.distributed as dist
 from torch import nn
-from transformers import BartForConditionalGeneration, T5ForConditionalGeneration, AutoModelForCausalLM, AutoModelForSeq2SeqLM
+from transformers import GenerationMixin
 from transformers.generation.beam_search import BeamScorer, BeamSearchScorer
 from transformers.generation.logits_process import (
     LogitsProcessorList,
@@ -28,7 +28,7 @@ from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
 
-class EnsembleGenerator(T5ForConditionalGeneration):
+class EnsembleGenerationMixin(GenerationMixin):
     def add_ensemble_models(self, models, devices):
         if isinstance(models[0], str):
             self._models_list = []

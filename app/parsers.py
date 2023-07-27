@@ -3,12 +3,12 @@ import sys
 
 import os
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
-from transformers import AutoTokenizer, T5ForConditionalGeneration
 
 from estimators import *
-from utils.ensemble_generator import EnsembleGenerator
+from utils.ensemble_generator import EnsembleGenerationMixin
 from utils.model import Model
 
 
@@ -173,29 +173,25 @@ def parse_model(model: str) -> str:
         case _:
             raise Exception(f'Unknown model: {model}')
 
-
-def parse_ensemble(path: str, device: str = 'cpu') -> EnsembleGenerator:
+def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[Model, Model]:
     if os.path.exists(path):
         path = Path(path) 
         model_paths = [model_dir for model_dir in path.iterdir()]
-
-        # TODO: implement devices for models
-        devices = [device] * (len(model_paths) - 1)
-
-        model = Model.from_pretrained(model_paths[0])
-
-        ensemble_model = EnsembleGenerator.from_pretrained(model_paths[0]).eval()
-        models = [T5ForConditionalGeneration.from_pretrained(path).eval() for path in model_paths[1:]]
-        ensemble_model.add_ensemble_models(models, devices)
     else:
         model_paths = path.split(',')
-        devices = [device] * (len(model_paths) - 1)
-        model = Model.from_pretrained(model_paths[0])
 
-        ensemble_model = EnsembleGenerator.from_pretrained(model_paths[0]).eval()
-        models = [T5ForConditionalGeneration.from_pretrained(path).eval() for path in model_paths[1:]]
-        ensemble_model.add_ensemble_models(models, devices)
+    # TODO: implement devices for models
+    devices = [device] * (len(model_paths) - 1)
+
+    model = Model.from_pretrained(model_paths[0])
+    ensemble_model = Model.from_pretrained(model_paths[0])
     
-    ensemble_model.tokenizer = AutoTokenizer.from_pretrained(model_paths[0], padding_side="left", add_bos_token=True, model_max_length=256)
+    ensemble_model.model.__class__ = type('EnsembleModel',
+                                          (ensemble_model.model.__class__,
+                                           EnsembleGenerationMixin),
+                                          {}) 
+
+    models = [Model.from_pretrained(path).model for path in model_paths[1:]]
+    ensemble_model.model.add_ensemble_models(models, devices)
 
     return model, ensemble_model
