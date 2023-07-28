@@ -86,7 +86,7 @@ if __name__ == "__main__":
                     batch_size=args.batch_size,
                     prompt=args.prompt,
                     subset='train',
-                    size=20_000
+                    size=10_000
                 )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
