@@ -55,8 +55,11 @@ class Dataset:
     @staticmethod
     def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str):
         if 'trivia_qa' in csv_path.lower():
-            dataset: DatasetDict = load_dataset(csv_path, 'rc.nocontext')
-        dataset: DatasetDict = load_dataset(csv_path)['test']
+            dataset = load_dataset(csv_path, 'rc.nocontext')['test']
+        elif 'babi_qa' in csv_path.lower():
+            dataset = load_dataset(csv_path, 'en-10k-qa1')['test']
+        else:
+            dataset = load_dataset(csv_path)['test']
         # In this case this is a NMT dataset
         if 'translation' in dataset.column_names:
             x, y = [], []
