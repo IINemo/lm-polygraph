@@ -69,10 +69,18 @@ if __name__ == "__main__":
 
         if args.use_density_based_ue:
             if (args.train_dataset is not None) and (
-                (args.train_dataset != args.dataset or not args.train_dataset.endswith('csv'))
-            ):
+                args.train_dataset != args.dataset):
                 train_dataset, _ = Dataset.load(
                     args.train_dataset,
+                    args.input_column,
+                    args.output_column,
+                    batch_size=args.batch_size,
+                    prompt=args.prompt,
+                    subset='train'
+                )
+            elif not args.dataset.endswith('csv'):
+                train_dataset, _ = Dataset.load(
+                    args.dataset,
                     args.input_column,
                     args.output_column,
                     batch_size=args.batch_size,
