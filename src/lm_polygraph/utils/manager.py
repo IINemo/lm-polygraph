@@ -95,6 +95,7 @@ class UEManager:
             ignore_exceptions: bool = True,
             ensemble_model: Optional[WhiteboxModel] = None,
             verbose: bool = True,
+            max_new_tokens: int = 100,
     ):
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -137,6 +138,8 @@ class UEManager:
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
 
+        self.max_new_tokens = max_new_tokens
+
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         train_stats = self.extract_train_embeddings()
         backgound_train_stats = self.extract_train_embeddings(background=True)
@@ -162,7 +165,7 @@ class UEManager:
 
             try:
                 for stat_calculator in self.stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue

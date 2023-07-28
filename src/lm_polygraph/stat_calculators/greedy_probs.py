@@ -43,8 +43,9 @@ class GreedyProbsCalculator(StatCalculator):
                           'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
                           'embeddings'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
-        str, np.ndarray]:
+    def __call__(
+            self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100
+    ) -> Dict[str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
@@ -54,7 +55,7 @@ class GreedyProbsCalculator(StatCalculator):
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,
-                max_length=1024+42,
+                max_new_tokens=max_new_tokens,
                 min_length=2,
                 output_attentions=True,
                 output_hidden_states=True,

@@ -17,7 +17,11 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
+<<<<<<< HEAD:src/lm_polygraph/stat_calculators/ensemble_token_data.py
                        model: PreTrainedModel) -> Dict[str, np.ndarray]:
+=======
+                       model: EnsembleGenerator, **kwargs) -> Dict[str, np.ndarray]:
+>>>>>>> e2ffb47 (max_new_tokens added):stat_calculators/ensemble_token_data.py
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
 

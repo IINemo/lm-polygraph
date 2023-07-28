@@ -56,7 +56,7 @@ if __name__ == '__main__':
             device=device,
         )
 
-        dataset = Dataset.load(
+        dataset, max_new_tokens = Dataset.load(
             args.dataset,
             args.input_column,
             args.output_column,
@@ -183,6 +183,7 @@ if __name__ == '__main__':
             train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
+            max_new_tokens=max_new_tokens,
         )
         man()
         man.save(args.save_path + f'_seed{seed}')

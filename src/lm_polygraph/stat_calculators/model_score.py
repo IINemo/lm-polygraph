@@ -66,7 +66,7 @@ class ModelScoreCalculator(StatCalculator):
                 exit(0)
         return score_list
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, **kwargs) -> Dict[str, np.ndarray]:
         preds, inp_tokens = dependencies['greedy_tokens'], dependencies['input_tokens']
         prompted_refs = model.tokenizer(
             [self.prompt.format(s) for s in dependencies['target_texts']])['input_ids']

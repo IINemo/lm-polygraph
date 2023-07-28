@@ -63,15 +63,14 @@ class SamplingGenerationCalculator(StatCalculator):
         self.samples_n = samples_n
         super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
-        str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         sequences, logits = gen_samples(
             self.samples_n, model, batch,
             output_scores=True,
             return_dict_in_generate=True,
-            max_length=256,
+            max_new_tokens=max_new_tokens,
             min_length=2,
             do_sample=True,
             num_beams=1,

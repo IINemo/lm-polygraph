@@ -66,6 +66,7 @@ class Dataset:
             for inst in dataset['translation']:
                 x.append(inst[x_column])
                 y.append(inst[y_column])
+            max_new_tokens = 1024
         # For COQA dataset
         elif 'coqa' in csv_path.lower():
             x, y = [], []
@@ -73,6 +74,7 @@ class Dataset:
                 for question, answer in zip(inst['questions'], inst['answers']['input_text']):
                     x.append(f'Story:\n{inst["story"]}\n\nQuestion:\n{question}\n\nAnswer:\n')
                     y.append(answer)
+            max_new_tokens = 14
         # For Babi_QA dataset
         elif 'babi_qa' in csv_path.lower():
             x, y = [], []
@@ -87,14 +89,22 @@ class Dataset:
                         input = prompt + f'Context:\n{context.strip()}\n\nQuestion:\n{text}'
                         x.append(input)
                         y.append(answer)
+            max_new_tokens = 3
         # Otherwise, it is a standard one (e.g. summarization)
         else:
             x = [prompt.strip() + " " + text for text in dataset[x_column]]
             y = dataset[y_column]
-        return Dataset(x, y, batch_size)
+            if csv_path == 'xsum':
+                max_new_tokens = 42
+            elif csv_path == 'aeslc':
+                max_new_tokens = 20
+            else:
+                max_new_tokens = 200
+        return Dataset(x, y, batch_size), max_new_tokens
 
     @staticmethod
     def load(csv_path, *args, **kwargs):
         if os.path.exists(csv_path):
-            return Dataset.from_csv(csv_path, *args, **kwargs)
+            # Setting to 100 default max new tokens
+            return Dataset.from_csv(csv_path, *args, **kwargs), 100
         return Dataset.from_datasets(csv_path, *args, **kwargs)
