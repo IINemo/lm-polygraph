@@ -76,8 +76,10 @@ class Dataset:
         # In this case this is a NMT dataset
         if "translation" in dataset.column_names:
             x, y = [], []
+            source_lang = "German" if x_column == 'de' else "French" if x_column == "fr" else "English"
+            target_lang = "German" if y_column == 'de' else "French" if y_column == "fr" else "English"
             for inst in dataset["translation"]:
-                x.append(inst[x_column])
+                x.append(f"Translate from {source_lang} into {target_lang}:\n{inst[x_column]}\nTranslation:\n")
                 y.append(inst[y_column])
             max_new_tokens = 1024
         # For COQA dataset
