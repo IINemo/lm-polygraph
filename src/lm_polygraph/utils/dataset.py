@@ -113,14 +113,23 @@ class Dataset:
             max_new_tokens = 3
         # Otherwise, it is a standard one (e.g. summarization)
         else:
-            x = [prompt.strip() + " " + text for text in dataset[x_column]]
-            y = dataset[y_column]
-            if csv_path == "xsum":
+            if csv_path == 'xsum':
+                x = [
+                    f'Summarize the text in a one-sentence headline.\n\nText:\n{text}\n\nSummary (one sentence):\n'
+                    for text in dataset[x_column]
+                ]
                 max_new_tokens = 42
-            elif csv_path == "aeslc":
+            elif csv_path == 'aeslc':
+                x = [
+                    f'Write a headline for the email.\n\nEmail:\n{text}\n\nHeadline:\n'
+                    for text in dataset[x_column]
+                ]
                 max_new_tokens = 20
             else:
+                x = [prompt.strip() + " " + text for text in dataset[x_column]]
                 max_new_tokens = 200
+            y = dataset[y_column]
+
         return Dataset(x, y, batch_size), max_new_tokens
 
     @staticmethod
