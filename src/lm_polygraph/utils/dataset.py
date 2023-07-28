@@ -67,8 +67,8 @@ class Dataset:
         elif "babi_qa" in csv_path.lower():
             dataset = load_dataset(csv_path, "en-10k-qa1")[subset]
         elif "wmt" in csv_path.lower():
-            subset = "de-en" if "de" in [x_column, y_column] else "fr-en"
-            dataset = load_dataset(csv_path, subset)[subset]
+            dataset_subset = "de-en" if "de" in [x_column, y_column] else "fr-en"
+            dataset = load_dataset(csv_path, dataset_subset)[subset]
         else:
             dataset = load_dataset(csv_path)[subset]
         # In this case this is a NMT dataset
