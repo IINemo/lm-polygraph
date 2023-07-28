@@ -8,13 +8,13 @@ from .estimator import Estimator
 class ExponentialAttentionRecursiveSeq(Estimator):
     def __init__(self, coef: float):
         self.coef = coef
-        super().__init__(['entropy'], 'sequence')
+        super().__init__(["entropy"], "sequence")
 
     def __str__(self):
-        return f'ExponentialAttentionRecursiveSeq_{self.coef}'
+        return f"ExponentialAttentionRecursiveSeq_{self.coef}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        entropies = stats['entropy']
+        entropies = stats["entropy"]
         ue = []
         for entropy in entropies:
             entropy = np.array(entropy)
@@ -34,13 +34,13 @@ class ExponentialAttentionRecursiveSeq(Estimator):
 class ExponentialAttentionRecursiveToken(Estimator):
     def __init__(self, coef: float):
         self.coef = coef
-        super().__init__(['entropy'], 'token')
+        super().__init__(["entropy"], "token")
 
     def __str__(self):
-        return f'AttentionRecursiveToken_{self.coef}'
+        return f"AttentionRecursiveToken_{self.coef}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        entropies = stats['entropy']
+        entropies = stats["entropy"]
         ue = []
         for entropy in entropies:
             entropy = np.array(entropy)

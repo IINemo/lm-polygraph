@@ -17,7 +17,7 @@ class SemanticEntropy(Estimator):
             batch_size: int = 10,
             verbose: bool = False
     ):
-        super().__init__(['sample_log_probs', 'sample_texts'], 'sequence')
+        super().__init__(["sample_log_probs", "sample_texts"], "sequence")
         self.batch_size = batch_size
         DEBERTA.setup()
         self._sample_to_class = {}
@@ -26,15 +26,19 @@ class SemanticEntropy(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return 'SemanticEntropy'
+        return "SemanticEntropy"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        loglikelihoods_list = stats['sample_log_probs']
-        hyps_list = stats['sample_texts']
+        loglikelihoods_list = stats["sample_log_probs"]
+        hyps_list = stats["sample_texts"]
         return self.batched_call(hyps_list, loglikelihoods_list)
 
-    def batched_call(self, hyps_list: List[List[str]], loglikelihoods_list: List[List[float]],
-                     log_weights: Optional[List[List[float]]] = None) -> np.array:
+    def batched_call(
+        self,
+        hyps_list: List[List[str]],
+        loglikelihoods_list: List[List[float]],
+        log_weights: Optional[List[List[float]]] = None,
+    ) -> np.array:
         if log_weights is None:
             log_weights = [None for _ in hyps_list]
 
@@ -42,14 +46,21 @@ class SemanticEntropy(Estimator):
 
         semantic_logits = {}
         for i in range(len(hyps_list)):
-            class_likelihoods = [np.array(loglikelihoods_list[i])[np.array(class_idx)]
-                                 for class_idx in self._class_to_sample[i]]
-            class_lp = [np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods]
+            class_likelihoods = [
+                np.array(loglikelihoods_list[i])[np.array(class_idx)]
+                for class_idx in self._class_to_sample[i]
+            ]
+            class_lp = [
+                np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
+            ]
             if log_weights[i] is None:
                 log_weights[i] = [0 for _ in hyps_list[i]]
             semantic_logits[i] = -np.mean(
-                [class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
-                 for j in range(len(hyps_list[i]))])
+                [
+                    class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
+                    for j in range(len(hyps_list[i]))
+                ]
+            )
         return np.array([semantic_logits[i] for i in range(len(hyps_list))])
 
     def get_classes(self, hyps_list: List[List[str]]):
@@ -57,13 +68,15 @@ class SemanticEntropy(Estimator):
         self._class_to_sample: Dict[int, List] = defaultdict(list)
         self._is_entailment = {}
 
-        generators = [self._determine_class(idx, i, hyp)
-                      for idx, hyp in enumerate(hyps_list)
-                      for i in range(len(hyp))]
+        generators = [
+            self._determine_class(idx, i, hyp)
+            for idx, hyp in enumerate(hyps_list)
+            for i in range(len(hyp))
+        ]
         rng = zip(*generators)
         if self.verbose:
             max_len = max(len(hyp) for hyp in hyps_list)
-            rng = tqdm(rng, total=max_len, desc='DeBERTa inference')
+            rng = tqdm(rng, total=max_len, desc="DeBERTa inference")
         for queries in rng:
             not_nan_queries = [(t[0], t[1]) for t in queries if t is not None]
             if len(not_nan_queries) == 0:
@@ -89,11 +102,11 @@ class SemanticEntropy(Estimator):
             inp = {k: v.to(DEBERTA.device) for k, v in encoded.items()}
             with torch.no_grad():
                 if self.verbose:
-                    sys.stderr.write('Inference...')
+                    sys.stderr.write("Inference...")
                     sys.stderr.flush()
                 logits = DEBERTA.deberta(**inp).logits
                 if self.verbose:
-                    sys.stderr.write('Done')
+                    sys.stderr.write("Done")
                     sys.stderr.flush()
             res.append((logits.argmax(-1) == DEBERTA.deberta.config.label2id['ENTAILMENT']).cpu().numpy())
         return np.concatenate(res)
@@ -120,7 +133,10 @@ class SemanticEntropy(Estimator):
                 yield class_text, cur_text
             if (cur_text, class_text) not in self._is_entailment.keys():
                 yield cur_text, class_text
-            if self._is_entailment[class_text, cur_text] and self._is_entailment[cur_text, class_text]:
+            if (
+                self._is_entailment[class_text, cur_text]
+                and self._is_entailment[cur_text, class_text]
+            ):
                 self._class_to_sample[idx][class_id].append(i)
                 self._sample_to_class[idx][i] = class_id
                 found_class = True

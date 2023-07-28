@@ -40,15 +40,13 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         }
 
 
-def gen_samples(n_samples, model, batch, **args):
-    batch_size = len(batch['input_ids'])
+def gen_samples(n_samples, model, batch, **kwargs):
+    batch_size = len(batch["input_ids"])
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
-            out = model.generate(
-                **batch,
-                **args
-            )
+
+            out = model.model.generate(**batch, **kwargs)
             cur_logits = torch.stack(out.scores, dim=1).log_softmax(-1)
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
@@ -61,13 +59,15 @@ def gen_samples(n_samples, model, batch, **args):
 class SamplingGenerationCalculator(StatCalculator):
     def __init__(self, samples_n: int = 10):
         self.samples_n = samples_n
-        super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
+        super().__init__(["sample_log_probs", "sample_tokens", "sample_texts"], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         sequences, logits = gen_samples(
-            self.samples_n, model, batch,
+            self.samples_n,
+            model,
+            batch,
             output_scores=True,
             return_dict_in_generate=True,
             max_new_tokens=max_new_tokens,
@@ -83,7 +83,11 @@ class SamplingGenerationCalculator(StatCalculator):
             sequences = [seq[1:] for seq in sequences]
         for i in range(len(logits)):
             log_prob, toks = 0, []
-            inp_size = len(batch['input_ids'][int(i / self.samples_n)]) if model.model_type == "CausalLM" else 0
+            inp_size = (
+                len(batch["input_ids"][int(i / self.samples_n)])
+                if model.model_type == "CausalLM"
+                else 0
+            )
             for j in range(len(sequences[i]) - inp_size):
                 cur_token = sequences[i][j + inp_size].item()
                 log_prob += max(logits[i][j][cur_token].item(), -10)
@@ -94,7 +98,7 @@ class SamplingGenerationCalculator(StatCalculator):
             tokens[int(i / self.samples_n)].append(toks)
             texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
         return {
-            'sample_log_probs': log_probs,
-            'sample_tokens': tokens,
-            'sample_texts': texts,
+            "sample_log_probs": log_probs,
+            "sample_tokens": tokens,
+            "sample_texts": texts,
         }

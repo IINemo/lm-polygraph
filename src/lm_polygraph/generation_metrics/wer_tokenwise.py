@@ -6,10 +6,10 @@ from .generation_metric import GenerationMetric
 
 class WERTokenwiseMetric(GenerationMetric):
     def __init__(self):
-        super().__init__(['greedy_tokens'], 'token')
+        super().__init__(["greedy_tokens"], "token")
 
     def __str__(self):
-        return f'WERTokenwise'
+        return f"WERTokenwise"
 
     def _score_single(self, hyp: List[int], ref: List[int]) -> List[float]:
         n, m = len(hyp), len(ref)
@@ -43,13 +43,20 @@ class WERTokenwiseMetric(GenerationMetric):
                 i -= 1
                 j -= 1
             else:
-                raise Exception('Internal error')
+                raise Exception("Internal error")
 
         return correct[:-1]
 
-    def __call__(self, stats: Dict[str, np.ndarray], target_texts: List[str],
-                 target_tokens: List[List[int]]) -> np.ndarray:
-        return np.array([
-            c
-            for hyp, ref in zip(stats['greedy_tokens'], target_tokens)
-            for c in self._score_single(hyp, ref)])
+    def __call__(
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
+    ) -> np.ndarray:
+        return np.array(
+            [
+                c
+                for hyp, ref in zip(stats["greedy_tokens"], target_tokens)
+                for c in self._score_single(hyp, ref)
+            ]
+        )

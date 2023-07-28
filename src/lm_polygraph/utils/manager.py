@@ -17,7 +17,6 @@ from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
 from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
-
 def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
     ordered: List[str] = []
     have_stats: Set[str] = set()
@@ -28,12 +27,12 @@ def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
             continue
         dependent = False
         if stat not in STAT_DEPENDENCIES.keys():
-            raise Exception(f'Cant find stat calculator for: {stat}')
+            raise Exception(f"Cant find stat calculator for: {stat}")
         for d in STAT_DEPENDENCIES[stat]:
             if d not in have_stats:
                 stats = [d] + stats
                 if stats.count(d) > 40:
-                    raise Exception(f'Found possibly cyclic dependencies: {d}')
+                    raise Exception(f"Found possibly cyclic dependencies: {d}")
                 dependent = True
         if not dependent:
             stats = stats[1:]
@@ -47,7 +46,7 @@ def _check_unique_names(xs):
     names = set()
     for x in xs:
         if str(x) in names:
-            raise Exception(f'Got multiple __str__ values for {x}')
+            raise Exception(f"Got multiple __str__ values for {x}")
         names.add(str(x))
 
 
@@ -79,7 +78,6 @@ def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text:
     texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
     tokens = man.stats.get('greedy_tokens', None)
     return UncertaintyOutput(texts, tokens, ue)
-
 
 class UEManager:
     def __init__(
@@ -126,8 +124,7 @@ class UEManager:
         train_stats, _ = _order_calculators(train_stats)
         self.train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in train_stats]
         background_train_stats = [s for e in estimators for s in e.stats_dependencies if s.startswith("background_train")]
-        background_train_stats, _ = _order_calculators(background_train_stats)
-        self.background_train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in background_train_stats]
+        self.background_train_stat_calculators: List[StatCalculator] = _order_calculators(background_train_stats)
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
@@ -149,7 +146,7 @@ class UEManager:
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ('input_texts', inp_texts),
-                ('target_texts', target_texts),
+                ('target_texts', target_texts)
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
@@ -162,10 +159,11 @@ class UEManager:
 
             batch_stats['generation_params'] = {}
             batch_stats['ensemble_model'] = self.ensemble_model
-
             try:
                 for stat_calculator in self.stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
+                    new_stats = stat_calculator(
+                        batch_stats, inp_texts, self.model, self.max_new_tokens
+                    )
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue
@@ -192,7 +190,9 @@ class UEManager:
                 batch_estimations[estimator.level, str(estimator)] += e
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
-                m = generation_metric(batch_stats, target_texts=target_texts, target_tokens=target_tokens).tolist()
+                m = generation_metric(
+                    batch_stats, target_texts=target_texts, target_tokens=target_tokens
+                ).tolist()
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
@@ -208,13 +208,17 @@ class UEManager:
                     if gen_level != e_level:
                         continue
                     if len(estimator_values) != len(generation_metric):
-                        raise Exception(f'Got different number of metrics for {e_name} and {gen_name}: '
-                                        f'{len(estimator_values)} and {len(generation_metric)}')
+                        raise Exception(
+                            f"Got different number of metrics for {e_name} and {gen_name}: "
+                            f"{len(estimator_values)} and {len(generation_metric)}"
+                        )
                     ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric(ue, metric)
+                        self.metrics[
+                            e_level, e_name, gen_name, str(ue_metric)
+                        ] = ue_metric(ue, metric)
 
         for processor in self.processors:
             processor.on_eval(self.metrics)
@@ -237,9 +241,9 @@ class UEManager:
 
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
-                    ('input_texts', inp_texts),
-                    ('target_texts', target_texts),
-                    ('target_tokens', target_tokens),
+                    ("input_texts", inp_texts),
+                    ("target_texts", target_texts),
+                    ("target_tokens", target_tokens),
                 ]:
                     self.stats[key] += val
                     batch_stats[key] = val
@@ -270,20 +274,23 @@ class UEManager:
 
     def save(self, save_path: str):
         if len(self.metrics) == 0:
-            raise Exception('Nothing to save')
-        torch.save({
-            'metrics': self.metrics,
-            'gen_metrics': self.gen_metrics,
-            'estimations': self.estimations,
-            'stats': self.stats,
-        }, save_path)
+            raise Exception("Nothing to save")
+        torch.save(
+            {
+                "metrics": self.metrics,
+                "gen_metrics": self.gen_metrics,
+                "estimations": self.estimations,
+                "stats": self.stats,
+            },
+            save_path,
+        )
 
     @staticmethod
-    def load(load_path: str) -> 'UEManager':
+    def load(load_path: str) -> "UEManager":
         res_dict = torch.load(load_path)
         man = UEManager(None, None, [], [], [], [])
-        man.metrics = res_dict.get('metrics', None)
-        man.gen_metrics = res_dict.get('gen_metrics', None)
-        man.estimations = res_dict.get('estimations', None)
-        man.stats = res_dict.get('stats', None)
+        man.metrics = res_dict.get("metrics", None)
+        man.gen_metrics = res_dict.get("gen_metrics", None)
+        man.estimations = res_dict.get("estimations", None)
+        man.stats = res_dict.get("stats", None)
         return man

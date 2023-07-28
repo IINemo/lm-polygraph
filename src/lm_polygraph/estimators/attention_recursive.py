@@ -7,14 +7,14 @@ from .estimator import Estimator
 
 class AttentionRecursiveSeq(Estimator):
     def __init__(self):
-        super().__init__(['entropy', 'attention'], 'sequence')
+        super().__init__(["entropy", "attention"], "sequence")
 
     def __str__(self):
-        return 'AttentionRecursiveSeq'
+        return "AttentionRecursiveSeq"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        entropies = stats['entropy']
-        attentions = stats['attention']
+        entropies = stats["entropy"]
+        attentions = stats["attention"]
         ue = []
         for attn, entropy in zip(attentions, entropies):
             entropy = np.array(entropy)
@@ -26,16 +26,17 @@ class AttentionRecursiveSeq(Estimator):
             ue.append(np.mean(u))
         return np.array(ue)
 
+
 class AttentionRecursiveToken(Estimator):
     def __init__(self):
-        super().__init__(['entropy', 'attention'], 'token')
+        super().__init__(["entropy", "attention"], "token")
 
     def __str__(self):
-        return 'AttentionRecursiveToken'
+        return "AttentionRecursiveToken"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        entropies = stats['entropy']
-        attentions = stats['attention']
+        entropies = stats["entropy"]
+        attentions = stats["attention"]
         ue = []
         for attn, entropy in zip(attentions, entropies):
             entropy = np.array(entropy)

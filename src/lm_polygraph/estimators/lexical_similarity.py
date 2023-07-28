@@ -13,15 +13,19 @@ class LexicalSimilarity(Estimator):
         super().__init__(['blackbox_sample_texts'], 'sequence')
 
     def __str__(self):
-        return f'LexicalSimilarity_{self.metric}'
+        return f"LexicalSimilarity_{self.metric}"
 
     def _score_single(self, t1: str, t2: str):
-        if self.metric.startswith('rouge'):
-            return rouge_scorer.RougeScorer([self.metric], use_stemmer=True).score(t1, t2)[self.metric].fmeasure
-        elif self.metric == 'BLEU':
-            return -(1 - sentence_bleu([t1.split()], t2.split())) ** 2
+        if self.metric.startswith("rouge"):
+            return (
+                rouge_scorer.RougeScorer([self.metric], use_stemmer=True)
+                .score(t1, t2)[self.metric]
+                .fmeasure
+            )
+        elif self.metric == "BLEU":
+            return -((1 - sentence_bleu([t1.split()], t2.split())) ** 2)
         else:
-            raise Exception(f'Unknown metrics for lexical similarity: {self.metric}')
+            raise Exception(f"Unknown metrics for lexical similarity: {self.metric}")
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_texts = stats['blackbox_sample_texts']

@@ -29,6 +29,7 @@ def smoothing_function(p_n, references, hypothesis, hyp_len):
             smoothed_p_n.append(p_i)
     return smoothed_p_n
 
+
 def pair_bleu(references, prediction):
     """
     Compute the bleu score between two given texts.
@@ -56,15 +57,15 @@ def pair_bleu(references, prediction):
 
 class BLEUVar(Estimator):
     def __init__(self):
-        super().__init__(['bleuvar'], 'sequence')
+        super().__init__(["bleuvar"], "sequence")
 
     def __str__(self):
-        return 'BLEUVar'
+        return "BLEUVar"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        hypotheses: List[List[str]] = stats['ensemble_hypotheses']
+        hypotheses: List[List[str]] = stats["ensemble_hypotheses"]
         bleu_vars = []
-        for inst_hypotheses in tqdm(hypotheses, desc='Calculating BLEUVar scores...'):
+        for inst_hypotheses in tqdm(hypotheses, desc="Calculating BLEUVar scores..."):
             n = len(inst_hypotheses)
             bleu_scores = np.zeros((n, n), dtype=float)
             min_bleuvar = float("inf")

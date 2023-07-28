@@ -7,17 +7,20 @@ from .estimator import Estimator
 
 class ConditionalMutualInformationSeq(Estimator):
     def __init__(self, tau: float, lambd: float):
-        super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods', 'entropy'], 'sequence')
+        super().__init__(
+            ["greedy_log_likelihoods", "greedy_lm_log_likelihoods", "entropy"],
+            "sequence",
+        )
         self.tau = tau
         self.lambd = lambd
 
     def __str__(self):
-        return 'ConditionalMutualInformationSeq'
+        return "ConditionalMutualInformationSeq"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        logprobs = stats['greedy_log_likelihoods']
-        lm_logprobs = stats['greedy_lm_log_likelihoods']
-        entropies = stats['entropy']
+        logprobs = stats["greedy_log_likelihoods"]
+        lm_logprobs = stats["greedy_lm_log_likelihoods"]
+        entropies = stats["entropy"]
         mi_scores = []
         for lp, lm_lp, ent in zip(logprobs, lm_logprobs, entropies):
             mi_scores.append([])
@@ -31,17 +34,19 @@ class ConditionalMutualInformationSeq(Estimator):
 
 class ConditionalMutualInformationToken(Estimator):
     def __init__(self, tau: float, lambd: float):
-        super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods', 'entropy'], 'token')
+        super().__init__(
+            ["greedy_log_likelihoods", "greedy_lm_log_likelihoods", "entropy"], "token"
+        )
         self.tau = tau
         self.lambd = lambd
 
     def __str__(self):
-        return 'ConditionalMutualInformationToken'
+        return "ConditionalMutualInformationToken"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        logprobs = stats['greedy_log_likelihoods']
-        lm_logprobs = stats['greedy_lm_log_likelihoods']
-        entropies = stats['entropy']
+        logprobs = stats["greedy_log_likelihoods"]
+        lm_logprobs = stats["greedy_lm_log_likelihoods"]
+        entropies = stats["entropy"]
         mi_scores = []
         for lp, lm_lp, ent in zip(logprobs, lm_logprobs, entropies):
             mi_scores.append([])

@@ -7,6 +7,12 @@ from .p_true import PTrue
 from .p_true_sampling import PTrueSampling
 from .monte_carlo_sequence_entropy import MonteCarloSequenceEntropy
 from .monte_carlo_normalized_sequence_entropy import MonteCarloNormalizedSequenceEntropy
+from .max_probability_normalized import MaxProbabilityNormalizedSeq, MaxProbabilityNormalizedToken
+from .sent_std import StdSeq, StdToken
+from .max_probability_normalized import (
+    MaxProbabilityNormalizedSeq,
+    MaxProbabilityNormalizedToken,
+)
 from .lexical_similarity import LexicalSimilarity
 from .deg_mat import DegMat
 from .eccentricity import Eccentricity

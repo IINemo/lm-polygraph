@@ -10,20 +10,27 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 
 class EraseHypothesesLogitsProcessor(LogitsProcessor):
-    def __init__(self, hyps_to_erase: List[List[int]], hyps_logprobs: List[float], input_len: int):
+    def __init__(
+        self, hyps_to_erase: List[List[int]], hyps_logprobs: List[float], input_len: int
+    ):
         self.hyps_to_erase: List[List[int]] = hyps_to_erase
         self.hyps_logprobs: List[float] = hyps_logprobs
         self.importance_logits, self.logits = [], []
         self.input_len = input_len
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.LongTensor:
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
+    ) -> torch.LongTensor:
         self.logits.append(scores.clone())
         scores = scores.log_softmax(-1)
         for i in range(len(input_ids)):
             equal = True
             for j in range(len(input_ids[i]) - self.input_len):
-                if len(self.hyps_to_erase[i]) < j + 1 or input_ids[i, j + self.input_len].item() != \
-                        self.hyps_to_erase[i][j]:
+                if (
+                    len(self.hyps_to_erase[i]) < j + 1
+                    or input_ids[i, j + self.input_len].item()
+                    != self.hyps_to_erase[i][j]
+                ):
                     equal = False
                     break
             if len(input_ids[i]) - self.input_len >= len(self.hyps_to_erase[i]):
@@ -47,12 +54,17 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
 
 
 def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
-    batch_size = len(batch['input_ids'])
-    logits, importance_logits = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
+    batch_size = len(batch["input_ids"])
+    logits, importance_logits = (
+        [[] for _ in range(batch_size)],
+        [[] for _ in range(batch_size)],
+    )
     sequences = [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
-            input_len = batch['input_ids'].shape[1] if model.model_type == "CausalLM" else 0
+            input_len = (
+                batch["input_ids"].shape[1] if model.model_type == "CausalLM" else 0
+            )
             logits_processor = EraseHypothesesLogitsProcessor(
                 hyps_to_erase=[tokens[k] for tokens in sample_tokens],
                 hyps_logprobs=[log_p[k] for log_p in sample_log_p],
@@ -64,7 +76,9 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
                 **args
             )
             cur_logits = torch.stack(logits_processor.logits, dim=1).log_softmax(-1)
-            cur_importance_logits = torch.stack(logits_processor.importance_logits, dim=1).log_softmax(-1)
+            cur_importance_logits = torch.stack(
+                logits_processor.importance_logits, dim=1
+            ).log_softmax(-1)
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])
@@ -78,9 +92,15 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
 class AdaptedSamplingGenerationCalculator(StatCalculator):
     def __init__(self, samples_n: int = 10):
         self.samples_n = samples_n
-        super().__init__(['adapted_sample_log_probs', 'adapted_sample_log_probs_gen',
-                          'adapted_sample_tokens', 'adapted_sample_texts'],
-                         ['sample_log_probs', 'sample_tokens', 'sample_texts'])
+        super().__init__(
+            [
+                "adapted_sample_log_probs",
+                "adapted_sample_log_probs_gen",
+                "adapted_sample_tokens",
+                "adapted_sample_texts",
+            ],
+            ["sample_log_probs", "sample_tokens", "sample_texts"],
+        )
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         sample_texts: List[List[str]] = \
@@ -97,17 +117,21 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
 
         n_importance_samples = self.samples_n // 2
         importance_sequences, logits, importance_logits = gen_samples(
-            n_importance_samples, model, batch, sample_tokens, sample_log_p,
+            n_importance_samples,
+            model,
+            batch,
+            sample_tokens,
+            sample_log_p,
             output_scores=True,
             return_dict_in_generate=True,
             max_new_tokens=max_new_tokens,
             min_length=2,
             num_beams=1,
             do_sample=True)
-
+        
         for i in range(len(importance_logits)):
             importance_log_prob, log_prob, toks = 0, 0, []
-            inp_size = len(batch['input_ids'][int(i / n_importance_samples)])
+            inp_size = len(batch["input_ids"][int(i / n_importance_samples)])
             for j in range(len(importance_sequences[i]) - inp_size):
                 cur_token = importance_sequences[i][j + inp_size].item()
                 importance_log_prob += importance_logits[i][j][cur_token].item()
@@ -118,11 +142,13 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             sample_log_p_gen[int(i / n_importance_samples)].append(importance_log_prob)
             sample_log_p[int(i / n_importance_samples)].append(log_prob)
             sample_tokens[int(i / n_importance_samples)].append(toks)
-            sample_texts[int(i / n_importance_samples)].append(model.tokenizer.decode(toks))
+            sample_texts[int(i / n_importance_samples)].append(
+                model.tokenizer.decode(toks)
+            )
 
         return {
-            'adapted_sample_log_probs': sample_log_p,
-            'adapted_sample_log_probs_gen': sample_log_p_gen,
-            'adapted_sample_tokens': sample_tokens,
-            'adapted_sample_texts': sample_texts,
+            "adapted_sample_log_probs": sample_log_p,
+            "adapted_sample_log_probs_gen": sample_log_p_gen,
+            "adapted_sample_tokens": sample_tokens,
+            "adapted_sample_texts": sample_texts,
         }

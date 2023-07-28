@@ -76,14 +76,16 @@ class GreedyProbsCalculator(StatCalculator):
             elif model.model_type == "CausalLM":
                 attentions = out.attentions
             sequences = out.sequences
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
+            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                out, batch, model.model_type
+            )
 
         cut_logits = []
         cut_sequences = []
         cut_texts = []
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
-                seq = sequences[i, batch['input_ids'].shape[1]:].cpu()
+                seq = sequences[i, batch["input_ids"].shape[1] :].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -101,10 +103,18 @@ class GreedyProbsCalculator(StatCalculator):
             c = len(cut_sequences[i])
             attn_mask.append(np.zeros(shape=(c, c)))
             for j in range(1, c):
-                attn_mask[i][j, :j] = torch.vstack(
-                    [attentions[j][l][i][h][0][-j:]
-                     for l in range(len(attentions[j]))
-                     for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
+                attn_mask[i][j, :j] = (
+                    torch.vstack(
+                        [
+                            attentions[j][l][i][h][0][-j:]
+                            for l in range(len(attentions[j]))
+                            for h in range(len(attentions[j][l][i]))
+                        ]
+                    )
+                    .mean(0)
+                    .cpu()
+                    .numpy()
+                )
 
         ll = []
         for i in range(len(texts)):
@@ -115,24 +125,24 @@ class GreedyProbsCalculator(StatCalculator):
 
         if model.model_type == "CausalLM":
             embeddings_dict = {
-                'embeddings_decoder': embeddings_decoder,
+                "embeddings_decoder": embeddings_decoder,
             }
         elif model.model_type == "Seq2SeqLM":
             embeddings_dict = {
-                'embeddings_encoder': embeddings_encoder,
-                'embeddings_decoder': embeddings_decoder,
+                "embeddings_encoder": embeddings_encoder,
+                "embeddings_decoder": embeddings_decoder,
             }
         else:
             raise NotImplementedError
 
         result_dict = {
-            'input_texts': texts,
-            'input_tokens': inp_tokens,
-            'greedy_log_probs': cut_logits,
-            'greedy_tokens': cut_sequences,
-            'greedy_texts': cut_texts,
-            'attention': attn_mask,
-            'greedy_log_likelihoods': ll,
+            "input_texts": texts,
+            "input_tokens": inp_tokens,
+            "greedy_log_probs": cut_logits,
+            "greedy_tokens": cut_sequences,
+            "greedy_texts": cut_texts,
+            "attention": attn_mask,
+            "greedy_log_likelihoods": ll,
         }
         result_dict.update(embeddings_dict)
 

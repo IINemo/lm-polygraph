@@ -41,12 +41,12 @@ class EnsembleGenerationMixin(GenerationMixin):
 
     @property
     def tokenizer(self):
-        if hasattr(self, '_tokenizer'):
+        if hasattr(self, "_tokenizer"):
             return self._tokenizer
         return None
 
     @tokenizer.setter
-    def tokenizer(self, value = None):
+    def tokenizer(self, value=None):
         self._tokenizer = value
 
     @property
@@ -57,20 +57,20 @@ class EnsembleGenerationMixin(GenerationMixin):
     def ensembling_mode(self):
         if self._ensembling_mode is not None:
             return self._ensembling_mode
-        return 'pe'
+        return "pe"
 
     @ensembling_mode.setter
-    def ensembling_mode(self, value = 'pe'):
+    def ensembling_mode(self, value="pe"):
         self._ensembling_mode = value
 
     @property
     def mc(self):
-        if hasattr(self, '_mc') and self._mc is not None:
+        if hasattr(self, "_mc") and self._mc is not None:
             return self._mc
         return False
 
     @mc.setter
-    def mc(self, value = False):
+    def mc(self, value=False):
         self._mc = value
 
     @property
@@ -78,7 +78,7 @@ class EnsembleGenerationMixin(GenerationMixin):
         return self._mc_models_num
 
     @mc_models_num.setter
-    def mc_models_num(self, num = 1):
+    def mc_models_num(self, num=1):
         self._mc_models_num = num
 
     @property
@@ -86,7 +86,7 @@ class EnsembleGenerationMixin(GenerationMixin):
         return self._base_seed
 
     @base_seed.setter
-    def base_seed(self, seed = 42):
+    def base_seed(self, seed=42):
         self._base_seed = seed
 
     @property
@@ -94,12 +94,12 @@ class EnsembleGenerationMixin(GenerationMixin):
         return self._mc_seeds
 
     @mc_seeds.setter
-    def mc_seeds(self, seeds = []):
+    def mc_seeds(self, seeds=[]):
         self._mc_seeds = seeds
 
     @property
     def models_beam_logits_iter(self):
-        if hasattr(self, '_models_beam_logits_iter'):
+        if hasattr(self, "_models_beam_logits_iter"):
             return self._models_beam_logits_iter
 
     @models_beam_logits_iter.setter
@@ -251,15 +251,21 @@ class EnsembleGenerationMixin(GenerationMixin):
                 UserWarning,
             )
         pad_token_id = (
-            pad_token_id if pad_token_id is not None else self.generation_config.pad_token_id
+            pad_token_id
+            if pad_token_id is not None
+            else self.generation_config.pad_token_id
         )
         eos_token_id = (
-            eos_token_id if eos_token_id is not None else self.generation_config.eos_token_id
+            eos_token_id
+            if eos_token_id is not None
+            else self.generation_config.eos_token_id
         )
         if isinstance(eos_token_id, int):
             eos_token_id = [eos_token_id]
         output_scores = (
-            output_scores if output_scores is not None else self.generation_config.output_scores
+            output_scores
+            if output_scores is not None
+            else self.generation_config.output_scores
         )
         output_attentions = (
             output_attentions
@@ -328,32 +334,32 @@ class EnsembleGenerationMixin(GenerationMixin):
         this_peer_finished = False  # used by synced_gpus only
         encoder_outputs = model_kwargs.pop("encoder_outputs")
         calculate_entropies = getattr(self, "calculate_entropies", True)
-        
+
         self.models_beam_tokens_iter = None
         models_beam_next_token_logits = []
-        
+
         pe_uncertainties = {}
         ep_uncertainties = {}
         if calculate_entropies:
-            pe_uncertainties['total_uncertainty'] = []
-            pe_uncertainties['data_uncertainty'] = []
-            pe_uncertainties['mutual_information'] = []
-            pe_uncertainties['epkl_total_uncertainty'] = []
-            pe_uncertainties['epkl'] = []
-            pe_uncertainties['rmi'] = []
+            pe_uncertainties["total_uncertainty"] = []
+            pe_uncertainties["data_uncertainty"] = []
+            pe_uncertainties["mutual_information"] = []
+            pe_uncertainties["epkl_total_uncertainty"] = []
+            pe_uncertainties["epkl"] = []
+            pe_uncertainties["rmi"] = []
 
-            ep_uncertainties['total_uncertainty'] = []
-            ep_uncertainties['data_uncertainty'] = []
-            ep_uncertainties['mutual_information'] = []
-            ep_uncertainties['epkl_total_uncertainty'] = []
-            ep_uncertainties['epkl'] = []
-            ep_uncertainties['rmi']= []
+            ep_uncertainties["total_uncertainty"] = []
+            ep_uncertainties["data_uncertainty"] = []
+            ep_uncertainties["mutual_information"] = []
+            ep_uncertainties["epkl_total_uncertainty"] = []
+            ep_uncertainties["epkl"] = []
+            ep_uncertainties["rmi"] = []
 
         if self.mc:
             num_models = self.mc_models_num
         else:
             num_models = len(self.models)
-        
+
         self.models_beam_logits_iter = None
 
         while True:
@@ -375,7 +381,9 @@ class EnsembleGenerationMixin(GenerationMixin):
                     torch.manual_seed(self.mc_seeds[i])
                     model_inputs.append(
                         self.prepare_inputs_for_generation(
-                            input_ids, encoder_outputs=encoder_outputs[i], **model_kwargs
+                            input_ids,
+                            encoder_outputs=encoder_outputs[i],
+                            **model_kwargs,
                         )
                     )
                 torch.manual_seed(self.base_seed)
@@ -383,10 +391,16 @@ class EnsembleGenerationMixin(GenerationMixin):
                 for i in range(num_models):
                     dev = self.models[i].device
                     input_ids.to(dev)
-                    model_kwargs = {k: v.to(dev) for k, v in model_kwargs.items() if hasattr(v, 'to')}
+                    model_kwargs = {
+                        k: v.to(dev)
+                        for k, v in model_kwargs.items()
+                        if hasattr(v, "to")
+                    }
                     model_inputs.append(
                         self.prepare_inputs_for_generation(
-                            input_ids.to(dev), encoder_outputs=encoder_outputs[i], **model_kwargs
+                            input_ids.to(dev),
+                            encoder_outputs=encoder_outputs[i],
+                            **model_kwargs,
                         )
                     )
 
@@ -397,12 +411,14 @@ class EnsembleGenerationMixin(GenerationMixin):
             if self.mc:
                 for i in range(self.mc_models_num):
                     torch.manual_seed(self.mc_seeds[i])
-                    models_outputs.append(self(
-                        **model_inputs[i],
-                        return_dict=True,
-                        output_attentions=output_attentions,
-                        output_hidden_states=output_hidden_states,
-                    ))
+                    models_outputs.append(
+                        self(
+                            **model_inputs[i],
+                            return_dict=True,
+                            output_attentions=output_attentions,
+                            output_hidden_states=output_hidden_states,
+                        )
+                    )
 
                     if synced_gpus and this_peer_finished:
                         cur_len = cur_len + 1
@@ -411,17 +427,19 @@ class EnsembleGenerationMixin(GenerationMixin):
                 torch.manual_seed(self.base_seed)
             else:
                 for i, model in enumerate(self.models):
-                    models_outputs.append(model(
-                        **model_inputs[i],
-                        return_dict=True,
-                        output_attentions=output_attentions,
-                        output_hidden_states=output_hidden_states,
-                    ))
+                    models_outputs.append(
+                        model(
+                            **model_inputs[i],
+                            return_dict=True,
+                            output_attentions=output_attentions,
+                            output_hidden_states=output_hidden_states,
+                        )
+                    )
 
                     if synced_gpus and this_peer_finished:
                         cur_len = cur_len + 1
                         continue  # don't waste resources running the code we don't need
-            
+
             for outputs in models_outputs:
                 model_next_token_logits = outputs.logits[:, -1, :].to(self.device)
                 # hack: adjust tokens for Marian. For Marian we have to make sure that the `pad_token_id`
@@ -438,43 +456,59 @@ class EnsembleGenerationMixin(GenerationMixin):
                     model_next_token_scores.exp()
                 )  # probas of one model
                 if calculate_entropies:
-                    model_entropy = torch.tensor(entropy(models_next_token_probas[-1].cpu().numpy(), axis=-1)).to(input_ids.device)
+                    model_entropy = torch.tensor(
+                        entropy(models_next_token_probas[-1].cpu().numpy(), axis=-1)
+                    ).to(input_ids.device)
                     models_entropies.append(model_entropy)
-            
 
-            pe_next_token_scores = torch.stack(models_next_token_logits).logsumexp(dim=0) - torch.tensor(num_models).log()
+            pe_next_token_scores = (
+                torch.stack(models_next_token_logits).logsumexp(dim=0)
+                - torch.tensor(num_models).log()
+            )
 
             if self.models_beam_logits_iter is None:
-                self.models_beam_logits_iter = torch.zeros((num_models, batch_size * num_beams, 1)).to(input_ids.device)
+                self.models_beam_logits_iter = torch.zeros(
+                    (num_models, batch_size * num_beams, 1)
+                ).to(input_ids.device)
                 models_beam_logits = self.models_beam_logits_iter
 
             denom = models_beam_logits.logsumexp(dim=0)
-            num = (torch.stack(models_next_token_logits) + models_beam_logits).logsumexp(dim=0)
+            num = (
+                torch.stack(models_next_token_logits) + models_beam_logits
+            ).logsumexp(dim=0)
             ep_next_token_scores = num - denom
 
             pe_next_token_probas = pe_next_token_scores.exp()
             ep_next_token_probas = ep_next_token_scores.exp()
 
             if calculate_entropies:
-                pe_token_total_unc = torch.tensor(entropy(pe_next_token_probas.cpu().numpy(), axis=-1)).to(input_ids.device)
+                pe_token_total_unc = torch.tensor(
+                    entropy(pe_next_token_probas.cpu().numpy(), axis=-1)
+                ).to(input_ids.device)
                 pe_token_data_unc = torch.stack(models_entropies).mean(0)
                 pe_token_mi = pe_token_total_unc - pe_token_data_unc
                 pe_token_av_logs = torch.stack(models_next_token_logits).mean(0)
-                pe_token_epkl_total_unc = -(pe_token_av_logs * pe_next_token_probas).sum(-1)
+                pe_token_epkl_total_unc = -(
+                    pe_token_av_logs * pe_next_token_probas
+                ).sum(-1)
                 pe_token_epkl = pe_token_epkl_total_unc - pe_token_data_unc
                 pe_token_rmi = pe_token_epkl_total_unc - pe_token_total_unc
-            
-                ep_token_total_unc = torch.tensor(entropy(ep_next_token_probas.cpu().numpy(), axis=-1)).to(input_ids.device)
+
+                ep_token_total_unc = torch.tensor(
+                    entropy(ep_next_token_probas.cpu().numpy(), axis=-1)
+                ).to(input_ids.device)
                 ep_token_data_unc = torch.stack(models_entropies).mean(0)
                 ep_token_mi = ep_token_total_unc - ep_token_data_unc
                 ep_token_av_logs = torch.stack(models_next_token_logits).mean(0)
-                ep_token_epkl_total_unc = -(ep_token_av_logs * ep_next_token_probas).sum(-1)
+                ep_token_epkl_total_unc = -(
+                    ep_token_av_logs * ep_next_token_probas
+                ).sum(-1)
                 ep_token_epkl = ep_token_epkl_total_unc - ep_token_data_unc
                 ep_token_rmi = ep_token_epkl_total_unc - ep_token_total_unc
 
-            if self.ensembling_mode == 'pe':
+            if self.ensembling_mode == "pe":
                 next_token_scores = pe_next_token_scores
-            elif self.ensembling_mode == 'ep':
+            elif self.ensembling_mode == "ep":
                 next_token_scores = ep_next_token_scores
             else:
                 raise NotImplementedError
@@ -509,19 +543,23 @@ class EnsembleGenerationMixin(GenerationMixin):
                         else (outputs.hidden_states,)
                     )
                 if calculate_entropies:
-                    pe_uncertainties['total_uncertainty'].append(pe_token_total_unc)
-                    pe_uncertainties['data_uncertainty'].append(pe_token_data_unc)
-                    pe_uncertainties['mutual_information'].append(pe_token_mi)
-                    pe_uncertainties['epkl_total_uncertainty'].append(pe_token_epkl_total_unc)
-                    pe_uncertainties['epkl'].append(pe_token_epkl)
-                    pe_uncertainties['rmi'].append(pe_token_rmi)
+                    pe_uncertainties["total_uncertainty"].append(pe_token_total_unc)
+                    pe_uncertainties["data_uncertainty"].append(pe_token_data_unc)
+                    pe_uncertainties["mutual_information"].append(pe_token_mi)
+                    pe_uncertainties["epkl_total_uncertainty"].append(
+                        pe_token_epkl_total_unc
+                    )
+                    pe_uncertainties["epkl"].append(pe_token_epkl)
+                    pe_uncertainties["rmi"].append(pe_token_rmi)
 
-                    ep_uncertainties['total_uncertainty'].append(ep_token_total_unc)
-                    ep_uncertainties['data_uncertainty'].append(ep_token_data_unc)
-                    ep_uncertainties['mutual_information'].append(ep_token_mi)
-                    ep_uncertainties['epkl_total_uncertainty'].append(ep_token_epkl_total_unc)
-                    ep_uncertainties['epkl'].append(ep_token_epkl)
-                    ep_uncertainties['rmi'].append(ep_token_rmi)
+                    ep_uncertainties["total_uncertainty"].append(ep_token_total_unc)
+                    ep_uncertainties["data_uncertainty"].append(ep_token_data_unc)
+                    ep_uncertainties["mutual_information"].append(ep_token_mi)
+                    ep_uncertainties["epkl_total_uncertainty"].append(
+                        ep_token_epkl_total_unc
+                    )
+                    ep_uncertainties["epkl"].append(ep_token_epkl)
+                    ep_uncertainties["rmi"].append(ep_token_rmi)
 
             # reshape for beam search
             vocab_size = next_token_scores.shape[-1]
@@ -550,23 +588,34 @@ class EnsembleGenerationMixin(GenerationMixin):
             beam_scores = beam_outputs["next_beam_scores"]
             beam_next_tokens = beam_outputs["next_beam_tokens"]
             beam_idx = beam_outputs["next_beam_indices"]
-            
+
             input_ids = torch.cat(
                 [input_ids[beam_idx, :], beam_next_tokens.unsqueeze(-1)], dim=-1
             )
 
-            token_models_beam_logits = torch.stack(models_next_token_logits)[:, beam_idx, :]
-            token_models_beam_logits = torch.gather(token_models_beam_logits, -1,
-                                                    beam_next_tokens.repeat((num_models), 1).unsqueeze(-1))
+            token_models_beam_logits = torch.stack(models_next_token_logits)[
+                :, beam_idx, :
+            ]
+            token_models_beam_logits = torch.gather(
+                token_models_beam_logits,
+                -1,
+                beam_next_tokens.repeat((num_models), 1).unsqueeze(-1),
+            )
 
-            self.models_beam_logits_iter = torch.cat((self.models_beam_logits_iter[:, beam_idx, :], token_models_beam_logits), -1)
+            self.models_beam_logits_iter = torch.cat(
+                (
+                    self.models_beam_logits_iter[:, beam_idx, :],
+                    token_models_beam_logits,
+                ),
+                -1,
+            )
             models_beam_logits = self.models_beam_logits_iter.sum(-1, keepdims=True)
 
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
-            
-            #if "past" not in model_kwargs.keys():
+
+            # if "past" not in model_kwargs.keys():
             #    model_kwargs["past"] = None
             if model_kwargs["past_key_values"] is not None:
                 model_kwargs["past_key_values"] = self._reorder_cache(
@@ -600,7 +649,7 @@ class EnsembleGenerationMixin(GenerationMixin):
             max_length=stopping_criteria.max_length,
             beam_indices=beam_indices,
         )
-        
+
         if return_dict_in_generate:
             if not output_scores:
                 sequence_outputs["sequence_scores"] = None
@@ -753,77 +802,125 @@ class EnsembleGenerationMixin(GenerationMixin):
         if getattr(self, "models", None) is None:
             self._models_list = []
         # init values
-        logits_processor = logits_processor if logits_processor is not None else LogitsProcessorList()
-        stopping_criteria = stopping_criteria if stopping_criteria is not None else StoppingCriteriaList()
+        logits_processor = (
+            logits_processor if logits_processor is not None else LogitsProcessorList()
+        )
+        stopping_criteria = (
+            stopping_criteria
+            if stopping_criteria is not None
+            else StoppingCriteriaList()
+        )
         if max_length is not None:
             warnings.warn(
                 "`max_length` is deprecated in this function, use"
                 " `stopping_criteria=StoppingCriteriaList(MaxLengthCriteria(max_length=max_length))` instead.",
                 UserWarning,
             )
-            stopping_criteria = validate_stopping_criteria(stopping_criteria, max_length)
-        logits_warper = logits_warper if logits_warper is not None else LogitsProcessorList()
-        pad_token_id = pad_token_id if pad_token_id is not None else self.generation_config.pad_token_id
-        eos_token_id = eos_token_id if eos_token_id is not None else self.generation_config.eos_token_id
+            stopping_criteria = validate_stopping_criteria(
+                stopping_criteria, max_length
+            )
+        logits_warper = (
+            logits_warper if logits_warper is not None else LogitsProcessorList()
+        )
+        pad_token_id = (
+            pad_token_id
+            if pad_token_id is not None
+            else self.generation_config.pad_token_id
+        )
+        eos_token_id = (
+            eos_token_id
+            if eos_token_id is not None
+            else self.generation_config.eos_token_id
+        )
         if isinstance(eos_token_id, int):
             eos_token_id = [eos_token_id]
-        eos_token_id_tensor = torch.tensor(eos_token_id).to(input_ids.device) if eos_token_id is not None else None
-        output_scores = output_scores if output_scores is not None else self.generation_config.output_scores
-        output_attentions = output_attentions if output_attentions is not None else self.generation_config.output_attentions
+        eos_token_id_tensor = (
+            torch.tensor(eos_token_id).to(input_ids.device)
+            if eos_token_id is not None
+            else None
+        )
+        output_scores = (
+            output_scores
+            if output_scores is not None
+            else self.generation_config.output_scores
+        )
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.generation_config.output_attentions
+        )
         output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.generation_config.output_hidden_states
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.generation_config.output_hidden_states
         )
         return_dict_in_generate = (
-            return_dict_in_generate if return_dict_in_generate is not None else self.generation_config.return_dict_in_generate
+            return_dict_in_generate
+            if return_dict_in_generate is not None
+            else self.generation_config.return_dict_in_generate
         )
 
         # init attention / hidden states / scores tuples
         scores = () if (return_dict_in_generate and output_scores) else None
         models_scores = [] if (return_dict_in_generate and output_scores) else None
-        decoder_attentions = () if (return_dict_in_generate and output_attentions) else None
-        cross_attentions = () if (return_dict_in_generate and output_attentions) else None
-        decoder_hidden_states = () if (return_dict_in_generate and output_hidden_states) else None
+        decoder_attentions = (
+            () if (return_dict_in_generate and output_attentions) else None
+        )
+        cross_attentions = (
+            () if (return_dict_in_generate and output_attentions) else None
+        )
+        decoder_hidden_states = (
+            () if (return_dict_in_generate and output_hidden_states) else None
+        )
 
         # if model is an encoder-decoder, retrieve encoder attention weights and hidden states
         if return_dict_in_generate and self.config.is_encoder_decoder:
-            encoder_attentions = model_kwargs["encoder_outputs"][0].get("attentions") if output_attentions else None
+            encoder_attentions = (
+                model_kwargs["encoder_outputs"][0].get("attentions")
+                if output_attentions
+                else None
+            )
             encoder_hidden_states = (
-                model_kwargs["encoder_outputs"][0].get("hidden_states") if output_hidden_states else None
+                model_kwargs["encoder_outputs"][0].get("hidden_states")
+                if output_hidden_states
+                else None
             )
 
         # keep track of which sequences are already finished
-        unfinished_sequences = torch.ones(input_ids.shape[0], dtype=torch.long, device=input_ids.device)
+        unfinished_sequences = torch.ones(
+            input_ids.shape[0], dtype=torch.long, device=input_ids.device
+        )
 
         this_peer_finished = False  # used by synced_gpus only
 
         encoder_outputs = model_kwargs.pop("encoder_outputs")
         calculate_entropies = getattr(self, "calculate_entropies", True)
-        
+
         self.models_beam_tokens_iter = None
         models_beam_next_token_logits = []
-        
+
         pe_uncertainties = {}
         ep_uncertainties = {}
         if calculate_entropies:
-            pe_uncertainties['total_uncertainty'] = []
-            pe_uncertainties['data_uncertainty'] = []
-            pe_uncertainties['mutual_information'] = []
-            pe_uncertainties['epkl_total_uncertainty'] = []
-            pe_uncertainties['epkl'] = []
-            pe_uncertainties['rmi'] = []
+            pe_uncertainties["total_uncertainty"] = []
+            pe_uncertainties["data_uncertainty"] = []
+            pe_uncertainties["mutual_information"] = []
+            pe_uncertainties["epkl_total_uncertainty"] = []
+            pe_uncertainties["epkl"] = []
+            pe_uncertainties["rmi"] = []
 
-            ep_uncertainties['total_uncertainty'] = []
-            ep_uncertainties['data_uncertainty'] = []
-            ep_uncertainties['mutual_information'] = []
-            ep_uncertainties['epkl_total_uncertainty'] = []
-            ep_uncertainties['epkl'] = []
-            ep_uncertainties['rmi']= []
+            ep_uncertainties["total_uncertainty"] = []
+            ep_uncertainties["data_uncertainty"] = []
+            ep_uncertainties["mutual_information"] = []
+            ep_uncertainties["epkl_total_uncertainty"] = []
+            ep_uncertainties["epkl"] = []
+            ep_uncertainties["rmi"] = []
 
         if self.mc:
             num_models = self.mc_models_num
         else:
             num_models = len(self.models)
-        
+
         self.models_beam_logits_iter = None
 
         # auto-regressive generation
@@ -831,7 +928,9 @@ class EnsembleGenerationMixin(GenerationMixin):
             if synced_gpus:
                 # Under synced_gpus the `forward` call must continue until all gpus complete their sequence.
                 # The following logic allows an early break if all peers finished generating their sequence
-                this_peer_finished_flag = torch.tensor(0.0 if this_peer_finished else 1.0).to(input_ids.device)
+                this_peer_finished_flag = torch.tensor(
+                    0.0 if this_peer_finished else 1.0
+                ).to(input_ids.device)
                 # send 0.0 if we finished, 1.0 otherwise
                 dist.all_reduce(this_peer_finished_flag, op=dist.ReduceOp.SUM)
                 # did all peers finish? the reduced sum will be 0.0 then
@@ -845,7 +944,9 @@ class EnsembleGenerationMixin(GenerationMixin):
                     torch.manual_seed(self.mc_seeds[i])
                     model_inputs.append(
                         self.prepare_inputs_for_generation(
-                            input_ids, encoder_outputs=encoder_outputs[i], **model_kwargs
+                            input_ids,
+                            encoder_outputs=encoder_outputs[i],
+                            **model_kwargs,
                         )
                     )
                 torch.manual_seed(self.base_seed)
@@ -853,10 +954,16 @@ class EnsembleGenerationMixin(GenerationMixin):
                 for i in range(num_models):
                     dev = self.models[i].device
                     input_ids.to(dev)
-                    model_kwargs = {k: v.to(dev) for k, v in model_kwargs.items() if hasattr(v, 'to')}
+                    model_kwargs = {
+                        k: v.to(dev)
+                        for k, v in model_kwargs.items()
+                        if hasattr(v, "to")
+                    }
                     model_inputs.append(
                         self.prepare_inputs_for_generation(
-                            input_ids.to(dev), encoder_outputs=encoder_outputs[i], **model_kwargs
+                            input_ids.to(dev),
+                            encoder_outputs=encoder_outputs[i],
+                            **model_kwargs,
                         )
                     )
 
@@ -868,12 +975,14 @@ class EnsembleGenerationMixin(GenerationMixin):
             if self.mc:
                 for i in range(self.mc_models_num):
                     torch.manual_seed(self.mc_seeds[i])
-                    models_outputs.append(self(
-                        **model_inputs[i],
-                        return_dict=True,
-                        output_attentions=output_attentions,
-                        output_hidden_states=output_hidden_states,
-                    ))
+                    models_outputs.append(
+                        self(
+                            **model_inputs[i],
+                            return_dict=True,
+                            output_attentions=output_attentions,
+                            output_hidden_states=output_hidden_states,
+                        )
+                    )
 
                     if synced_gpus and this_peer_finished:
                         continue  # don't waste resources running the code we don't need
@@ -881,12 +990,14 @@ class EnsembleGenerationMixin(GenerationMixin):
                 torch.manual_seed(self.base_seed)
             else:
                 for i, model in enumerate(self.models):
-                    models_outputs.append(model(
-                        **model_inputs[i],
-                        return_dict=True,
-                        output_attentions=output_attentions,
-                        output_hidden_states=output_hidden_states,
-                    ))
+                    models_outputs.append(
+                        model(
+                            **model_inputs[i],
+                            return_dict=True,
+                            output_attentions=output_attentions,
+                            output_hidden_states=output_hidden_states,
+                        )
+                    )
 
                     if synced_gpus and this_peer_finished:
                         continue  # don't waste resources running the code we don't need
@@ -901,42 +1012,59 @@ class EnsembleGenerationMixin(GenerationMixin):
                     model_next_token_scores.exp()
                 )  # probas of one model
                 if calculate_entropies:
-                    model_entropy = torch.tensor(entropy(models_next_token_probas[-1].cpu().numpy(), axis=-1)).to(input_ids.device)
+                    model_entropy = torch.tensor(
+                        entropy(models_next_token_probas[-1].cpu().numpy(), axis=-1)
+                    ).to(input_ids.device)
                     models_entropies.append(model_entropy)
 
-            pe_next_token_scores = torch.stack(models_next_token_logits).logsumexp(dim=0) - torch.tensor(num_models).log()
+            pe_next_token_scores = (
+                torch.stack(models_next_token_logits).logsumexp(dim=0)
+                - torch.tensor(num_models).log()
+            )
 
             if self.models_beam_logits_iter is None:
-                self.models_beam_logits_iter = torch.zeros((num_models, input_ids.shape[0], 1)).to(input_ids.device)
+                self.models_beam_logits_iter = torch.zeros(
+                    (num_models, input_ids.shape[0], 1)
+                ).to(input_ids.device)
                 models_beam_logits = self.models_beam_logits_iter
 
             denom = models_beam_logits.logsumexp(dim=0)
-            num = (torch.stack(models_next_token_logits) + models_beam_logits).logsumexp(dim=0)
+            num = (
+                torch.stack(models_next_token_logits) + models_beam_logits
+            ).logsumexp(dim=0)
             ep_next_token_scores = num - denom
 
             pe_next_token_probas = pe_next_token_scores.exp()
             ep_next_token_probas = ep_next_token_scores.exp()
 
             if calculate_entropies:
-                pe_token_total_unc = torch.tensor(entropy(pe_next_token_probas.cpu().numpy(), axis=-1)).to(input_ids.device)
+                pe_token_total_unc = torch.tensor(
+                    entropy(pe_next_token_probas.cpu().numpy(), axis=-1)
+                ).to(input_ids.device)
                 pe_token_data_unc = torch.stack(models_entropies).mean(0)
                 pe_token_mi = pe_token_total_unc - pe_token_data_unc
                 pe_token_av_logs = torch.stack(models_next_token_logits).mean(0)
-                pe_token_epkl_total_unc = -(pe_token_av_logs * pe_next_token_probas).sum(-1)
+                pe_token_epkl_total_unc = -(
+                    pe_token_av_logs * pe_next_token_probas
+                ).sum(-1)
                 pe_token_epkl = pe_token_epkl_total_unc - pe_token_data_unc
                 pe_token_rmi = pe_token_epkl_total_unc - pe_token_total_unc
-            
-                ep_token_total_unc = torch.tensor(entropy(ep_next_token_probas.cpu().numpy(), axis=-1)).to(input_ids.device)
+
+                ep_token_total_unc = torch.tensor(
+                    entropy(ep_next_token_probas.cpu().numpy(), axis=-1)
+                ).to(input_ids.device)
                 ep_token_data_unc = torch.stack(models_entropies).mean(0)
                 ep_token_mi = ep_token_total_unc - ep_token_data_unc
                 ep_token_av_logs = torch.stack(models_next_token_logits).mean(0)
-                ep_token_epkl_total_unc = -(ep_token_av_logs * ep_next_token_probas).sum(-1)
+                ep_token_epkl_total_unc = -(
+                    ep_token_av_logs * ep_next_token_probas
+                ).sum(-1)
                 ep_token_epkl = ep_token_epkl_total_unc - ep_token_data_unc
                 ep_token_rmi = ep_token_epkl_total_unc - ep_token_total_unc
 
-            if self.ensembling_mode == 'pe':
+            if self.ensembling_mode == "pe":
                 next_token_scores = pe_next_token_scores
-            elif self.ensembling_mode == 'ep':
+            elif self.ensembling_mode == "ep":
                 next_token_scores = ep_next_token_scores
             else:
                 raise NotImplementedError
@@ -958,7 +1086,9 @@ class EnsembleGenerationMixin(GenerationMixin):
                     models_scores.append(iter_models_scores)
                 if output_attentions:
                     decoder_attentions += (
-                        (outputs.decoder_attentions,) if self.config.is_encoder_decoder else (outputs.attentions,)
+                        (outputs.decoder_attentions,)
+                        if self.config.is_encoder_decoder
+                        else (outputs.attentions,)
                     )
                     if self.config.is_encoder_decoder:
                         cross_attentions += (outputs.cross_attentions,)
@@ -970,19 +1100,23 @@ class EnsembleGenerationMixin(GenerationMixin):
                         else (outputs.hidden_states,)
                     )
                 if calculate_entropies:
-                    pe_uncertainties['total_uncertainty'].append(pe_token_total_unc)
-                    pe_uncertainties['data_uncertainty'].append(pe_token_data_unc)
-                    pe_uncertainties['mutual_information'].append(pe_token_mi)
-                    pe_uncertainties['epkl_total_uncertainty'].append(pe_token_epkl_total_unc)
-                    pe_uncertainties['epkl'].append(pe_token_epkl)
-                    pe_uncertainties['rmi'].append(pe_token_rmi)
+                    pe_uncertainties["total_uncertainty"].append(pe_token_total_unc)
+                    pe_uncertainties["data_uncertainty"].append(pe_token_data_unc)
+                    pe_uncertainties["mutual_information"].append(pe_token_mi)
+                    pe_uncertainties["epkl_total_uncertainty"].append(
+                        pe_token_epkl_total_unc
+                    )
+                    pe_uncertainties["epkl"].append(pe_token_epkl)
+                    pe_uncertainties["rmi"].append(pe_token_rmi)
 
-                    ep_uncertainties['total_uncertainty'].append(ep_token_total_unc)
-                    ep_uncertainties['data_uncertainty'].append(ep_token_data_unc)
-                    ep_uncertainties['mutual_information'].append(ep_token_mi)
-                    ep_uncertainties['epkl_total_uncertainty'].append(ep_token_epkl_total_unc)
-                    ep_uncertainties['epkl'].append(ep_token_epkl)
-                    ep_uncertainties['rmi'].append(ep_token_rmi)
+                    ep_uncertainties["total_uncertainty"].append(ep_token_total_unc)
+                    ep_uncertainties["data_uncertainty"].append(ep_token_data_unc)
+                    ep_uncertainties["mutual_information"].append(ep_token_mi)
+                    ep_uncertainties["epkl_total_uncertainty"].append(
+                        ep_token_epkl_total_unc
+                    )
+                    ep_uncertainties["epkl"].append(ep_token_epkl)
+                    ep_uncertainties["rmi"].append(ep_token_rmi)
 
             # sample
             probs = nn.functional.softmax(next_token_scores, dim=-1)
@@ -991,18 +1125,27 @@ class EnsembleGenerationMixin(GenerationMixin):
             # finished sentences should have their next token be a padding token
             if eos_token_id is not None:
                 if pad_token_id is None:
-                    raise ValueError("If `eos_token_id` is defined, make sure that `pad_token_id` is defined.")
-                next_tokens = next_tokens * unfinished_sequences + pad_token_id * (1 - unfinished_sequences)
+                    raise ValueError(
+                        "If `eos_token_id` is defined, make sure that `pad_token_id` is defined."
+                    )
+                next_tokens = next_tokens * unfinished_sequences + pad_token_id * (
+                    1 - unfinished_sequences
+                )
 
             # update generated ids, model inputs, and length for next step
             input_ids = torch.cat([input_ids, next_tokens[:, None]], dim=-1)
             if streamer is not None:
                 streamer.put(next_tokens.cpu())
             token_models_beam_logits = torch.stack(models_next_token_logits)
-            token_models_beam_logits = torch.gather(token_models_beam_logits, -1,
-                                                    next_tokens.repeat((num_models), 1).unsqueeze(-1))
+            token_models_beam_logits = torch.gather(
+                token_models_beam_logits,
+                -1,
+                next_tokens.repeat((num_models), 1).unsqueeze(-1),
+            )
 
-            self.models_beam_logits_iter = torch.cat((self.models_beam_logits_iter, token_models_beam_logits), -1)
+            self.models_beam_logits_iter = torch.cat(
+                (self.models_beam_logits_iter, token_models_beam_logits), -1
+            )
             models_beam_logits = self.models_beam_logits_iter.sum(-1, keepdims=True)
 
             model_kwargs = self._update_model_kwargs_for_generation(
@@ -1012,7 +1155,9 @@ class EnsembleGenerationMixin(GenerationMixin):
             # if eos_token was found in one sentence, set sentence to finished
             if eos_token_id_tensor is not None:
                 unfinished_sequences = unfinished_sequences.mul(
-                    next_tokens.tile(eos_token_id_tensor.shape[0], 1).ne(eos_token_id_tensor.unsqueeze(1)).prod(dim=0)
+                    next_tokens.tile(eos_token_id_tensor.shape[0], 1)
+                    .ne(eos_token_id_tensor.unsqueeze(1))
+                    .prod(dim=0)
                 )
 
                 # stop when each sentence is finished
@@ -1061,11 +1206,11 @@ class EnsembleGenerationMixin(GenerationMixin):
         if getattr(self, "models", None) is None:
             self._models_list = []
 
-        if self.mc:        
+        if self.mc:
             # 1. get encoders
             encoder = self.get_encoder()
             # Compatibility with Accelerate big model inference: we need the encoder to outputs stuff on the same device
-        # as the inputs.
+            # as the inputs.
             if hasattr(encoder, "_hf_hook"):
                 encoder._hf_hook.io_same_device = True
 
@@ -1078,15 +1223,21 @@ class EnsembleGenerationMixin(GenerationMixin):
             }
 
             encoder_signature = set(inspect.signature(encoder.forward).parameters)
-            encoder_accepts_wildcard = "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+            encoder_accepts_wildcard = (
+                "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+            )
             if not encoder_accepts_wildcard:
                 encoder_kwargs = {
-                    argument: value for argument, value in encoder_kwargs.items() if argument in encoder_signature
+                    argument: value
+                    for argument, value in encoder_kwargs.items()
+                    if argument in encoder_signature
                 }
 
             # 3. make sure that encoder returns `ModelOutput`
             model_input_name = (
-                model_input_name if model_input_name is not None else self.main_input_name
+                model_input_name
+                if model_input_name is not None
+                else self.main_input_name
             )
             encoder_kwargs["return_dict"] = True
             encoder_kwargs[model_input_name] = inputs_tensor
@@ -1113,21 +1264,31 @@ class EnsembleGenerationMixin(GenerationMixin):
                     if not any(argument.startswith(p) for p in irrelevant_prefix)
                 }
                 encoder_signature = set(inspect.signature(encoder.forward).parameters)
-                encoder_accepts_wildcard = "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+                encoder_accepts_wildcard = (
+                    "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+                )
                 if not encoder_accepts_wildcard:
                     encoder_kwargs = {
-                        argument: value for argument, value in encoder_kwargs.items() if argument in encoder_signature
+                        argument: value
+                        for argument, value in encoder_kwargs.items()
+                        if argument in encoder_signature
                     }
 
                 # 3. make sure that encoder returns `ModelOutput`
                 model_input_name = (
-                    model_input_name if model_input_name is not None else self.main_input_name
+                    model_input_name
+                    if model_input_name is not None
+                    else self.main_input_name
                 )
                 encoder_kwargs["return_dict"] = True
                 encoder_kwargs[model_input_name] = inputs_tensor
 
                 encoder_kwargs[model_input_name].to(model.device)
-                encoder_kwargs = {k: v.to(model.device) for k, v in encoder_kwargs.items() if hasattr(v, 'to')}
+                encoder_kwargs = {
+                    k: v.to(model.device)
+                    for k, v in encoder_kwargs.items()
+                    if hasattr(v, "to")
+                }
                 model_kwargs["encoder_outputs"].append(encoder(**encoder_kwargs))
 
         return model_kwargs
@@ -1143,8 +1304,12 @@ class EnsembleGenerationMixin(GenerationMixin):
 
         def _expand_dict_for_generation(dict_to_expand):
             for key in dict_to_expand:
-                if dict_to_expand[key] is not None and isinstance(dict_to_expand[key], torch.Tensor):
-                    dict_to_expand[key] = dict_to_expand[key].repeat_interleave(expand_size, dim=0)
+                if dict_to_expand[key] is not None and isinstance(
+                    dict_to_expand[key], torch.Tensor
+                ):
+                    dict_to_expand[key] = dict_to_expand[key].repeat_interleave(
+                        expand_size, dim=0
+                    )
             return dict_to_expand
 
         if input_ids is not None:
@@ -1154,14 +1319,14 @@ class EnsembleGenerationMixin(GenerationMixin):
 
         if is_encoder_decoder:
             if model_kwargs.get("encoder_outputs") is None:
-                raise ValueError("If `is_encoder_decoder` is True, make sure that `encoder_outputs` is defined.")
+                raise ValueError(
+                    "If `is_encoder_decoder` is True, make sure that `encoder_outputs` is defined."
+                )
             encoder_outputs_expanded = []
             for output in model_kwargs["encoder_outputs"]:
-                encoder_outputs_expanded.append(
-                    _expand_dict_for_generation(output)
-                )
+                encoder_outputs_expanded.append(_expand_dict_for_generation(output))
             model_kwargs["encoder_outputs"] = encoder_outputs_expanded
-            
+
         return input_ids, model_kwargs
 
 
@@ -1271,4 +1436,3 @@ class SampleEncoderDecoderOutput(ModelOutput):
     decoder_attentions: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
     cross_attentions: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
     decoder_hidden_states: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
-

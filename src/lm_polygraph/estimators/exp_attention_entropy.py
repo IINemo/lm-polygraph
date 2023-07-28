@@ -8,13 +8,13 @@ from .estimator import Estimator
 class ExponentialAttentionEntropySeq(Estimator):
     def __init__(self, coef: float):
         self.coef = coef
-        super().__init__(['entropy'], 'sequence')
+        super().__init__(["entropy"], "sequence")
 
     def __str__(self):
-        return f'ExponentialAttentionEntropySeq_{self.coef}'
+        return f"ExponentialAttentionEntropySeq_{self.coef}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        entropies = stats['entropy']
+        entropies = stats["entropy"]
         ue = []
         for entropy in entropies:
             entropy = np.array(entropy)
@@ -32,13 +32,13 @@ class ExponentialAttentionEntropySeq(Estimator):
 class ExponentialAttentionEntropyToken(Estimator):
     def __init__(self, coef: float):
         self.coef = coef
-        super().__init__(['entropy'], 'token')
+        super().__init__(["entropy"], "token")
 
     def __str__(self):
-        return f'ExponentialAttentionEntropyToken_{self.coef}'
+        return f"ExponentialAttentionEntropyToken_{self.coef}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        entropies = stats['entropy']
+        entropies = stats["entropy"]
         ue = []
         for entropy in entropies:
             entropy = np.array(entropy)

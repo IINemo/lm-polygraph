@@ -4,7 +4,7 @@ from typing import List, Dict
 from abc import ABC, abstractmethod
 from lm_polygraph.utils.model import WhiteboxModel
 
-STAT_CALCULATORS: Dict[str, 'StatCalculator'] = {}
+STAT_CALCULATORS: Dict[str, "StatCalculator"] = {}
 STAT_DEPENDENCIES: Dict[str, List[str]] = {}
 
 

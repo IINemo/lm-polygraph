@@ -93,9 +93,16 @@ class WhiteboxModel(Model):
         config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
-            model = AutoModelForCausalLM.from_pretrained(model_path, max_length=1024, trust_remote_code=True).to(device)
-        elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
-                  for architecture in config.architectures]):
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path, max_length=1024, trust_remote_code=True
+            ).to(device)
+        elif any(
+            [
+                ("Seq2SeqLM" in architecture)
+                or ("ConditionalGeneration" in architecture)
+                for architecture in config.architectures
+            ]
+        ):
             model_type = "Seq2SeqLM"
             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=1024).to(device)
         elif any(["BartModel" in architecture for architecture in config.architectures]):
@@ -108,6 +115,7 @@ class WhiteboxModel(Model):
 
         tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
                                                   model_max_length=1024)
+
         model.eval()
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
@@ -115,15 +123,25 @@ class WhiteboxModel(Model):
         return WhiteboxModel(model, tokenizer, model_path, model_type)
 
     @staticmethod
-    def load(model_path: str, tokenizer_path: str, device: str = 'cpu'):
+    def load(model_path: str, tokenizer_path: str, device: str = "cpu"):
         model = torch.load(model_path).to(device)
         tokenizer = torch.load(tokenizer_path, padding_side="left")
         model.eval()
         return WhiteboxModel(model, tokenizer, model_path)
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        if ("falcon" in self.model.config._name_or_path.lower()) or ("llama" in self.model.config._name_or_path.lower()):
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt', return_token_type_ids=False)
+        if ("falcon" in self.model.config._name_or_path.lower()) or (
+            "llama" in self.model.config._name_or_path.lower()
+        ):
+            tokenized = self.tokenizer(
+                texts,
+                truncation=True,
+                padding=True,
+                return_tensors="pt",
+                return_token_type_ids=False,
+            )
         else:
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+            tokenized = self.tokenizer(
+                texts, truncation=True, padding=True, return_tensors="pt"
+            )
         return tokenized

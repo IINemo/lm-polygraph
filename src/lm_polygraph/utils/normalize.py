@@ -8,6 +8,7 @@ import numpy as np
 from lm_polygraph.estimators import *
 
 NORMALIZATION_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
+UE_BOUNDS_FILEPATH = f'{pathlib.Path(__file__).parent.resolve()}/ue_bounds.json'
 
 
 def can_normalize_ue(est: Estimator, model_path: str) -> bool:
@@ -27,7 +28,10 @@ def normalize_ue(est: Estimator, model_path: str, val: float) -> float:
         ue_bounds = json.load(f)
     if str(est) not in ue_bounds.keys():
         sys.stderr.write(
-            f'Could not find normalizing bounds for estimator: {str(est)}. Will not normalize values.')
+            f"Could not find normalizing bounds for estimator: {str(est)}. Will not normalize values."
+        )
         return val
     q = np.array(ue_bounds[str(est)])
     return (q < val).mean()
+    low, high = ue_bounds[str(est)]['low'], ue_bounds[str(est)]['high']
+    return min(1, max(0, (val - low) / (high - low)))

@@ -16,8 +16,8 @@ def normalize(target: List[float]):
 class UEMetric(ABC):
     @abstractmethod
     def __str__(self):
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @abstractmethod
     def __call__(self, estimator: List[float], target: List[float]) -> float:
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")

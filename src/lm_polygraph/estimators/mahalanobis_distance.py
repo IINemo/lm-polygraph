@@ -8,7 +8,8 @@ from typing import Dict
 from .estimator import Estimator
 
 DOUBLE_INFO = torch.finfo(torch.double)
-JITTERS = [10**exp for exp in range(-15, 0, 1)]
+JITTERS = [10 ** exp for exp in range(-15, 0, 1)]
+
 
 def compute_inv_covariance(centroids, train_features, train_labels, jitters=None):
     if jitters is None:
@@ -26,10 +27,7 @@ def compute_inv_covariance(centroids, train_features, train_labels, jitters=None
     cov_scaled = cov / (train_features.shape[0] - 1)
 
     for i, jitter_eps in enumerate(jitters):
-        jitter = jitter_eps * torch.eye(
-            cov_scaled.shape[1],
-            device=cov_scaled.device,
-        )
+        jitter = jitter_eps * torch.eye(cov_scaled.shape[1], device=cov_scaled.device,)
         cov_scaled_update = cov_scaled + jitter
         eigenvalues = torch.linalg.eigh(cov_scaled_update.cpu()).eigenvalues
         if (eigenvalues >= 0).all():
@@ -37,6 +35,7 @@ def compute_inv_covariance(centroids, train_features, train_labels, jitters=None
     cov_scaled = cov_scaled + jitter
     cov_inv = torch.inverse(cov_scaled.to(torch.float64)).float()
     return cov_inv, jitter_eps
+
 
 def mahalanobis_distance_with_known_centroids_sigma_inv(
     centroids, centroids_mask, sigma_inv, eval_features
@@ -51,9 +50,15 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
         dists = dists.masked_fill_(centroids_mask, float("inf")).to(device)
     return dists  # np.min(dists, axis=1)
 
+
 class MahalanobisDistanceSeq(Estimator):
-    def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
-        super().__init__(['embeddings', 'train_embeddings'], 'sequence')
+    def __init__(
+        self,
+        embeddings_type: str = "decoder",
+        parameters_path: str = None,
+        normalize: bool = False,
+    ):
+        super().__init__(["embeddings", "train_embeddings"], "sequence")
         self.centroid = None
         self.sigma_inv = None
         self.parameters_path = parameters_path
@@ -71,38 +76,46 @@ class MahalanobisDistanceSeq(Estimator):
                 self.sigma_inv = torch.load(f"{self.full_path}/sigma_inv.pt")
                 self.max = torch.load(f"{self.full_path}/max.pt")
                 self.min = torch.load(f"{self.full_path}/min.pt")
-            
 
     def __str__(self):
-        return f'MahalanobisDistanceSeq_{self.embeddings_type}'
+        return f"MahalanobisDistanceSeq_{self.embeddings_type}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        embeddings = stats[f'embeddings_{self.embeddings_type}']       
+        embeddings = stats[f"embeddings_{self.embeddings_type}"]
         if self.centroid is None:
-            self.centroid = stats[f'train_embeddings_{self.embeddings_type}'].mean(dim=0)
+            self.centroid = stats[f"train_embeddings_{self.embeddings_type}"].mean(
+                dim=0
+            )
             if self.parameters_path is not None:
                 if not os.path.exists(f"{self.parameters_path}"):
-                    splitted_path = str(self.parameters_path).split('/')
-                    for intermediate_path in ['/'.join(splitted_path[:i + 1]) for i in range(len(splitted_path))]:
-                        if not os.path.exists(intermediate_path) and len(intermediate_path) > 0:
+                    splitted_path = str(self.parameters_path).split("/")
+                    for intermediate_path in [
+                        "/".join(splitted_path[: i + 1])
+                        for i in range(len(splitted_path))
+                    ]:
+                        if (
+                            not os.path.exists(intermediate_path)
+                            and len(intermediate_path) > 0
+                        ):
                             os.mkdir(intermediate_path)
                 torch.save(self.centroid, f"{self.parameters_path}/centroid.pt")
 
         if self.sigma_inv is None:
-            train_labels = np.zeros(stats[f'train_embeddings_{self.embeddings_type}'].shape[0])
+            train_labels = np.zeros(
+                stats[f"train_embeddings_{self.embeddings_type}"].shape[0]
+            )
             self.sigma_inv, _ = compute_inv_covariance(
-                self.centroid.unsqueeze(0), stats[f'train_embeddings_{self.embeddings_type}'], train_labels
+                self.centroid.unsqueeze(0),
+                stats[f"train_embeddings_{self.embeddings_type}"],
+                train_labels,
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
-                
+
         dists = mahalanobis_distance_with_known_centroids_sigma_inv(
-            self.centroid.unsqueeze(0),
-            None,
-            self.sigma_inv,
-            embeddings,
+            self.centroid.unsqueeze(0), None, self.sigma_inv, embeddings,
         )[:, 0]
-        
+
         if self.max < dists.max():
             self.max = dists.max()
             if self.parameters_path is not None:
@@ -111,8 +124,8 @@ class MahalanobisDistanceSeq(Estimator):
             self.min = dists.min()
             if self.parameters_path is not None:
                 torch.save(self.min, f"{self.full_path}/min.pt")
-                
+
         if self.normalize:
-            dists = torch.clip((self.max - dists) / (self.max - self.min), min=0, max=1) 
-                
+            dists = torch.clip((self.max - dists) / (self.max - self.min), min=0, max=1)
+
         return dists.cpu().detach().numpy()

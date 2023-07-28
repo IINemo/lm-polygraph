@@ -9,7 +9,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 class PromptCalculator(StatCalculator):
     def __init__(self, prompt: str, expected: str, method: str):
-        super().__init__([method], ['greedy_texts', 'sample_texts'])
+        super().__init__([method], ["greedy_texts", "sample_texts"])
         self.method = method
         self.prompt = prompt
         self.expected = expected

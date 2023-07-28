@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class GenerationParameters:
     temperature: float = 1.0

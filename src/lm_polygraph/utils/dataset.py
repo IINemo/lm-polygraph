@@ -15,28 +15,30 @@ class Dataset:
 
     def __iter__(self) -> Iterable[Tuple[List[str], List[str]]]:
         for i in range(0, len(self.x), self.batch_size):
-            yield self.x[i:i + self.batch_size], self.y[i:i + self.batch_size]
+            yield self.x[i : i + self.batch_size], self.y[i : i + self.batch_size]
 
     def __len__(self):
         return (len(self.x) + self.batch_size - 1) // self.batch_size
-    
+
     def select(self, indices: List[int]):
         self.x = np.array(self.x)[indices].tolist()
         self.y = np.array(self.y)[indices].tolist()
         return self
-    
+
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):
-        X_train, X_test, y_train, y_test = train_test_split(np.array(self.x), np.array(self.y), test_size=test_size, random_state=seed)
-            
+        X_train, X_test, y_train, y_test = train_test_split(
+            np.array(self.x), np.array(self.y), test_size=test_size, random_state=seed
+        )
+
         if split == "train":
             self.x = X_train.tolist()
             self.y = y_train.tolist()
         else:
             self.x = X_test.tolist()
             self.y = y_test.tolist()
-            
+
         return X_train.tolist(), X_test.tolist(), y_train.tolist(), y_test.tolist()
-    
+
     def subsample(self, size: int, seed: int):
         np.random.seed(seed)
         if len(self.x) < size:
@@ -46,47 +48,57 @@ class Dataset:
         self.select(indices)
 
     @staticmethod
-    def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
+    def from_csv(
+        csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs
+    ):
         csv = pd.read_csv(csv_path)
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
         return Dataset(x, y, batch_size)
 
     @staticmethod
-    def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str):
-        if 'trivia_qa' in csv_path.lower():
-            dataset = load_dataset(csv_path, 'rc.nocontext')['test']
-        elif 'babi_qa' in csv_path.lower():
-            dataset = load_dataset(csv_path, 'en-10k-qa1')['test']
+    def from_datasets(
+        csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str
+    ):
+        if "trivia_qa" in csv_path.lower():
+            dataset = load_dataset(csv_path, "rc.nocontext")["test"]
+        elif "babi_qa" in csv_path.lower():
+            dataset = load_dataset(csv_path, "en-10k-qa1")["test"]
         else:
-            dataset = load_dataset(csv_path)['test']
+            dataset = load_dataset(csv_path)["test"]
         # In this case this is a NMT dataset
-        if 'translation' in dataset.column_names:
+        if "translation" in dataset.column_names:
             x, y = [], []
-            for inst in dataset['translation']:
+            for inst in dataset["translation"]:
                 x.append(inst[x_column])
                 y.append(inst[y_column])
             max_new_tokens = 1024
         # For COQA dataset
-        elif 'coqa' in csv_path.lower():
+        elif "coqa" in csv_path.lower():
             x, y = [], []
             for inst in dataset:
-                for question, answer in zip(inst['questions'], inst['answers']['input_text']):
-                    x.append(f'Story:\n{inst["story"]}\n\nQuestion:\n{question}\n\nAnswer:\n')
+                for question, answer in zip(
+                    inst["questions"], inst["answers"]["input_text"]
+                ):
+                    x.append(
+                        f'Story:\n{inst["story"]}\n\nQuestion:\n{question}\n\nAnswer:\n'
+                    )
                     y.append(answer)
             max_new_tokens = 14
         # For Babi_QA dataset
-        elif 'babi_qa' in csv_path.lower():
+        elif "babi_qa" in csv_path.lower():
             x, y = [], []
-            prompt = 'Answer the question given a context. Output only the full name of the location.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\n'
+            prompt = "Answer the question given a context. Output only the full name of the location.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\n"
             for inst in dataset:
-                inst = inst['story']
-                context = ''
-                for text, answer in zip(inst['text'], inst['answer']):
-                    if answer == '':
-                        context += text + ' '
+                inst = inst["story"]
+                context = ""
+                for text, answer in zip(inst["text"], inst["answer"]):
+                    if answer == "":
+                        context += text + " "
                     else:
-                        input = prompt + f'Context:\n{context.strip()}\n\nQuestion:\n{text}'
+                        input = (
+                            prompt + f"Context:\n{context.strip()}\n\nQuestion:\n{text}"
+                        )
                         x.append(input)
                         y.append(answer)
             max_new_tokens = 3
@@ -94,9 +106,9 @@ class Dataset:
         else:
             x = [prompt.strip() + " " + text for text in dataset[x_column]]
             y = dataset[y_column]
-            if csv_path == 'xsum':
+            if csv_path == "xsum":
                 max_new_tokens = 42
-            elif csv_path == 'aeslc':
+            elif csv_path == "aeslc":
                 max_new_tokens = 20
             else:
                 max_new_tokens = 200

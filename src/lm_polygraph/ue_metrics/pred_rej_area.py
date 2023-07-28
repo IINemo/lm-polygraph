@@ -7,7 +7,7 @@ from .ue_metric import UEMetric, normalize
 
 class PredictionRejectionArea(UEMetric):
     def __str__(self):
-        return 'prr'
+        return "prr"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         target = normalize(target)
@@ -25,4 +25,3 @@ class PredictionRejectionArea(UEMetric):
         prr_score = np.sum(scores) / num_obs
         scores = np.append(scores, 1)
         return prr_score
-

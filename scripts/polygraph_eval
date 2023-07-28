@@ -15,11 +15,13 @@ from lm_polygraph.generation_metrics import RougeMetric, WERTokenwiseMetric, Bar
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str,
-                        default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv",
+    )
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--background_train_dataset", type=str, default="allenai/c4")
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
@@ -29,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument("--subsample_train_dataset", type=int, default=100)
     parser.add_argument("--subsample_eval_dataset", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=2)
-    parser.add_argument("--seed", nargs='+', type=int)
+    parser.add_argument("--seed", nargs="+", type=int)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--save_path", type=str,
                         default='/home/petrakov/emnlp/lm-polygraph/workdir/save')
@@ -45,11 +47,11 @@ if __name__ == '__main__':
 
     device = args.device
     if device is None:
-        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+        device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     for seed in args.seed:
-        print('=' * 150)
-        print('SEED:', seed)
+        print("=" * 150)
+        print("SEED:", seed)
         transformers.set_seed(seed)
         model = WhiteboxModel.from_pretrained(
             args.model,
@@ -61,25 +63,27 @@ if __name__ == '__main__':
             args.input_column,
             args.output_column,
             batch_size=args.batch_size,
-            prompt=args.prompt
+            prompt=args.prompt,
         )
 
         if args.use_density_based_ue:
-            if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
+            if (args.train_dataset is not None) and (
+                args.train_dataset != args.dataset
+            ):
                 train_dataset = Dataset.load(
                     args.train_dataset,
                     args.input_column,
                     args.output_column,
                     batch_size=args.batch_size,
-                    prompt=args.prompt
+                    prompt=args.prompt,
                 )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
-                    test_size=0.7,
-                    seed=seed,
-                    split="eval"
+                    test_size=0.7, seed=seed, split="eval"
                 )
-                train_dataset = Dataset(x=X_train, y=y_train, batch_size=args.batch_size)
+                train_dataset = Dataset(
+                    x=X_train, y=y_train, batch_size=args.batch_size
+                )
             background_train_dataset = Dataset.load(
                     args.background_train_dataset,
                     'text', 'url',
@@ -162,14 +166,15 @@ if __name__ == '__main__':
                 PointwiseMutualInformation(),
                 ConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
                 SemanticEntropyToken(model.model_path, args.cache_path),
-            ] + density_based_ue,
+            ]
+            + density_based_ue,
             [
-                RougeMetric('rouge1'),
-                RougeMetric('rouge2'),
-                RougeMetric('rougeL'),
-                BartScoreSeqMetric('rh'),
-                ModelScoreSeqMetric('model_rh'),
-                ModelScoreTokenwiseMetric('model_rh'),
+                RougeMetric("rouge1"),
+                RougeMetric("rouge2"),
+                RougeMetric("rougeL"),
+                BartScoreSeqMetric("rh"),
+                ModelScoreSeqMetric("model_rh"),
+                ModelScoreTokenwiseMetric("model_rh"),
                 WERTokenwiseMetric(),
             ],
             [
@@ -177,9 +182,7 @@ if __name__ == '__main__':
                 PredictionRejectionArea(),
                 RiskCoverageCurveAUC(),
             ],
-            [
-                Logger(),
-            ],
+            [Logger(),],
             train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,

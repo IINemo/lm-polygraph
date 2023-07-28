@@ -7,7 +7,7 @@ from .ue_metric import UEMetric
 
 class ReversedPairsProportion(UEMetric):
     def __str__(self):
-        return 'rpp'
+        return "rpp"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         # smaller is better

@@ -10,7 +10,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 class EntropyCalculator(StatCalculator):
     def __init__(self):
-        super().__init__(['entropy'], ['greedy_log_probs'])
+        super().__init__(["entropy"], ["greedy_log_probs"])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, **kwargs) -> Dict[str, np.ndarray]:
         logprobs = dependencies['greedy_log_probs']
@@ -20,4 +20,4 @@ class EntropyCalculator(StatCalculator):
             for lp in s_lp:
                 mask = ~np.isinf(lp)
                 entropies[-1].append(-np.mean(np.array(lp[mask]) * np.exp(lp[mask])))
-        return {'entropy': entropies}
+        return {"entropy": entropies}

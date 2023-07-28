@@ -49,6 +49,6 @@ class GreedyLMProbsCalculator(StatCalculator):
                 greedy_lm_ll.append([logprobs[-len(toks) + j, toks[j]].item()
                                      for j in range(len(toks))])
         return {
-            'greedy_lm_log_probs': greedy_lm_log_probs,
-            'greedy_lm_log_likelihoods': greedy_lm_ll,
+            "greedy_lm_log_probs": greedy_lm_log_probs,
+            "greedy_lm_log_likelihoods": greedy_lm_ll,
         }
