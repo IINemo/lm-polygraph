@@ -128,7 +128,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             min_length=2,
             num_beams=1,
             do_sample=True)
-        
+
         for i in range(len(importance_logits)):
             importance_log_prob, log_prob, toks = 0, 0, []
             inp_size = len(batch["input_ids"][int(i / n_importance_samples)])
