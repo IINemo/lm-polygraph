@@ -58,7 +58,13 @@ class Dataset:
 
     @staticmethod
     def from_datasets(
-        csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str, subset: str = 'test', size: int = None
+        csv_path: str,
+        x_column: str,
+        y_column: str,
+        batch_size: int,
+        prompt: str,
+        subset: str = "test",
+        size: int = None,
     ):
         if "coqa" in csv_path and subset == "test":
             subset = "validation"
@@ -76,10 +82,24 @@ class Dataset:
         # In this case this is a NMT dataset
         if "translation" in dataset.column_names:
             x, y = [], []
-            source_lang = "German" if x_column == 'de' else "French" if x_column == "fr" else "English"
-            target_lang = "German" if y_column == 'de' else "French" if y_column == "fr" else "English"
+            source_lang = (
+                "German"
+                if x_column == "de"
+                else "French"
+                if x_column == "fr"
+                else "English"
+            )
+            target_lang = (
+                "German"
+                if y_column == "de"
+                else "French"
+                if y_column == "fr"
+                else "English"
+            )
             for inst in dataset["translation"]:
-                x.append(f"Translate from {source_lang} into {target_lang}:\n{inst[x_column]}\nTranslation:\n")
+                x.append(
+                    f"Translate from {source_lang} into {target_lang}:\n{inst[x_column]}\nTranslation:\n"
+                )
                 y.append(inst[y_column])
             max_new_tokens = None
         # For COQA dataset
@@ -113,15 +133,15 @@ class Dataset:
             max_new_tokens = 3
         # Otherwise, it is a standard one (e.g. summarization)
         else:
-            if csv_path == 'xsum':
+            if csv_path == "xsum":
                 x = [
-                    f'Summarize the text in a one-sentence headline.\n\nText:\n{text}\n\nSummary (one sentence):\n'
+                    f"Summarize the text in a one-sentence headline.\n\nText:\n{text}\n\nSummary (one sentence):\n"
                     for text in dataset[x_column]
                 ]
                 max_new_tokens = 42
-            elif csv_path == 'aeslc':
+            elif csv_path == "aeslc":
                 x = [
-                    f'Write a headline for the email.\n\nEmail:\n{text}\n\nHeadline:\n'
+                    f"Write a headline for the email.\n\nEmail:\n{text}\n\nHeadline:\n"
                     for text in dataset[x_column]
                 ]
                 max_new_tokens = 20

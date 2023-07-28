@@ -144,7 +144,7 @@ class EmbeddingsCalculator(StatCalculator):
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         if max_new_tokens is None:
-            max_new_tokens = int(batch['input_ids'].shape[1] * 1.5)
+            max_new_tokens = int(batch["input_ids"].shape[1] * 1.5)
         with torch.no_grad():
             out = model.generate(
                 **batch,

@@ -64,29 +64,30 @@ if __name__ == "__main__":
             args.output_column,
             batch_size=args.batch_size,
             prompt=args.prompt,
-            subset='test'
+            subset="test",
         )
 
         if args.use_density_based_ue:
             if (args.train_dataset is not None) and (
-                args.train_dataset != args.dataset):
+                args.train_dataset != args.dataset
+            ):
                 train_dataset, _ = Dataset.load(
                     args.train_dataset,
                     args.input_column,
                     args.output_column,
                     batch_size=args.batch_size,
                     prompt=args.prompt,
-                    subset='train'
+                    subset="train",
                 )
-            elif not args.dataset.endswith('csv'):
+            elif not args.dataset.endswith("csv"):
                 train_dataset, _ = Dataset.load(
                     args.dataset,
                     args.input_column,
                     args.output_column,
                     batch_size=args.batch_size,
                     prompt=args.prompt,
-                    subset='train',
-                    size=10_000
+                    subset="train",
+                    size=10_000,
                 )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(

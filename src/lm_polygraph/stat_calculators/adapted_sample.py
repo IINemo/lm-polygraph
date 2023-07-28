@@ -60,8 +60,8 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **kwargs):
         [[] for _ in range(batch_size)],
     )
     sequences = [[] for _ in range(batch_size)]
-    if kwargs.get('max_new_tokens', 0) is None:
-        kwargs['max_new_tokens'] = int(batch['input_ids'].shape[1] * 1.5)
+    if kwargs.get("max_new_tokens", 0) is None:
+        kwargs["max_new_tokens"] = int(batch["input_ids"].shape[1] * 1.5)
     with torch.no_grad():
         for k in range(n_samples):
             input_len = (
