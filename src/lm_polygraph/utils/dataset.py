@@ -60,6 +60,8 @@ class Dataset:
     def from_datasets(
         csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str, subset: str = 'test'
     ):
+        if "coqa" in csv_path and subset == "test":
+            subset = "validation"
         if "trivia_qa" in csv_path.lower():
             dataset = load_dataset(csv_path, "rc.nocontext")[subset]
         elif "babi_qa" in csv_path.lower():
