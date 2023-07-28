@@ -132,6 +132,21 @@ if __name__ == '__main__':
                 LexicalSimilarity(metric='rouge2'),
                 LexicalSimilarity(metric='rougeL'),
                 LexicalSimilarity(metric='BLEU'),
+                
+                BlackBoxUE(similarity_score = 'NLI_score', uncertainty_method = "Num_Sem_Sets"),
+
+                BlackBoxUE(similarity_score = 'NLI_score', order = 'entail', uncertainty_method = "Eig_Val_Laplacian"),
+                BlackBoxUE(similarity_score = 'NLI_score', order = 'contra', uncertainty_method = "Eig_Val_Laplacian"),
+                BlackBoxUE(similarity_score = 'Jaccard_score',  uncertainty_method = "Eig_Val_Laplacian"),
+
+                BlackBoxUE(similarity_score = 'NLI_score', order = 'entail', uncertainty_method = "Deg_Mat"),
+                BlackBoxUE(similarity_score = 'NLI_score', order = 'contra', uncertainty_method = "Deg_Mat"),
+                BlackBoxUE(similarity_score = 'Jaccard_score', uncertainty_method = "Deg_Mat"),
+                
+                BlackBoxUE(similarity_score = 'NLI_score', order = 'entail', uncertainty_method = "Eccentricity"),
+                BlackBoxUE(similarity_score = 'NLI_score', order = 'contra', uncertainty_method = "Eccentricity"),
+                BlackBoxUE(similarity_score = 'Jaccard_score', uncertainty_method = "Eccentricity"),
+
                 SemanticEntropy(),
                 # PredictiveEntropyAdaptedSampling(),  # FIXME i out of bounds: if len(input_ids[i]) - self.input_len >= len(self.hyps_to_erase[i])
                 # SemanticEntropyAdaptedSampling(),  # lm-polygraph/stat_calculators/adapted_sample.py", line 30, in call
