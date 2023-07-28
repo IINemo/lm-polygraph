@@ -13,7 +13,6 @@ from .exp_attention_recursive import ExponentialAttentionRecursiveSeq, Exponenti
 from .predictive_entropy import PredictiveEntropy
 from .len_norm_predictive_entropy import LengthNormalizedPredictiveEntropy
 from .lexical_similarity import LexicalSimilarity
-from .black_box_uncertainty import BlackBoxUE
 from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
 from .semantic_entropy_adapted_sampling import SemanticEntropyAdaptedSampling
