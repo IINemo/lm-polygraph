@@ -1,11 +1,12 @@
 import json
 import sys
+import pathlib
 
 import numpy as np
 
 from lm_polygraph.estimators import *
 
-UE_BOUNDS_FILEPATH = 'utils/ue_bounds.json'
+UE_BOUNDS_FILEPATH = f'{pathlib.Path(__file__).parent.resolve()}/ue_bounds.json'
 
 
 def has_norm_bound(est: Estimator) -> bool:

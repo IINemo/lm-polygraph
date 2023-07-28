@@ -33,6 +33,7 @@ install_requires = [
     'scipy==1.9.3',
     'datasets==2.3.2',
     'tensorflow',
+    'flask==2.3.2',
 ]
 
 setup(
@@ -48,6 +49,8 @@ setup(
     url="https://github.com/IINemo/lm-polygraph",
     package_dir={"": "src"},
     packages=find_packages("src"),
+    include_package_data=True,
+    package_data={"": ["**/*.json"]},
     python_requires=">=3.9.0",
     install_requires=list(install_requires),
     classifiers=[
