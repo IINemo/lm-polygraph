@@ -1,0 +1,7 @@
+#!/bin/bash
+
+LIB_PATH=$(python -c 'import lm_polygraph; import inspect; import os; print(os.path.dirname(lm_polygraph.__file__))')
+
+cd $LIB_PATH/app
+npm install
+node index.js
