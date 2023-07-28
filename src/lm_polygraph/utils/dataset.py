@@ -90,7 +90,7 @@ class Dataset:
                     inst["questions"], inst["answers"]["input_text"]
                 ):
                     x.append(
-                        f'Story:\n{inst["story"]}\n\nQuestion:\n{question}\n\nAnswer:\n'
+                        f'Answer the question given a story.\nStory:\n{inst["story"]}\n\nQuestion:\n{question}\n\nAnswer:\n'
                     )
                     y.append(answer)
             max_new_tokens = 14
