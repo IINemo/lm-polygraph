@@ -71,7 +71,7 @@ class Dataset:
             dataset = load_dataset(csv_path, dataset_subset)[subset]
         else:
             dataset = load_dataset(csv_path)[subset]
-        if size is not None:
+        if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
         # In this case this is a NMT dataset
         if "translation" in dataset.column_names:
