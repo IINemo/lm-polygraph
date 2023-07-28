@@ -81,7 +81,7 @@ class Dataset:
             for inst in dataset["translation"]:
                 x.append(f"Translate from {source_lang} into {target_lang}:\n{inst[x_column]}\nTranslation:\n")
                 y.append(inst[y_column])
-            max_new_tokens = 1024
+            max_new_tokens = None
         # For COQA dataset
         elif "coqa" in csv_path.lower():
             x, y = [], []

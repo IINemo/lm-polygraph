@@ -53,13 +53,15 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
         return scores
 
 
-def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
+def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **kwargs):
     batch_size = len(batch["input_ids"])
     logits, importance_logits = (
         [[] for _ in range(batch_size)],
         [[] for _ in range(batch_size)],
     )
     sequences = [[] for _ in range(batch_size)]
+    if kwargs.get('max_new_tokens', 0) is None:
+        kwargs['max_new_tokens'] = int(batch['input_ids'].shape[1] * 1.5)
     with torch.no_grad():
         for k in range(n_samples):
             input_len = (
@@ -73,7 +75,7 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
             out = model.generate(
                 **batch,
                 logits_processor=LogitsProcessorList([logits_processor]),
-                **args
+                **kwargs
             )
             cur_logits = torch.stack(logits_processor.logits, dim=1).log_softmax(-1)
             cur_importance_logits = torch.stack(
