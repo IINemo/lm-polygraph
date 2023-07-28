@@ -7,15 +7,15 @@ from typing import List, Set, Dict, Tuple, Optional, Union
 from tqdm import tqdm
 from dataclasses import dataclass
 
-from utils.dataset import Dataset
-from utils.model import Model
-from utils.processor import Processor
-from utils.normalize import normalize_from_bounds
-from generation_metrics.generation_metric import GenerationMetric
-from ue_metrics.ue_metric import UEMetric
-from estimators.estimator import Estimator
-from stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
-from stat_calculators import EmbeddingsCalculator
+from lm_polygraph.utils.dataset import Dataset
+from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.processor import Processor
+from lm_polygraph.utils.normalize import normalize_from_bounds
+from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
+from lm_polygraph.ue_metrics.ue_metric import UEMetric
+from lm_polygraph.estimators.estimator import Estimator
+from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
+from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
 
 def _order_calculators(stats: List[str]) -> List[StatCalculator]:

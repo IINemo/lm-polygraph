@@ -5,14 +5,14 @@ import torch
 from typing import Optional, Dict, Tuple, List
 
 from flask import Flask, request, abort
-from utils.model import Model
-from utils.generation_parameters import GenerationParameters
-from utils.manager import UEManager
-from utils.processor import Processor
-from utils.dataset import Dataset
-from utils.normalize import normalize_from_bounds, has_norm_bound
+from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.manager import UEManager
+from lm_polygraph.utils.processor import Processor
+from lm_polygraph.utils.dataset import Dataset
+from lm_polygraph.utils.normalize import normalize_from_bounds, has_norm_bound
 
-from app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
+from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
 app = Flask(__name__)
 

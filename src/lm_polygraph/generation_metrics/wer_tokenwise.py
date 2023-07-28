@@ -1,7 +1,7 @@
 import numpy as np
 
 from typing import List, Dict
-from generation_metrics.generation_metric import GenerationMetric
+from .generation_metric import GenerationMetric
 
 
 class WERTokenwiseMetric(GenerationMetric):

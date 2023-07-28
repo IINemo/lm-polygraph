@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from estimators import *
+from lm_polygraph.estimators import *
 
 UE_BOUNDS_FILEPATH = 'utils/ue_bounds.json'
 

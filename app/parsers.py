@@ -7,9 +7,9 @@ from typing import Tuple
 
 import numpy as np
 
-from estimators import *
-from utils.ensemble_generator import EnsembleGenerationMixin
-from utils.model import Model
+from lm_polygraph.estimators import *
+from lm_polygraph.utils.ensemble_generator import EnsembleGenerationMixin
+from lm_polygraph.utils.model import Model
 
 
 def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:

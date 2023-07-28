@@ -2,7 +2,7 @@ import numpy as np
 
 from typing import List
 
-from ue_metrics.ue_metric import UEMetric
+from .ue_metric import UEMetric
 
 
 class ReversedPairsProportion(UEMetric):

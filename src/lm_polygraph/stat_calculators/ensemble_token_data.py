@@ -5,10 +5,10 @@ import torch
 import numpy as np
 from transformers import PreTrainedModel
 
-from stat_calculators.stat_calculator import StatCalculator
-from utils.token_restoration import collect_sample_token_level_uncertainties, \
-                                    collect_token_level_uncertainties, \
-                                    get_collect_fn
+from .stat_calculator import StatCalculator
+from lm_polygraph.utils.token_restoration import collect_sample_token_level_uncertainties, \
+                                                 collect_token_level_uncertainties, \
+                                                 get_collect_fn
 
 
 class EnsembleTokenLevelDataCalculator(StatCalculator):

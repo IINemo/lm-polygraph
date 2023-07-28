@@ -4,8 +4,8 @@ import torch.nn.functional as F
 
 from typing import Dict, List
 
-from stat_calculators.stat_calculator import StatCalculator
-from utils.model import Model
+from .stat_calculator import StatCalculator
+from lm_polygraph.utils.model import Model
 
 
 class EntropyCalculator(StatCalculator):

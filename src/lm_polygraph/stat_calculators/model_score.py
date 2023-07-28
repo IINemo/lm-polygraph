@@ -2,10 +2,11 @@ import torch
 import traceback
 import numpy as np
 from typing import List, Dict
-from stat_calculators.stat_calculator import StatCalculator
+
+from .stat_calculator import StatCalculator
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from utils.model import Model
+from lm_polygraph.utils.model import Model
 
 
 def _batch_tokens(tokens_list: List[List[int]], model: Model, max_len: int = None):

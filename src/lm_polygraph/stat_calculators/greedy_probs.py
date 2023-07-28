@@ -3,9 +3,9 @@ import numpy as np
 
 from typing import Dict, List
 
-from stat_calculators.embeddings import get_embeddings_from_output
-from stat_calculators.stat_calculator import StatCalculator
-from utils.model import Model
+from .embeddings import get_embeddings_from_output
+from .stat_calculator import StatCalculator
+from lm_polygraph.utils.model import Model
 
 
 class GreedyProbsCalculator(StatCalculator):

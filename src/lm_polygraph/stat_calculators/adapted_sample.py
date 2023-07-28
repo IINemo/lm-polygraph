@@ -4,9 +4,9 @@ import math
 
 from typing import Dict, List
 
-from stat_calculators.stat_calculator import StatCalculator
+from .stat_calculator import StatCalculator
 from transformers import LogitsProcessor, LogitsProcessorList
-from utils.model import Model
+from lm_polygraph.utils.model import Model
 
 
 class EraseHypothesesLogitsProcessor(LogitsProcessor):

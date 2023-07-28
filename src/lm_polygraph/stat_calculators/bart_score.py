@@ -7,10 +7,10 @@ import torch
 import torch.nn as nn
 from transformers import BartTokenizer, BartForConditionalGeneration
 
-from stat_calculators.stat_calculator import StatCalculator
+from .stat_calculator import StatCalculator
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from utils.model import Model
+from lm_polygraph.utils.model import Model
 
 
 class BartScoreCalculator(StatCalculator):

@@ -5,13 +5,13 @@ import torch
 import transformers
 import argparse
 
-from utils.manager import UEManager
-from utils.dataset import Dataset
-from utils.model import Model
-from utils.processor import Logger
-from generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetric, ModelScoreSeqMetric, ModelScoreTokenwiseMetric
-from estimators import *
-from ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
+from lm_polygraph.utils.manager import UEManager
+from lm_polygraph.utils.dataset import Dataset
+from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.processor import Logger
+from lm_polygraph.generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetric, ModelScoreSeqMetric, ModelScoreTokenwiseMetric
+from lm_polygraph.estimators import *
+from lm_polygraph.ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
 
 if __name__ == '__main__':

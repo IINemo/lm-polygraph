@@ -2,7 +2,7 @@ import numpy as np
 from rouge_score import rouge_scorer
 
 from typing import List, Dict
-from generation_metrics.generation_metric import GenerationMetric
+from .generation_metric import GenerationMetric
 
 
 class RougeMetric(GenerationMetric):
