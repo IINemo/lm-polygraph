@@ -71,7 +71,7 @@ if __name__ == "__main__":
             if (args.train_dataset is not None) and (
                 (args.train_dataset != args.dataset or not args.train_dataset.endswith('csv'))
             ):
-                train_dataset = Dataset.load(
+                train_dataset, _ = Dataset.load(
                     args.train_dataset,
                     args.input_column,
                     args.output_column,
