@@ -58,7 +58,7 @@ class Dataset:
 
     @staticmethod
     def from_datasets(
-        csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str, subset: str = 'test'
+        csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str, subset: str = 'test', size: int = None
     ):
         if "coqa" in csv_path and subset == "test":
             subset = "validation"
@@ -71,6 +71,8 @@ class Dataset:
             dataset = load_dataset(csv_path, dataset_subset)[subset]
         else:
             dataset = load_dataset(csv_path)[subset]
+        if size is not None:
+            dataset = dataset.select(range(size))
         # In this case this is a NMT dataset
         if "translation" in dataset.column_names:
             x, y = [], []
