@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import os
 
 install_requires = [
     'hydra-core==1.1.0',
@@ -36,6 +37,11 @@ install_requires = [
     'flask==2.3.2',
 ]
 
+package_data = ["**/*.json", "**/*.js", "**/*.css",
+                "**/*.html", "**/*.ico", "**/*.png",
+                "**/assets/*", "**/assets/css/*",
+                "**/assets/js/*", "**/assets/img/*"]
+
 setup(
     name="lm_polygraph",
     version="0.0.1",  # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
@@ -53,8 +59,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages("src"),
     include_package_data=True,
-    package_data={"": ["**/*.json", "**/*.js", "**/*.css", "**/*.html",
-                       "**/*.ico", "**/*.png", ]},
+    package_data={"": package_data},
     python_requires=">=3.9.0",
     install_requires=list(install_requires),
     classifiers=[

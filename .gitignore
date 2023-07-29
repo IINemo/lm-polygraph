@@ -1,5 +1,5 @@
 .idea
-**/node_modules/
+src/lm_polygraph/app/node_modules
 **/.DStore
 workdir/
 
