@@ -1,6 +1,13 @@
 #!/bin/bash
 
-LIB_PATH=$(python -c 'import lm_polygraph; import inspect; import os; print(os.path.dirname(lm_polygraph.__file__))')
+if command -v python > /dev/null; then
+    LIB_PATH=$(python -c 'import lm_polygraph; import inspect; import os; print(os.path.dirname(lm_polygraph.__file__))')
+elif command -v python3 > dev/null; then
+    LIB_PATH=$(python3 -c 'import lm_polygraph; import inspect; import os; print(os.path.dirname(lm_polygraph.__file__))')
+else
+    echo "No python 3 found, exiting..."
+    exit 1
+fi
 
 cd $LIB_PATH/app
 npm install
