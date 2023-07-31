@@ -126,7 +126,7 @@ class Dataset:
                         context += text + " "
                     else:
                         input = (
-                            prompt + f"Context:\n{context.strip()}\n\nQuestion:\n{text}"
+                            prompt + f"Context:\n{context.strip()}\n\nQuestion:\n{text}\nAnswer:\n"
                         )
                         x.append(input)
                         y.append(answer)
