@@ -102,6 +102,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             return_dict_in_generate=True,
             max_length=256,
             min_length=2,
+            num_beams=1,
             do_sample=True)
 
         for i in range(len(importance_logits)):
