@@ -17,7 +17,7 @@ class BartScoreCalculator(StatCalculator):
     def __init__(self, device=None, max_length=1024, checkpoint='facebook/bart-large-cnn'):
         super().__init__(['rh'],
                          ['greedy_tokens', 'input_tokens'])
-        if self.device is None:
+        if device is None:
             self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         else:
             self.device = device
