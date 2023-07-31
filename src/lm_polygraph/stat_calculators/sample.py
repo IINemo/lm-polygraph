@@ -40,6 +40,7 @@ class SamplingGenerationCalculator(StatCalculator):
             max_length=256,
             min_length=2,
             do_sample=True,
+            num_beams=1,
             num_return_sequences=1)
 
         log_probs = [[] for _ in range(len(texts))]
