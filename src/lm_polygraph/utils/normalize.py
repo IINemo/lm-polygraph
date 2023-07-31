@@ -25,4 +25,4 @@ def normalize_from_bounds(est: Estimator, val: float) -> float:
             f'Could not find normalizing bounds for estimator: {str(est)}. Will not normalize values.')
         return val
     low, high = ue_bounds[str(est)]['low'], ue_bounds[str(est)]['high']
-    return min(1, max(0, (high - val) / (high - low)))
+    return min(1, max(0, (val - low) / (high - low)))

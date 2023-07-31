@@ -64,7 +64,7 @@ def _delete_nans(ue, metric):
 class UncertaintyOutput:
     generation_text: str
     generation_tokens: List[int]
-    confidence: Union[List[float], float]
+    uncertainty: Union[List[float], float]
 
 
 def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str, target_text: str = ''):

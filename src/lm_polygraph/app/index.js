@@ -47,29 +47,29 @@ app.post('/get-prompt-result', async (req, res) => {
             ]
         })
         let generation = result.data.generation;
-        let tok_uncertainty = result.data.token_uncertainty;
+        let tok_confidence = result.data.token_confidence;
         let tok_norm = result.data.token_normalization;
-        let seq_uncertainty = result.data.sequence_uncertainty;
+        let seq_confidence = result.data.sequence_confidence;
         let seq_norm = result.data.sequence_normalization;
 
         console.log('Model output:')
         console.log('  generation: ' + generation)
-        console.log('  token uncertainty: ' + tok_uncertainty);
+        console.log('  token confidence: ' + tok_confidence);
         console.log('  token normalization: ' + tok_norm);
-        console.log('  sequence uncertainty: ' + seq_uncertainty);
+        console.log('  sequence confidence: ' + seq_confidence);
         console.log('  sequence normalization: ' + seq_norm);
 
         let response = '';
         let started_border = false;
-        let uncertainty_thrs = 0.2;
+        let confidence_thrs = 0.2;
         for (let i = 0; i < generation.length; i++) {
-            if (tok_norm == 'none' || tok_uncertainty[i] >= uncertainty_thrs || tok_uncertainty.length == 0) {
+            if (tok_norm == 'none' || tok_confidence[i] >= confidence_thrs || tok_confidence.length == 0) {
                 response += generation[i];
                 continue;
             }
             const white = 100;
-            const green = white + Math.floor((255 - white) * tok_uncertainty[i]);
-            const red = white + Math.floor((255 - white) * (1 - tok_uncertainty[i]));
+            const green = white + Math.floor((255 - white) * tok_confidence[i]);
+            const red = white + Math.floor((255 - white) * (1 - tok_confidence[i]));
             const color = 'rgb(' + red + ', ' + green + ', ' + white + ')';
             for (let j = 0; j < generation[i].length - generation[i].trimLeft().length; j++) {
                 response += ' ';
@@ -83,8 +83,7 @@ app.post('/get-prompt-result', async (req, res) => {
                 let right_border = false;
                 if (generation[i].slice(-1) == ' ' || i + 1 == generation.length || (
                         i + 1 < generation.length &&
-                        (generation[i + 1][0] == ' ' ||
-                         tok_uncertainty[i + 1] >= uncertainty_thrs))) {
+                        (generation[i + 1][0] == ' ' || tok_confidence[i + 1] >= confidence_thrs))) {
                     right_border = true;
                     started_border = false;
                 }
@@ -104,15 +103,15 @@ app.post('/get-prompt-result', async (req, res) => {
             }
         }
 
-        if (seq_uncertainty.length != 0) {
+        if (seq_confidence.length != 0) {
             const white = 100;
-            const green = white + Math.floor((255 - white) * seq_uncertainty[0]);
-            const red = white + Math.floor((255 - white) * (1 - seq_uncertainty[0]));
+            const green = white + Math.floor((255 - white) * seq_confidence[0]);
+            const red = white + Math.floor((255 - white) * (1 - seq_confidence[0]));
             var colorStyle = '';
-            var ueStr = seq_uncertainty[0].toPrecision(3);
+            var ueStr = seq_confidence[0].toPrecision(3);
             if (seq_norm != 'none') {
                 colorStyle = 'background-color:rgb(' + red + ', ' + green + ', ' + white + ');';
-                ueStr = Math.round(seq_uncertainty[0] * 100) + '%';
+                ueStr = Math.round(seq_confidence[0] * 100) + '%';
             }
             response += '<div style="line-height:1%;"><br></div><span style="color: rgb(178, 190, 181)">Confidence: </span>';
             response += '<span style="' + colorStyle + 'border-radius:10px;padding: 3px;">' + ueStr + '</span>';

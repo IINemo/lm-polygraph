@@ -39,27 +39,27 @@ class ResultProcessor(Processor):
         self.ue_estimations = batch_estimations
 
 
-def _get_uncertainty(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
+def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
     if len(methods) == 0:
         return [], 'none'
-    uncertainties, normalized_uncertainties = [], []
+    condifences, normalized_confidences = [], []
     normalization = 'bounds'
     for method in methods:
-        uncertainties.append([])
-        normalized_uncertainties.append([])
+        condifences.append([])
+        normalized_confidences.append([])
         for x in processor.ue_estimations[level, str(method)]:
-            uncertainties[-1].append(x)
+            condifences[-1].append(-x)
             if not has_norm_bound(method):
                 normalization = 'none'
-            normalized_uncertainties[-1].append(normalize_from_bounds(method, x))
-        print(' {} Uncertainty: {}'.format(str(method), uncertainties[-1]))
+            normalized_confidences[-1].append(1 - normalize_from_bounds(method, x))
+        print(' {} Confidence: {}'.format(str(method), condifences[-1]))
     if normalization != 'none':
-        uncertainties = normalized_uncertainties
+        condifences = normalized_confidences
 
-    uncertainties = np.array(uncertainties)
-    uncertainties = uncertainties.reshape(len(methods), len(uncertainties[0]))
-    ue_list = np.mean(uncertainties, axis=0).tolist() if len(uncertainties[0]) != 0 else []
-    return ue_list, normalization
+    condifences = np.array(condifences)
+    condifences = condifences.reshape(len(methods), len(condifences[0]))
+    conf_list = np.mean(condifences, axis=0).tolist() if len(condifences[0]) != 0 else []
+    return conf_list, normalization
 
 
 def _add_spaces_to_tokens(tokenizer, stats, tokens):
@@ -76,19 +76,19 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 
-def _align_tokenwise_uncertainty(tokens, uncertainties):
-    if len(uncertainties) == 0:
+def _align_tokenwise_confidences(tokens, confidences):
+    if len(confidences) == 0:
         return []
-    uncertainties_grouped = np.zeros_like(uncertainties)
+    confidences_grouped = np.zeros_like(confidences)
     word_len = 0
     for i, token in enumerate(tokens):
-        uncertainties_grouped[i] = uncertainties[i]
+        confidences_grouped[i] = confidences[i]
         if (" " in token) or ((word_len > 0) and ((len(tokens) - 1) == i)):
-            uncertainties_grouped[i - word_len: i + 1] = np.min(uncertainties_grouped[i - word_len: i + 1])
+            confidences_grouped[i - word_len: i + 1] = np.min(confidences_grouped[i - word_len: i + 1])
             word_len = 0
         else:
             word_len += 1
-    return uncertainties_grouped.tolist()
+    return confidences_grouped.tolist()
 
 
 @app.route('/chat/completions', methods=['GET', 'POST'])
@@ -145,8 +145,8 @@ def generate():
                           f'got: {processor.ue_estimations.keys()}')
     print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
 
-    tok_uncertainty, tok_norm = _get_uncertainty(processor, tok_methods, 'token')
-    seq_uncertainty, seq_norm = _get_uncertainty(processor, seq_methods, 'sequence')
+    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token')
+    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence')
     tokens = []
     for t in processor.stats['greedy_tokens'][0][:-1]:
         tokens.append(model.tokenizer.decode([t]))
@@ -156,12 +156,12 @@ def generate():
 
     if model.model_type == "Seq2SeqLM":
         tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-        tok_uncertainty = _align_tokenwise_uncertainty(tokens, tok_uncertainty)
+        tok_conf = _align_tokenwise_confidences(tokens, tok_conf)
 
     return {
         'generation': tokens,
-        'token_uncertainty': tok_uncertainty,
-        'sequence_uncertainty': seq_uncertainty,
+        'token_confidence': tok_conf,
+        'sequence_confidence': seq_conf,
         'token_normalization': tok_norm,
         'sequence_normalization': seq_norm,
     }
