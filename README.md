@@ -1,5 +1,17 @@
 # Uncertainty estimation for LLMs
 
+## Installation
+
+```
+git clone git@github.com:IINemo/lm-polygraph.git
+cd lm-polygraph
+git fetch
+git checkout restructure_package
+git pull origin restructure_package
+
+pip install .
+```
+
 ## Usage examples
 
 * [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/example.ipynb): examples of library usage
@@ -10,7 +22,7 @@
 To evaluate the performance of uncertainty methods run: 
 
 ```
-python3 -m main --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
+polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
 ```
 
 Parameters:
@@ -29,23 +41,18 @@ The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found 
 
 ## Web application
 
-### Installation
-```
-cd app && npm install && cd ../
-```
-
 ### Starting the model server
 
 Requires python3.10
 
 ```
-python3 -m app.service
+polygraph_backend
 ```
 
 ### Starting the web application server
 
 ```
-node app/index.js
+polygraph_frontend
 ```
 
 Once both servers are up and running, the chat model will be available at <http://localhost:3001/>.
