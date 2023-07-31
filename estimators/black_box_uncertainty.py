@@ -66,7 +66,7 @@ class BlackBoxUE(Estimator):
         self.deberta.eval()
     
     def __str__(self):
-        return f'similarity score: {self.similarity_score}, black box uncertainty measure: {self.uncertainty_method}'
+        return f'{self.uncertainty_method}_{self.similarity_score}'
 
     def get_pairs(self, lst):
         pairs = []
@@ -127,7 +127,7 @@ class BlackBoxUE(Estimator):
 
         return W
     
-    def U_NumSenSets(self, answers):
+    def U_NumSemSets(self, answers):
         
         lst = self.get_pairs_semsets(answers)
         # basically we have only 1 semantic set
@@ -210,7 +210,7 @@ class BlackBoxUE(Estimator):
             if self.uncertainty_method == 'Num_Sem_Sets':
                 print(self.similarity_score)
                 assert self.similarity_score == "NLI_score", "For Num_Set_Sets uncertaimty measure only NLI score is relevant"
-                res.append(self.U_NumSenSets(answers))
+                res.append(self.U_NumSemSets(answers))
 
             elif self.uncertainty_method == 'Eig_Val_Laplacian':
                 res.append(self.U_EigVal_Laplacian(answers))
