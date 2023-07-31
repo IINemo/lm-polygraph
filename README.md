@@ -2,13 +2,18 @@
 
 ## Installation
 
+Clone repo via SSH:
 ```
 git clone git@github.com:IINemo/lm-polygraph.git
-cd lm-polygraph
-git fetch
-git checkout restructure_package
-git pull origin restructure_package
+```
+or via HTTPS:
+```
+git clone https://github.com/IINemo/lm-polygraph.git
+```
 
+
+```
+cd lm-polygraph
 pip install .
 ```
 
