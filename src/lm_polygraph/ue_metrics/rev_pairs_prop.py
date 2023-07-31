@@ -15,5 +15,5 @@ class ReversedPairsProportion(UEMetric):
         target = np.array(target)
         cnts = []
         for i in range(len(ue)):
-            cnts.append(np.logical_and(ue >= ue[i], target < target[i]).mean())
+            cnts.append(np.logical_and(ue > ue[i], target < target[i]).mean())
         return np.mean(cnts).item()
