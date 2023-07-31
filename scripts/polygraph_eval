@@ -188,6 +188,7 @@ if __name__ == "__main__":
                 ModelScoreSeqMetric("model_rh"),
                 ModelScoreTokenwiseMetric("model_rh"),
                 WERTokenwiseMetric(),
+                AccuracyMetric()
             ],
             [
                 ReversedPairsProportion(),
