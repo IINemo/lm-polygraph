@@ -1,9 +1,12 @@
 .idea
-app/node_modules
-!app/node_modules/openai
-!app/node_modules/openai/dist/*
-*/.DStore
+src/lm_polygraph/app/node_modules
+**/.DStore
 workdir/
+
+*.npy
+*.csv
+models--*/
+test.man_seed*
 
 app/.env
 app/uploads/*
@@ -12,7 +15,7 @@ app/uploads/*
 __pycache__/
 *.py[cod]
 *$py.class
-*/__pycache__/
+**/__pycache__/
 
 # C extensions
 *.so
@@ -32,7 +35,7 @@ sdist/
 var/
 wheels/
 share/python-wheels/
-*.egg-info/
+**.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
