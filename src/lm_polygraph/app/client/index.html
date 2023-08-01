@@ -31,7 +31,7 @@
             <input v-if="modelSelected.includes('Ensemble')" v-model="value"
                    id="ensemble-path-input" class="ensemble-path-input">
           </div>
-          <treeselect v-model="modelSelected" :multiple="false" :options="options" :clear-on-select="false"
+          <treeselect color="black" v-model="modelSelected" :multiple="false" :options="options" :clear-on-select="false"
                       placeholder="Select model"></treeselect>
         </div>
 
@@ -41,7 +41,7 @@
         </div>
 
         <div id="tokue">
-          <treeselect v-model="tokueSelected" :multiple="true" :options="computedOptions"
+          <treeselect color="black" v-model="tokueSelected" :multiple="true" :options="computedOptions"
                       placeholder="Select token-level estimators"></treeselect>
         </div>
 
