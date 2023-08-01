@@ -117,7 +117,7 @@ class Dataset:
         # For Babi_QA dataset
         elif "babi_qa" in csv_path.lower():
             x, y = [], []
-            prompt = "Answer the question given a context. Output only the full name of the location.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\n"
+            prompt = "Answer the question given a context. You must only output the full name of the location the same way it is mentioned in the text. Don't output articles or any additional information.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\n"
             for inst in dataset:
                 inst = inst["story"]
                 context = ""
