@@ -17,6 +17,7 @@ from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
 from .semantic_entropy_adapted_sampling import SemanticEntropyAdaptedSampling
 from .predictive_entropy_adapted_sampling import PredictiveEntropyAdaptedSampling
+from .perplexity import PerplexitySeq
 from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq
