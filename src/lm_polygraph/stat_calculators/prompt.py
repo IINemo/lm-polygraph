@@ -25,7 +25,6 @@ class PromptCalculator(StatCalculator):
         samples = dependencies['sample_texts']
         inp_texts = [self.prompt.format(q=text, s=', '.join(sample), a=ans)
                      for text, ans, sample in zip(texts, answers, samples)]
-
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():

@@ -17,7 +17,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
-                       model: PreTrainedModel) -> Dict[str, np.ndarray]:
+                       model: PreTrainedModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         super().__init__(["ensemble_token_scores"], [])
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
@@ -28,7 +28,6 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
         max_length = generation_params.get("generation_max_length", 256)  # None)
         min_length = generation_params.get("generation_min_length", 2)
         num_return_sequences = generation_params.get("num_return_sequences", 5)
-
         max_length = generation_params.get('generation_max_length', 256)#None)
         min_length = generation_params.get('generation_min_length', 2)
         num_return_sequences = generation_params.get('num_return_sequences', 5)

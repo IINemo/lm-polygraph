@@ -33,5 +33,3 @@ def normalize_ue(est: Estimator, model_path: str, val: float) -> float:
         return val
     q = np.array(ue_bounds[str(est)])
     return (q < val).mean()
-    low, high = ue_bounds[str(est)]['low'], ue_bounds[str(est)]['high']
-    return min(1, max(0, (val - low) / (high - low)))
