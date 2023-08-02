@@ -101,7 +101,7 @@ if __name__ == "__main__":
                     'text', 'url',
                     batch_size=args.batch_size,
                     data={"data_files": "en/c4-train.00000-of-01024.json.gz"},
-                    max_size=100_000,
+                    size=100_000,
                     split="train",
             )
 

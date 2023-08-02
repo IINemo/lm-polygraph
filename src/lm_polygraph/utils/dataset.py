@@ -65,6 +65,7 @@ class Dataset:
         prompt: str = "",
         subset: str = "test",
         size: int = None,
+        **kwargs
     ):
         if "coqa" in csv_path and subset == "test":
             subset = "validation"
