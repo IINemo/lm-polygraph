@@ -116,7 +116,8 @@ class UEManager:
         stats, have_stats = _order_calculators(stats)
         stats = [s for s in stats if not (str(s).startswith('blackbox_') and s[len('blackbox_'):] in have_stats)]
         self.stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in stats]
-        print('Stat calculators:', self.stat_calculators)
+        if verbose:
+            print('Stat calculators:', self.stat_calculators)
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)

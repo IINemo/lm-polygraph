@@ -27,8 +27,10 @@ class Model(ABC):
 
 
 class BlackboxModel(Model):
-    def __init__(self, openai_api_key: str, openai_model_path: str, model_type: str = 'Blackbox'):
-        super().__init__(openai_model_path, model_type)
+    def __init__(self, openai_api_key: str, openai_model_path: str,
+                 parameters: GenerationParameters = GenerationParameters()):
+        super().__init__(openai_model_path, 'Blackbox')
+        self.parameters = parameters
         openai.api_key = openai_api_key
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
