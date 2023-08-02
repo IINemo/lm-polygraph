@@ -33,7 +33,6 @@ install_requires = [
     'PyYAML==6.0',
     'scipy==1.9.3',
     'datasets==2.3.2',
-    'tensorflow',
     'flask==2.3.2',
     'einops',
     'accelerate',
