@@ -121,10 +121,12 @@ class UEManager:
             print('Stat calculators:', self.stat_calculators)
 
         train_stats = [s for e in estimators for s in e.stats_dependencies if s.startswith("train")]
-        train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []
-        self.train_stat_calculators: List[StatCalculator] = _order_calculators(train_stats)
+        train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []     
+        train_stats, _ = _order_calculators(train_stats)
+        self.train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in train_stats]
         background_train_stats = [s for e in estimators for s in e.stats_dependencies if s.startswith("background_train")]
-        self.background_train_stat_calculators: List[StatCalculator] = _order_calculators(background_train_stats)
+        background_train_stats, _ = _order_calculators(background_train_stats)
+        self.background_train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in background_train_stats]
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
