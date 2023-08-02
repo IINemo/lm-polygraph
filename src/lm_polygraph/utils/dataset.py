@@ -63,21 +63,21 @@ class Dataset:
         y_column: str,
         batch_size: int,
         prompt: str = "",
-        subset: str = "test",
+        split: str = "test",
         size: int = None,
         **kwargs
     ):
-        if "coqa" in csv_path and subset == "test":
-            subset = "validation"
+        if "coqa" in csv_path and split == "test":
+            split = "validation"
         if "trivia_qa" in csv_path.lower():
-            dataset = load_dataset(csv_path, "rc.nocontext")[subset]
+            dataset = load_dataset(csv_path, "rc.nocontext", split=split, **kwargs)
         elif "babi_qa" in csv_path.lower():
-            dataset = load_dataset(csv_path, "en-10k-qa1")[subset]
+            dataset = load_dataset(csv_path, "en-10k-qa1", split=split, **kwargs)
         elif "wmt" in csv_path.lower():
             dataset_subset = "de-en" if "de" in [x_column, y_column] else "fr-en"
-            dataset = load_dataset(csv_path, dataset_subset)[subset]
+            dataset = load_dataset(csv_path, dataset_subset, split=split, **kwargs)
         else:
-            dataset = load_dataset(csv_path)[subset]
+            dataset = load_dataset(csv_path, split=split, **kwargs)
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
         # In this case this is a NMT dataset

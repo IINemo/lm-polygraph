@@ -64,7 +64,7 @@ if __name__ == "__main__":
             args.output_column,
             batch_size=args.batch_size,
             prompt=args.prompt,
-            subset="test",
+            split="test",
         )
 
         if args.use_density_based_ue:
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                     args.output_column,
                     batch_size=args.batch_size,
                     prompt=args.prompt,
-                    subset="train",
+                    split="train",
                 )
             elif not args.dataset.endswith("csv"):
                 train_dataset, _ = Dataset.load(
@@ -86,7 +86,7 @@ if __name__ == "__main__":
                     args.output_column,
                     batch_size=args.batch_size,
                     prompt=args.prompt,
-                    subset="train",
+                    split="train",
                     size=10_000,
                 )
             else:
@@ -100,9 +100,9 @@ if __name__ == "__main__":
                     args.background_train_dataset,
                     'text', 'url',
                     batch_size=args.batch_size,
-                    data={"data_files": "en/c4-train.00000-of-01024.json.gz"},
                     size=100_000,
                     split="train",
+                    data_files="en/c4-train.00000-of-01024.json.gz",
             )
 
             if args.subsample_train_dataset != -1:
