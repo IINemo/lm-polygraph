@@ -3,7 +3,8 @@ html, body {
 }
 /* Add background color to the body */
 body {
-    background-color: rgba(68, 70, 84, 1.0);
+    color: black;
+    background-color: rgba(225, 225, 225, 1.0);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -26,6 +27,7 @@ select {
 
 .ensemble-options {
     background: white;
+    color: black;
     border-radius: 5px;
 }
 
@@ -39,13 +41,13 @@ select {
 /* Style for each response element in the list */
 .response-container {
     margin-bottom: 10px;
-    color: white;
+    color: black;
     font-size: 1rem;
     word-break: break-word;
 }
 
 .desc-container {
-    color: rgb(190, 190, 190);
+    color: rgb(65, 65, 65);
     font-size: 0.7rem;
     width: 20%;
 }
@@ -73,7 +75,7 @@ select {
 
 .prompt-content {
     background: transparent !important;
-    color: white;
+    color: black;
     padding: 0 !important;
 }
 
@@ -95,10 +97,11 @@ select {
 }
 
 .settings-button {
-    background-color: rgba(68, 70, 84, 1.0);
+    background-color: rgba(30, 30, 30, 1.0);
     width: 40px;
     height: 40px;
     border: none;
+    filter: invert(1);
 }
 
 .modal {
@@ -110,7 +113,7 @@ select {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0.5);
 }
 
 .modal-content {
@@ -220,13 +223,13 @@ select {
 }
 
 .chatgpt-response {
-    background-color: rgba(68, 70, 84, 1);
+    background-color:  rgba(225, 225, 225, 1.0);
 }
 
 .total-response-my-question {
     margin-top: 10px;
-    background-color: rgba(52, 53, 65, 1);
-    border: 5px solid rgba(52, 53, 65, 1);
+    background-color: rgba(200, 200, 200, 1);
+    border: 5px solid rgba(200, 200, 200, 1);
 }
 
 .total-response-chatgpt-response {
@@ -234,7 +237,7 @@ select {
 }
 
 .chatgpt-response {
-    background-color: rgba(68, 70, 84, 1);
+    background-color:  rgba(225, 225, 225, 1.0);
 }
 
 /* Change background color of the input container */
@@ -242,8 +245,8 @@ select {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(64, 65, 79, 1);
-    border-color: rgba(32,33,35,.5);
+    background-color: rgba(190, 190, 190, 1);
+    border-color: rgba(225, 225, 225, .5);
     border-radius: 5px;
     margin-top: 10px;
     padding: 15px 20%;
@@ -255,7 +258,7 @@ select {
     padding: 10px;
     border-radius: 5px;
     min-height: 20px;
-    color: white;
+    color: black;
     overflow: auto;
 }
 
@@ -266,7 +269,8 @@ select {
 /* Remove background color and add an SVG background for the submit button */
 #submit-button {
     background: transparent url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='white' d='M2.01 21L23 12 2.01 3 2 10l15 2-15 2z'/></svg>") no-repeat center center;
-    color: white;
+    filter: invert(1);
+    color: black;
     width: 40px;
     height: 40px;
     border: none;
@@ -284,7 +288,7 @@ select {
 
 #regenerate-response-button {
     display: none;
-    color: white;
+    color: black;
     border: none;
     background: #10A37F;
     border-radius: 4px;
@@ -306,17 +310,17 @@ select {
 }
 
 #model {
-    color: rgba(32,33,35,.5);
+    color: rgba(30,30,30,.5);
     flex: 1;
 }
 
 #seque {
-    color: rgba(32,33,35,.5);
+    color: rgba(30,30,30,.5);
     flex: 1;
 }
 
 #tokue {
-    color: rgba(32,33,35,.5);
+    color: rgba(30,30,30,.5);
     width: 35%;
 }
 
@@ -324,22 +328,22 @@ select {
     background: transparent;
     border: none;
     outline: none;
-    color: white;
+    color: black;
 }
 
 #model select option:not(:checked) {
-    background: rgba(32,33,35,.8);
+    background: rgba(223,222,220,.8);
 }
 
 #model select option {
-    background: rgba(32,33,35,.5);
+    background: rgba(223,222,220,.5);
 }
 
 #seque select {
     background: transparent;
     border: none;
     outline: none;
-    color: white;
+    color: black;
 }
 
 #tokue select {
@@ -349,19 +353,19 @@ select {
 }
 
 #seque select option:not(:checked) {
-    background: rgba(32,33,35,.8);
+    background: rgba(40,40,40,.8);
 }
 
 #tokue select option:not(:checked) {
-    background: rgba(32,33,35,.8);
+    background: rgba(223,222,220,.8);
 }
 
 #seque select option {
-    background: rgba(32,33,35,.5);
+    background: rgba(223,222,220,.5);
 }
 
 #tokue select option {
-    background: rgba(32,33,35,.5);
+    background: rgba(223,222,220,.5);
 }
 
 .hidden {
@@ -375,7 +379,7 @@ select {
 
 /* Override hljs to match for chatgpt */
 .hljs {
-    background: rgb(0,0,0) !important;
+    background: rgb(255,255,255) !important;
     color: white !important;
 }
 
