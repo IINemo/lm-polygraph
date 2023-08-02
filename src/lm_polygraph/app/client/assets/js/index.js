@@ -208,6 +208,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
         var openai_key = openaiKeyInput.value
     }
 
+    // TODO(rediska): надо пошифровать openai_key
+
     try {
         // Send a POST request to the API with the prompt in the request body
         const response = await fetch(API_URL + 'get-prompt-result', {
