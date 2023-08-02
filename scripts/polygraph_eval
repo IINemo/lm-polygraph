@@ -25,7 +25,6 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
-    parser.add_argument("--density_based_params_path", type=str, default="/home/jovyan/projects/lm-polygraph/workdir")
     parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
     parser.add_argument("--subsample_train_dataset", type=int, default=100)
     parser.add_argument("--subsample_eval_dataset", type=int, default=100)
@@ -90,7 +89,7 @@ if __name__ == '__main__':
                 
             dataset_name = args.dataset.split('/')[-1].split('.')[0]
             model_name = args.model.split('/')[-1]
-            parameters_path = f"{args.density_based_params_path}/{dataset_name}/{model_name}"
+            parameters_path = f"{args.cache_path}/{dataset_name}/{model_name}"
         
             if model.model_type == "Seq2SeqLM":
                 density_based_ue = [
