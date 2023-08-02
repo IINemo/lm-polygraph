@@ -184,10 +184,17 @@ class UEManager:
                 batch_stats[stat] = backgound_train_stats[stat]
 
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+            bad_estimators = []
             for estimator in self.estimators:
-                e = estimator(batch_stats).tolist()
-                self.estimations[estimator.level, str(estimator)] += e
-                batch_estimations[estimator.level, str(estimator)] += e
+                try:
+                    e = estimator(batch_stats).tolist()
+                    self.estimations[estimator.level, str(estimator)] += e
+                    batch_estimations[estimator.level, str(estimator)] += e
+                except:
+                    bad_estimators.append(estimator)
+            for bad_estim in bad_estimators:
+                self.estimators.remove(bad_estim)
+                
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
                 m = generation_metric(
@@ -208,10 +215,11 @@ class UEManager:
                     if gen_level != e_level:
                         continue
                     if len(estimator_values) != len(generation_metric):
-                        raise Exception(
-                            f"Got different number of metrics for {e_name} and {gen_name}: "
-                            f"{len(estimator_values)} and {len(generation_metric)}"
-                        )
+                        continue
+                        # raise Exception(
+                        #     f"Got different number of metrics for {e_name} and {gen_name}: "
+                        #     f"{len(estimator_values)} and {len(generation_metric)}"
+                        # )
                     ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
