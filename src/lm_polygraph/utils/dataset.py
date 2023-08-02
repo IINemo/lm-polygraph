@@ -62,7 +62,7 @@ class Dataset:
         x_column: str,
         y_column: str,
         batch_size: int,
-        prompt: str,
+        prompt: str = "",
         subset: str = "test",
         size: int = None,
     ):
