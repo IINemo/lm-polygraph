@@ -3,6 +3,7 @@ from .greedy_probs import GreedyProbsCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .prompt import PromptCalculator
 from .entropy import EntropyCalculator
+from .std import StdCalculator
 from .sample import SamplingGenerationCalculator
 from .adapted_sample import AdaptedSamplingGenerationCalculator
 from .bart_score import BartScoreCalculator
@@ -12,6 +13,7 @@ from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 
 register(GreedyProbsCalculator())
 register(EntropyCalculator())
+register(StdCalculator())
 register(GreedyLMProbsCalculator())
 register(PromptCalculator(
     'Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n '

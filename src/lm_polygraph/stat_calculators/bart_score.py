@@ -14,13 +14,14 @@ from lm_polygraph.utils.model import Model
 
 
 class BartScoreCalculator(StatCalculator):
-    def __init__(self, device='cuda:0', max_length=1024, checkpoint='facebook/bart-large-cnn'):
+    def __init__(self, device=None, max_length=1024, checkpoint='facebook/bart-large-cnn'):
         super().__init__(['rh'],
                          ['greedy_tokens', 'input_tokens'])
-        self.device = device
         self.max_length = max_length
         self.checkpoint = checkpoint
         self.device = device
+        if device is None:
+            self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
         self.tokenizer = None
         self.model = None

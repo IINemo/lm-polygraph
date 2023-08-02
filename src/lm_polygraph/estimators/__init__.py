@@ -1,6 +1,7 @@
 from .estimator import Estimator
 from .max_probability import MaxProbabilitySeq, MaxProbabilityToken
 from .max_probability_normalized import MaxProbabilityNormalizedSeq, MaxProbabilityNormalizedToken
+from .sent_std import StdSeq, StdToken
 from .entropy import EntropySeq, EntropyToken
 from .mutual_information import MutualInformationSeq, MutualInformationToken
 from .conditional_mutual_information import ConditionalMutualInformationSeq, ConditionalMutualInformationToken
@@ -13,7 +14,10 @@ from .exp_attention_recursive import ExponentialAttentionRecursiveSeq, Exponenti
 from .predictive_entropy import PredictiveEntropy
 from .len_norm_predictive_entropy import LengthNormalizedPredictiveEntropy
 from .lexical_similarity import LexicalSimilarity
-from .black_box_uncertainty import BlackBoxUE
+from .deg_mat import DegMat
+from .eccentricity import Eccentricity
+from .eig_val_laplacian import EigValLaplacian
+from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
 from .semantic_entropy_adapted_sampling import SemanticEntropyAdaptedSampling
