@@ -70,6 +70,7 @@ class UncertaintyOutput:
 def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str, target_text: str = ''):
     man = UEManager(Dataset([input_text], [target_text], batch_size=1), model,
                     [estimator], [], [], [], ignore_exceptions=False, verbose=False)
+    man()
     ue = man.estimations[estimator.level, str(estimator)]
     if estimator.level == 'sequence':
         ue = normalize_from_bounds(estimator, ue[0])
