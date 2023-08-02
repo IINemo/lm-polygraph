@@ -4,7 +4,6 @@ let promptToRetry = null;
 let uniqueIdToRetry = null;
 
 const submitButton = document.getElementById('submit-button');
-const regenerateResponseButton = document.getElementById('regenerate-response-button');
 const promptInput = document.getElementById('prompt-input');
 const modelSelect = document.getElementById('model');
 const tokUeSelect = document.getElementById('tokue');
@@ -146,16 +145,6 @@ function setErrorForResponse(element, message) {
 function setRetryResponse(prompt, uniqueId) {
     promptToRetry = prompt;
     uniqueIdToRetry = uniqueId;
-    regenerateResponseButton.style.display = 'flex';
-}
-
-async function regenerateGPTResult() {
-    try {
-        await getGPTResult(promptToRetry, uniqueIdToRetry)
-        regenerateResponseButton.classList.add("loading");
-    } finally {
-        regenerateResponseButton.classList.remove("loading");
-    }
 }
 
 // Function to get GPT result
@@ -213,6 +202,11 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     if (ensemblePathInput) {
         var ensembles = ensemblePathInput.value
     }
+    var openaiKeyInput = document.getElementById('openai-secret-key-input');
+    var openai_key
+    if (openaiKeyInput) {
+        var openai_key = openaiKeyInput.value
+    }
 
     try {
         // Send a POST request to the API with the prompt in the request body
@@ -222,6 +216,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
             body: JSON.stringify({
                 prompt,
                 model,
+                openai_key,
                 ensembles,
                 tok_ue,
                 seq_ue,
@@ -244,7 +239,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
         promptToRetry = null;
         uniqueIdToRetry = null;
-        regenerateResponseButton.style.display = 'none';
         setTimeout(() => {
             // Scroll to the bottom of the response list
             responseList.scrollTop = responseList.scrollHeight;
@@ -268,10 +262,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
 submitButton.addEventListener("click", () => {
     getGPTResult();
-});
-
-regenerateResponseButton.addEventListener("click", () => {
-    regenerateGPTResult();
 });
 
 document.addEventListener("DOMContentLoaded", function(){

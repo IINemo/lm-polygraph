@@ -8,7 +8,7 @@ from tqdm import tqdm
 from dataclasses import dataclass
 
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.normalize import normalize_from_bounds
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
@@ -18,8 +18,8 @@ from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_C
 from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
 
-def _order_calculators(stats: List[str]) -> List[StatCalculator]:
-    ordered: List[StatCalculator] = []
+def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
+    ordered: List[str] = []
     have_stats: Set[str] = set()
     while len(stats) > 0:
         stat = stats[0]
@@ -37,10 +37,10 @@ def _order_calculators(stats: List[str]) -> List[StatCalculator]:
                 dependent = True
         if not dependent:
             stats = stats[1:]
-            ordered.append(STAT_CALCULATORS[stat])
-            for new_stat in ordered[-1].stats:
+            ordered.append(stat)
+            for new_stat in STAT_CALCULATORS[stat].stats:
                 have_stats.add(new_stat)
-    return ordered
+    return ordered, have_stats
 
 
 def _check_unique_names(xs):
@@ -63,11 +63,11 @@ def _delete_nans(ue, metric):
 @dataclass
 class UncertaintyOutput:
     generation_text: str
-    generation_tokens: List[int]
+    generation_tokens: Optional[List[int]]
     uncertainty: Union[List[float], float]
 
 
-def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str, target_text: str = ''):
+def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text: str, target_text: str = ''):
     man = UEManager(Dataset([input_text], [target_text], batch_size=1), model,
                     [estimator], [], [], [], ignore_exceptions=False, verbose=False)
     man()
@@ -76,7 +76,9 @@ def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str, ta
         ue = normalize_from_bounds(estimator, ue[0])
     else:
         ue = [normalize_from_bounds(estimator, i) for i in ue]
-    return UncertaintyOutput(man.stats['greedy_texts'][0], man.stats['greedy_tokens'][0], ue)
+    texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
+    tokens = man.stats.get('greedy_tokens', None)
+    return UncertaintyOutput(texts, tokens, ue)
 
 
 class UEManager:
@@ -91,10 +93,10 @@ class UEManager:
             train_data: Dataset = None,
             background_train_data: Dataset = None,
             ignore_exceptions: bool = True,
-            ensemble_model: Optional[Model] = None,
+            ensemble_model: Optional[WhiteboxModel] = None,
             verbose: bool = True,
     ):
-        self.model: Model = model
+        self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
@@ -105,9 +107,16 @@ class UEManager:
         _check_unique_names(generation_metrics)
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
+        if isinstance(model, BlackboxModel):
+            greedy = ['blackbox_greedy_texts']
+        else:
+            greedy = ['greedy_tokens', 'greedy_texts']
         stats = [s for e in estimators for s in e.stats_dependencies] + \
-                [s for m in generation_metrics for s in m.stats_dependencies] + ['greedy_tokens', 'greedy_texts']
-        self.stat_calculators: List[StatCalculator] = _order_calculators(stats)
+                [s for m in generation_metrics for s in m.stats_dependencies] + greedy
+        stats, have_stats = _order_calculators(stats)
+        stats = [s for s in stats if not (str(s).startswith('blackbox_') and s[len('blackbox_'):] in have_stats)]
+        self.stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in stats]
+        print('Stat calculators:', self.stat_calculators)
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
@@ -121,20 +130,24 @@ class UEManager:
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
 
         train_embeddings_decoder, train_embeddings_encoder = self.extract_train_embeddings()
-        background_train_embeddings_decoder, background_train_embeddings_encoder = self.extract_train_embeddings(background=True, remove_calculator=True)
+        background_train_embeddings_decoder, background_train_embeddings_encoder = self.extract_train_embeddings(
+            background=True, remove_calculator=True)
         if self.verbose:
             self.data = tqdm(self.data)
         for inp_texts, target_texts in self.data:
-            target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
-                             for text in target_texts]
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ('input_texts', inp_texts),
                 ('target_texts', target_texts),
-                ('target_tokens', target_tokens),
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
+
+            if isinstance(self.model, WhiteboxModel):
+                target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
+                                 for text in target_texts]
+                self.stats['target_tokens'] += target_tokens
+                batch_stats['target_tokens'] = target_tokens
 
             batch_stats['generation_params'] = {}
             batch_stats['ensemble_model'] = self.ensemble_model
@@ -146,6 +159,8 @@ class UEManager:
                         if stat in batch_stats.keys():
                             continue
                         batch_stats[stat] = stat_value
+                        if f'blackbox_{stat}' in STAT_CALCULATORS.keys():
+                            batch_stats[f'blackbox_{stat}'] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
                     sys.stderr.write(f'Caught exception while calculating stats: {e}')
@@ -162,7 +177,7 @@ class UEManager:
                 batch_stats["background_train_embeddings_decoder"] = background_train_embeddings_decoder
             if len(background_train_embeddings_encoder):
                 batch_stats["background_train_embeddings_encoder"] = background_train_embeddings_encoder
-            
+
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for estimator in self.estimators:
                 e = estimator(batch_stats).tolist()
@@ -174,7 +189,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ['greedy_texts', 'greedy_tokens']:
+            for key in ['blackbox_greedy_texts', 'greedy_texts', 'greedy_tokens']:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:

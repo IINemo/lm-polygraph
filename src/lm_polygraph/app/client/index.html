@@ -16,11 +16,6 @@
 <div id="response-list">
 </div>
 <div id="bottom-container">
-    <div id="regenerate-button-container">
-        <button id="regenerate-response-button">
-            Regenerate Response
-        </button>
-    </div>
     <div id="select-container">
 
         <div id="model" class="model">
@@ -31,6 +26,19 @@
             <input v-if="modelSelected.includes('Ensemble')" v-model="value"
                    id="ensemble-path-input" class="ensemble-path-input">
           </div>
+
+          <div class="openai-options">
+            <label class="openai-secret-key"
+                   v-if="modelSelected.includes('gpt-4') || modelSelected.includes('gpt-3.5')"
+                   for="openai-secret-key-input"
+                   style="color: black; font-size: 14px">
+                Enter your OpenAI API secret key:</label>
+            <input type="password"
+                   v-if="modelSelected.includes('gpt-4') || modelSelected.includes('gpt-3.5')"
+                   v-model="value"
+                   id="openai-secret-key-input" class="openai-secret-key-input">
+          </div>
+
           <treeselect color="black" v-model="modelSelected" :multiple="false" :options="options" :clear-on-select="false"
                       placeholder="Select model"></treeselect>
         </div>

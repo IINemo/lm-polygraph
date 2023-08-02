@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 def get_embeddings_from_output(
@@ -114,11 +114,11 @@ class EmbeddingsCalculator(StatCalculator):
         super().__init__(['train_embeddings', 'background_train_embeddings'], [])
         self.hidden_layer = -1
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
-            out = model.model.generate(
+            out = model.generate(
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,

@@ -49,7 +49,8 @@ select {
 .desc-container {
     color: rgb(65, 65, 65);
     font-size: 0.7rem;
-    width: 20%;
+    min-width: 20%;
+    max-width: 20%;
 }
 
 #input-container {
@@ -276,25 +277,6 @@ select {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}
-
-#regenerate-button-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin-bottom: 10px;
-    padding: 15px 20%;
-}
-
-#regenerate-response-button {
-    display: none;
-    color: black;
-    border: none;
-    background: #10A37F;
-    border-radius: 4px;
-    padding: 10px 20px;
-    cursor: pointer;
-    padding: 15px 20%;
 }
 
 .loading {

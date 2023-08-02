@@ -5,14 +5,14 @@ import torch.nn.functional as F
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class EntropyCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['entropy'], ['greedy_log_probs'])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         logprobs = dependencies['greedy_log_probs']
         entropies = []
         for s_lp in logprobs:
