@@ -3,7 +3,6 @@ import os
 
 install_requires = [
     'hydra-core==1.1.0',
-    'datasets==2.3.2',
     'rouge-score==0.0.4',
     'plotly==5.5.0',
     'kaleido==0.2.1',
@@ -32,7 +31,7 @@ install_requires = [
     'dill==0.3.5.1',
     'PyYAML==6.0',
     'scipy==1.9.3',
-    'datasets==2.3.2',
+    'datasets==2.14.2',
     'flask==2.3.2',
     'einops',
     'accelerate',
