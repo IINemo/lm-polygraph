@@ -12,7 +12,7 @@ class GreedyProbsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
                           'greedy_log_probs', 'greedy_tokens',
-                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'embeddings'], [])
+                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods', 'embeddings'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)

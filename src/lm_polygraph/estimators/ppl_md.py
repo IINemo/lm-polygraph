@@ -27,7 +27,7 @@ def rank(target_array, source_array):
 
 class PPLMDSeq(Estimator):
     def __init__(self, embeddings_type: str = "decoder", md_type: str = "MD", parameters_path: str = None, normalize: bool = False):
-        super().__init__(['train_greedy_lm_log_likelihoods', 'greedy_lm_log_likelihoods', 'embeddings', 'train_embeddings', 'background_train_embeddings'], 'sequence')
+        super().__init__(['train_greedy_log_likelihoods', 'greedy_log_likelihoods', 'embeddings', 'train_embeddings', 'background_train_embeddings'], 'sequence')
         self.parameters_path = parameters_path
         self.embeddings_type = embeddings_type
         self.normalize = normalize
@@ -66,7 +66,7 @@ class PPLMDSeq(Estimator):
         
         if self.train_ppl is None:
             copy_stats = copy.deepcopy(stats)
-            copy_stats['greedy_lm_log_likelihoods'] = copy_stats['train_greedy_lm_log_likelihoods']
+            copy_stats['greedy_log_likelihoods'] = copy_stats['train_greedy_log_likelihoods']
             self.train_ppl = self.PPL(copy_stats)
             if self.parameters_path is not None:
                 save_array(self.train_ppl, f"{self.full_path}/train_ppl.npy")
