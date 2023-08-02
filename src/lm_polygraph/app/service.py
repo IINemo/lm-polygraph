@@ -5,7 +5,7 @@ import torch
 from typing import Optional, Dict, Tuple, List
 
 from flask import Flask, request, abort
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
@@ -16,13 +16,14 @@ from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Esti
 
 app = Flask(__name__)
 
-model: Optional[Model] = None
+model: Optional[WhiteboxModel] = None
 tok_ue_methods: Dict[str, Estimator] = {}
 seq_ue_methods: Dict[str, Estimator] = {}
 cache_path: str = '/Users/ekaterinafadeeva/cache'
 density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
                                   "RDE", "RDE - encoder"]
 device: str = 'cpu'
+
 
 class ResultProcessor(Processor):
     def __init__(self):
@@ -110,7 +111,10 @@ def generate():
         model, ensemble_model = parse_ensemble(model_path, device=device)
     elif model is None or model.model_path != parse_model(data['model']):
         model_path = parse_model(data['model'])
-        model = Model.from_pretrained(model_path, device=device)
+        if model_path.startswith('openai-'):
+            model = BlackboxModel(data['openai_key'], model_path[len('openai-'):])
+        else:
+            model = WhiteboxModel.from_pretrained(model_path, device=device)
     else:
         model_path = parse_model(data['model'])
     model.parameters = parameters
@@ -133,23 +137,29 @@ def generate():
     tok_methods = [tok_ue_methods[ue_method_name] for ue_method_name in tok_ue_method_names]
     seq_methods = [seq_ue_methods[ue_method_name] for ue_method_name in seq_ue_method_names]
 
-    man = UEManager(dataset, model, tok_methods + seq_methods, [], [],
-                    [processor],
-                    ensemble_model=ensemble_model,
-                    ignore_exceptions=False)
-    man()
+    try:
+        man = UEManager(dataset, model, tok_methods + seq_methods, [], [],
+                        [processor],
+                        ensemble_model=ensemble_model,
+                        ignore_exceptions=False)
+        man()
+    except Exception as e:
+        abort(400, str(e))
 
     if len(processor.ue_estimations) != len(tok_methods) + len(seq_methods):
-        abort(500,
-              description=f'Internal: expected {len(tok_methods) + len(seq_methods)} estimations, '
-                          f'got: {processor.ue_estimations.keys()}')
-    print(' Generation: {}'.format(processor.stats['greedy_texts'][0]))
+        abort(500, f'Internal: expected {len(tok_methods) + len(seq_methods)} estimations, '
+                   f'got: {processor.ue_estimations.keys()}')
+    greedy_text = processor.stats.get('greedy_texts', processor.stats.get('blackbox_greedy_texts', None))[0]
+    print(' Generation: {}'.format(greedy_text))
 
     tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token')
     seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence')
-    tokens = []
-    for t in processor.stats['greedy_tokens'][0][:-1]:
-        tokens.append(model.tokenizer.decode([t]))
+    if 'greedy_tokens' in processor.stats.keys():
+        tokens = []
+        for t in processor.stats['greedy_tokens'][0][:-1]:
+            tokens.append(model.tokenizer.decode([t]))
+    else:
+        tokens = [greedy_text]
     if len(tokens) > 0:
         tokens[0] = tokens[0].lstrip()
         tokens[-1] = tokens[-1].rstrip()

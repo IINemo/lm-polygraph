@@ -10,7 +10,7 @@ from .estimator import Estimator
 class LexicalSimilarity(Estimator):
     def __init__(self, metric):
         self.metric = metric
-        super().__init__(['sample_texts'], 'sequence')
+        super().__init__(['blackbox_sample_texts'], 'sequence')
 
     def __str__(self):
         return f'LexicalSimilarity_{self.metric}'
@@ -24,7 +24,7 @@ class LexicalSimilarity(Estimator):
             raise Exception(f'Unknown metrics for lexical similarity: {self.metric}')
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        batch_texts = stats['sample_texts']
+        batch_texts = stats['blackbox_sample_texts']
         res = []
         for texts in batch_texts:
             sims = []

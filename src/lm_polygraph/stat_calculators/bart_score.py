@@ -10,17 +10,18 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 from .stat_calculator import StatCalculator
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class BartScoreCalculator(StatCalculator):
-    def __init__(self, device='cuda:0', max_length=1024, checkpoint='facebook/bart-large-cnn'):
+    def __init__(self, device=None, max_length=1024, checkpoint='facebook/bart-large-cnn'):
         super().__init__(['rh'],
                          ['greedy_tokens', 'input_tokens'])
-        self.device = device
         self.max_length = max_length
         self.checkpoint = checkpoint
         self.device = device
+        if device is None:
+            self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
         self.tokenizer = None
         self.model = None
@@ -135,7 +136,7 @@ class BartScoreCalculator(StatCalculator):
 
         print(self.score(src_list, tgt_list, batch_size))
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         if self.model is None:
             self._setup()
         srcs, tgts = dependencies['greedy_texts'], dependencies['target_texts']

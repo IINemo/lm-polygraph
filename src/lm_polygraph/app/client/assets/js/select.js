@@ -16,6 +16,7 @@ const modelVue = new Vue({
     data: {
         modelSelected: 'Bloomz 560M',
         options: toOptions([
+            'gpt-4', 'gpt-3.5-turbo',
             'Ensemble', 'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
             'Bloomz 560M', 'Bloomz 3b', 'Bloomz 7b', 'Falcon 7b',
             'Llama 3b', 'Llama 7b', 'Llama 13b', "OPT 2.7b",
@@ -30,16 +31,28 @@ new Vue({
     el: '#seque',
     data: {
         sequeSelected: [],
-        model: ''
+        model: '',
+        type: ''
     },
     computed: {
         computedOptions() {
             var newModel = document.getElementById('model').__vue__.modelSelected;
-            if ((this.model === 'Ensemble') != (newModel === 'Ensemble')) {
+            var newType = '';
+            if (newModel == 'Ensemble') {
+                newType = 'ensemble';
+            } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
+                newType = 'T5';
+            } else if (['gpt-4', 'gpt-3.5-turbo'].includes(newModel)) {
+                newType = 'openai';
+            } else {
+                newType = 'seq2seq';
+            }
+            if (this.type != newType) {
                 this.sequeSelected = [];
             }
             this.model = newModel;
-            if (newModel === 'Ensemble') {
+            this.type = newType;
+            if (newType === 'ensemble') {
                 return toOptions([
                     'EP-S-total-uncertainty', 'EP-S-rmi', 'EP-S-rmi-abs', 'PE-S-total-uncertainty',
                     'PE-S-rmi', 'PE-S-rmi-abs', 'EP-T-total-uncertainty', 'EP-T-data-uncertainty', 'EP-T-mutual-information',
@@ -47,16 +60,23 @@ new Vue({
                     'EP-T-entropy-top15', 'PE-T-total-uncertainty', 'PE-T-data-uncertainty',
                     'PE-T-mutual-information', 'PE-T-rmi', 'PE-T-epkl', 'PE-T-epkl-tu',
                     'PE-T-entropy-top5', 'PE-T-entropy-top10', 'PE-T-entropy-top15']);
-            } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
+            } else if (newType === 'T5') {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Perplexity', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
                     'Attention Recursive Entropy', 'Exponential Attention Entropy',
                     'Exponential Attention Recursive Entropy', 'P(True)', 'P(Uncertainty)',
                     'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
                     'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
-                    'Lexical Similarity Rouge-BLEU', 'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
+                    'Lexical Similarity Rouge-BLEU',
+                    "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",
+                    'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
                     'Adaptive Sampling Semantic Entropy', 
                     'Mahalanobis Distance', 'Mahalanobis Distance - Encoder', 'RDE', 'RDE - Encoder', 'PPL+MD', 'PPL+MD - Encoder']);
+            } else if (newType === 'openai') {
+                return toOptions([
+                    'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
+                    'Lexical Similarity Rouge-BLEU',
+                    "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",]);
             } else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Perplexity', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
@@ -64,7 +84,9 @@ new Vue({
                     'Exponential Attention Recursive Entropy', 'P(True)', 'P(Uncertainty)',
                     'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
                     'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
-                    'Lexical Similarity Rouge-BLEU', 'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
+                    'Lexical Similarity Rouge-BLEU',
+                    "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",
+                    'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
                     'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance', 'RDE', 'PPL+MD']);
             }
         }
@@ -76,16 +98,30 @@ new Vue({
     el: '#tokue',
     data: {
         tokueSelected: [],
-        model: ''
+        model: '',
+        type: ''
     },
     computed: {
         computedOptions() {
             var newModel = document.getElementById('model').__vue__.modelSelected;
-            if ((this.model === 'Ensemble') != (newModel === 'Ensemble')) {
+            var newType = '';
+            if (newModel == 'Ensemble') {
+                newType = 'ensemble';
+            } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
+                newType = 'T5';
+            } else if (['gpt-4', 'gpt-3.5-turbo'].includes(newModel)) {
+                newType = 'openai';
+            } else {
+                newType = 'seq2seq';
+            }
+            if (this.type != newType) {
                 this.tokueSelected = [];
             }
             this.model = newModel;
-            if (newModel === 'Ensemble') {
+            this.type = newType;
+            if (newType === 'ensemble') {
+                return toOptions([]);
+            } else if (newType === 'openai') {
                 return toOptions([]);
             } else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',

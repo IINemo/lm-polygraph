@@ -9,7 +9,7 @@ import argparse
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetric, ModelScoreSeqMetric, ModelScoreTokenwiseMetric
 from lm_polygraph.estimators import *
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         print('=' * 150)
         print('SEED:', seed)
         transformers.set_seed(seed)
-        model = Model.from_pretrained(
+        model = WhiteboxModel.from_pretrained(
             args.model,
             device=device,
         )
@@ -128,6 +128,7 @@ if __name__ == '__main__':
                 PerplexitySeq(),
                 MaxProbabilityNormalizedSeq(),
                 EntropySeq(),
+                StdSeq(),
                 MutualInformationSeq(),
                 ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599),
                 AttentionEntropySeq(),
@@ -144,21 +145,16 @@ if __name__ == '__main__':
                 LexicalSimilarity(metric='rouge2'),
                 LexicalSimilarity(metric='rougeL'),
                 LexicalSimilarity(metric='BLEU'),
-                
-                BlackBoxUE(similarity_score = 'NLI_score', uncertainty_method = "Num_Sem_Sets"),
-
-                BlackBoxUE(similarity_score = 'NLI_score', order = 'entail', uncertainty_method = "Eig_Val_Laplacian"),
-                BlackBoxUE(similarity_score = 'NLI_score', order = 'contra', uncertainty_method = "Eig_Val_Laplacian"),
-                BlackBoxUE(similarity_score = 'Jaccard_score',  uncertainty_method = "Eig_Val_Laplacian"),
-
-                BlackBoxUE(similarity_score = 'NLI_score', order = 'entail', uncertainty_method = "Deg_Mat"),
-                BlackBoxUE(similarity_score = 'NLI_score', order = 'contra', uncertainty_method = "Deg_Mat"),
-                BlackBoxUE(similarity_score = 'Jaccard_score', uncertainty_method = "Deg_Mat"),
-                
-                BlackBoxUE(similarity_score = 'NLI_score', order = 'entail', uncertainty_method = "Eccentricity"),
-                BlackBoxUE(similarity_score = 'NLI_score', order = 'contra', uncertainty_method = "Eccentricity"),
-                BlackBoxUE(similarity_score = 'Jaccard_score', uncertainty_method = "Eccentricity"),
-
+                NumSemSets(),
+                EigValLaplacian(similarity_score='NLI_score', affinity='entail'),
+                EigValLaplacian(similarity_score='NLI_score', affinity='contra'),
+                EigValLaplacian(similarity_score='Jaccard_score'),
+                DegMat(similarity_score='NLI_score', affinity='entail'),
+                DegMat(similarity_score='NLI_score', affinity='contra'),
+                DegMat(similarity_score='Jaccard_score'),
+                Eccentricity(similarity_score='NLI_score', affinity='entail'),
+                Eccentricity(similarity_score='NLI_score', affinity='contra'),
+                Eccentricity(similarity_score='Jaccard_score'),
                 SemanticEntropy(),
                 PredictiveEntropyAdaptedSampling(),
                 SemanticEntropyAdaptedSampling(),

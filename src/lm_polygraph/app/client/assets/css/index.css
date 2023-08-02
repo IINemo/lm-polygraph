@@ -4,7 +4,7 @@ html, body {
 /* Add background color to the body */
 body {
     color: black;
-    background-color: rgba(225, 225, 225, 1.0);
+    background-color: rgba(255, 255, 255, 1.0);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -49,7 +49,8 @@ select {
 .desc-container {
     color: rgb(65, 65, 65);
     font-size: 0.7rem;
-    width: 20%;
+    min-width: 20%;
+    max-width: 20%;
 }
 
 #input-container {
@@ -97,7 +98,7 @@ select {
 }
 
 .settings-button {
-    background-color: rgba(30, 30, 30, 1.0);
+    background-color: rgba(0, 0, 0, 1.0);
     width: 40px;
     height: 40px;
     border: none;
@@ -223,13 +224,13 @@ select {
 }
 
 .chatgpt-response {
-    background-color:  rgba(225, 225, 225, 1.0);
+    background-color:  rgba(255, 255, 255, 1.0);
 }
 
 .total-response-my-question {
     margin-top: 10px;
-    background-color: rgba(200, 200, 200, 1);
-    border: 5px solid rgba(200, 200, 200, 1);
+    background-color: rgba(230, 230, 230, 1);
+    border: 5px solid rgba(230, 230, 230, 1);
 }
 
 .total-response-chatgpt-response {
@@ -237,7 +238,7 @@ select {
 }
 
 .chatgpt-response {
-    background-color:  rgba(225, 225, 225, 1.0);
+    background-color:  rgba(255, 255, 255, 1.0);
 }
 
 /* Change background color of the input container */
@@ -245,8 +246,8 @@ select {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(190, 190, 190, 1);
-    border-color: rgba(225, 225, 225, .5);
+    background-color: rgba(210, 210, 210, 1);
+    border-color: rgba(255, 255, 255, .5);
     border-radius: 5px;
     margin-top: 10px;
     padding: 15px 20%;
@@ -276,25 +277,6 @@ select {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}
-
-#regenerate-button-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin-bottom: 10px;
-    padding: 15px 20%;
-}
-
-#regenerate-response-button {
-    display: none;
-    color: black;
-    border: none;
-    background: #10A37F;
-    border-radius: 4px;
-    padding: 10px 20px;
-    cursor: pointer;
-    padding: 15px 20%;
 }
 
 .loading {
@@ -332,11 +314,11 @@ select {
 }
 
 #model select option:not(:checked) {
-    background: rgba(223,222,220,.8);
+    background: rgba(255, 255, 255,.8);
 }
 
 #model select option {
-    background: rgba(223,222,220,.5);
+    background: rgba(255, 255, 255,.5);
 }
 
 #seque select {
@@ -357,15 +339,15 @@ select {
 }
 
 #tokue select option:not(:checked) {
-    background: rgba(223,222,220,.8);
+    background: rgba(255, 255, 255,.8);
 }
 
 #seque select option {
-    background: rgba(223,222,220,.5);
+    background: rgba(255, 255, 255,.5);
 }
 
 #tokue select option {
-    background: rgba(223,222,220,.5);
+    background: rgba(255, 255, 255,.5);
 }
 
 .hidden {

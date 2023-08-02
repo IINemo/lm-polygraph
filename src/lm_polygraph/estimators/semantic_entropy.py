@@ -8,32 +8,22 @@ from tqdm import tqdm
 from typing import List, Tuple, Dict, Optional
 
 from .estimator import Estimator
-from transformers import DebertaForSequenceClassification, DebertaTokenizer
+from .common import DEBERTA
 
 
 class SemanticEntropy(Estimator):
     def __init__(
             self,
-            deberta_path: str = 'microsoft/deberta-large-mnli',
             batch_size: int = 10,
             verbose: bool = False
     ):
         super().__init__(['sample_log_probs', 'sample_texts'], 'sequence')
         self.batch_size = batch_size
-        self.init_deberta(deberta_path)
-        self.verbose = verbose
-
-    def init_deberta(self, deberta_path):
-        self.deberta = DebertaForSequenceClassification.from_pretrained(
-            deberta_path, problem_type="multi_label_classification")
-        self.deberta_tokenizer = DebertaTokenizer.from_pretrained(deberta_path)
-        self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-        self.deberta.to(self.device)
-        self.deberta.eval()
-
+        DEBERTA.setup()
         self._sample_to_class = {}
         self._class_to_sample: Dict[int, List] = defaultdict(list)
         self._is_entailment = {}
+        self.verbose = verbose
 
     def __str__(self):
         return 'SemanticEntropy'
@@ -92,20 +82,20 @@ class SemanticEntropy(Estimator):
         for i in range(0, len(texts), self.batch_size):
             texts1 = [t1 for t1, _ in texts[i:i + self.batch_size]]
             texts2 = [t2 for _, t2 in texts[i:i + self.batch_size]]
-            encoded = self.deberta_tokenizer.batch_encode_plus(
+            encoded = DEBERTA.deberta_tokenizer.batch_encode_plus(
                 ['[CLS] {} [SEP] {} [SEP]'.format(t1, t2) for t1, t2 in zip(texts1, texts2)],
                 add_special_tokens=True, padding='max_length',
                 truncation=True, return_attention_mask=True, return_tensors="pt")
-            inp = {k: v.to(self.device) for k, v in encoded.items()}
+            inp = {k: v.to(DEBERTA.device) for k, v in encoded.items()}
             with torch.no_grad():
                 if self.verbose:
                     sys.stderr.write('Inference...')
                     sys.stderr.flush()
-                logits = self.deberta(**inp).logits
+                logits = DEBERTA.deberta(**inp).logits
                 if self.verbose:
                     sys.stderr.write('Done')
                     sys.stderr.flush()
-            res.append((logits.argmax(-1) == self.deberta.config.label2id['ENTAILMENT']).cpu().numpy())
+            res.append((logits.argmax(-1) == DEBERTA.deberta.config.label2id['ENTAILMENT']).cpu().numpy())
         return np.concatenate(res)
 
     def _determine_class(self, idx: int, i: int, texts: List[str]):

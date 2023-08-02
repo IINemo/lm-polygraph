@@ -4,14 +4,14 @@ import numpy as np
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class GreedyLMProbsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['greedy_lm_log_probs', 'greedy_lm_log_likelihoods', 'train_greedy_lm_log_likelihoods'], ['greedy_tokens'])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         tokens = dependencies['greedy_tokens']
         try:
             batch = model.tokenize([model.tokenizer.decode(t) for t in tokens])
@@ -48,7 +48,6 @@ class GreedyLMProbsCalculator(StatCalculator):
                 greedy_lm_log_probs.append(logprobs[-len(toks):-1].cpu().numpy())
                 greedy_lm_ll.append([logprobs[-len(toks) + j, toks[j]].item()
                                      for j in range(len(toks))])
-                
         return {
             'greedy_lm_log_probs': greedy_lm_log_probs,
             'greedy_lm_log_likelihoods': greedy_lm_ll,
