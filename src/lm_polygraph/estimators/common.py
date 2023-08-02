@@ -49,7 +49,7 @@ def _compute_Jaccard_score(lst, epsilon):
     return jaccard_sim_mat
 
 
-def _compute_adjaency_mat(answers, order):
+def _compute_adjaency_mat(answers, affinity):
     W = np.eye(len(answers))
     pairs = _get_pairs(answers)
 
@@ -72,9 +72,9 @@ def _compute_adjaency_mat(answers, order):
         a_nli_contra_forward = 1 - probs_forward[0][0]
         a_nli_contra_backward = 1 - probs_backward[0][0]
 
-        if order == "entail":
+        if affinity == "entail":
             w = (a_nli_entail_forward + a_nli_entail_backward) / 2
-        elif order == "contra":
+        elif affinity == "contra":
             w = (a_nli_contra_forward + a_nli_contra_backward) / 2
 
         W[i, j] = w
@@ -83,8 +83,8 @@ def _compute_adjaency_mat(answers, order):
     return W
 
 
-def compute_sim_score(answers, order, epsilon, similarity_score):
+def compute_sim_score(answers, affinity, epsilon, similarity_score):
     if similarity_score == "NLI_score":
-        return _compute_adjaency_mat(answers, order)
+        return _compute_adjaency_mat(answers, affinity)
     elif similarity_score == "Jaccard_score":
         return _compute_Jaccard_score(answers, epsilon)
