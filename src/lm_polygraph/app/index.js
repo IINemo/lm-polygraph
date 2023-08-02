@@ -18,7 +18,7 @@ app.use('/', express.static(__dirname + '/client')); // Serves resources from cl
 
 app.post('/get-prompt-result', async (req, res) => {
     // Get the prompt from the request body
-    const {prompt, model, ensembles, tok_ue, seq_ue, temperature, topk, topp, do_sample, num_beams} = req.body;
+    const {prompt, model, openai_key, ensembles, tok_ue, seq_ue, temperature, topk, topp, do_sample, num_beams} = req.body;
 
     // Check if prompt is present in the request
     if (!prompt) {
@@ -32,6 +32,7 @@ app.post('/get-prompt-result', async (req, res) => {
 
         const result = await openai.createChatCompletion({
             model: model,
+            openai_key: openai_key,
             ensembles: ensembles,
             tok_ue: tok_ue,
             seq_ue: seq_ue,
@@ -46,6 +47,7 @@ app.post('/get-prompt-result', async (req, res) => {
                 { role: "user", content: prompt }
             ]
         })
+
         let generation = result.data.generation;
         let tok_confidence = result.data.token_confidence;
         let tok_norm = result.data.token_normalization;
@@ -119,10 +121,11 @@ app.post('/get-prompt-result', async (req, res) => {
 
         return res.send(response);
     } catch (error) {
-        const errorMsg = error.response ? error.response.data.error : `${error}`;
+        var errorMsg = error.response.data;
+        const lines = errorMsg.split('\n');
+        errorMsg = lines[lines.length - 2];
         console.error(errorMsg);
-        // Send a 500 status code and the error message as the response
-        return res.status(500).send(errorMsg);
+        return res.status(400).send(errorMsg);
     }
 });
 

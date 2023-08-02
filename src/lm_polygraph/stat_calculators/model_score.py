@@ -6,10 +6,10 @@ from typing import List, Dict
 from .stat_calculator import StatCalculator
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
-def _batch_tokens(tokens_list: List[List[int]], model: Model, max_len: int = None):
+def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel, max_len: int = None):
     if max_len is None:
         max_len = max(len(tokens) for tokens in tokens_list)
     tokens = torch.from_numpy(pad_sequences(
@@ -26,7 +26,7 @@ class ModelScoreCalculator(StatCalculator):
         self.batch_size = batch_size
         self.prompt = prompt
 
-    def _score(self, model: Model, srcs: List[List[int]], tgts: List[List[int]]) -> List[List[float]]:
+    def _score(self, model: WhiteboxModel, srcs: List[List[int]], tgts: List[List[int]]) -> List[List[float]]:
         score_list = []
         for i in range(0, len(srcs), self.batch_size):
             src_list = srcs[i:i + self.batch_size]
@@ -37,7 +37,7 @@ class ModelScoreCalculator(StatCalculator):
                     src_tokens = encoded_src['input_ids'].to(model.device())
                     src_mask = encoded_src['attention_mask'].to(model.device())
                     if model.model_type == "CausalLM":
-                        logits = model.model(
+                        logits = model(
                             input_ids=src_tokens,
                             attention_mask=src_mask,
                         ).logits
@@ -50,7 +50,7 @@ class ModelScoreCalculator(StatCalculator):
                         tgt_tokens = encoded_tgt['input_ids'].long().to(model.device())
                         src_mask = encoded_src['attention_mask'].to(model.device())
                         
-                        logits = model.model(
+                        logits = model(
                             input_ids=src_tokens,
                             attention_mask=src_mask,
                             labels=tgt_tokens
@@ -67,7 +67,7 @@ class ModelScoreCalculator(StatCalculator):
                 exit(0)
         return score_list
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         preds, inp_tokens = dependencies['greedy_tokens'], dependencies['input_tokens']
         prompted_refs = model.tokenizer(
             [self.prompt.format(s) for s in dependencies['target_texts']])['input_ids']

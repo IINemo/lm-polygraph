@@ -10,7 +10,7 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 from .stat_calculator import StatCalculator
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class BartScoreCalculator(StatCalculator):
@@ -136,7 +136,7 @@ class BartScoreCalculator(StatCalculator):
 
         print(self.score(src_list, tgt_list, batch_size))
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         if self.model is None:
             self._setup()
         srcs, tgts = dependencies['greedy_texts'], dependencies['target_texts']

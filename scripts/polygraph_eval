@@ -9,7 +9,7 @@ import argparse
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import RougeMetric, WERTokenwiseMetric, BartScoreSeqMetric, ModelScoreSeqMetric, ModelScoreTokenwiseMetric
 from lm_polygraph.estimators import *
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         print('=' * 150)
         print('SEED:', seed)
         transformers.set_seed(seed)
-        model = Model.from_pretrained(
+        model = WhiteboxModel.from_pretrained(
             args.model,
             device=device,
         )

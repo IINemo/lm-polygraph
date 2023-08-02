@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class PromptCalculator(StatCalculator):
@@ -14,7 +14,7 @@ class PromptCalculator(StatCalculator):
         self.prompt = prompt
         self.expected = expected
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         expected_tokens = model.tokenizer([self.expected])['input_ids'][0]
         expected_tokens = [t for t in expected_tokens
                            if t != model.tokenizer.eos_token_id and t != model.tokenizer.bos_token_id]
@@ -29,7 +29,7 @@ class PromptCalculator(StatCalculator):
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
-            out = model.model.generate(
+            out = model.generate(
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,

@@ -9,7 +9,7 @@ import numpy as np
 
 from lm_polygraph.estimators import *
 from lm_polygraph.utils.ensemble_generator import EnsembleGenerationMixin
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
@@ -48,6 +48,14 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return LexicalSimilarity(metric='rougeL')
         case "Lexical Similarity Rouge-BLEU":
             return LexicalSimilarity(metric='BLEU')
+        case "Eigenvalue Laplacian":
+            return EigValLaplacian()
+        case "Eccentricity":
+            return Eccentricity()
+        case "Degree Matrix":
+            return DegMat()
+        case "Number of Semantic Sets":
+            return NumSemSets()
         case "Semantic Entropy":
             return SemanticEntropy()
         case "Adaptive Sampling Predictive Entropy":
@@ -142,6 +150,10 @@ def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> E
 
 def parse_model(model: str) -> str:
     match model:
+        case "gpt-4":
+            return 'openai-gpt-4'
+        case "gpt-3.5-turbo":
+            return 'openai-gpt-3.5-turbo'
         case "Dolly 3b":
             return 'databricks/dolly-v2-3b'
         case "Dolly 7b":
@@ -173,7 +185,7 @@ def parse_model(model: str) -> str:
         case _:
             raise Exception(f'Unknown model: {model}')
 
-def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[Model, Model]:
+def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[WhiteboxModel, WhiteboxModel]:
     if os.path.exists(path):
         path = Path(path) 
         model_paths = [model_dir for model_dir in path.iterdir()]
@@ -183,15 +195,15 @@ def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[Model, Model]:
     # TODO: implement devices for models
     devices = [device] * (len(model_paths) - 1)
 
-    model = Model.from_pretrained(model_paths[0])
-    ensemble_model = Model.from_pretrained(model_paths[0])
+    model = WhiteboxModel.from_pretrained(model_paths[0])
+    ensemble_model = WhiteboxModel.from_pretrained(model_paths[0])
     
     ensemble_model.model.__class__ = type('EnsembleModel',
                                           (ensemble_model.model.__class__,
                                            EnsembleGenerationMixin),
                                           {}) 
 
-    models = [Model.from_pretrained(path).model for path in model_paths[1:]]
+    models = [WhiteboxModel.from_pretrained(path).model for path in model_paths[1:]]
     ensemble_model.model.add_ensemble_models(models, devices)
 
     return model, ensemble_model

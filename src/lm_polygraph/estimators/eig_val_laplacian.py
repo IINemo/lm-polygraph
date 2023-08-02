@@ -29,7 +29,7 @@ class EigValLaplacian(Estimator):
                 - 'forward': Compute entailment probability between response_1 and response_2 as p(response_1 -> response_2).
                 - 'backward': Compute entailment probability between response_1 and response_2 as p(response_2 -> response_1).
         """
-        super().__init__(['sample_texts'], 'sequence')
+        super().__init__(['blackbox_sample_texts'], 'sequence')
         self.similarity_score = similarity_score
         self.batch_size = batch_size
         if self.similarity_score == "NLI_score":
@@ -52,7 +52,7 @@ class EigValLaplacian(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         res = []
-        for answers in stats['sample_texts']:
+        for answers in stats['blackbox_sample_texts']:
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_EigVal_Laplacian(answers))

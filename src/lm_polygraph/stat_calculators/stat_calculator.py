@@ -2,7 +2,7 @@ import numpy as np
 
 from typing import List, Dict
 from abc import ABC, abstractmethod
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 STAT_CALCULATORS: Dict[str, 'StatCalculator'] = {}
 STAT_DEPENDENCIES: Dict[str, List[str]] = {}
@@ -14,7 +14,7 @@ class StatCalculator(ABC):
         self._stat_dependencies = stat_dependencies
 
     @abstractmethod
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         raise Exception('Not implemented')
 
     @property

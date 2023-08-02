@@ -4,7 +4,30 @@ import numpy as np
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel, Model
+
+
+class BlackboxSamplingGenerationCalculator(StatCalculator):
+    def __init__(self, samples_n: int = 10):
+        self.samples_n = samples_n
+        super().__init__(['blackbox_sample_texts'], [])
+
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[
+        str, np.ndarray]:
+        samples = [[] for _ in range(len(texts))]
+        for _ in range(self.samples_n):
+            for i, seq in enumerate(model.generate_texts(
+                    input_texts=texts,
+                    max_length=256,
+                    min_length=2,
+                    do_sample=True,
+                    num_beams=1,
+                    num_return_sequences=1)):
+                samples[i].append(seq)
+
+        return {
+            'blackbox_sample_texts': samples,
+        }
 
 
 def gen_samples(n_samples, model, batch, **args):
@@ -12,7 +35,7 @@ def gen_samples(n_samples, model, batch, **args):
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
-            out = model.model.generate(
+            out = model.generate(
                 **batch,
                 **args
             )
@@ -30,7 +53,8 @@ class SamplingGenerationCalculator(StatCalculator):
         self.samples_n = samples_n
         super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
+        str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         sequences, logits = gen_samples(
