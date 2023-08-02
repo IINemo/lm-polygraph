@@ -99,7 +99,6 @@ class MahalanobisDistanceSeq(Estimator):
                         ):
                             os.mkdir(intermediate_path)
                 torch.save(self.centroid, f"{self.parameters_path}/centroid.pt")
-
         if self.sigma_inv is None:
             train_labels = np.zeros(
                 stats[f"train_embeddings_{self.embeddings_type}"].shape[0]
@@ -124,7 +123,6 @@ class MahalanobisDistanceSeq(Estimator):
             self.min = dists.min()
             if self.parameters_path is not None:
                 torch.save(self.min, f"{self.full_path}/min.pt")
-
         if self.normalize:
             dists = torch.clip((self.max - dists) / (self.max - self.min), min=0, max=1)
 

@@ -194,7 +194,7 @@ class UEManager:
                     bad_estimators.append(estimator)
             for bad_estim in bad_estimators:
                 self.estimators.remove(bad_estim)
-                
+
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
                 m = generation_metric(
