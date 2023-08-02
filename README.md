@@ -47,7 +47,7 @@ Use `visualization_tables.ipynb` to generate the summarizing tables for an exper
 
 The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found [here](https://drive.google.com/drive/folders/1bQlvPRZHdZvdpAyBQ_lQiXLq9t5whTfi?usp=sharing).
 
-## Web application
+## Demo web application
 
 ### Starting the model server
 
