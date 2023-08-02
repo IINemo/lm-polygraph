@@ -12,7 +12,6 @@ softmax = nn.Softmax(dim=1)
 class NumSemSets(Estimator):
     def __init__(
             self,
-            order: Literal["entail", "contra"] = "entail",
             batch_size: int = 10,
             verbose: bool = False,
             epsilon: float = 1e-13
@@ -20,15 +19,10 @@ class NumSemSets(Estimator):
         """
         A number of semantic sets in response (higher = bigger uncertainty).
 
-        Parameters:
-            order (str): The argument to be processed. Possible values are.
-                - 'forward': Compute entailment probability between response_1 and response_2 as p(response_1 -> response_2).
-                - 'backward': Compute entailment probability between response_1 and response_2 as p(response_2 -> response_1).
         """
         super().__init__(['blackbox_sample_texts'], 'sequence')
         self.batch_size = batch_size
         DEBERTA.setup()
-        self.order = order
         self.verbose = verbose
         self.epsilon = epsilon
 
