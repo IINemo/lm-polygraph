@@ -30,11 +30,14 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         self.max = -1e+100
         self.MD = MahalanobisDistanceSeq(embeddings_type, parameters_path, normalize=False)
         
-        if (self.parameters_path is not None) and os.path.exists(f"{self.parameters_path}/centroid_0.pt"):
-            self.centroid_0 = torch.load(f"{self.parameters_path}/centroid_0.pt")
-            self.sigma_inv_0 = torch.load(f"{self.parameters_path}/sigma_inv_0.pt")
-            self.max = load_array(f"{self.parameters_path}/max_0.npy")
-            self.min = load_array(f"{self.parameters_path}/min_0.npy")
+        if self.parameters_path is not None:
+            self.full_path = f"{self.parameters_path}/rmd_{self.embeddings_type}" 
+            os.makedirs(self.full_path, exist_ok=True)
+            if os.path.exists(f"{self.full_path}/centroid_0.pt"):
+                self.centroid_0 = torch.load(f"{self.full_path}/centroid_0.pt")
+                self.sigma_inv_0 = torch.load(f"{self.full_path}/sigma_inv_0.pt")
+                self.max = load_array(f"{self.full_path}/max_0.npy")
+                self.min = load_array(f"{self.full_path}/min_0.npy")
 
     def __str__(self):
         return f'RelativeMahalanobisDistanceSeq_{self.embeddings_type}'
@@ -45,9 +48,7 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         if self.centroid_0 is None:
             self.centroid_0 = stats[f'background_train_embeddings_{self.embeddings_type}'].mean(dim=0)
             if self.parameters_path is not None:
-                if not os.path.exists(f"{self.parameters_path}"):
-                    os.mkdir(self.parameters_path)
-                torch.save(self.centroid_0, f"{self.parameters_path}/centroid_0.pt")
+                torch.save(self.centroid_0, f"{self.full_path}/centroid_0.pt")
                 
         if self.sigma_inv_0 is None:
             train_labels = np.zeros(stats[f'background_train_embeddings_{self.embeddings_type}'].shape[0])
@@ -55,7 +56,7 @@ class RelativeMahalanobisDistanceSeq(Estimator):
                 self.centroid_0.unsqueeze(0), stats[f'background_train_embeddings_{self.embeddings_type}'], train_labels
             )
             if self.parameters_path is not None:
-                torch.save(self.sigma_inv_0, f"{self.parameters_path}/sigma_inv_0.pt")
+                torch.save(self.sigma_inv_0, f"{self.full_path}/sigma_inv_0.pt")
                 
         dists_0 = mahalanobis_distance_with_known_centroids_sigma_inv(
             self.centroid_0.unsqueeze(0),
@@ -70,11 +71,11 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         if self.max < dists.max():
             self.max = dists.max()
             if self.parameters_path is not None:
-                save_array(self.max, f"{self.parameters_path}/max_0.npy")
+                save_array(self.max, f"{self.full_path}/max_0.npy")
         if self.min > dists.min():
             self.min = dists.min()
             if self.parameters_path is not None:
-                save_array(self.min, f"{self.parameters_path}/min_0.npy")
+                save_array(self.min, f"{self.full_path}/min_0.npy")
                 
         if self.normalize:
             dists = np.clip((self.max - dists) / (self.max - self.min), a_min=0, a_max=1) 

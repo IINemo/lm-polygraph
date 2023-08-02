@@ -13,11 +13,16 @@ from lm_polygraph.utils.model import Model
 
 
 def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
+    dataset_name = "triviaqa"
+    model_name = model_path.split('/')[-1]
+    density_based_ue_params_path = f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"    
     match method_name:
         case "Maximum Probability":
             return MaxProbabilitySeq()
         case "Normalized Maximum Probability":
             return MaxProbabilityNormalizedSeq()
+        case "Perplexity":
+            return PerplexitySeq()
         case "Entropy":
             return EntropySeq()
         case "Mutual Information":
@@ -55,13 +60,17 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "Adaptive Sampling Semantic Entropy":
             return SemanticEntropyAdaptedSampling()
         case "Mahalanobis Distance":
-            return MahalanobisDistanceSeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_decoder/{model_path.split('/')[-1]}", normalize=True)
+            return MahalanobisDistanceSeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "Mahalanobis Distance - Encoder":
-            return MahalanobisDistanceSeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/md_encoder/{model_path.split('/')[-1]}", normalize=True)
+            return MahalanobisDistanceSeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "RDE":
-            return RDESeq("decoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_decoder/{model_path.split('/')[-1]}", normalize=True)
+            return RDESeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "RDE - Encoder":
-            return RDESeq("encoder", parameters_path=f"/home/jovyan/projects/lm-polygraph/workdir/rde_encoder/{model_path.split('/')[-1]}", normalize=True)        
+            return RDESeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)  
+        case "PPL+MD":
+            return PPLMDSeq("decoder", md_type="MD", parameters_path=density_based_ue_params_path)
+        case "PPL+MD - Encoder":
+            return PPLMDSeq("encoder", md_type="MD", parameters_path=density_based_ue_params_path)
         case "EP-T-total-uncertainty":
             return EPTtu()
         case "EP-T-data-uncertainty":
