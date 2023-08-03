@@ -3,9 +3,7 @@
 ## Installation
 
 ```
-git clone https://github.com/IINemo/lm-polygraph.git
-cd lm-polygraph
-pip install .
+git clone https://github.com/IINemo/lm-polygraph.git && cd lm-polygraph && pip install .
 ```
 
 ## Usage examples
@@ -20,27 +18,27 @@ model = WhiteboxModel.from_pretrained(
 )
 ```
 
-2. Specify input text and UE method
+2. Specify UE method
 ```python
 from lm_polygraph.estimators import *
 
 ue_method = MeanPointwiseMutualInformation()
-input_text = "Who is George Bush?"
 ```
 
-3. Compute results
+3. Get predictions and their uncertainty scores
 ```python
 from lm_polygraph.utils.manager import estimate_uncertainty
 
+input_text = "Who is George Bush?"
 estimate_uncertainty(model, ue_method, input_text=input_text)
 ```
 
 ### Other examples:
 
 * [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
-* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
-* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
-* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
+* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for the QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
+* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for the NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
+* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for the ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
 * [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: only `bloomz-560m`, `gpt-3.5-turbo` and `gpt-4` fits default memory limit, other models can be run only with Colab-pro subscription)
 
 
