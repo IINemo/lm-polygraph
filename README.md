@@ -2,53 +2,28 @@
 
 ## Installation
 
-Clone repo via SSH:
-```
-git clone git@github.com:IINemo/lm-polygraph.git
-```
-or via HTTPS:
 ```
 git clone https://github.com/IINemo/lm-polygraph.git
-```
-
-
-```
 cd lm-polygraph
 pip install .
 ```
 
 ## Usage examples
 
-* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
-* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
-* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
-* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
-* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
-
-### Code example
-
-1. Import required modules from `lm_polygraph`
-
+1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
 ```python
-from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.processor import Logger
-from lm_polygraph.utils.manager import UEManager
-from lm_polygraph.ue_metrics import RiskCoverageCurveAUC
-from lm_polygraph.generation_metrics import RougeMetric, BartScoreSeqMetric
-```
 
-2. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
-```python
 model = WhiteboxModel.from_pretrained(
     "bigscience/bloomz-3b",
     device="cuda:0",
 )
 ```
 
-3. Load the dataset from HuggingFace datasets or a local file. For example, `triviaqa.csv`
+2. Load the dataset from HuggingFace datasets or a local file. For example, `triviaqa.csv`
 ```python
+from lm_polygraph.utils.dataset import Dataset
+
 dataset = Dataset.load(
     "../workdir/data/triviaqa.csv",
     "question", "answer",
@@ -58,6 +33,11 @@ dataset = Dataset.load(
 
 3. Specify UE methods, UE metrics, and generation metrics
 ```python
+from lm_polygraph.estimators import *
+from lm_polygraph.utils.processor import Logger
+from lm_polygraph.ue_metrics import RiskCoverageCurveAUC
+from lm_polygraph.generation_metrics import RougeMetric, BartScoreSeqMetric
+
 ue_methods = [MaxProbabilitySeq(), 
               SemanticEntropy()]
 
@@ -71,6 +51,8 @@ loggers = [Logger()]
 
 4. Initialize UE manager
 ```python
+from lm_polygraph.utils.manager import UEManager
+
 man = UEManager(
     dataset,
     model,
@@ -85,6 +67,15 @@ man = UEManager(
 ```python
 results = man()
 ```
+
+### Other examples:
+
+* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
+* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
+* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
+* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
+* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
+
 
 ## Benchmarks
 
