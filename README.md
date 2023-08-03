@@ -1,4 +1,4 @@
-# Uncertainty estimation for LLMs
+# LM-Polygraph: Uncertainty estimation for LLMs
 
 ## Installation
 
