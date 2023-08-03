@@ -10,31 +10,33 @@ pip install .
 
 ## Usage examples
 
-1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file
+1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
 ```python
-
-from ??? import WhiteboxModel
+from lm_polygraph.utils.model import WhiteboxModel
 
 model = WhiteboxModel.from_pretrained(
-    model_name_or_path,
-    device=device,
+    "bigscience/bloomz-3b",
+    device="cuda:0",
 )
 ```
 
-2. Load the dataset from HuggingFace datasets or a local file
+2. Load the dataset from HuggingFace datasets or a local file. For example, `triviaqa.csv`
 ```python
-from datasets import Dataset
+from lm_polygraph.utils.dataset import Dataset
 
 dataset = Dataset.load(
-    dataset_name,
-    'question', 'answer',
-    batch_size=batch_size,
+    "../workdir/data/triviaqa.csv",
+    "question", "answer",
+    batch_size=4,
 )
 ```
 
 3. Specify UE methods, UE metrics, and generation metrics
 ```python
-from ...
+from lm_polygraph.estimators import *
+from lm_polygraph.utils.processor import Logger
+from lm_polygraph.ue_metrics import RiskCoverageCurveAUC
+from lm_polygraph.generation_metrics import RougeMetric, BartScoreSeqMetric
 
 ue_methods = [MaxProbabilitySeq(), 
               SemanticEntropy()]
@@ -49,6 +51,8 @@ loggers = [Logger()]
 
 4. Initialize UE manager
 ```python
+from lm_polygraph.utils.manager import UEManager
+
 man = UEManager(
     dataset,
     model,
