@@ -10,3 +10,5 @@ CMD bash scripts/polygraph_all.sh
 #bash /app/scripts/polygraph_all.sh
 #CMD ls /app
 #CMD python -c "print('hello world')"
+
+RUN pip install openai
