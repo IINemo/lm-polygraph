@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
     parser.add_argument("--subsample_train_dataset", type=int, default=100)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=100)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs="+", type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -201,5 +201,10 @@ if __name__ == "__main__":
             background_train_data=background_train_dataset,
             max_new_tokens=max_new_tokens,
         )
-        man()
+        try:
+            man()
+        except:
+            import sys, pdb
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            pdb.post_mortem(exc_traceback)
         man.save(args.save_path + f'_seed{seed}')
