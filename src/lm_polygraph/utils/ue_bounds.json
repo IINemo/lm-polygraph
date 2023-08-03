@@ -1,7 +1,7 @@
 {
   "MeanTokenEntropy": {
     "low": 2.460051767955589e-06,
-    "high": 2.9075606901852337e-05
+    "high": 0.9075606901852337e-04
   },
   "MeanPointwiseMutualInformation": {
     "low": -14.640225399524999,
@@ -48,8 +48,8 @@
     "high": 0.0
   },
   "TokenEntropy": {
-    "low": 7.1919374956627065e-06,
-    "high": 2.5314351660199463e-05
+    "low": 7.1919374956627065e-10,
+    "high": 0.875290554880089e-04
   },
   "PointwiseMutualInformation": {
     "low": -23.179998323031953,
