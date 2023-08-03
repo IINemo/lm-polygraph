@@ -14,7 +14,7 @@ class PromptCalculator(StatCalculator):
         self.prompt = prompt
         self.expected = expected
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, **kwargs) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
         expected_tokens = model.tokenizer([self.expected])['input_ids'][0]
         expected_tokens = [t for t in expected_tokens
                            if t != model.tokenizer.eos_token_id and t != model.tokenizer.bos_token_id]
