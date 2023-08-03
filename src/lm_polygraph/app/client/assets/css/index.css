@@ -48,20 +48,26 @@ select {
     flex: 1;
 }
 
+.openai-secret-key-input {
+    min-width: 40%;
+    max-width: 40%;
+}
+
 /* Style for each response element in the list */
 .response-container {
     margin-bottom: 10px;
     color: black;
     font-size: 1rem;
     word-break: break-word;
+    max-width: 80%;
 }
 
 .desc-container {
     color: var(--light_text);
     font-size: 0.7rem;
     margin-left: 2%;
-    min-width: 18%;
-    max-width: 18%;
+    min-width: 20%;
+    max-width: 20%;
 }
 
 #input-container {
@@ -109,11 +115,10 @@ select {
 }
 
 .settings-button {
-    background-color: rgba(0, 0, 0, 1.0);
+    background-color: var(--background);
     width: 40px;
     height: 40px;
     border: none;
-    filter: invert(1);
 }
 
 .modal {
@@ -129,9 +134,14 @@ select {
 }
 
 .modal-content {
-    background-color: white;
-    margin: 20% auto;
-    padding: 20px;
+    border: 5px solid var(--input);
+    border-radius: 12px;
+    background-color: var(--background);
+    margin: 15% auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     width: 30%;
     text-align: left;
     align-items: center;
@@ -177,6 +187,14 @@ select {
     align-items: center;
 }
 
+.repetition-penalty-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
 .temp-label {
     margin-left: 6%;
     margin-right: 5px;
@@ -213,6 +231,15 @@ select {
 }
 
 .num-beams-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.repetition-penalty-label {
     margin-left: 6%;
     margin-right: 5px;
     margin-bottom: 4px;
@@ -294,6 +321,16 @@ select {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+.openai-options {
+    display: flex;
+    align-items: flex-end;
+    align-items: center;
+}
+
+.openai-secret-key {
+    flex: 1;
 }
 
 #select-container {

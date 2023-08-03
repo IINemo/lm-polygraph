@@ -97,12 +97,14 @@ def generate():
     data = request.get_json()
     print(f'Request data: {data}')
 
+    topk = int(data['parameters']['topk'])
     parameters = GenerationParameters(
         temperature=float(data['parameters']['temperature']),
-        topk=int(data['parameters']['topk']),
+        topk=topk,
         topp=float(data['parameters']['topp']),
-        do_sample=(data['parameters']['do_sample'] == 'on'),
+        do_sample=(topk > 1),
         num_beams=int(data['parameters']['num_beams']),
+        repetition_penalty=float(data['parameters']['repetition_penalty']),
     )
     global model
     ensemble_model = None

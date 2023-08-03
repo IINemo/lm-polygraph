@@ -14,11 +14,11 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 const modelVue = new Vue({
     el: '#model',
     data: {
-        modelSelected: 'Bloomz 560M',
+        modelSelected: 'BLOOMz 560M',
         options: toOptions([
-            'gpt-4', 'gpt-3.5-turbo',
-            'Ensemble', 'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
-            'Bloomz 560M', 'Bloomz 3b', 'Bloomz 7b', 'Falcon 7b',
+            'GPT-4', 'GPT-3.5-turbo',
+            'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
+            'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
             'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b', "OPT 2.7b",
             'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN']),
         value: '',
@@ -30,7 +30,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: ['Maximum Sequence Probability'],
+        sequeSelected: ['Mean Token Entropy'],
         model: '',
         type: ''
     },
@@ -42,7 +42,7 @@ new Vue({
                 newType = 'ensemble';
             } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
                 newType = 'T5';
-            } else if (['gpt-4', 'gpt-3.5-turbo'].includes(newModel)) {
+            } else if (['GPT-4', 'GPT-3.5-turbo'].includes(newModel)) {
                 newType = 'openai';
             } else {
                 newType = 'seq2seq';
@@ -90,7 +90,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#tokue',
     data: {
-        tokueSelected: ['Maximum Token Probability'],
+        tokueSelected: ['Token Entropy'],
         model: '',
         type: ''
     },
@@ -102,7 +102,7 @@ new Vue({
                 newType = 'ensemble';
             } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
                 newType = 'T5';
-            } else if (['gpt-4', 'gpt-3.5-turbo'].includes(newModel)) {
+            } else if (['GPT-4', 'GPT-3.5-turbo'].includes(newModel)) {
                 newType = 'openai';
             } else {
                 newType = 'seq2seq';

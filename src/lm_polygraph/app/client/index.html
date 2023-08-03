@@ -29,12 +29,12 @@
 
           <div class="openai-options">
             <label class="openai-secret-key"
-                   v-if="modelSelected.includes('gpt-4') || modelSelected.includes('gpt-3.5')"
+                   v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
                    for="openai-secret-key-input"
                    style="color: black; font-size: 14px">
-                Enter your OpenAI API secret key:</label>
+                Enter your OpenAI API key:</label>
             <input type="password"
-                   v-if="modelSelected.includes('gpt-4') || modelSelected.includes('gpt-3.5')"
+                   v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
                    v-model="value"
                    id="openai-secret-key-input" class="openai-secret-key-input">
           </div>
@@ -55,13 +55,13 @@
 
         <div>
           <button class="settings-button" id="settings-button" style="padding:10px">
-              <img class="settings-img" src="assets/img/settings.png"/>
+              <img class="settings-img" src="assets/img/settings.svg"/>
           </button>
             <div class="modal" id="modal">
               <div class="modal-content" id="modal-content">
                   <span class="close" id="close">&times;</span>
                   <div class="temp-input" id="temp-input">
-                        <label class="temp-label"> temperature:</label>
+                        <label class="temp-label"> Temperature:</label>
                         <div class="temp-slider">
                           <input id="temp-slider-value" type="range" min="0" max="86.49" value="25" step="0.01"
                                  onchange="updateTemp()" oninput="updateTemp()"/>
@@ -69,32 +69,33 @@
                         </div>
                   </div>
                   <div class="topk-input" id="topk-slider">
-                        <label class="topk-label"> topk: </label>
+                        <label class="topk-label"> Top-k: </label>
                         <div class="topk-slider">
                           <input id="topk-slider-value" type="number" min="1" value="1"
                                  onchange="updateTopk()" oninput="updateTopk()"/>
                         </div>
                   </div>
                   <div class="topp-input" id="topp-slider">
-                        <label class="topp-label"> topp: </label>
+                        <label class="topp-label"> Top-p: </label>
                         <div class="topp-slider">
                           <input id="topp-slider-value" type="range" min="0.01" max="1" step="0.01" value="1"
                                  onchange="updateTopp()" oninput="updateTopp()"/>
                             <output id="topp-value">1</output>
                         </div>
                   </div>
-                  <div class="do-sample-input" id="do-sample-slider">
-                        <label class="do-sample-label"> sample: </label>
-                        <div class="do-sample-slider">
-                          <input id="do-sample-slider-value" type="checkbox"
-                                 onchange="updateDoSample()" oninput="updateDoSample()"/>
-                        </div>
-                  </div>
                   <div class="num-beams-input" id="num-beams-slider">
-                        <label class="num-beams-label"> number of beams: </label>
+                        <label class="num-beams-label"> Number of beams: </label>
                         <div class="num-beams-slider">
                           <input id="num-beams-slider-value" type="number" min="1" value="1"
                                  onchange="updateNumBeams()" oninput="updateNumBeams()"/>
+                        </div>
+                  </div>
+                  <div class="repetition-penalty-input" id="repetition-penalty-input">
+                        <label class="repetition-penalty-label"> Repetition penalty:</label>
+                        <div class="repetition-penalty-slider">
+                          <input id="repetition-penalty-slider-value" type="range" min="0" max="1" value="0.69897" step="0.01"
+                                 onchange="updateRepetitionPenalty()" oninput="updateRepetitionPenalty()"/>
+                            <output id="repetition-penalty-value">5</output>
                         </div>
                   </div>
               </div>

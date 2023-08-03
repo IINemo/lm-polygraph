@@ -18,7 +18,8 @@ app.use('/', express.static(__dirname + '/client')); // Serves resources from cl
 
 app.post('/get-prompt-result', async (req, res) => {
     // Get the prompt from the request body
-    const {prompt, model, openai_key, ensembles, tok_ue, seq_ue, temperature, topk, topp, do_sample, num_beams} = req.body;
+    const {prompt, model, openai_key, ensembles, tok_ue, seq_ue, temperature,
+           topk, topp, num_beams, repetition_penalty} = req.body;
 
     // Check if prompt is present in the request
     if (!prompt) {
@@ -40,8 +41,8 @@ app.post('/get-prompt-result', async (req, res) => {
                 temperature: temperature,
                 topk: topk,
                 topp: topp,
-                do_sample: do_sample,
                 num_beams: num_beams,
+                repetition_penalty: repetition_penalty,
             },
             messages: [
                 { role: "user", content: prompt }
@@ -121,9 +122,13 @@ app.post('/get-prompt-result', async (req, res) => {
 
         return res.send(response);
     } catch (error) {
-        var errorMsg = error.response.data;
-        const lines = errorMsg.split('\n');
-        errorMsg = lines[lines.length - 2];
+        var errorMsg;
+        if (error.response) {
+            const lines = error.response.data.split('\n');
+            errorMsg = lines[lines.length - 2];
+        } else {
+            errorMsg = error.name;
+        }
         console.error(errorMsg);
         return res.status(400).send(errorMsg);
     }

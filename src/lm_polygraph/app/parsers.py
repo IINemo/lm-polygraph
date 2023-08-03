@@ -125,9 +125,9 @@ def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> E
 
 def parse_model(model: str) -> str:
     match model:
-        case "gpt-4":
+        case "GPT-4":
             return 'openai-gpt-4'
-        case "gpt-3.5-turbo":
+        case "GPT-3.5-turbo":
             return 'openai-gpt-3.5-turbo'
         case "Dolly 3b":
             return 'databricks/dolly-v2-3b'
@@ -135,11 +135,11 @@ def parse_model(model: str) -> str:
             return 'databricks/dolly-v2-7b'
         case "Dolly 12b":
             return 'databricks/dolly-v2-12b'
-        case "Bloomz 560M":
+        case "BLOOMz 560M":
             return 'bigscience/bloomz-560m'
-        case "Bloomz 3b":
+        case "BLOOMz 3b":
             return 'bigscience/bloomz-3b'
-        case "Bloomz 7b":
+        case "BLOOMz 7b":
             return 'bigscience/bloomz-7b1'
         case "Falcon 7b":
             return 'tiiuae/falcon-7b'
