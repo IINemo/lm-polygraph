@@ -64,7 +64,7 @@ man = UEManager(
 results = man()
 ```
 
-## Other examples could found here:
+## Other examples:
 
 * [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
 * [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
