@@ -6,7 +6,7 @@ from .entropy import EntropySeq, EntropyToken
 from .mutual_information import MutualInformationSeq, MutualInformationToken
 from .conditional_mutual_information import ConditionalMutualInformationSeq, ConditionalMutualInformationToken
 from .p_true import PTrue
-from .p_uncertainty import PUncertainty
+from .p_true_sampling import PTrueSampling
 from .attention_entropy import AttentionEntropySeq, AttentionEntropyToken
 from .attention_recursive import AttentionRecursiveSeq, AttentionRecursiveToken
 from .exp_attention_entropy import ExponentialAttentionEntropySeq, ExponentialAttentionEntropyToken
