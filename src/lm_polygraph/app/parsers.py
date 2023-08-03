@@ -39,20 +39,14 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return ExponentialAttentionRecursiveSeq(0.8)
         case "P(True)":
             return PTrue()
-        case "P(Uncertainty)":
-            return PUncertainty()
+        case "P(True) Sampling":
+            return PTrueSampling()
         case "Predictive Entropy Sampling":
             return PredictiveEntropy()
         case "Normalized Predictive Entropy Sampling":
             return LengthNormalizedPredictiveEntropy()
-        case "Lexical Similarity Rouge-1":
-            return LexicalSimilarity(metric='rouge1')
-        case "Lexical Similarity Rouge-2":
-            return LexicalSimilarity(metric='rouge2')
-        case "Lexical Similarity Rouge-L":
-            return LexicalSimilarity(metric='rougeL')
-        case "Lexical Similarity Rouge-BLEU":
-            return LexicalSimilarity(metric='BLEU')
+        case "Lexical Similarity":
+            return LexicalSimilarity()
         case "Eigenvalue Laplacian":
             return EigValLaplacian()
         case "Eccentricity":

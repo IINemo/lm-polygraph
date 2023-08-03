@@ -30,7 +30,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: [],
+        sequeSelected: ['Maximum Probability'],
         model: '',
         type: ''
     },
@@ -47,7 +47,7 @@ new Vue({
             } else {
                 newType = 'seq2seq';
             }
-            if (this.type != newType) {
+            if (this.type != '' && this.type != newType) {
                 this.sequeSelected = [];
             }
             this.model = newModel;
@@ -64,27 +64,24 @@ new Vue({
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Perplexity', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
                     'Attention Recursive Entropy', 'Exponential Attention Entropy',
-                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(Uncertainty)',
+                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(True) Sampling',
                     'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
-                    'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
-                    'Lexical Similarity Rouge-BLEU',
+                    'Lexical Similarity',
                     "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",
                     'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
                     'Adaptive Sampling Semantic Entropy', 
                     'Mahalanobis Distance', 'Mahalanobis Distance - Encoder', 'RDE', 'RDE - Encoder', 'PPL+MD', 'PPL+MD - Encoder']);
             } else if (newType === 'openai') {
                 return toOptions([
-                    'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
-                    'Lexical Similarity Rouge-BLEU',
+                    'Lexical Similarity',
                     "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",]);
             } else {
                 return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Perplexity', 'Entropy',
                     'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
                     'Attention Recursive Entropy', 'Exponential Attention Entropy',
-                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(Uncertainty)',
+                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(True) Sampling',
                     'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
-                    'Lexical Similarity Rouge-1', 'Lexical Similarity Rouge-2', 'Lexical Similarity Rouge-L',
-                    'Lexical Similarity Rouge-BLEU',
+                    'Lexical Similarity',
                     "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",
                     'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
                     'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance', 'RDE', 'PPL+MD']);
@@ -97,7 +94,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#tokue',
     data: {
-        tokueSelected: [],
+        tokueSelected: ['Maximum Probability'],
         model: '',
         type: ''
     },
@@ -114,7 +111,7 @@ new Vue({
             } else {
                 newType = 'seq2seq';
             }
-            if (this.type != newType) {
+            if (this.type != '' && this.type != newType) {
                 this.tokueSelected = [];
             }
             this.model = newModel;

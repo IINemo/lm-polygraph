@@ -8,7 +8,7 @@ from .estimator import Estimator
 
 
 class LexicalSimilarity(Estimator):
-    def __init__(self, metric):
+    def __init__(self, metric: str = 'rougeL'):
         self.metric = metric
         super().__init__(['blackbox_sample_texts'], 'sequence')
 
