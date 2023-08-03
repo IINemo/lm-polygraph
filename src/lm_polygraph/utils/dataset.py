@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-import os
+
+import datasets
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset
 
@@ -53,6 +54,11 @@ class Dataset:
         return Dataset(x, y, batch_size)
 
     @staticmethod
+    def from_json(csv_path: str, x_column: str, y_column: str, batch_size: int):
+        dataset = datasets.Dataset.from_json(csv_path)
+        return Dataset(dataset[x_column], dataset[y_column], batch_size)
+
+    @staticmethod
     def from_datasets(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
         kwargs["data"] = kwargs.get("data", {})
         dataset = load_dataset(csv_path, **kwargs["data"])
@@ -64,7 +70,9 @@ class Dataset:
         return Dataset(x, y, batch_size)
 
     @staticmethod
-    def load(csv_path, *args, **kwargs):
-        if os.path.exists(csv_path):
-            return Dataset.from_csv(csv_path, *args, **kwargs)
-        return Dataset.from_datasets(csv_path, *args, **kwargs)
+    def load(path, *args, **kwargs):
+        if os.path.exists(path) and path.endswith(".csv"):
+            return Dataset.from_csv(path, *args, **kwargs)
+        if os.path.exists(path) and path.endswith(".json"):
+            return Dataset.from_json(path, *args, **kwargs)
+        return Dataset.from_datasets(path, *args, **kwargs)

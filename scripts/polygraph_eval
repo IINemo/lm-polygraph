@@ -7,6 +7,7 @@ import torch
 import transformers
 import argparse
 
+from lm_polygraph.app.parsers import parse_ensemble
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel
@@ -22,9 +23,10 @@ if __name__ == '__main__':
                         default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--background_train_dataset", type=str, default="allenai/c4")
-    parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
+    parser.add_argument("--model", default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--is_ensemble", type=bool, default=False, action=argparse.BooleanOptionalAction)
     parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
     parser.add_argument("--subsample_train_dataset", type=int, default=100)
     parser.add_argument("--subsample_eval_dataset", type=int, default=100)
@@ -48,14 +50,17 @@ if __name__ == '__main__':
         print('=' * 150)
         print('SEED:', seed)
         transformers.set_seed(seed)
-        model = WhiteboxModel.from_pretrained(
-            args.model,
-            device=device,
-        )
+        if args.is_ensemble:
+            model = parse_ensemble(args.model, device=device)[1]
+        else:
+            model = WhiteboxModel.from_pretrained(
+                args.model,
+                device=device,
+            )
 
         dataset = Dataset.load(
             args.dataset,
-            'question', 'answer',
+            'email_body', 'subject_line',
             batch_size=args.batch_size,
         )
 
