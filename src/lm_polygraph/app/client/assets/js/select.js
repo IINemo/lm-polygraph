@@ -30,7 +30,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: [],
+        sequeSelected: ['Maximum Probability'],
         model: '',
         type: ''
     },
@@ -47,7 +47,7 @@ new Vue({
             } else {
                 newType = 'seq2seq';
             }
-            if (this.type != newType) {
+            if (this.type != '' && this.type != newType) {
                 this.sequeSelected = [];
             }
             this.model = newModel;
@@ -97,7 +97,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#tokue',
     data: {
-        tokueSelected: [],
+        tokueSelected: ['Maximum Probability'],
         model: '',
         type: ''
     },
@@ -114,7 +114,7 @@ new Vue({
             } else {
                 newType = 'seq2seq';
             }
-            if (this.type != newType) {
+            if (this.type != '' && this.type != newType) {
                 this.tokueSelected = [];
             }
             this.model = newModel;
