@@ -17,8 +17,8 @@ const span = document.getElementsByClassName("close")[0];
 var temperature = 1.0;
 var topk = 1;
 var topp = 1.0;
-var do_sample = false;
 var num_beams = 1;
+var repetition_penalty = 1;
 
 settingsButton.onclick = function() {
   modal.style.display = "block";
@@ -65,6 +65,14 @@ function updateTemp() {
     temperature = logScaleValue;
 }
 
+function updateRepetitionPenalty() {
+    var value = document.getElementById("repetition-penalty-slider-value").value;
+    var logValue = document.getElementById("repetition-penalty-value");
+    var logScaleValue = Math.round(Math.pow(10, value) * 100) / 100;
+    logValue.innerHTML = logScaleValue;
+    repetition_penalty = logScaleValue;
+}
+
 function updateTopk() {
     var value = document.getElementById("topk-slider-value").value;
     topk = value;
@@ -75,11 +83,6 @@ function updateTopp() {
     var logValue = document.getElementById("topp-value");
     logValue.innerHTML = value;
     topp = value;
-}
-
-function updateDoSample() {
-    var value = document.getElementById("do-sample-slider-value").value;
-    do_sample = value;
 }
 
 function updateNumBeams() {
@@ -93,7 +96,7 @@ function addResponse(selfFlag, desc, prompt) {
                     <div class="desc-container">
                         ${desc}
                     </div>
-                    <img class="avatar-image" src="assets/img/${selfFlag ? 'me' : 'model'}.png" alt="avatar"/>
+                    <img class="avatar-image" src="assets/img/${selfFlag ? 'me.png' : 'ai.svg'}" alt="avatar"/>
                     <div class="prompt-content" id="${uniqueId}">
                        ${prompt}
                     </div>
@@ -225,8 +228,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
                 temperature,
                 topp,
                 topk,
-                do_sample,
-                num_beams
+                num_beams,
+                repetition_penalty
             })
         });
         if (!response.ok) {
