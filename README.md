@@ -20,52 +20,19 @@ model = WhiteboxModel.from_pretrained(
 )
 ```
 
-2. Load the dataset from HuggingFace datasets or a local file. For example, `triviaqa.csv`
-```python
-from lm_polygraph.utils.dataset import Dataset
-
-dataset = Dataset.load(
-    "../workdir/data/triviaqa.csv",
-    "question", "answer",
-    batch_size=4,
-)
-```
-
-3. Specify UE methods, UE metrics, and generation metrics
+2. Specify input text and UE method
 ```python
 from lm_polygraph.estimators import *
-from lm_polygraph.utils.processor import Logger
-from lm_polygraph.ue_metrics import RiskCoverageCurveAUC
-from lm_polygraph.generation_metrics import RougeMetric, BartScoreSeqMetric
 
-ue_methods = [MaxProbabilitySeq(), 
-              SemanticEntropy()]
-
-ue_metrics = [RiskCoverageCurveAUC()]
-
-metrics = [RougeMetric('rougeL'),
-           BartScoreSeqMetric('rh'),]
-
-loggers = [Logger()] 
+ue_method = MaxProbabilitySeq()
+input_text = "Who is George Bush?"
 ```
 
-4. Initialize UE manager
+3. Compute results
 ```python
-from lm_polygraph.utils.manager import UEManager
+from lm_polygraph.utils.manager import estimate_uncertainty
 
-man = UEManager(
-    dataset,
-    model,
-    ue_methods,
-    metrics,
-    ue_metrics,
-    loggers
-)
-```
-
-5. Compute results
-```python
-results = man()
+estimate_uncertainty(model, ue_method, input_text=input_text)
 ```
 
 ### Other examples:
