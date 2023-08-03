@@ -17,34 +17,24 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
     model_name = model_path.split('/')[-1]
     density_based_ue_params_path = f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"    
     match method_name:
-        case "Maximum Probability":
-            return MaxProbabilitySeq()
-        case "Normalized Maximum Probability":
-            return MaxProbabilityNormalizedSeq()
+        case "Maximum Sequence Probability":
+            return MaximumSequenceProbability()
         case "Perplexity":
-            return PerplexitySeq()
-        case "Entropy":
-            return EntropySeq()
-        case "Mutual Information":
-            return MutualInformationSeq()
-        case "Conditional Mutual Information":
-            return ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599)
-        case "Attention Entropy":
-            return AttentionEntropySeq()
-        case "Attention Recursive Entropy":
-            return AttentionRecursiveSeq()
-        case "Exponential Attention Entropy":
-            return ExponentialAttentionEntropySeq(0.8)
-        case "Exponential Attention Recursive Entropy":
-            return ExponentialAttentionRecursiveSeq(0.8)
+            return Perplexity()
+        case "Mean Token Entropy":
+            return MeanTokenEntropy()
+        case "Mean Pointwise Mutual Information":
+            return MeanPointwiseMutualInformation()
+        case "Mean Conditional Pointwise Mutual Information":
+            return MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599)
         case "P(True)":
             return PTrue()
         case "P(True) Sampling":
             return PTrueSampling()
-        case "Predictive Entropy Sampling":
-            return PredictiveEntropy()
-        case "Normalized Predictive Entropy Sampling":
-            return LengthNormalizedPredictiveEntropy()
+        case "Monte Carlo Sequence Entropy":
+            return MonteCarloSequenceEntropy()
+        case "Monte Carlo Normalized Sequence Entropy":
+            return MonteCarloNormalizedSequenceEntropy()
         case "Lexical Similarity":
             return LexicalSimilarity()
         case "Eigenvalue Laplacian":
@@ -57,10 +47,6 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return NumSemSets()
         case "Semantic Entropy":
             return SemanticEntropy()
-        case "Adaptive Sampling Predictive Entropy":
-            return PredictiveEntropyAdaptedSampling()
-        case "Adaptive Sampling Semantic Entropy":
-            return SemanticEntropyAdaptedSampling()
         case "Mahalanobis Distance":
             return MahalanobisDistanceSeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "Mahalanobis Distance - Encoder":
@@ -127,25 +113,15 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
 
 def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
     match method_name:
-        case "Maximum Probability":
-            return MaxProbabilityToken()
-        case "Normalized Maximum Probability":
-            return MaxProbabilityNormalizedToken()
-        case "Entropy":
-            return EntropyToken()
-        case "Mutual Information":
-            return MutualInformationToken()
-        case "Conditional Mutual Information":
-            return ConditionalMutualInformationToken(tau=0.0656, lambd=3.599)
-        case "Attention Entropy":
-            return AttentionEntropyToken()
-        case "Attention Recursive Entropy":
-            return AttentionRecursiveToken()
-        case "Exponential Attention Entropy":
-            return ExponentialAttentionEntropyToken(0.8)
-        case "Exponential Attention Recursive Entropy":
-            return ExponentialAttentionEntropyToken(0.8)
-        case "Semantic Entropy":
+        case "Maximum Token Probability":
+            return MaximumTokenProbability()
+        case "Token Entropy":
+            return TokenEntropy()
+        case "Pointwise Mutual Information":
+            return PointwiseMutualInformation()
+        case "Conditional Pointwise Mutual Information":
+            return ConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599)
+        case "Semantic Token Entropy":
             return SemanticEntropyToken(model_path, cache_path)
         case _:
             raise Exception(f'Unknown method: {method_name}')

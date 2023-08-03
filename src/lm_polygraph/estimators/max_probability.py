@@ -5,24 +5,24 @@ from typing import Dict
 from .estimator import Estimator
 
 
-class MaxProbabilitySeq(Estimator):
+class MaximumSequenceProbability(Estimator):
     def __init__(self):
         super().__init__(['greedy_log_likelihoods'], 'sequence')
 
     def __str__(self):
-        return 'MaxProbabilitySeq'
+        return 'MaximumSequenceProbability'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         log_likelihoods = stats['greedy_log_likelihoods']
         return np.array([-np.sum(l) for l in log_likelihoods])
 
 
-class MaxProbabilityToken(Estimator):
+class MaximumTokenProbability(Estimator):
     def __init__(self):
         super().__init__(['greedy_log_likelihoods'], 'token')
 
     def __str__(self):
-        return 'MaxProbabilityToken'
+        return 'MaximumTokenProbability'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         log_likelihoods = stats['greedy_log_likelihoods']
