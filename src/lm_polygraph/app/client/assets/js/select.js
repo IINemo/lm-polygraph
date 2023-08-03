@@ -19,7 +19,7 @@ const modelVue = new Vue({
             'gpt-4', 'gpt-3.5-turbo',
             'Ensemble', 'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
             'Bloomz 560M', 'Bloomz 3b', 'Bloomz 7b', 'Falcon 7b',
-            'Llama 3b', 'Llama 7b', 'Llama 13b', "OPT 2.7b",
+            'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b', "OPT 2.7b",
             'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN']),
         value: '',
     },

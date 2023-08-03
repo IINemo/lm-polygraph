@@ -143,11 +143,11 @@ def parse_model(model: str) -> str:
             return 'bigscience/bloomz-7b1'
         case "Falcon 7b":
             return 'tiiuae/falcon-7b'
-        case "Llama 3b":
+        case "Open Llama 3b":
             return 'openlm-research/open_llama_3b'
-        case "Llama 7b":
+        case "Open Llama 7b":
             return 'openlm-research/open_llama_7b'
-        case "Llama 13b":
+        case "Open Llama 13b":
             return 'openlm-research/open_llama_13b'
         case 'BART Large CNN':
             return 'facebook/bart-large-cnn'
