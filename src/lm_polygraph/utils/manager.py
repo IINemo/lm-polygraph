@@ -175,8 +175,8 @@ class UEManager:
                             batch_stats[f'blackbox_{stat}'] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
-                    sys.stderr.write(f'Caught exception while calculating stats: {e}')
-                    print(f'Caught exception while calculating stats: {e}')
+                    sys.stderr.write(f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}')
+                    print(f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}')
                     continue
                 else:
                     raise e
