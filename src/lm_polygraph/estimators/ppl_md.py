@@ -9,7 +9,7 @@ from typing import Dict
 from .estimator import Estimator
 from .mahalanobis_distance import compute_inv_covariance, mahalanobis_distance_with_known_centroids_sigma_inv, MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
-from .perplexity import PerplexitySeq
+from .perplexity import Perplexity
 from sklearn.model_selection import train_test_split
 
 def save_array(array, filename):
@@ -39,7 +39,7 @@ class PPLMDSeq(Estimator):
         self.train_ppl = None
         self.train_md = None
         
-        self.PPL = PerplexitySeq()
+        self.PPL = Perplexity()
         if self.md_type == "MD":
             self.MD = MahalanobisDistanceSeq(embeddings_type, parameters_path, normalize=False)
             self.MD_val = MahalanobisDistanceSeq(embeddings_type, parameters_path, normalize=False)

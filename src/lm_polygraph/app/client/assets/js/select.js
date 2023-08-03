@@ -30,7 +30,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: ['Maximum Probability'],
+        sequeSelected: ['Maximum Sequence Probability'],
         model: '',
         type: ''
     },
@@ -61,30 +61,26 @@ new Vue({
                     'PE-T-mutual-information', 'PE-T-rmi', 'PE-T-epkl', 'PE-T-epkl-tu',
                     'PE-T-entropy-top5', 'PE-T-entropy-top10', 'PE-T-entropy-top15']);
             } else if (newType === 'T5') {
-                return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Perplexity', 'Entropy',
-                    'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
-                    'Attention Recursive Entropy', 'Exponential Attention Entropy',
-                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(True) Sampling',
-                    'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
+                return toOptions(['Maximum Sequence Probability', 'Perplexity', 'Mean Token Entropy',
+                    'Mean Pointwise Mutual Information', 'Mean Conditional Pointwise Mutual Information',
+                    'P(True)', 'P(True) Sampling',
+                    'Monte Carlo Sequence Entropy', 'Monte Carlo Normalized Sequence Entropy',
                     'Lexical Similarity',
                     "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",
-                    'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
-                    'Adaptive Sampling Semantic Entropy', 
+                    'Semantic Entropy',
                     'Mahalanobis Distance', 'Mahalanobis Distance - Encoder', 'RDE', 'RDE - Encoder', 'PPL+MD', 'PPL+MD - Encoder']);
             } else if (newType === 'openai') {
                 return toOptions([
                     'Lexical Similarity',
                     "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",]);
             } else {
-                return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Perplexity', 'Entropy',
-                    'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
-                    'Attention Recursive Entropy', 'Exponential Attention Entropy',
-                    'Exponential Attention Recursive Entropy', 'P(True)', 'P(True) Sampling',
-                    'Predictive Entropy Sampling', 'Normalized Predictive Entropy Sampling',
+                return toOptions(['Maximum Sequence Probability', 'Perplexity', 'Mean Token Entropy',
+                    'Mean Pointwise Mutual Information', 'Mean Conditional Pointwise Mutual Information',
+                    'P(True)', 'P(True) Sampling',
+                    'Monte Carlo Sequence Entropy', 'Monte Carlo Normalized Sequence Entropy',
                     'Lexical Similarity',
                     "Eigenvalue Laplacian", "Eccentricity", "Degree Matrix", "Number of Semantic Sets",
-                    'Semantic Entropy', 'Adaptive Sampling Predictive Entropy',
-                    'Adaptive Sampling Semantic Entropy', 'Mahalanobis Distance', 'RDE', 'PPL+MD']);
+                    'Semantic Entropy', 'Mahalanobis Distance', 'RDE', 'PPL+MD']);
             }
         }
     }
@@ -94,7 +90,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#tokue',
     data: {
-        tokueSelected: ['Maximum Probability'],
+        tokueSelected: ['Maximum Token Probability'],
         model: '',
         type: ''
     },
@@ -121,10 +117,9 @@ new Vue({
             } else if (newType === 'openai') {
                 return toOptions([]);
             } else {
-                return toOptions(['Maximum Probability', 'Normalized Maximum Probability', 'Entropy',
-                    'Mutual Information', 'Conditional Mutual Information', 'Attention Entropy',
-                    'Attention Recursive Entropy', 'Exponential Attention Entropy',
-                    'Exponential Attention Recursive Entropy', 'Semantic Entropy']);
+                return toOptions(['Maximum Token Probability', 'Token Entropy',
+                    'Pointwise Mutual Information', 'Conditional Pointwise Mutual Information',
+                    'Semantic Token Entropy']);
             }
         }
     }

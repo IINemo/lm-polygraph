@@ -58,7 +58,7 @@ if __name__ == '__main__':
             'question', 'answer',
             batch_size=args.batch_size,
         )
-                        
+
         if args.use_density_based_ue:
             if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
                 train_dataset = Dataset.load(
@@ -81,16 +81,16 @@ if __name__ == '__main__':
                     max_size=100_000,
                     split="train",
             )
-                
+
             if args.subsample_train_dataset != -1:
-                train_dataset.subsample(args.subsample_train_dataset, seed=seed)  
+                train_dataset.subsample(args.subsample_train_dataset, seed=seed)
             if args.subsample_background_train_dataset != -1:
-                background_train_dataset.subsample(args.subsample_background_train_dataset, seed=seed) 
-                
+                background_train_dataset.subsample(args.subsample_background_train_dataset, seed=seed)
+
             dataset_name = args.dataset.split('/')[-1].split('.')[0]
             model_name = args.model.split('/')[-1]
             parameters_path = f"{args.cache_path}/{dataset_name}/{model_name}"
-        
+
             if model.model_type == "Seq2SeqLM":
                 density_based_ue = [
                     MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
@@ -116,31 +116,23 @@ if __name__ == '__main__':
             train_dataset = None
             background_train_dataset = None
             density_based_ue = []
-            
+
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
-            
+
         man = UEManager(
             dataset,
             model,
             [
-                MaxProbabilitySeq(),
-                PerplexitySeq(),
-                MaxProbabilityNormalizedSeq(),
-                EntropySeq(),
-                StdSeq(),
-                MutualInformationSeq(),
-                ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599),
-                AttentionEntropySeq(),
-                AttentionRecursiveSeq(),
-                ExponentialAttentionEntropySeq(coef=0.9),
-                ExponentialAttentionEntropySeq(coef=0.8),
-                ExponentialAttentionRecursiveSeq(coef=0.9),
-                ExponentialAttentionRecursiveSeq(coef=0.8),
+                MaximumSequenceProbability(),
+                Perplexity(),
+                MeanTokenEntropy(),
+                MeanPointwiseMutualInformation(),
+                MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
                 PTrue(),
-                PUncertainty(),
-                PredictiveEntropy(),
-                LengthNormalizedPredictiveEntropy(),
+                PTrueSampling(),
+                MonteCarloSequenceEntropy(),
+                MonteCarloNormalizedSequenceEntropy(),
                 LexicalSimilarity(metric='rouge1'),
                 LexicalSimilarity(metric='rouge2'),
                 LexicalSimilarity(metric='rougeL'),
@@ -156,19 +148,11 @@ if __name__ == '__main__':
                 Eccentricity(similarity_score='NLI_score', affinity='contra'),
                 Eccentricity(similarity_score='Jaccard_score'),
                 SemanticEntropy(),
-                PredictiveEntropyAdaptedSampling(),
-                SemanticEntropyAdaptedSampling(),
-                MaxProbabilityToken(),
-                MaxProbabilityNormalizedToken(),
-                EntropyToken(),
-                MutualInformationToken(),
-                ConditionalMutualInformationToken(tau=0.0656, lambd=3.599),
-                AttentionEntropyToken(),
-                AttentionRecursiveToken(),
-                ExponentialAttentionEntropyToken(coef=0.9),
-                ExponentialAttentionEntropyToken(coef=0.8),
-                ExponentialAttentionRecursiveToken(coef=0.9),
-                ExponentialAttentionRecursiveToken(coef=0.8),
+
+                MaximumTokenProbability(),
+                TokenEntropy(),
+                PointwiseMutualInformation(),
+                ConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
                 SemanticEntropyToken(model.model_path, args.cache_path),
             ] + density_based_ue,
             [
