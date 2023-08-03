@@ -94,7 +94,7 @@ class WhiteboxModel(Model):
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=1024, trust_remote_code=True
+                model_path, max_length=256, trust_remote_code=True
             ).to(device)
         elif any(
             [
@@ -114,7 +114,7 @@ class WhiteboxModel(Model):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side="left", add_bos_token=True,
-                                                  model_max_length=1024)
+                                                  model_max_length=256 if model_type == "CausalLM" else 1024)
 
         model.eval()
         if tokenizer.pad_token is None:

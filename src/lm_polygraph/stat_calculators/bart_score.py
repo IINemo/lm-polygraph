@@ -13,7 +13,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 
 class BartScoreCalculator(StatCalculator):
-    def __init__(self, device=None, max_length=1024, checkpoint='facebook/bart-large-cnn'):
+    def __init__(self, device=None, max_length=256, checkpoint='facebook/bart-large-cnn'):
         super().__init__(['rh'],
                          ['greedy_tokens', 'input_tokens'])
         self.max_length = max_length
