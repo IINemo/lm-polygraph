@@ -59,54 +59,50 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return PPLMDSeq("decoder", md_type="MD", parameters_path=density_based_ue_params_path)
         case "PPL+MD - Encoder":
             return PPLMDSeq("encoder", md_type="MD", parameters_path=density_based_ue_params_path)
-        case "EP-T-total-uncertainty":
+        case "EP-T-Total-Uncertainty":
             return EPTtu()
-        case "EP-T-data-uncertainty":
+        case "EP-T-Data-Uncertainty":
             return EPTdu()
-        case "EP-T-mutual-information":
+        case "EP-T-Mutual-Information":
             return EPTmi()
-        case "EP-T-rmi":
+        case "EP-T-RMI":
             return EPTrmi()
-        case "EP-T-epkl":
+        case "EP-T-EPKL":
             return EPTepkl()
-        case "EP-T-epkl-tu":
+        case "EP-T-EPKL-TU":
             return EPTepkltu()
-        case "EP-T-entropy-top5":
+        case "EP-T-Entropy-Top5":
             return EPTent5()
-        case "EP-T-entropy-top10":
+        case "EP-T-Entropy-Top10":
             return EPTent10()
-        case "EP-T-entropy-top15":
+        case "EP-T-Entropy-Top15":
             return EPTent15()
-        case "PE-T-total-uncertainty":
+        case "PE-T-Total-Uncertainty":
             return PETtu()
-        case "PE-T-data-uncertainty":
+        case "PE-T-Data-Uncertainty":
             return PETdu()
-        case "PE-T-mutual-information":
+        case "PE-T-Mutual-Information":
             return PETmi()
-        case "PE-T-rmi":
+        case "PE-T-RMI":
             return PETrmi()
-        case "PE-T-epkl":
+        case "PE-T-EPKL":
             return PETepkl()
-        case "PE-T-epkl-tu":
+        case "PE-T-EPKL-TU":
             return PETepkltu()
-        case "PE-T-entropy-top5":
+        case "PE-T-Entropy-Top5":
             return PETent5()
-        case "PE-T-entropy-top10":
+        case "PE-T-Entropy-Top10":
             return PETent10()
-        case "PE-T-entropy-top15":
+        case "PE-T-Entropy-Top15":
             return PETent15()
-        case "EP-S-total-uncertainty":
+        case "EP-S-Total-Uncertainty":
             return EPStu()
-        case "EP-S-rmi":
+        case "EP-S-RMI":
             return EPSrmi()
-        case "EP-S-rmi-abs":
-            return EPSrmiabs()
-        case "PE-S-total-uncertainty":
+        case "PE-S-Total-Uncertainty":
             return PEStu()
-        case "PE-S-rmi":
+        case "PE-S-RMI":
             return PESrmi()
-        case "PE-S-rmi-abs":
-            return PESrmiabs()
         case _:
             raise Exception(f'Unknown method: {method_name}')
 

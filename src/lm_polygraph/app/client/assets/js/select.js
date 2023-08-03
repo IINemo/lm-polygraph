@@ -54,12 +54,12 @@ new Vue({
             this.type = newType;
             if (newType === 'ensemble') {
                 return toOptions([
-                    'EP-S-total-uncertainty', 'EP-S-rmi', 'EP-S-rmi-abs', 'PE-S-total-uncertainty',
-                    'PE-S-rmi', 'PE-S-rmi-abs', 'EP-T-total-uncertainty', 'EP-T-data-uncertainty', 'EP-T-mutual-information',
-                    'EP-T-rmi', 'EP-T-epkl', 'EP-T-epkl-tu', 'EP-T-entropy-top5', 'EP-T-entropy-top10',
-                    'EP-T-entropy-top15', 'PE-T-total-uncertainty', 'PE-T-data-uncertainty',
-                    'PE-T-mutual-information', 'PE-T-rmi', 'PE-T-epkl', 'PE-T-epkl-tu',
-                    'PE-T-entropy-top5', 'PE-T-entropy-top10', 'PE-T-entropy-top15']);
+                    'EP-S-Total-Uncertainty', 'EP-S-RMI', 'PE-S-Total-Uncertainty',
+                    'PE-S-RMI', 'EP-T-Total-Uncertainty', 'EP-T-Data-Uncertainty', 'EP-T-Mutual-Information',
+                    'EP-T-RMI', 'EP-T-EPKL', 'EP-T-EPKL-TU', 'EP-T-Entropy-Top5', 'EP-T-Entropy-Top10',
+                    'EP-T-Entropy-Top15', 'PE-T-Total-Uncertainty', 'PE-T-Data-Uncertainty',
+                    'PE-T-Mutual-Information', 'PE-T-RMI', 'PE-T-EPKL', 'PE-T-EPKL-TU',
+                    'PE-T-Entropy-Top5', 'PE-T-Entropy-Top10', 'PE-T-Entropy-Top15']);
             } else if (newType === 'T5') {
                 return toOptions(['Maximum Sequence Probability', 'Perplexity', 'Mean Token Entropy',
                     'Mean Pointwise Mutual Information', 'Mean Conditional Pointwise Mutual Information',
