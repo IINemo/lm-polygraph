@@ -24,7 +24,7 @@ model = WhiteboxModel.from_pretrained(
 ```python
 from lm_polygraph.estimators import *
 
-ue_method = MaxProbabilitySeq()
+ue_method = MutualInformationSeq()
 input_text = "Who is George Bush?"
 ```
 
