@@ -44,7 +44,7 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 
 ## Benchmarks
 
-To evaluate the performance of uncertainty methods run: 
+To evaluate the performance of uncertainty estimation methods run: 
 
 ```
 polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
