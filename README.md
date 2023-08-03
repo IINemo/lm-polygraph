@@ -2,33 +2,19 @@
 
 ## Installation
 
-Clone repo via SSH:
-```
-git clone git@github.com:IINemo/lm-polygraph.git
-```
-or via HTTPS:
 ```
 git clone https://github.com/IINemo/lm-polygraph.git
-```
-
-
-```
 cd lm-polygraph
 pip install .
 ```
 
 ## Usage examples
 
-* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
-* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
-* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
-* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
-* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
-
-### Code example
-
 1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file
 ```python
+
+from ??? import WhiteboxModel
+
 model = WhiteboxModel.from_pretrained(
     model_name_or_path,
     device=device,
@@ -37,6 +23,8 @@ model = WhiteboxModel.from_pretrained(
 
 2. Load the dataset from HuggingFace datasets or a local file
 ```python
+from datasets import Dataset
+
 dataset = Dataset.load(
     dataset_name,
     'question', 'answer',
@@ -46,6 +34,8 @@ dataset = Dataset.load(
 
 3. Specify UE methods, UE metrics, and generation metrics
 ```python
+from ...
+
 ue_methods = [MaxProbabilitySeq(), 
               SemanticEntropy()]
 
@@ -73,6 +63,15 @@ man = UEManager(
 ```python
 results = man()
 ```
+
+## Other examples could found here:
+
+* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
+* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
+* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
+* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
+* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
+
 
 ## Benchmarks
 
