@@ -11,4 +11,4 @@ CMD bash scripts/polygraph_all.sh
 #CMD ls /app
 #CMD python -c "print('hello world')"
 
-RUN pip install openai
+RUN pip install openai einos
