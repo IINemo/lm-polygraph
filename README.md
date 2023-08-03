@@ -25,6 +25,58 @@ pip install .
 * [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
 * [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: models other from `bloomz-560m` can be run only with Colab-pro subscription)
 
+
+## Code example
+
+* Initialize the model (encoder-decoder or decoder-only)
+```python
+model = Model.from_pretrained(
+    model_name_or_path,
+    device=device,
+)
+```
+
+* Load the dataset locally or from HuggingFace datasets
+```python
+dataset = Dataset.load(
+    dataset_name,
+    'question', 'answer',
+    batch_size=batch_size,
+)
+```
+
+* Specify UE methods, UE metrics, and generation metrics
+```python
+ue_methods = [MaxProbabilitySeq(), 
+              SemanticEntropy(),
+              MahalanobisDistanceSeq("decoder"),]
+
+ue_metrics = [RiskCoverageCurveAUC()]
+
+metrics = [RougeMetric('rougeL'),
+           BartScoreSeqMetric('rh'),]
+
+loggers = [Logger()] 
+```
+
+* Initialize UE manager
+```python
+man = UEManager(
+    dataset,
+    model,
+    ue_methods,
+    metrics,
+    ue_metrics,
+    loggers,
+    train_data=train_dataset,
+)
+```
+
+* Compute results
+```python
+results = man()
+```
+
 ## Benchmarks
 
 To evaluate the performance of uncertainty methods run: 
