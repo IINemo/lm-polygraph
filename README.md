@@ -6,7 +6,7 @@
 git clone https://github.com/IINemo/lm-polygraph.git && cd lm-polygraph && pip install .
 ```
 
-## Usage examples
+## Basic usage
 
 1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
 ```python
