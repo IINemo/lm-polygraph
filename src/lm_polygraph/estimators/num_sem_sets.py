@@ -40,15 +40,15 @@ class NumSemSets(Estimator):
         lst = self.get_pairs_semsets(answers)
         # basically we have only 1 semantic set
         num_sets = 1
-
+        device = DEBERTA.deberta.device
         # we iterate over responces and incerase num_sets if the NLI condition is fulfilled
         for (sentence_1, sentence_2) in lst:
             # Tokenize input sentences
-            encoded_input_forward = DEBERTA.deberta_tokenizer(sentence_1, sentence_2, return_tensors='pt')
-            encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt')
+            encoded_input_forward = DEBERTA.deberta_tokenizer(sentence_1, sentence_2, return_tensors='pt').to(device)
+            encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt').to(device)
 
-            logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach()
-            logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach()
+            logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().cpu()
+            logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach().cpu()
 
             probs_forward = softmax(logits_forward)
             probs_backward = softmax(logits_backward)
