@@ -185,9 +185,10 @@ def generate():
     if len(tokens) > 0:
         tokens[0] = tokens[0].lstrip()
         tokens[-1] = tokens[-1].rstrip()
-
-    tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-    tokens, tok_conf = _merge_into_words(tokens, tok_conf)
+    
+    if type(model) == WhiteboxModel:
+        tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        tokens, tok_conf = _merge_into_words(tokens, tok_conf)
 
     return {
         'generation': tokens,
