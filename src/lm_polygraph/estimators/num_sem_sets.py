@@ -47,11 +47,11 @@ class NumSemSets(Estimator):
             encoded_input_forward = DEBERTA.deberta_tokenizer(sentence_1, sentence_2, return_tensors='pt').to(device)
             encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt').to(device)
 
-            logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().cpu()
-            logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach().cpu()
+            logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().to(device)
+            logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach().to(device)
 
-            probs_forward = softmax(logits_forward)
-            probs_backward = softmax(logits_backward)
+            probs_forward = softmax(logits_forward).to(device)
+            probs_backward = softmax(logits_backward).to(device)
 
             p_entail_forward = probs_forward[0][2]
             p_entail_backward = probs_backward[0][2]
