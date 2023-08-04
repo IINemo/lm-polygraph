@@ -77,19 +77,23 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 
-def _align_tokenwise_confidences(tokens, confidences):
+def _merge_into_words(tokens, confidences):
     if len(confidences) == 0:
         return []
+    words = []
     confidences_grouped = np.zeros_like(confidences)
     word_len = 0
     for i, token in enumerate(tokens):
         confidences_grouped[i] = confidences[i]
-        if (" " in token) or ((word_len > 0) and ((len(tokens) - 1) == i)):
+        if token.endswith(' ') or token.endswith('\n') or (
+                i + 1 < len(tokens) and (tokens[i + 1].startswith(' ') or tokens[i + 1].startswith('\n'))):
             confidences_grouped[i - word_len: i + 1] = np.min(confidences_grouped[i - word_len: i + 1])
+            words.append(''.join(tokens[i - word_len: i + 1]))
             word_len = 0
         else:
             word_len += 1
-    return confidences_grouped.tolist()
+    return words, confidences_grouped.tolist()
+
 
 
 @app.route('/chat/completions', methods=['GET', 'POST'])
@@ -169,9 +173,8 @@ def generate():
         tokens[0] = tokens[0].lstrip()
         tokens[-1] = tokens[-1].rstrip()
 
-    if model.model_type == "Seq2SeqLM":
-        tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-        tok_conf = _align_tokenwise_confidences(tokens, tok_conf)
+    tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+    tokens, tok_conf = _merge_into_words(tokens, tok_conf)
 
     return {
         'generation': tokens,
