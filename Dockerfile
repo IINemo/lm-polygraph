@@ -6,9 +6,11 @@ COPY . /app
 RUN cd /app && pip install .
 RUN cd /app/src/lm_polygraph/app && npm install
 WORKDIR /app
-CMD bash scripts/polygraph_all.sh
 #bash /app/scripts/polygraph_all.sh
 #CMD ls /app
 #CMD python -c "print('hello world')"
 
-RUN pip install openai einos
+RUN pip install openai einops
+RUN pip install --upgrade "protobuf<=3.20.1"
+
+CMD bash scripts/polygraph_server
