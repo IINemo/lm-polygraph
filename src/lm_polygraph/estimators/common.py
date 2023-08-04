@@ -36,6 +36,9 @@ def _get_pairs(lst):
 
 
 def _compute_Jaccard_score(lst, epsilon):
+    device = DEBERTA.device 
+    if device is None:
+        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     jaccard_sim_mat = np.eye(len(lst)) * epsilon
     for i in range(len(lst)):
         for j in range(i + 1, len(lst)):
@@ -46,12 +49,13 @@ def _compute_Jaccard_score(lst, epsilon):
             jaccard_score = intersection / union
             jaccard_sim_mat[i, j] = jaccard_score
 
-    return jaccard_sim_mat
+    return torch.tensor(jaccard_sim_mat).to(device)
 
 
 def _compute_adjaency_mat(answers, affinity):
     W = np.eye(len(answers))
     pairs = _get_pairs(answers)
+    device = DEBERTA.device 
 
     softmax = nn.Softmax(dim=1)
 
@@ -63,8 +67,8 @@ def _compute_adjaency_mat(answers, affinity):
         logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach()
         logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach()
 
-        probs_forward = softmax(logits_forward)
-        probs_backward = softmax(logits_backward)
+        probs_forward = softmax(logits_forward).to(device)
+        probs_backward = softmax(logits_backward).to(device)
 
         a_nli_entail_forward = probs_forward[0][2]
         a_nli_entail_backward = probs_backward[0][2]

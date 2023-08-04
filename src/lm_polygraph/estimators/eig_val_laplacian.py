@@ -37,6 +37,7 @@ class EigValLaplacian(Estimator):
         self.affinity = affinity
         self.verbose = verbose
         self.epsilon = epsilon
+        self.device = DEBERTA.device
 
     def __str__(self):
         if self.similarity_score == 'NLI_score':
@@ -44,7 +45,7 @@ class EigValLaplacian(Estimator):
         return f'EigValLaplacian_{self.similarity_score}'
 
     def U_EigVal_Laplacian(self, answers):
-        W = compute_sim_score(answers, self.affinity, self.epsilon, self.similarity_score)
+        W = compute_sim_score(answers, self.affinity, self.epsilon, self.similarity_score, self.device)
         D = np.diag(W.sum(axis=1))
         D_inverse_sqrt = np.linalg.inv(np.sqrt(D))
         L = np.eye(D.shape[0]) - D_inverse_sqrt @ W @ D_inverse_sqrt

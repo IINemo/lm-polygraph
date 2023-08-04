@@ -38,6 +38,7 @@ class DegMat(Estimator):
         self.affinity = affinity
         self.verbose = verbose
         self.epsilon = epsilon
+        self.device = DEBERTA.device 
 
     def __str__(self):
         if self.similarity_score == 'NLI_score':
@@ -46,7 +47,7 @@ class DegMat(Estimator):
 
     def U_DegMat(self, answers):
         # The Degree Matrix
-        W = compute_sim_score(answers, self.affinity, self.epsilon, self.similarity_score)
+        W = compute_sim_score(answers, self.affinity, self.epsilon, self.similarity_score, self.device)
         D = np.diag(W.sum(axis=1))
         return np.trace(len(answers) - D) / (len(answers) ** 2)
 

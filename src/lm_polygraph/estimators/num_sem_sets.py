@@ -50,8 +50,8 @@ class NumSemSets(Estimator):
             logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().cpu()
             logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach().cpu()
 
-            probs_forward = softmax(logits_forward)
-            probs_backward = softmax(logits_backward)
+            probs_forward = softmax(logits_forward).to(device)
+            probs_backward = softmax(logits_backward).to(device)
 
             p_entail_forward = probs_forward[0][2]
             p_entail_backward = probs_backward[0][2]
