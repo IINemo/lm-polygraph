@@ -31,3 +31,5 @@ scipy==1.9.3
 datasets==2.3.2
 tensorflow
 flask==2.3.2
+openai
+einops
