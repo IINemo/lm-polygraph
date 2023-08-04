@@ -1,5 +1,4 @@
 const API_URL = '/';
-// const API_URL = 'localhost:5239'
 const converter = new showdown.Converter();
 let promptToRetry = null;
 let uniqueIdToRetry = null;

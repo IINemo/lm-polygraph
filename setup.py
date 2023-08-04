@@ -55,7 +55,7 @@ setup(
     license="MIT",
     url="https://github.com/IINemo/lm-polygraph",
     scripts=['scripts/polygraph_eval',
-             'scripts/polygraph_backend'],
+             'scripts/polygraph_server'],
     package_dir={"": "src"},
     packages=find_packages("src"),
     include_package_data=True,

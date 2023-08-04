@@ -71,5 +71,5 @@ The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found 
 Requires python3.10
 
 ```
-polygraph_backend
+polygraph_server
 ```
