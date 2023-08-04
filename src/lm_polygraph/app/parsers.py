@@ -55,9 +55,9 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return RDESeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "RDE - Encoder":
             return RDESeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)  
-        case "PPL+MD":
+        case "HUQ - Decoder":
             return PPLMDSeq("decoder", md_type="MD", parameters_path=density_based_ue_params_path)
-        case "PPL+MD - Encoder":
+        case "HUQ - Encoder":
             return PPLMDSeq("encoder", md_type="MD", parameters_path=density_based_ue_params_path)
         case "EP-T-Total-Uncertainty":
             return EPTtu()
@@ -85,8 +85,6 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return PETrmi()
         case "PE-T-EPKL":
             return PETepkl()
-        case "PE-T-EPKL-TU":
-            return PETepkltu()
         case "PE-T-Entropy-Top5":
             return PETent5()
         case "PE-T-Entropy-Top10":
