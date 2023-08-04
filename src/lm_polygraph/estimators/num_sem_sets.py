@@ -14,7 +14,6 @@ class NumSemSets(Estimator):
             self,
             batch_size: int = 10,
             verbose: bool = False,
-            epsilon: float = 1e-13
     ):
         """
         A number of semantic sets in response (higher = bigger uncertainty).
@@ -24,7 +23,6 @@ class NumSemSets(Estimator):
         self.batch_size = batch_size
         DEBERTA.setup()
         self.verbose = verbose
-        self.epsilon = epsilon
 
     def __str__(self):
         return f'NumSemSets'

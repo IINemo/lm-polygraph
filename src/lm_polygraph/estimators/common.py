@@ -35,9 +35,9 @@ def _get_pairs(lst):
     return pairs
 
 
-def _compute_Jaccard_score(lst, epsilon):
+def _compute_Jaccard_score(lst):
     #device = DEBERTA.device 
-    jaccard_sim_mat = np.eye(len(lst)) * epsilon
+    jaccard_sim_mat = np.eye(len(lst))
     for i in range(len(lst)):
         for j in range(i + 1, len(lst)):
             set1 = set(lst[i].lower().split())
@@ -63,7 +63,7 @@ def _compute_adjaency_mat(answers, affinity):
         encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt').to(device)
 
         logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().to(device)
-        logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach().to(device)
+        logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach()
 
         probs_forward = softmax(logits_forward).to(device)
         probs_backward = softmax(logits_backward).to(device)
@@ -85,8 +85,8 @@ def _compute_adjaency_mat(answers, affinity):
     return W
 
 
-def compute_sim_score(answers, affinity, epsilon, similarity_score):
+def compute_sim_score(answers, affinity, similarity_score):
     if similarity_score == "NLI_score":
         return _compute_adjaency_mat(answers, affinity)
     elif similarity_score == "Jaccard_score":
-        return _compute_Jaccard_score(answers, epsilon)
+        return _compute_Jaccard_score(answers)
