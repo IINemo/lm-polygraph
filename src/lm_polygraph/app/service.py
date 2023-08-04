@@ -93,7 +93,7 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
 
 def _merge_into_words(tokens, confidences):
     if len(confidences) == 0:
-        return []
+        return tokens, []
     words = []
     confidences_grouped = np.zeros_like(confidences)
     word_len = 0
