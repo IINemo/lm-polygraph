@@ -134,10 +134,9 @@ def generate():
         if model_path.startswith('openai-'):
             model = BlackboxModel(data['openai_key'], model_path[len('openai-'):])
         else:
-            load_in_8bit = ('cuda' in device) and any(s in model_path for s in ['7b'])
-            load_in_4bit = ('cuda' in device) and any(s in model_path for s in ['12b', '13b'])
+            load_in_8bit = ('cuda' in device) and any(s in model_path for s in ['7b', '12b', '13b'])
             model = WhiteboxModel.from_pretrained(
-                model_path, device=device, load_in_8bit=load_in_8bit, load_in_4bit=load_in_4bit)
+                model_path, device=device, load_in_8bit=load_in_8bit)
     else:
         model_path = parse_model(data['model'])
     model.parameters = parameters
