@@ -16,7 +16,6 @@ from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
-# static_folder = 'src/lm_polygraph/app/client'
 static_folder = 'client'
 app = Flask(__name__, static_folder=static_folder)
 
