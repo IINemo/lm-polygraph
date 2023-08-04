@@ -11,7 +11,7 @@ from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.normalize import normalize_from_bounds, has_norm_bound
+from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
@@ -54,7 +54,7 @@ class ResultProcessor(Processor):
         self.ue_estimations = batch_estimations
 
 
-def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
+def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> Tuple[List, str]:
     if len(methods) == 0:
         return [], 'none'
     condifences, normalized_confidences = [], []
@@ -64,9 +64,10 @@ def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level:
         normalized_confidences.append([])
         for x in processor.ue_estimations[level, str(method)]:
             condifences[-1].append(-x)
-            if not has_norm_bound(method):
+            if not can_normalize_ue(method, model_path):
                 normalization = 'none'
-            normalized_confidences[-1].append(1 - normalize_from_bounds(method, x))
+            else:
+                normalized_confidences[-1].append(1 - normalize_ue(method, model_path, x))
         print(' {} Confidence: {}'.format(str(method), condifences[-1]))
     if normalization != 'none':
         condifences = normalized_confidences
@@ -174,8 +175,8 @@ def generate():
     greedy_text = processor.stats.get('greedy_texts', processor.stats.get('blackbox_greedy_texts', None))[0]
     print(' Generation: {}'.format(greedy_text))
 
-    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token')
-    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence')
+    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token', model_path)
+    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence', model_path)
     if 'greedy_tokens' in processor.stats.keys():
         tokens = []
         for t in processor.stats['greedy_tokens'][0][:-1]:
