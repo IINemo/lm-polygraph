@@ -36,6 +36,7 @@ def _get_pairs(lst):
 
 
 def _compute_Jaccard_score(lst, epsilon):
+    #device = DEBERTA.device 
     jaccard_sim_mat = np.eye(len(lst)) * epsilon
     for i in range(len(lst)):
         for j in range(i + 1, len(lst)):
@@ -52,19 +53,20 @@ def _compute_Jaccard_score(lst, epsilon):
 def _compute_adjaency_mat(answers, affinity):
     W = np.eye(len(answers))
     pairs = _get_pairs(answers)
+    device = DEBERTA.device 
 
     softmax = nn.Softmax(dim=1)
 
     for (sentence_1, sentence_2, i, j) in pairs:
         # Tokenize input sentences
-        encoded_input_forward = DEBERTA.deberta_tokenizer(sentence_1, sentence_2, return_tensors='pt')
-        encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt')
+        encoded_input_forward = DEBERTA.deberta_tokenizer(sentence_1, sentence_2, return_tensors='pt').to(device)
+        encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt').to(device)
 
-        logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach()
-        logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach()
+        logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().to(device)
+        logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach().to(device)
 
-        probs_forward = softmax(logits_forward)
-        probs_backward = softmax(logits_backward)
+        probs_forward = softmax(logits_forward).to(device)
+        probs_backward = softmax(logits_backward).to(device)
 
         a_nli_entail_forward = probs_forward[0][2]
         a_nli_entail_backward = probs_backward[0][2]
@@ -73,12 +75,12 @@ def _compute_adjaency_mat(answers, affinity):
         a_nli_contra_backward = 1 - probs_backward[0][0]
 
         if affinity == "entail":
-            w = (a_nli_entail_forward + a_nli_entail_backward) / 2
+            _w = (a_nli_entail_forward.item() + a_nli_entail_backward.item()) / 2
         elif affinity == "contra":
-            w = (a_nli_contra_forward + a_nli_contra_backward) / 2
+            _w = (a_nli_contra_forward.item() + a_nli_contra_backward.item()) / 2
 
-        W[i, j] = w
-        W[j, i] = w
+        W[i, j] = _w
+        W[j, i] = _w
 
     return W
 
