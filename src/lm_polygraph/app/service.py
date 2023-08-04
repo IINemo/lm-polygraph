@@ -93,6 +93,7 @@ def _align_tokenwise_confidences(tokens, confidences):
 
 
 @app.route('/chat/completions', methods=['GET', 'POST'])
+# @app.route('/get-prompt-result', methods=['GET', 'POST'])
 def generate():
     data = request.get_json()
     print(f'Request data: {data}')
