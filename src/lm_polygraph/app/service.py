@@ -1,10 +1,11 @@
+import os
 import numpy as np
 import argparse
 import torch
 
 from typing import Optional, Dict, Tuple, List
 
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory, render_template
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
@@ -14,7 +15,10 @@ from lm_polygraph.utils.normalize import normalize_from_bounds, has_norm_bound
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
-app = Flask(__name__)
+
+# static_folder = 'src/lm_polygraph/app/client'
+static_folder = 'client'
+app = Flask(__name__, static_folder=static_folder)
 
 model: Optional[WhiteboxModel] = None
 tok_ue_methods: Dict[str, Estimator] = {}
@@ -23,6 +27,16 @@ cache_path: str = '/Users/ekaterinafadeeva/cache'
 density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
                                   "RDE", "RDE - encoder"]
 device: str = 'cpu'
+
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(os.path.join(app.root_path, static_folder), 'index.html')
+
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(os.path.join(app.root_path, static_folder), filename)
 
 
 class ResultProcessor(Processor):
@@ -96,19 +110,19 @@ def _merge_into_words(tokens, confidences):
 
 
 
-@app.route('/chat/completions', methods=['GET', 'POST'])
+@app.route('/get-prompt-result', methods=['GET', 'POST'])
 def generate():
     data = request.get_json()
     print(f'Request data: {data}')
 
-    topk = int(data['parameters']['topk'])
+    topk = int(data['topk'])
     parameters = GenerationParameters(
-        temperature=float(data['parameters']['temperature']),
+        temperature=float(data['temperature']),
         topk=topk,
-        topp=float(data['parameters']['topp']),
+        topp=float(data['topp']),
         do_sample=(topk > 1),
-        num_beams=int(data['parameters']['num_beams']),
-        repetition_penalty=float(data['parameters']['repetition_penalty']),
+        num_beams=int(data['num_beams']),
+        repetition_penalty=float(data['repetition_penalty']),
     )
     global model
     ensemble_model = None
@@ -130,7 +144,7 @@ def generate():
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
     seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
-    text = data['messages'][0]['content']
+    text = data['prompt']
 
     for ue_method_name in tok_ue_method_names:
         if (ue_method_name not in tok_ue_methods.keys()) or (ue_method_name in density_based_names):
@@ -187,7 +201,7 @@ def generate():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=5239)
+    parser.add_argument("--port", type=int, default=3001)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--cache-path", type=str, default='/Users/romanvashurin/cache')
     args = parser.parse_args()
