@@ -19,5 +19,5 @@ from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq
 from .ppl_md import PPLMDSeq
-from .ensemble_token_measures import EPTtu, EPTdu, EPTmi, EPTrmi, EPTepkl, EPTent5, EPTent10, EPTent15, PETtu, PETdu, PETmi, PETrmi, PETepkl, PETepkltu, PETent5, PETent10, PETent15
+from .ensemble_token_measures import EPTtu, EPTdu, EPTmi, EPTrmi, EPTepkl, EPTent5, EPTent10, EPTent15, PETtu, PETdu, PETmi, PETrmi, PETepkl, PETent5, PETent10, PETent15
 from .ensemble_sequence_measures import EPStu, EPSrmi, EPSrmiabs, PEStu, PESrmi, PESrmiabs

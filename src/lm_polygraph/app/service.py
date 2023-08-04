@@ -2,6 +2,7 @@ import os
 import numpy as np
 import argparse
 import torch
+import string
 
 from typing import Optional, Dict, Tuple, List
 
@@ -11,10 +12,9 @@ from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.normalize import normalize_from_bounds, has_norm_bound
+from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
-
 
 # static_folder = 'src/lm_polygraph/app/client'
 static_folder = 'client'
@@ -54,7 +54,8 @@ class ResultProcessor(Processor):
         self.ue_estimations = batch_estimations
 
 
-def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
+def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> Tuple[
+    List, str]:
     if len(methods) == 0:
         return [], 'none'
     condifences, normalized_confidences = [], []
@@ -64,9 +65,10 @@ def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level:
         normalized_confidences.append([])
         for x in processor.ue_estimations[level, str(method)]:
             condifences[-1].append(-x)
-            if not has_norm_bound(method):
+            if not can_normalize_ue(method, model_path):
                 normalization = 'none'
-            normalized_confidences[-1].append(1 - normalize_from_bounds(method, x))
+            else:
+                normalized_confidences[-1].append(1 - normalize_ue(method, model_path, x))
         print(' {} Confidence: {}'.format(str(method), condifences[-1]))
     if normalization != 'none':
         condifences = normalized_confidences
@@ -91,23 +93,47 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 
-def _merge_into_words(tokens, confidences):
+def _split_spaces(tokens, conf, split=string.punctuation.replace("'", '') + " \n", strip=" \n"):
+    new_tokens, new_conf = [], []
+    for t, c in zip(tokens, conf):
+        while any(t.startswith(s) for s in split):
+            new_tokens.append(t[0])
+            new_conf.append(1.0)
+            t = t[1:]
+        stack_tokens, stack_conf = [], []
+        while any(t.endswith(s) for s in split):
+            stack_tokens.append(t[-1])
+            stack_conf.append(1.0)
+            t = t[:-1]
+        if len(t) > 0:
+            new_tokens.append(t)
+            new_conf.append(c)
+        new_tokens += stack_tokens[::-1]
+        new_conf += stack_conf[::-1]
+    while len(new_tokens) > 0 and new_tokens[0] in strip:
+        new_tokens = new_tokens[1:]
+        new_conf = new_conf[1:]
+    while len(new_tokens) > 0 and new_tokens[-1] in strip:
+        new_tokens = new_tokens[:-1]
+        new_conf = new_conf[:-1]
+    return new_tokens, new_conf
+
+
+def _merge_into_words(tokens, confidences, split=string.punctuation.replace("'", '') + " \n"):
     if len(confidences) == 0:
         return tokens, []
-    words = []
-    confidences_grouped = np.zeros_like(confidences)
-    word_len = 0
-    for i, token in enumerate(tokens):
-        confidences_grouped[i] = confidences[i]
-        if token.endswith(' ') or token.endswith('\n') or (
-                i + 1 < len(tokens) and (tokens[i + 1].startswith(' ') or tokens[i + 1].startswith('\n'))):
-            confidences_grouped[i - word_len: i + 1] = np.min(confidences_grouped[i - word_len: i + 1])
-            words.append(''.join(tokens[i - word_len: i + 1]))
-            word_len = 0
-        else:
-            word_len += 1
-    return words, confidences_grouped.tolist()
-
+    words, word_conf = [], []
+    word_start = 0
+    for i, (token, conf) in enumerate(zip(tokens, confidences)):
+        if token in split:
+            word_conf.append(conf)
+            words.append(token)
+            word_start = i + 1
+        elif i + 1 == len(tokens) or tokens[i + 1] in split:
+            word_conf.append(np.min(confidences[word_start:i + 1]))
+            words.append(''.join(tokens[word_start:i + 1]))
+            word_start = i + 1
+    return words, word_conf
 
 
 @app.route('/get-prompt-result', methods=['GET', 'POST'])
@@ -174,20 +200,19 @@ def generate():
     greedy_text = processor.stats.get('greedy_texts', processor.stats.get('blackbox_greedy_texts', None))[0]
     print(' Generation: {}'.format(greedy_text))
 
-    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token')
-    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence')
+    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token', model_path)
+    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence', model_path)
     if 'greedy_tokens' in processor.stats.keys():
         tokens = []
         for t in processor.stats['greedy_tokens'][0][:-1]:
             tokens.append(model.tokenizer.decode([t]))
     else:
         tokens = [greedy_text]
-    if len(tokens) > 0:
-        tokens[0] = tokens[0].lstrip()
-        tokens[-1] = tokens[-1].rstrip()
-    
+
     if type(model) == WhiteboxModel:
-        tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        if model.model_type == "Seq2SeqLM":
+            tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        tokens, tok_conf = _split_spaces(tokens, tok_conf)
         tokens, tok_conf = _merge_into_words(tokens, tok_conf)
 
     return {
