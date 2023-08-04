@@ -30,7 +30,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: ['Mean Pointwise Mutual Information'],
+        sequeSelected: ['Mean Token Entropy'],
         model: '',
         type: ''
     },
@@ -91,7 +91,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#tokue',
     data: {
-        tokueSelected: ['Maximum Token Probability'],
+        tokueSelected: ['Token Entropy'],
         model: '',
         type: ''
     },
