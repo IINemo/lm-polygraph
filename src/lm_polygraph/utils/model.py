@@ -34,6 +34,7 @@ class BlackboxModel(Model):
         openai.api_key = openai_api_key
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
+        print('gen')
         if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
             raise Exception("Cannot access logits for blackbox model")
 
@@ -48,7 +49,10 @@ class BlackboxModel(Model):
         for prompt in input_texts:
             response = openai.ChatCompletion.create(
                 model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
-            texts.append(response.choices[0].message.content)
+            if args['n'] == 1:
+                texts.append(response.choices[0].message.content)
+            else:
+                texts.append([resp.message.content for resp in response.choices])
         return texts
 
     def generate(self, **args):

@@ -6,27 +6,22 @@ from typing import Dict, List
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 
 
 class BlackboxGreedyTextsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['blackbox_greedy_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel) -> Dict[
         str, np.ndarray]:
         with torch.no_grad():
             sequences = model.generate_texts(
                 input_texts=texts,
-                max_new_tokens=256,
-                min_length=2,
+                max_tokens=256,
                 temperature=model.parameters.temperature,
-                top_k=model.parameters.topk,
                 top_p=model.parameters.topp,
-                do_sample=model.parameters.do_sample,
-                num_beams=model.parameters.num_beams,
-                repetition_penalty=model.parameters.repetition_penalty,
-                num_return_sequences=1,
+                n=1,
             )
 
         return {'blackbox_greedy_texts': sequences}
