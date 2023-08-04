@@ -93,7 +93,7 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 
-def _split_spaces(tokens, conf, split=" \n", strip=" \n"):
+def _split_spaces(tokens, conf, split=string.punctuation.replace("'", '') + " \n", strip=" \n"):
     new_tokens, new_conf = [], []
     for t, c in zip(tokens, conf):
         while any(t.startswith(s) for s in split):
@@ -119,7 +119,7 @@ def _split_spaces(tokens, conf, split=" \n", strip=" \n"):
     return new_tokens, new_conf
 
 
-def _merge_into_words(tokens, confidences, split=" \n"):
+def _merge_into_words(tokens, confidences, split=string.punctuation.replace("'", '') + " \n"):
     if len(confidences) == 0:
         return tokens, []
     words, word_conf = [], []
