@@ -17,7 +17,7 @@ class Eccentricity(Estimator):
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
             batch_size: int = 10,
             verbose: bool = False,
-            epsilon: float = 1e-13
+            epsilon: float = 1.0
     ):
         """
         It is a frobenious norm (euclidian norm) between all eigenvectors that are informative embeddings of graph Laplacian (lower this value -> answers are closer in terms of euclidian distance between embeddings = eigenvectors or higher = bigger uncertainty).

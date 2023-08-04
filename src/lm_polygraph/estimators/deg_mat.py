@@ -17,7 +17,7 @@ class DegMat(Estimator):
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
             batch_size: int = 10,
             verbose: bool = False,
-            epsilon: float = 1e-13
+            epsilon: float = 1.0
     ):
         """
         Elements on diagonal of matrix D are sums of similarities between the particular number (position in matrix) and other answers. Thus, it is an average pairwise distance (less = more confident because distance between answers is smaller or higher = bigger uncertainty).

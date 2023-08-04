@@ -16,7 +16,7 @@ class EigValLaplacian(Estimator):
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
             batch_size: int = 10,
             verbose: bool = False,
-            epsilon: float = 1e-13
+            epsilon: float = 1.0
     ):
         """
         (Due to the Theorem) A continuous analogue to the number of semantic sets (higher = bigger uncertainty).
