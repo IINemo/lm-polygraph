@@ -209,4 +209,4 @@ if __name__ == '__main__':
         device = args.device
     elif torch.cuda.is_available():
         device = 'cuda:0'
-    app.run(host='localhost', port=args.port)
+    app.run(host='0.0.0.0', port=args.port, debug=True)
