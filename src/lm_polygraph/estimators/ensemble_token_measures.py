@@ -79,15 +79,6 @@ class EPTepkl(EPEnsembleEstimator):
     def __str__(self):
         return 'EPTepkl'
 
-class EPTepkltu(EPEnsembleEstimator):
-    def __init__(self):
-        self.ue_name = 'epkl_total_uncertainty'
-
-        super().__init__()
-
-    def __str__(self):
-        return 'EPTepkltu'
-
 class EPTent5(EPEnsembleEstimator):
     def __init__(self):
         self.ue_name = 'entropy_top5'

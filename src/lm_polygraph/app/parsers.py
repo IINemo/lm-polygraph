@@ -69,8 +69,6 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return EPTrmi()
         case "EP-T-EPKL":
             return EPTepkl()
-        case "EP-T-EPKL-TU":
-            return EPTepkltu()
         case "EP-T-Entropy-Top5":
             return EPTent5()
         case "EP-T-Entropy-Top10":
