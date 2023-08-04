@@ -66,18 +66,10 @@ The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found 
 
 ## Demo web application
 
-### Starting the model server
+### Starting the model server with web application
 
 Requires python3.10
 
 ```
 polygraph_backend
 ```
-
-### Starting the web application server
-
-```
-polygraph_frontend
-```
-
-Once both servers are up and running, the chat model will be available at <http://localhost:3001/>.

@@ -1,4 +1,5 @@
 const API_URL = '/';
+// const API_URL = 'localhost:5239'
 const converter = new showdown.Converter();
 let promptToRetry = null;
 let uniqueIdToRetry = null;
@@ -292,6 +293,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     try {
         // Send a POST request to the API with the prompt in the request body
         const response = await fetch(API_URL + 'get-prompt-result', {
+        // const response = await fetch('localhost:5239/get-prompt-result', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -314,12 +316,12 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
             setErrorForResponse(responseElement, `HTTP Error: ${await response.text()}`);
             return;
         }
-        // responseText = await response.text();
         responseRaw = await response.json()
         responseText = formatResponse(responseRaw)
-        // console.log(responseRaw)
         responseElement.innerHTML = converter.makeHtml(responseText);
-        console.error('response html: ' + responseElement.innerHTML);
+        // responseText = await response.text();
+        // console.log(responseRaw)
+        // console.error('response html: ' + responseElement.innerHTML);
 
         promptToRetry = null;
         uniqueIdToRetry = null;
