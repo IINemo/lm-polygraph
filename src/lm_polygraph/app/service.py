@@ -93,7 +93,7 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
 
 def _merge_into_words(tokens, confidences):
     if len(confidences) == 0:
-        return []
+        return tokens, []
     words = []
     confidences_grouped = np.zeros_like(confidences)
     word_len = 0
@@ -185,9 +185,10 @@ def generate():
     if len(tokens) > 0:
         tokens[0] = tokens[0].lstrip()
         tokens[-1] = tokens[-1].rstrip()
-
-    tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-    tokens, tok_conf = _merge_into_words(tokens, tok_conf)
+    
+    if type(model) == WhiteboxModel:
+        tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        tokens, tok_conf = _merge_into_words(tokens, tok_conf)
 
     return {
         'generation': tokens,
@@ -209,4 +210,4 @@ if __name__ == '__main__':
         device = args.device
     elif torch.cuda.is_available():
         device = 'cuda:0'
-    app.run(host='localhost', port=args.port)
+    app.run(host='0.0.0.0', port=args.port, debug=True)

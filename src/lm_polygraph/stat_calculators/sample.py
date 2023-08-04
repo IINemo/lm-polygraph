@@ -17,13 +17,23 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                        model: BlackboxModel) -> Dict[str, np.ndarray]:
 
         samples = [[] for _ in range(len(texts))]
-        #for _ in range(self.samples_n):
-        samples = model.generate_texts(
-                input_texts=texts,
-                max_tokens=256,
-                temperature=model.parameters.temperature,
-                top_p=model.parameters.topp,
-                n=self.samples_n)
+        if type(model) == BlackboxModel:
+            samples = model.generate_texts(
+                    input_texts=texts,
+                    max_tokens=256,
+                    temperature=model.parameters.temperature,
+                    top_p=model.parameters.topp,
+                    n=self.samples_n)
+        else:
+            for _ in range(self.samples_n):
+                for i, seq in enumerate(model.generate_texts(
+                        input_texts=texts,
+                        max_length=256,
+                        min_length=2,
+                        do_sample=True,
+                        num_beams=1,
+                        num_return_sequences=1)):
+                    samples[i].append(seq)
 
         return {
             'blackbox_sample_texts': samples,
