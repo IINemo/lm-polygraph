@@ -1,0 +1,5 @@
+#CUDA_VISIBLE_DEVICES=1 scripts/polygraph_eval_density_web --dataset ./workdir/data/triviaqa.csv --save_path ./workdir/exps/test.man --cache_path ./workdir --seed 42 --model databricks/dolly-v2-3b --use_density_based_ue;
+CUDA_VISIBLE_DEVICES=1 scripts/polygraph_eval_density_web --dataset ./workdir/data/triviaqa.csv --save_path ./workdir/exps/test.man --cache_path ./workdir --seed 42 --model databricks/dolly-v2-7b --use_density_based_ue;
+CUDA_VISIBLE_DEVICES=1 scripts/polygraph_eval_density_web --dataset ./workdir/data/triviaqa.csv --save_path ./workdir/exps/test.man --cache_path ./workdir --seed 42 --model databricks/dolly-v2-12b --use_density_based_ue --batch_size 1;
+CUDA_VISIBLE_DEVICES=1 scripts/polygraph_eval_density_web --dataset ./workdir/data/triviaqa.csv --save_path ./workdir/exps/test.man --cache_path ./workdir --seed 42 --model openlm-research/open_llama_7b --use_density_based_ue;
+CUDA_VISIBLE_DEVICES=0 scripts/polygraph_eval_density_web --dataset ./workdir/data/triviaqa.csv --save_path ./workdir/exps/test.man --cache_path ./workdir --seed 42 --model tiiuae/falcon-7b --use_density_based_ue;

@@ -95,6 +95,7 @@ class UEManager:
             ignore_exceptions: bool = True,
             ensemble_model: Optional[WhiteboxModel] = None,
             verbose: bool = True,
+            max_new_tokens: int = 100,
     ):
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -136,6 +137,8 @@ class UEManager:
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
+        
+        self.max_new_tokens = max_new_tokens
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         train_stats = self.extract_train_embeddings()
@@ -266,8 +269,8 @@ class UEManager:
         return result_train_stat
 
     def save(self, save_path: str):
-        if len(self.metrics) == 0:
-            raise Exception('Nothing to save')
+        #if len(self.metrics) == 0:
+        #    raise Exception('Nothing to save')
         torch.save({
             'metrics': self.metrics,
             'gen_metrics': self.gen_metrics,

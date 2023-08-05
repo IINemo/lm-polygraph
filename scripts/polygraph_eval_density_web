@@ -25,9 +25,9 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
     parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
-    parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
-    parser.add_argument("--subsample_train_dataset", type=int, default=1000)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=-1)
+    parser.add_argument("--subsample_background_train_dataset", type=int, default=500)
+    parser.add_argument("--subsample_train_dataset", type=int, default=1500)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -38,7 +38,6 @@ if __name__ == '__main__':
     parser.add_argument("--input_column", type=str, default='question')
     parser.add_argument("--output_column", type=str, default='answer')
     parser.add_argument("--prompt", type=str, default='')
-
     args = parser.parse_args()
 
     if args.seed is None or len(args.seed) == 0:
@@ -58,6 +57,7 @@ if __name__ == '__main__':
             device=device,
             load_in_8bit=load_in_8bit,
         )
+        print(device, args.model, load_in_8bit)
 
         dataset, max_new_tokens = Dataset.load(
             args.dataset,
@@ -104,10 +104,18 @@ if __name__ == '__main__':
                     data_files="en/c4-train.00000-of-01024.json.gz",
             )
 
+            big_model = any(s in args.model for s in ['3b', '7b', '12b', '13b'])
             if args.subsample_train_dataset != -1:
-                train_dataset.subsample(args.subsample_train_dataset, seed=seed)
+                size = args.subsample_train_dataset if not big_model else args.subsample_train_dataset//3
+                train_dataset.subsample(size, seed=seed)
             if args.subsample_background_train_dataset != -1:
-                background_train_dataset.subsample(args.subsample_background_train_dataset, seed=seed)
+                size = args.subsample_background_train_dataset if not big_model else args.subsample_background_train_dataset//3
+                background_train_dataset.subsample(size, seed=seed)
+                
+            train_dataset = Dataset(x=background_train_dataset.x+train_dataset.x, 
+                                    y=background_train_dataset.y+train_dataset.y, 
+                                    batch_size=args.batch_size)
+            print(len(train_dataset.x))
 
             dataset_name = args.dataset.split('/')[-1].split('.')[0]
             model_name = args.model.split('/')[-1]
@@ -115,24 +123,24 @@ if __name__ == '__main__':
 
             if model.model_type == "Seq2SeqLM":
                 density_based_ue = [
-                    #MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
-                    #MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                    RelativeMahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
-                    RelativeMahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                    #RDESeq("encoder", parameters_path=parameters_path),
-                    #RDESeq("decoder", parameters_path=parameters_path),
+                    MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
+                    MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+                    #RelativeMahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
+                    #RelativeMahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+                    RDESeq("encoder", parameters_path=parameters_path),
+                    RDESeq("decoder", parameters_path=parameters_path),
                     PPLMDSeq("encoder", md_type="MD", parameters_path=parameters_path),
-                    PPLMDSeq("encoder", md_type="RMD", parameters_path=parameters_path),
+                    #PPLMDSeq("encoder", md_type="RMD", parameters_path=parameters_path),
                     PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-                    PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
+                    #PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
                 ]
             else:
                 density_based_ue = [
-                    #MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                    RelativeMahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                    #RDESeq("decoder", parameters_path=parameters_path),
+                    MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+                    #RelativeMahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+                    RDESeq("decoder", parameters_path=parameters_path),
                     PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-                    PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
+                    #PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
                 ]
         else:
             train_dataset = None
@@ -147,26 +155,12 @@ if __name__ == '__main__':
             dataset,
             model,
             [
-                #NumSemSets(),
-                #EigValLaplacian(similarity_score='NLI_score', affinity='entail'),
-                #DegMat(similarity_score='NLI_score', affinity='entail'),
-                #Eccentricity(similarity_score='NLI_score', affinity='entail'),
-                EigValLaplacian(similarity_score='Jaccard_score'),
-                DegMat(similarity_score='Jaccard_score'),
-                Eccentricity(similarity_score='Jaccard_score'),
+                MaximumSequenceProbability(),
             ] + density_based_ue,
             [
-                RougeMetric('rouge1'),
-                RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
-                #BartScoreSeqMetric('rh'),
-                ModelScoreSeqMetric('model_rh'),
-                #ModelScoreTokenwiseMetric('model_rh'),
-                #WERTokenwiseMetric(),
             ],
             [
-                #ReversedPairsProportion(),
-                #PredictionRejectionArea(),
                 RiskCoverageCurveAUC(),
             ],
             [
@@ -175,7 +169,6 @@ if __name__ == '__main__':
             train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
-            max_new_tokens=max_new_tokens
         )
         man()
         man.save(args.save_path + f'_seed{seed}')

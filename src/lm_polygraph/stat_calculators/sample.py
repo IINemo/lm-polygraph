@@ -20,7 +20,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         if type(model) == BlackboxModel:
             samples = model.generate_texts(
                     input_texts=texts,
-                    max_tokens=256,
+                    max_new_tokens=42,
                     temperature=model.parameters.temperature,
                     top_p=model.parameters.topp,
                     n=self.samples_n)
@@ -28,7 +28,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             for _ in range(self.samples_n):
                 for i, seq in enumerate(model.generate_texts(
                         input_texts=texts,
-                        max_length=256,
+                        max_new_tokens=42,
                         min_length=2,
                         do_sample=True,
                         num_beams=1,
@@ -71,7 +71,7 @@ class SamplingGenerationCalculator(StatCalculator):
             self.samples_n, model, batch,
             output_scores=True,
             return_dict_in_generate=True,
-            max_length=256,
+            max_new_tokens=42,
             min_length=2,
             do_sample=True,
             num_beams=1,
