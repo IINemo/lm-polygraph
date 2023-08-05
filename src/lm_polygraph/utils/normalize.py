@@ -29,7 +29,6 @@ def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_
 
 
 def normalize_ue(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
-    print(cache_path)
     if np.isnan(val):
         return 1
     filepath = os.path.join(cache_path, model_path.split('/')[-1] + '.json')

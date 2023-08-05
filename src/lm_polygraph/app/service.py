@@ -68,7 +68,7 @@ def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level:
             if not can_normalize_ue(method, model_path, cache_path):
                 normalization = 'none'
             else:
-                normalized_confidences[-1].append(1 - normalize_ue(method, model_path, cache_path, x))
+                normalized_confidences[-1].append(1 - normalize_ue(method, model_path, x, cache_path))
         print(' {} Confidence: {}'.format(str(method), condifences[-1]))
     if normalization != 'none':
         condifences = normalized_confidences
