@@ -149,6 +149,7 @@ def generate():
         do_sample=(topk > 1),
         num_beams=int(data['num_beams']),
         repetition_penalty=float(data['repetition_penalty']),
+        allow_newlines=('Dolly' not in data['model']),
     )
     global model
     ensemble_model = None

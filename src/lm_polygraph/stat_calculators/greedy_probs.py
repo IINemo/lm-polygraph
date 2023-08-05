@@ -64,6 +64,8 @@ class GreedyProbsCalculator(StatCalculator):
                 do_sample=model.parameters.do_sample,
                 num_beams=model.parameters.num_beams,
                 repetition_penalty=model.parameters.repetition_penalty,
+                suppress_tokens=([] if model.parameters.allow_newlines else
+                                 [t for t in range(len(model.tokenizer)) if '\n' in model.tokenizer.decode([t])]),
                 num_return_sequences=1,
                 logits_processor=LogitsProcessorList([processor]),
             )
