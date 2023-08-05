@@ -231,7 +231,7 @@ def generate():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=3001)
+    parser.add_argument("--port", type=int, default=3002)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--cache-path", type=str,
                         default=os.path.expanduser('~') + '/.cache')

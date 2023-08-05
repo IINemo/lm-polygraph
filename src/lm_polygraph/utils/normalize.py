@@ -2,18 +2,26 @@ import json
 import sys
 import os
 import pathlib
+import pysftp
 
 import numpy as np
 
 from lm_polygraph.estimators import *
 
 NORMALIZATION_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
-
+PASS = os.environ['DATA_STORAGE_PASS']
+HOST = os.environ['DATA_STORAGE_HOST']
 
 def can_normalize_ue(est: Estimator, model_path: str) -> bool:
-    filepath = os.path.join(NORMALIZATION_PATH, model_path.split('/')[-1] + '.json')
+    archive_path = model_path.split('/')[-1] + '.json'
+    filepath = os.path.join(NORMALIZATION_PATH, archive_path)
     if not os.path.exists(filepath):
-        return False
+        try:
+            with pysftp.Connection(HOST, username='polygraph', password=PASS) as sftp:
+                sftp.get('/home/polygraph/polygraph_data/normalization/' + archive_path,
+                         localpath = filepath)
+        except:
+            return False
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)
     return str(est) in ue_bounds.keys()
