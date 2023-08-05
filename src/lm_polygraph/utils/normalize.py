@@ -17,6 +17,8 @@ def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_
     archive_path = model_path.split('/')[-1] + '.json'
     filepath = os.path.join(cache_path, archive_path)
     if not os.path.exists(filepath):
+        sys.stdout.write(
+            f'No cached normalizing bounds for estimator: {str(est)}. Looking in remote storage...')
         try:
             with pysftp.Connection(HOST, username='polygraph', password=PASS) as sftp:
                 sftp.get('/home/polygraph/polygraph_data/normalization/' + archive_path,
