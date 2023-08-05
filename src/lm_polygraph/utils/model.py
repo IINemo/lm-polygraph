@@ -99,6 +99,8 @@ class WhiteboxModel(Model):
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256, **kwargs)
+            if 'falcon' in model_path:
+                model.transformer.alibi = True
         elif any(["BartModel" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = BartForCausalLM.from_pretrained(model_path, max_length=256, **kwargs)
