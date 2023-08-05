@@ -1,20 +1,19 @@
 import torch
 import traceback
 import numpy as np
+
+from torch.nn.utils.rnn import pad_sequence
 from typing import List, Dict
 
 from .stat_calculator import StatCalculator
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
 from lm_polygraph.utils.model import WhiteboxModel
 
 
-def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel, max_len: int = None):
-    if max_len is None:
-        max_len = max(len(tokens) for tokens in tokens_list)
-    tokens = torch.from_numpy(pad_sequences(
-        tokens_list, maxlen=max_len, padding='pre', truncating='pre',
-        value=model.tokenizer.pad_token_id))
+def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel):
+    token_tensors = [torch.tensor(t) for t in tokens_list]
+    tokens = pad_sequence(
+        token_tensors, batch_first=True, padding_value=model.tokenizer.pad_token_id
+    )
     attn_mask = (tokens != model.tokenizer.pad_token_id)
     return {'input_ids': tokens, 'attention_mask': attn_mask}
 
@@ -42,9 +41,8 @@ class ModelScoreCalculator(StatCalculator):
                             attention_mask=src_mask,
                         ).logits
                     else:
-                        max_len = max(max(len(s) for s in src_list), max(len(t) for t in tgt_list))
-                        encoded_src = _batch_tokens(src_list, model, max_len=max_len)
-                        encoded_tgt = _batch_tokens(tgt_list, model, max_len=max_len)
+                        encoded_src = _batch_tokens(src_list, model)
+                        encoded_tgt = _batch_tokens(tgt_list, model)
                         
                         src_tokens = encoded_src['input_ids'].to(model.device())
                         tgt_tokens = encoded_tgt['input_ids'].long().to(model.device())
