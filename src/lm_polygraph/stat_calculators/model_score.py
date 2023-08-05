@@ -1,20 +1,21 @@
 import torch
 import traceback
 import numpy as np
+
+from torch.nn.utils.rnn import pad_sequence
 from typing import List, Dict
 
 from .stat_calculator import StatCalculator
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
 from lm_polygraph.utils.model import WhiteboxModel
 
 
 def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel, max_len: int = None):
     if max_len is None:
         max_len = max(len(tokens) for tokens in tokens_list)
-    tokens = torch.from_numpy(pad_sequences(
-        tokens_list, maxlen=max_len, padding='pre', truncating='pre',
-        value=model.tokenizer.pad_token_id))
+    token_tensors = [torch.tensor(t) for t in tokens_list]
+    tokens = pad_sequence(
+        token_tensors, batch_first=True, padding_value=model.tokenizer.pad_token_id
+    )
     attn_mask = (tokens != model.tokenizer.pad_token_id)
     return {'input_ids': tokens, 'attention_mask': attn_mask}
 
