@@ -28,7 +28,7 @@ install_requires = [
     'accelerate',
     'bitsandbytes',
     'openai',
-    'pysftp'
+    'wget'
 ]
 
 package_data = ["**/*.json", "**/*.js", "**/*.css",
