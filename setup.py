@@ -35,7 +35,9 @@ install_requires = [
     'datasets==2.3.2',
     'tensorflow',
     'flask==2.3.2',
-    'einops'
+    'einops',
+    'accelerate',
+    'bitsandbytes'
 ]
 
 package_data = ["**/*.json", "**/*.js", "**/*.css",
@@ -55,8 +57,7 @@ setup(
     license="MIT",
     url="https://github.com/IINemo/lm-polygraph",
     scripts=['scripts/polygraph_eval',
-             'scripts/polygraph_backend',
-             'scripts/polygraph_frontend'],
+             'scripts/polygraph_server'],
     package_dir={"": "src"},
     packages=find_packages("src"),
     include_package_data=True,

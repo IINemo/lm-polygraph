@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel, Model
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
@@ -12,18 +12,28 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         self.samples_n = samples_n
         super().__init__(['blackbox_sample_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[
-        str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array],
+                       texts: List[str],
+                       model: BlackboxModel) -> Dict[str, np.ndarray]:
+
         samples = [[] for _ in range(len(texts))]
-        for _ in range(self.samples_n):
-            for i, seq in enumerate(model.generate_texts(
+        if type(model) == BlackboxModel:
+            samples = model.generate_texts(
                     input_texts=texts,
-                    max_length=256,
-                    min_length=2,
-                    do_sample=True,
-                    num_beams=1,
-                    num_return_sequences=1)):
-                samples[i].append(seq)
+                    max_tokens=256,
+                    temperature=model.parameters.temperature,
+                    top_p=model.parameters.topp,
+                    n=self.samples_n)
+        else:
+            for _ in range(self.samples_n):
+                for i, seq in enumerate(model.generate_texts(
+                        input_texts=texts,
+                        max_length=256,
+                        min_length=2,
+                        do_sample=True,
+                        num_beams=1,
+                        num_return_sequences=1)):
+                    samples[i].append(seq)
 
         return {
             'blackbox_sample_texts': samples,

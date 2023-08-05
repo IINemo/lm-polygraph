@@ -15,8 +15,7 @@ class EigValLaplacian(Estimator):
             similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
             batch_size: int = 10,
-            verbose: bool = False,
-            epsilon: float = 1e-13
+            verbose: bool = False
     ):
         """
         (Due to the Theorem) A continuous analogue to the number of semantic sets (higher = bigger uncertainty).
@@ -36,7 +35,7 @@ class EigValLaplacian(Estimator):
             DEBERTA.setup()
         self.affinity = affinity
         self.verbose = verbose
-        self.epsilon = epsilon
+        self.device = DEBERTA.device
 
     def __str__(self):
         if self.similarity_score == 'NLI_score':
@@ -44,7 +43,7 @@ class EigValLaplacian(Estimator):
         return f'EigValLaplacian_{self.similarity_score}'
 
     def U_EigVal_Laplacian(self, answers):
-        W = compute_sim_score(answers, self.affinity, self.epsilon, self.similarity_score)
+        W = compute_sim_score(answers = answers, affinity = self.affinity, similarity_score = self.similarity_score)
         D = np.diag(W.sum(axis=1))
         D_inverse_sqrt = np.linalg.inv(np.sqrt(D))
         L = np.eye(D.shape[0]) - D_inverse_sqrt @ W @ D_inverse_sqrt
@@ -57,3 +56,4 @@ class EigValLaplacian(Estimator):
                 print(f"generated answers: {answers}")
             res.append(self.U_EigVal_Laplacian(answers))
         return np.array(res)
+    

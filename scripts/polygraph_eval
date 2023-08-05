@@ -32,9 +32,9 @@ if __name__ == '__main__':
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--save_path", type=str,
-                        default='/Users/ekaterinafadeeva/work/data/uncertainty_mans/debug')
+                        default='/home/petrakov/emnlp/lm-polygraph/workdir/save')
     parser.add_argument("--cache_path", type=str,
-                        default='/home/esfadeeva/data')
+                        default='/home/petrakov/emnlp/lm-polygraph/workdir')
     args = parser.parse_args()
 
     if args.seed is None or len(args.seed) == 0:
@@ -119,7 +119,8 @@ if __name__ == '__main__':
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
-
+        
+        
         man = UEManager(
             dataset,
             model,

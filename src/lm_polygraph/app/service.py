@@ -1,20 +1,24 @@
+import os
 import numpy as np
 import argparse
 import torch
+import string
 
 from typing import Optional, Dict, Tuple, List
 
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory, render_template
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.normalize import normalize_from_bounds, has_norm_bound
+from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
-app = Flask(__name__)
+# static_folder = 'src/lm_polygraph/app/client'
+static_folder = 'client'
+app = Flask(__name__, static_folder=static_folder)
 
 model: Optional[WhiteboxModel] = None
 tok_ue_methods: Dict[str, Estimator] = {}
@@ -23,6 +27,16 @@ cache_path: str = '/Users/ekaterinafadeeva/cache'
 density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
                                   "RDE", "RDE - encoder"]
 device: str = 'cpu'
+
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(os.path.join(app.root_path, static_folder), 'index.html')
+
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(os.path.join(app.root_path, static_folder), filename)
 
 
 class ResultProcessor(Processor):
@@ -40,7 +54,8 @@ class ResultProcessor(Processor):
         self.ue_estimations = batch_estimations
 
 
-def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str) -> Tuple[List, str]:
+def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> Tuple[
+    List, str]:
     if len(methods) == 0:
         return [], 'none'
     condifences, normalized_confidences = [], []
@@ -50,9 +65,10 @@ def _get_confidence(processor: ResultProcessor, methods: List[Estimator], level:
         normalized_confidences.append([])
         for x in processor.ue_estimations[level, str(method)]:
             condifences[-1].append(-x)
-            if not has_norm_bound(method):
+            if not can_normalize_ue(method, model_path):
                 normalization = 'none'
-            normalized_confidences[-1].append(1 - normalize_from_bounds(method, x))
+            else:
+                normalized_confidences[-1].append(1 - normalize_ue(method, model_path, x))
         print(' {} Confidence: {}'.format(str(method), condifences[-1]))
     if normalization != 'none':
         condifences = normalized_confidences
@@ -77,34 +93,62 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 
-def _align_tokenwise_confidences(tokens, confidences):
+def _split_spaces(tokens, conf, split=string.punctuation.replace("'", '') + " \n", strip=" \n"):
+    new_tokens, new_conf = [], []
+    for t, c in zip(tokens, conf):
+        while any(t.startswith(s) for s in split):
+            new_tokens.append(t[0])
+            new_conf.append(1.0)
+            t = t[1:]
+        stack_tokens, stack_conf = [], []
+        while any(t.endswith(s) for s in split):
+            stack_tokens.append(t[-1])
+            stack_conf.append(1.0)
+            t = t[:-1]
+        if len(t) > 0:
+            new_tokens.append(t)
+            new_conf.append(c)
+        new_tokens += stack_tokens[::-1]
+        new_conf += stack_conf[::-1]
+    while len(new_tokens) > 0 and new_tokens[0] in strip:
+        new_tokens = new_tokens[1:]
+        new_conf = new_conf[1:]
+    while len(new_tokens) > 0 and new_tokens[-1] in strip:
+        new_tokens = new_tokens[:-1]
+        new_conf = new_conf[:-1]
+    return new_tokens, new_conf
+
+
+def _merge_into_words(tokens, confidences, split=string.punctuation.replace("'", '') + " \n"):
     if len(confidences) == 0:
-        return []
-    confidences_grouped = np.zeros_like(confidences)
-    word_len = 0
-    for i, token in enumerate(tokens):
-        confidences_grouped[i] = confidences[i]
-        if (" " in token) or ((word_len > 0) and ((len(tokens) - 1) == i)):
-            confidences_grouped[i - word_len: i + 1] = np.min(confidences_grouped[i - word_len: i + 1])
-            word_len = 0
-        else:
-            word_len += 1
-    return confidences_grouped.tolist()
+        return tokens, []
+    words, word_conf = [], []
+    word_start = 0
+    for i, (token, conf) in enumerate(zip(tokens, confidences)):
+        if token in split:
+            word_conf.append(conf)
+            words.append(token)
+            word_start = i + 1
+        elif i + 1 == len(tokens) or tokens[i + 1] in split:
+            word_conf.append(np.min(confidences[word_start:i + 1]))
+            words.append(''.join(tokens[word_start:i + 1]))
+            word_start = i + 1
+    return words, word_conf
 
 
-@app.route('/chat/completions', methods=['GET', 'POST'])
+@app.route('/get-prompt-result', methods=['GET', 'POST'])
 def generate():
     data = request.get_json()
     print(f'Request data: {data}')
 
-    topk = int(data['parameters']['topk'])
+    topk = int(data['topk'])
     parameters = GenerationParameters(
-        temperature=float(data['parameters']['temperature']),
+        temperature=float(data['temperature']),
         topk=topk,
-        topp=float(data['parameters']['topp']),
+        topp=float(data['topp']),
         do_sample=(topk > 1),
-        num_beams=int(data['parameters']['num_beams']),
-        repetition_penalty=float(data['parameters']['repetition_penalty']),
+        num_beams=int(data['num_beams']),
+        repetition_penalty=float(data['repetition_penalty']),
     )
     global model
     ensemble_model = None
@@ -116,14 +160,16 @@ def generate():
         if model_path.startswith('openai-'):
             model = BlackboxModel(data['openai_key'], model_path[len('openai-'):])
         else:
-            model = WhiteboxModel.from_pretrained(model_path, device=device)
+            load_in_8bit = ('cuda' in device) and any(s in model_path for s in ['7b', '12b', '13b'])
+            model = WhiteboxModel.from_pretrained(
+                model_path, device=device, load_in_8bit=load_in_8bit)
     else:
         model_path = parse_model(data['model'])
     model.parameters = parameters
 
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
     seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
-    text = data['messages'][0]['content']
+    text = data['prompt']
 
     for ue_method_name in tok_ue_method_names:
         if (ue_method_name not in tok_ue_methods.keys()) or (ue_method_name in density_based_names):
@@ -154,21 +200,20 @@ def generate():
     greedy_text = processor.stats.get('greedy_texts', processor.stats.get('blackbox_greedy_texts', None))[0]
     print(' Generation: {}'.format(greedy_text))
 
-    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token')
-    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence')
+    tok_conf, tok_norm = _get_confidence(processor, tok_methods, 'token', model_path)
+    seq_conf, seq_norm = _get_confidence(processor, seq_methods, 'sequence', model_path)
     if 'greedy_tokens' in processor.stats.keys():
         tokens = []
         for t in processor.stats['greedy_tokens'][0][:-1]:
             tokens.append(model.tokenizer.decode([t]))
     else:
         tokens = [greedy_text]
-    if len(tokens) > 0:
-        tokens[0] = tokens[0].lstrip()
-        tokens[-1] = tokens[-1].rstrip()
 
-    if model.model_type == "Seq2SeqLM":
-        tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-        tok_conf = _align_tokenwise_confidences(tokens, tok_conf)
+    if type(model) == WhiteboxModel:
+        if model.model_type == "Seq2SeqLM":
+            tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
+        tokens, tok_conf = _split_spaces(tokens, tok_conf)
+        tokens, tok_conf = _merge_into_words(tokens, tok_conf)
 
     return {
         'generation': tokens,
@@ -181,7 +226,7 @@ def generate():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=5239)
+    parser.add_argument("--port", type=int, default=3001)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--cache-path", type=str, default='/Users/romanvashurin/cache')
     args = parser.parse_args()
@@ -190,4 +235,4 @@ if __name__ == '__main__':
         device = args.device
     elif torch.cuda.is_available():
         device = 'cuda:0'
-    app.run(host='localhost', port=args.port)
+    app.run(host='0.0.0.0', port=args.port, debug=True)

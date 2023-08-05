@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
-from lm_polygraph.utils.normalize import normalize_from_bounds
+from lm_polygraph.utils.normalize import normalize_ue
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
 from lm_polygraph.ue_metrics.ue_metric import UEMetric
 from lm_polygraph.estimators.estimator import Estimator
@@ -73,9 +73,9 @@ def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text:
     man()
     ue = man.estimations[estimator.level, str(estimator)]
     if estimator.level == 'sequence':
-        ue = normalize_from_bounds(estimator, ue[0])
+        ue = normalize_ue(estimator, model.model_path, ue[0])
     else:
-        ue = [normalize_from_bounds(estimator, i) for i in ue]
+        ue = [normalize_ue(estimator, model.model_path, i) for i in ue]
     texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
     tokens = man.stats.get('greedy_tokens', None)
     return UncertaintyOutput(texts, tokens, ue)
