@@ -46,6 +46,7 @@ def _compute_Jaccard_score(lst):
             union = len(set1 | set2)
             jaccard_score = intersection / union
             jaccard_sim_mat[i, j] = jaccard_score
+            jaccard_sim_mat[j, i] = jaccard_score
 
     return jaccard_sim_mat
 
