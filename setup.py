@@ -4,8 +4,6 @@ import os
 install_requires = [
     'datasets>=2.3.2',
     'rouge-score==0.0.4',
-    'plotly==5.5.0',
-    'kaleido==0.2.1',
     'nlpaug==1.1.10',
     'scikit-learn==1.0.2',
     'tqdm==4.64.1',
