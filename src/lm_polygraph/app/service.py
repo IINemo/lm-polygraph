@@ -209,8 +209,8 @@ def generate():
     else:
         tokens = [greedy_text]
 
-    if type(model) == WhiteboxModel:
-        if model.model_type == "Seq2SeqLM":
+    if type(model) == WhiteboxModel and len(tok_methods) > 0:
+        if model.model_type == "Seq2SeqLM": 
             tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
         tokens, tok_conf = _split_spaces(tokens, tok_conf)
         tokens, tok_conf = _merge_into_words(tokens, tok_conf)
