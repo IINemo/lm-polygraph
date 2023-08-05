@@ -14,7 +14,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
-                       model: BlackboxModel) -> Dict[str, np.ndarray]:
+                       model: BlackboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
 
         samples = [[] for _ in range(len(texts))]
         if type(model) == BlackboxModel:
