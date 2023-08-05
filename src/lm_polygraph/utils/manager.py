@@ -266,8 +266,8 @@ class UEManager:
         return result_train_stat
 
     def save(self, save_path: str):
-        if len(self.metrics) == 0:
-            raise Exception('Nothing to save')
+        # if len(self.metrics) == 0:
+        #     raise Exception('Nothing to save')
         torch.save({
             'metrics': self.metrics,
             'gen_metrics': self.gen_metrics,
