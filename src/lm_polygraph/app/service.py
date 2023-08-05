@@ -23,7 +23,7 @@ app = Flask(__name__, static_folder=static_folder)
 model: Optional[WhiteboxModel] = None
 tok_ue_methods: Dict[str, Estimator] = {}
 seq_ue_methods: Dict[str, Estimator] = {}
-cache_path: str = '/Users/ekaterinafadeeva/cache'
+cache_path: str = None
 density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
                                   "RDE", "RDE - encoder"]
 device: str = 'cpu'
@@ -233,7 +233,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=3001)
     parser.add_argument("--device", type=str, default=None)
-    parser.add_argument("--cache-path", type=str, default='/Users/romanvashurin/cache')
+    parser.add_argument("--cache-path", type=str,
+                        default=os.path.expanduser('~') + '/.cache')
+
     args = parser.parse_args()
     cache_path = args.cache_path
     if args.device is not None:

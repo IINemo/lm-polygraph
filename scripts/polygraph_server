@@ -1,9 +1,13 @@
 #!/bin/bash
 
+cache_dir=$(pwd)\/cache
+mkdir -p $cache_dir
+echo $cache_dir
+
 if command -v python > /dev/null; then
-    /usr/bin/env python -m lm_polygraph.app.service
+    /usr/bin/env python -m lm_polygraph.app.service --cache-path $cache_dir
 elif command -v python3 > /dev/null; then
-    /usr/bin/env python3 -m lm_polygraph.app.service
+    /usr/bin/env python3 -m lm_polygraph.app.service --cache-path $cache_dir
 else
     echo "No python found, exiting..."
     exit 1
