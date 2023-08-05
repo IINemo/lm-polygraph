@@ -8,7 +8,6 @@ import torch.nn as nn
 from transformers import BartTokenizer, BartForConditionalGeneration
 
 from .stat_calculator import StatCalculator
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from lm_polygraph.utils.model import WhiteboxModel
 
