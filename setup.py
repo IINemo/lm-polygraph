@@ -27,7 +27,8 @@ install_requires = [
     'einops',
     'accelerate',
     'bitsandbytes',
-    'openai'
+    'openai',
+    'pysftp'
 ]
 
 package_data = ["**/*.json", "**/*.js", "**/*.css",
