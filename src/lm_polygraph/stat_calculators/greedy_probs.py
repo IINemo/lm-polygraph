@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from transformers import LogitsProcessorList
 
 from typing import Dict, List
 
@@ -24,23 +25,35 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 top_p=model.parameters.topp,
                 do_sample=model.parameters.do_sample,
                 num_beams=model.parameters.num_beams,
+                repetition_penalty=model.parameters.repetition_penalty,
                 num_return_sequences=1,
             )
 
         return {'blackbox_greedy_texts': sequences}
 
 
+class ScoresProcessor:
+    # Stores original token scores instead of the ones modified with generation parameters
+    def __init__(self):
+        self.scores = []
+    def __call__(self, input_ids=None, scores=None):
+        self.scores.append(scores.log_softmax(-1))
+        return scores
+
+
 class GreedyProbsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
                           'greedy_log_probs', 'greedy_tokens',
-                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods', 'embeddings'], [])
+                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
+                          'embeddings'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
         str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
+        processor = ScoresProcessor()
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -55,9 +68,12 @@ class GreedyProbsCalculator(StatCalculator):
                 top_p=model.parameters.topp,
                 do_sample=model.parameters.do_sample,
                 num_beams=model.parameters.num_beams,
+                repetition_penalty=model.parameters.repetition_penalty,
                 num_return_sequences=1,
+                logits_processor=LogitsProcessorList([processor]),
             )
-            logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+            logits = torch.stack([s for s in processor.scores], dim=1)
+            logits = logits.log_softmax(-1)
 
             if model.model_type == "Seq2SeqLM":
                 attentions = out.decoder_attentions

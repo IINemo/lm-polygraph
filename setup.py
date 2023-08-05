@@ -35,6 +35,7 @@ install_requires = [
     'datasets==2.3.2',
     'tensorflow',
     'flask==2.3.2',
+    'einops'
 ]
 
 package_data = ["**/*.json", "**/*.js", "**/*.css",

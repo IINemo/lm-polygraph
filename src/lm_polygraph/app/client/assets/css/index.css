@@ -1,10 +1,20 @@
+:root {
+  --background: rgba(255, 255, 255, 1.0);
+  --background_half: rgba(255, 255, 255, 0.5);
+  --prompt: #e8f4f8;
+  --input: #d1e9f1;
+  --light_text: rgba(65, 65, 65, 1);
+  --text: rgba(30, 30, 30, 1);
+  --white: #faf0e6;
+}
+
 html, body {
     height: 100%;
 }
 /* Add background color to the body */
 body {
     color: black;
-    background-color: rgba(255, 255, 255, 1.0);
+    background-color: var(--background);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -38,17 +48,24 @@ select {
     flex: 1;
 }
 
+.openai-secret-key-input {
+    min-width: 40%;
+    max-width: 40%;
+}
+
 /* Style for each response element in the list */
 .response-container {
     margin-bottom: 10px;
     color: black;
     font-size: 1rem;
     word-break: break-word;
+    max-width: 80%;
 }
 
 .desc-container {
-    color: rgb(65, 65, 65);
+    color: var(--light_text);
     font-size: 0.7rem;
+    margin-left: 2%;
     min-width: 20%;
     max-width: 20%;
 }
@@ -98,11 +115,10 @@ select {
 }
 
 .settings-button {
-    background-color: rgba(0, 0, 0, 1.0);
+    background-color: var(--background);
     width: 40px;
     height: 40px;
     border: none;
-    filter: invert(1);
 }
 
 .modal {
@@ -114,13 +130,18 @@ select {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: var(--background_half);
 }
 
 .modal-content {
-    background-color: white;
-    margin: 20% auto;
-    padding: 20px;
+    border: 5px solid var(--input);
+    border-radius: 12px;
+    background-color: var(--background);
+    margin: 15% auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     width: 30%;
     text-align: left;
     align-items: center;
@@ -159,6 +180,14 @@ select {
 }
 
 .num-beams-input {
+    margin: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.repetition-penalty-input {
     margin: 5%;
     display: flex;
     flex-direction: row;
@@ -210,6 +239,15 @@ select {
     text-align: right;
 }
 
+.repetition-penalty-label {
+    margin-left: 6%;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
 .close {
   color: #aaaaaa;
   float: right;
@@ -224,13 +262,13 @@ select {
 }
 
 .chatgpt-response {
-    background-color:  rgba(255, 255, 255, 1.0);
+    background-color: var(--background);
 }
 
 .total-response-my-question {
     margin-top: 10px;
-    background-color: rgba(230, 230, 230, 1);
-    border: 5px solid rgba(230, 230, 230, 1);
+    background-color: var(--prompt);
+    border: 5px solid var(--prompt);
 }
 
 .total-response-chatgpt-response {
@@ -238,7 +276,7 @@ select {
 }
 
 .chatgpt-response {
-    background-color:  rgba(255, 255, 255, 1.0);
+    background-color: var(--background);
 }
 
 /* Change background color of the input container */
@@ -246,8 +284,8 @@ select {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(210, 210, 210, 1);
-    border-color: rgba(255, 255, 255, .5);
+    background-color: var(--input);
+    border-color: var(--background);
     border-radius: 5px;
     margin-top: 10px;
     padding: 15px 20%;
@@ -285,6 +323,16 @@ select {
     pointer-events: none;
 }
 
+.openai-options {
+    display: flex;
+    align-items: flex-end;
+    align-items: center;
+}
+
+.openai-secret-key {
+    flex: 1;
+}
+
 #select-container {
     display: flex;
     align-items: flex-end;
@@ -292,17 +340,17 @@ select {
 }
 
 #model {
-    color: rgba(30,30,30,.5);
+    color: var(--text);
     flex: 1;
 }
 
 #seque {
-    color: rgba(30,30,30,.5);
+    color: var(--text);
     flex: 1;
 }
 
 #tokue {
-    color: rgba(30,30,30,.5);
+    color: var(--text);
     width: 35%;
 }
 
@@ -314,11 +362,11 @@ select {
 }
 
 #model select option:not(:checked) {
-    background: rgba(255, 255, 255,.8);
+    background: var(--background);
 }
 
 #model select option {
-    background: rgba(255, 255, 255,.5);
+    background: var(--background);
 }
 
 #seque select {
@@ -334,22 +382,6 @@ select {
     outline: none;
 }
 
-#seque select option:not(:checked) {
-    background: rgba(40,40,40,.8);
-}
-
-#tokue select option:not(:checked) {
-    background: rgba(255, 255, 255,.8);
-}
-
-#seque select option {
-    background: rgba(255, 255, 255,.5);
-}
-
-#tokue select option {
-    background: rgba(255, 255, 255,.5);
-}
-
 .hidden {
     display: none;
 }
@@ -361,7 +393,7 @@ select {
 
 /* Override hljs to match for chatgpt */
 .hljs {
-    background: rgb(255,255,255) !important;
+    background: var(--background) !important;
     color: white !important;
 }
 

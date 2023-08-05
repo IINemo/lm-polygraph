@@ -17,42 +17,26 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
     model_name = model_path.split('/')[-1]
     density_based_ue_params_path = f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"    
     match method_name:
-        case "Maximum Probability":
-            return MaxProbabilitySeq()
-        case "Normalized Maximum Probability":
-            return MaxProbabilityNormalizedSeq()
+        case "Maximum Sequence Probability":
+            return MaximumSequenceProbability()
         case "Perplexity":
-            return PerplexitySeq()
-        case "Entropy":
-            return EntropySeq()
-        case "Mutual Information":
-            return MutualInformationSeq()
-        case "Conditional Mutual Information":
-            return ConditionalMutualInformationSeq(tau=0.0656, lambd=3.599)
-        case "Attention Entropy":
-            return AttentionEntropySeq()
-        case "Attention Recursive Entropy":
-            return AttentionRecursiveSeq()
-        case "Exponential Attention Entropy":
-            return ExponentialAttentionEntropySeq(0.8)
-        case "Exponential Attention Recursive Entropy":
-            return ExponentialAttentionRecursiveSeq(0.8)
+            return Perplexity()
+        case "Mean Token Entropy":
+            return MeanTokenEntropy()
+        case "Mean Pointwise Mutual Information":
+            return MeanPointwiseMutualInformation()
+        case "Mean Conditional Pointwise Mutual Information":
+            return MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599)
         case "P(True)":
             return PTrue()
-        case "P(Uncertainty)":
-            return PUncertainty()
-        case "Predictive Entropy Sampling":
-            return PredictiveEntropy()
-        case "Normalized Predictive Entropy Sampling":
-            return LengthNormalizedPredictiveEntropy()
-        case "Lexical Similarity Rouge-1":
-            return LexicalSimilarity(metric='rouge1')
-        case "Lexical Similarity Rouge-2":
-            return LexicalSimilarity(metric='rouge2')
-        case "Lexical Similarity Rouge-L":
-            return LexicalSimilarity(metric='rougeL')
-        case "Lexical Similarity Rouge-BLEU":
-            return LexicalSimilarity(metric='BLEU')
+        case "P(True) Sampling":
+            return PTrueSampling()
+        case "Monte Carlo Sequence Entropy":
+            return MonteCarloSequenceEntropy()
+        case "Monte Carlo Normalized Sequence Entropy":
+            return MonteCarloNormalizedSequenceEntropy()
+        case "Lexical Similarity":
+            return LexicalSimilarity()
         case "Eigenvalue Laplacian":
             return EigValLaplacian()
         case "Eccentricity":
@@ -63,10 +47,6 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return NumSemSets()
         case "Semantic Entropy":
             return SemanticEntropy()
-        case "Adaptive Sampling Predictive Entropy":
-            return PredictiveEntropyAdaptedSampling()
-        case "Adaptive Sampling Semantic Entropy":
-            return SemanticEntropyAdaptedSampling()
         case "Mahalanobis Distance":
             return MahalanobisDistanceSeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "Mahalanobis Distance - Encoder":
@@ -79,79 +59,65 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
             return PPLMDSeq("decoder", md_type="MD", parameters_path=density_based_ue_params_path)
         case "PPL+MD - Encoder":
             return PPLMDSeq("encoder", md_type="MD", parameters_path=density_based_ue_params_path)
-        case "EP-T-total-uncertainty":
+        case "EP-T-Total-Uncertainty":
             return EPTtu()
-        case "EP-T-data-uncertainty":
+        case "EP-T-Data-Uncertainty":
             return EPTdu()
-        case "EP-T-mutual-information":
+        case "EP-T-Mutual-Information":
             return EPTmi()
-        case "EP-T-rmi":
+        case "EP-T-RMI":
             return EPTrmi()
-        case "EP-T-epkl":
+        case "EP-T-EPKL":
             return EPTepkl()
-        case "EP-T-epkl-tu":
+        case "EP-T-EPKL-TU":
             return EPTepkltu()
-        case "EP-T-entropy-top5":
+        case "EP-T-Entropy-Top5":
             return EPTent5()
-        case "EP-T-entropy-top10":
+        case "EP-T-Entropy-Top10":
             return EPTent10()
-        case "EP-T-entropy-top15":
+        case "EP-T-Entropy-Top15":
             return EPTent15()
-        case "PE-T-total-uncertainty":
+        case "PE-T-Total-Uncertainty":
             return PETtu()
-        case "PE-T-data-uncertainty":
+        case "PE-T-Data-Uncertainty":
             return PETdu()
-        case "PE-T-mutual-information":
+        case "PE-T-Mutual-Information":
             return PETmi()
-        case "PE-T-rmi":
+        case "PE-T-RMI":
             return PETrmi()
-        case "PE-T-epkl":
+        case "PE-T-EPKL":
             return PETepkl()
-        case "PE-T-epkl-tu":
+        case "PE-T-EPKL-TU":
             return PETepkltu()
-        case "PE-T-entropy-top5":
+        case "PE-T-Entropy-Top5":
             return PETent5()
-        case "PE-T-entropy-top10":
+        case "PE-T-Entropy-Top10":
             return PETent10()
-        case "PE-T-entropy-top15":
+        case "PE-T-Entropy-Top15":
             return PETent15()
-        case "EP-S-total-uncertainty":
+        case "EP-S-Total-Uncertainty":
             return EPStu()
-        case "EP-S-rmi":
+        case "EP-S-RMI":
             return EPSrmi()
-        case "EP-S-rmi-abs":
-            return EPSrmiabs()
-        case "PE-S-total-uncertainty":
+        case "PE-S-Total-Uncertainty":
             return PEStu()
-        case "PE-S-rmi":
+        case "PE-S-RMI":
             return PESrmi()
-        case "PE-S-rmi-abs":
-            return PESrmiabs()
         case _:
             raise Exception(f'Unknown method: {method_name}')
 
 
 def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
     match method_name:
-        case "Maximum Probability":
-            return MaxProbabilityToken()
-        case "Normalized Maximum Probability":
-            return MaxProbabilityNormalizedToken()
-        case "Entropy":
-            return EntropyToken()
-        case "Mutual Information":
-            return MutualInformationToken()
-        case "Conditional Mutual Information":
-            return ConditionalMutualInformationToken(tau=0.0656, lambd=3.599)
-        case "Attention Entropy":
-            return AttentionEntropyToken()
-        case "Attention Recursive Entropy":
-            return AttentionRecursiveToken()
-        case "Exponential Attention Entropy":
-            return ExponentialAttentionEntropyToken(0.8)
-        case "Exponential Attention Recursive Entropy":
-            return ExponentialAttentionEntropyToken(0.8)
-        case "Semantic Entropy":
+        case "Maximum Token Probability":
+            return MaximumTokenProbability()
+        case "Token Entropy":
+            return TokenEntropy()
+        case "Pointwise Mutual Information":
+            return PointwiseMutualInformation()
+        case "Conditional Pointwise Mutual Information":
+            return ConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599)
+        case "Semantic Token Entropy":
             return SemanticEntropyToken(model_path, cache_path)
         case _:
             raise Exception(f'Unknown method: {method_name}')
@@ -159,9 +125,9 @@ def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> E
 
 def parse_model(model: str) -> str:
     match model:
-        case "gpt-4":
+        case "GPT-4":
             return 'openai-gpt-4'
-        case "gpt-3.5-turbo":
+        case "GPT-3.5-turbo":
             return 'openai-gpt-3.5-turbo'
         case "Dolly 3b":
             return 'databricks/dolly-v2-3b'
@@ -169,19 +135,19 @@ def parse_model(model: str) -> str:
             return 'databricks/dolly-v2-7b'
         case "Dolly 12b":
             return 'databricks/dolly-v2-12b'
-        case "Bloomz 560M":
+        case "BLOOMz 560M":
             return 'bigscience/bloomz-560m'
-        case "Bloomz 3b":
+        case "BLOOMz 3b":
             return 'bigscience/bloomz-3b'
-        case "Bloomz 7b":
+        case "BLOOMz 7b":
             return 'bigscience/bloomz-7b1'
         case "Falcon 7b":
             return 'tiiuae/falcon-7b'
-        case "Llama 3b":
+        case "Open Llama 3b":
             return 'openlm-research/open_llama_3b'
-        case "Llama 7b":
+        case "Open Llama 7b":
             return 'openlm-research/open_llama_7b'
-        case "Llama 13b":
+        case "Open Llama 13b":
             return 'openlm-research/open_llama_13b'
         case 'BART Large CNN':
             return 'facebook/bart-large-cnn'
