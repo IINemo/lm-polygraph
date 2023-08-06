@@ -166,7 +166,7 @@ def generate():
         do_sample=(topk > 1),
         num_beams=int(data['num_beams']),
         repetition_penalty=float(data['repetition_penalty']),
-        allow_newlines=('Dolly' not in data['model']),
+        allow_newlines=True,
     )
     global model
     ensemble_model = None
@@ -188,6 +188,10 @@ def generate():
     tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
     seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
     text = data['prompt']
+
+    if 'dolly' in model_path.lower():
+        text = f'Below is an instruction that describes a task. Write a response that appropriately completes '\
+               f'the request.\n### Instruction:\n{text}\n### Response:\n'
 
     for ue_method_name in tok_ue_method_names:
         if (ue_method_name not in tok_ue_methods.keys()) or (ue_method_name in density_based_names):
@@ -229,6 +233,12 @@ def generate():
     else:
         tokens = [greedy_text]
         text = greedy_text
+
+    for i in range(len(tokens)):
+        if '### End' in tokens[i]:
+            tokens = tokens[:i]
+            tok_conf = tok_conf[:i]
+            break
 
     if type(model) == WhiteboxModel and len(tok_methods) > 0:
         if model.model_type == "Seq2SeqLM":
