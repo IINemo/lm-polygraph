@@ -14,13 +14,13 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
-                       model: BlackboxModel) -> Dict[str, np.ndarray]:
+                       model: BlackboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
 
         samples = [[] for _ in range(len(texts))]
         if type(model) == BlackboxModel:
             samples = model.generate_texts(
                     input_texts=texts,
-                    max_new_tokens=42,
+                    max_new_tokens=max_new_tokens,
                     temperature=model.parameters.temperature,
                     top_p=model.parameters.topp,
                     n=self.samples_n)
@@ -28,7 +28,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             for _ in range(self.samples_n):
                 for i, seq in enumerate(model.generate_texts(
                         input_texts=texts,
-                        max_new_tokens=42,
+                        max_new_tokens=max_new_tokens,
                         min_length=2,
                         do_sample=True,
                         num_beams=1,
@@ -63,7 +63,7 @@ class SamplingGenerationCalculator(StatCalculator):
         self.samples_n = samples_n
         super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
@@ -71,7 +71,7 @@ class SamplingGenerationCalculator(StatCalculator):
             self.samples_n, model, batch,
             output_scores=True,
             return_dict_in_generate=True,
-            max_new_tokens=42,
+            max_new_tokens=max_new_tokens,
             min_length=2,
             do_sample=True,
             num_beams=1,

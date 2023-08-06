@@ -165,7 +165,7 @@ class UEManager:
 
             try:
                 for stat_calculator in self.stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue

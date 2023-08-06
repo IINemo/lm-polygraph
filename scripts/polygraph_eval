@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
     parser.add_argument("--subsample_train_dataset", type=int, default=1000)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=-1)
+    parser.add_argument("--subsample_eval_dataset", type=float, default=-1)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--seed", nargs='+', type=int)
     parser.add_argument("--device", type=str, default=None)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
             batch_size=args.batch_size,
             prompt=args.prompt,
             split="test",
-        )
+        )                         
 
         if args.use_density_based_ue:
             if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
@@ -140,7 +140,11 @@ if __name__ == '__main__':
             density_based_ue = []
 
         if args.subsample_eval_dataset != -1:
-            dataset.subsample(args.subsample_eval_dataset, seed=seed)
+            if args.subsample_eval_dataset < 1:
+                size = int(args.subsample_eval_dataset * len(dataset.x))
+            else:
+                size = int(args.subsample_eval_dataset)
+            dataset.subsample(size, seed=seed)
         
         
         man = UEManager(
@@ -167,7 +171,7 @@ if __name__ == '__main__':
             [
                 #ReversedPairsProportion(),
                 #PredictionRejectionArea(),
-                RiskCoverageCurveAUC(),
+                #RiskCoverageCurveAUC(),
             ],
             [
                 Logger(),

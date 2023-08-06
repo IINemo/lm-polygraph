@@ -13,12 +13,12 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['blackbox_greedy_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel, max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
         with torch.no_grad():
             sequences = model.generate_texts(
                 input_texts=texts,
-                max_new_tokens=42,
+                max_new_tokens=max_new_tokens,
                 temperature=model.parameters.temperature,
                 top_p=model.parameters.topp,
                 n=1,
@@ -43,7 +43,7 @@ class GreedyProbsCalculator(StatCalculator):
                           'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
                           'embeddings'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
@@ -54,7 +54,7 @@ class GreedyProbsCalculator(StatCalculator):
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,
-                max_new_tokens=42,
+                max_new_tokens=max_new_tokens,
                 min_length=2,
                 output_attentions=True,
                 output_hidden_states=True,
