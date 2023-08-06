@@ -16,6 +16,8 @@ DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
 def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
     archive_path = model_path.split('/')[-1] + '.json'
     filepath = os.path.join(cache_path, archive_path)
+    if os.path.exists(filepath):
+        os.remove(filepath)
     try:
         wget.download(HOST + '/normalization/' + archive_path, out = filepath)
     except:
