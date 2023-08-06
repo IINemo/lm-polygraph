@@ -8,4 +8,4 @@ RUN pip install openai einops
 RUN pip install --upgrade "protobuf<=3.20.1"
 
 RUN pip install .
-CMD polygraph_server
+#CMD polygraph_server
