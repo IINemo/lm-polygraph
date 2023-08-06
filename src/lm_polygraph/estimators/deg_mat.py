@@ -16,8 +16,7 @@ class DegMat(Estimator):
             similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
             batch_size: int = 10,
-            verbose: bool = False,
-            epsilon: float = 1e-13
+            verbose: bool = False
     ):
         """
         Elements on diagonal of matrix D are sums of similarities between the particular number (position in matrix) and other answers. Thus, it is an average pairwise distance (less = more confident because distance between answers is smaller or higher = bigger uncertainty).
@@ -37,7 +36,6 @@ class DegMat(Estimator):
             DEBERTA.setup()
         self.affinity = affinity
         self.verbose = verbose
-        self.epsilon = epsilon
         self.device = DEBERTA.device 
 
     def __str__(self):
@@ -47,7 +45,7 @@ class DegMat(Estimator):
 
     def U_DegMat(self, answers):
         # The Degree Matrix
-        W = compute_sim_score(answers, self.affinity, self.epsilon, self.similarity_score)
+        W = compute_sim_score(answers, self.affinity, self.similarity_score)
         D = np.diag(W.sum(axis=1))
         return np.trace(len(answers) - D) / (len(answers) ** 2)
 
