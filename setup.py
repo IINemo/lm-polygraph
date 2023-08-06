@@ -27,7 +27,8 @@ install_requires = [
     'einops',
     'accelerate',
     'bitsandbytes',
-    'openai'
+    'openai',
+    'wget'
 ]
 
 package_data = ["**/*.json", "**/*.js", "**/*.css",
