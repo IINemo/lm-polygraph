@@ -93,26 +93,40 @@ def _add_spaces_to_tokens(tokenizer, stats, tokens):
     return tokens_with_spaces
 
 
-def _split_spaces(tokens, conf, model_path, split=string.punctuation.replace("'", '') + " \n", strip=(' ', '\n')):
+def _split_spaces(text, tokens, conf, split=string.punctuation.replace("'", '') + " \n", strip=(' ', '\n')):
     new_tokens, new_conf = [], []
+    j = 0
+    need_spaces = all((' ' not in t) for t in tokens)
     for i, (t, c) in enumerate(zip(tokens, conf)):
-        while any(t.startswith(s) for s in split):
-            new_tokens.append(t[0])
-            new_conf.append(1.0)
-            t = t[1:]
+        if need_spaces:
+            while j < len(text) and len(t) > 0 and text[j] != t[0]:
+                new_tokens.append(text[j])
+                new_conf.append(1.0)
+                j += 1
+        else:
+            while any(t.startswith(s) for s in split):
+                new_tokens.append(t[0])
+                new_conf.append(1.0)
+                t = t[1:]
         stack_tokens, stack_conf = [], []
-        while any(t.endswith(s) for s in split):
-            stack_tokens.append(t[-1])
-            stack_conf.append(1.0)
-            t = t[:-1]
+        if not need_spaces:
+            while any(t.endswith(s) for s in split):
+                stack_tokens.append(t[-1])
+                stack_conf.append(1.0)
+                t = t[:-1]
         if len(t) > 0:
             new_tokens.append(t)
             new_conf.append(c)
+            j += len(t)
         new_tokens += stack_tokens[::-1]
         new_conf += stack_conf[::-1]
-        if 'llama' in model_path.lower():
-            new_tokens.append(' ')
+
+    if need_spaces:
+        while j < len(text):
+            new_tokens.append(text[j])
             new_conf.append(1.0)
+            j += 1
+
     while len(new_tokens) > 0 and new_tokens[0] in strip:
         new_tokens = new_tokens[1:]
         new_conf = new_conf[1:]
@@ -211,13 +225,15 @@ def generate():
         for t in processor.stats['greedy_tokens'][0][:-1]:
             if t not in [model.tokenizer.bos_token_id, model.tokenizer.eos_token_id, model.tokenizer.pad_token_id]:
                 tokens.append(model.tokenizer.decode([t]))
+        text = model.tokenizer.decode([t for t in processor.stats['greedy_tokens'][0][:-1]])
     else:
         tokens = [greedy_text]
+        text = greedy_text
 
     if type(model) == WhiteboxModel and len(tok_methods) > 0:
-        if model.model_type == "Seq2SeqLM": 
+        if model.model_type == "Seq2SeqLM":
             tokens = _add_spaces_to_tokens(model.tokenizer, processor.stats, tokens)
-        tokens, tok_conf = _split_spaces(tokens, tok_conf, model_path)
+        tokens, tok_conf = _split_spaces(text, tokens, tok_conf)
         tokens, tok_conf = _merge_into_words(tokens, tok_conf)
 
     return {
