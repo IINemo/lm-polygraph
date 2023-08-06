@@ -1,8 +1,3 @@
-from pathlib import Path
-from modal import Image, Stub, wsgi_app
-from flask import Flask, request, abort, send_from_directory, render_template
-import os
-
 import os
 import numpy as np
 import argparse
@@ -19,18 +14,9 @@ from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 
-from lm_polygraph.app.parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
+from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
 
-
-# @app.route('/')
-# def serve_index():
-#     return send_from_directory(os.path.join(app.root_path, static_folder), 'index.html')
-#
-#
-# @app.route('/<path:filename>')
-# def serve_static(filename):
-#     return send_from_directory(os.path.join(app.root_path, static_folder), filename)
 
 model: Optional[WhiteboxModel] = None
 tok_ue_methods: Dict[str, Estimator] = {}
@@ -39,7 +25,6 @@ cache_path: str = None
 density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
                                   "RDE", "RDE - encoder"]
 device: str = 'cpu'
-
 
 
 class ResultProcessor(Processor):
@@ -141,6 +126,7 @@ def _merge_into_words(tokens, confidences, split=string.punctuation.replace("'",
             word_start = i + 1
     return words, word_conf
 
+
 def _generate_response(data):
     print(f'Request data: {data}')
 
@@ -227,61 +213,3 @@ def _generate_response(data):
         'token_normalization': tok_norm,
         'sequence_normalization': seq_norm,
     }
-
-
-
-
-
-
-
-
-# static_folder = 'client'
-# static_path = Path(__file__).parent / static_folder
-static_path = '/app/src/lm_polygraph/app/client'
-
-polygraph_image = Image.from_dockerhub("mephodybro/polygraph_demo:0.0.8")
-
-
-stub = Stub(
-    "demo_polygraph",
-    image=polygraph_image,
-)
-
-
-@stub.function(gpu='any')
-@wsgi_app()
-def flask_app():
-    app = Flask(__name__, static_folder=static_path)
-    device = 'cuda'
-
-    @app.get("/debug")
-    def home():
-        result = '\n'.join([
-            os.getcwd(),
-            str(os.liktdir('.')),
-            str(os.listdir('./src/lm_polygraph/app')),
-            str(static_path),
-            # str(os.listdir('/app')),
-            # str(os.listdir(static_path))
-        ])
-        return result
-        # return f"{os.getcwd()}\n{os.listdir('.')}\n{static_path} "
-
-    @app.route('/')
-    def serve_index():
-        return send_from_directory(static_path, 'index.html')
-
-    @app.route('/<path:filename>')
-    def serve_static(filename):
-        return send_from_directory(static_path, filename)
-
-    @app.route('/get-prompt-result', methods=['GET', 'POST'])
-    def generate():
-        data = request.get_json()
-        return _generate_response(data)
-    #
-    # @app.get("/debug")
-    # def home():
-    #     return f"{os.listdir('.')}\n{static_path} "
-
-    return app
