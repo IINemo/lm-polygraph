@@ -412,3 +412,7 @@ select {
 .hljs-link, .hljs-operator, .hljs-regexp, .hljs-selector-attr, .hljs-selector-pseudo, .hljs-symbol, .hljs-template-variable, .hljs-variable {
     color: white !important;
 }
+
+.openai-options {
+    margin-bottom: 0.5em;
+}

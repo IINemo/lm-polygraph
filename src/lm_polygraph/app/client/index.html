@@ -19,11 +19,14 @@
 
         <div id="model" class="model">
           <div class="openai-options">
-            <label class="openai-secret-key"
-                   v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
-                   for="openai-secret-key-input"
-                   style="color: black; font-size: 14px">
-                Enter your OpenAI API key:</label>
+            <div class="openai-label">
+                <label class="openai-secret-key"
+                       v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
+                       for="openai-secret-key-input"
+                       style="color: black; font-size: 14px">
+                    Enter your OpenAI API key:</label>
+            </div>
+            </br>
             <input type="password"
                    v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
                    v-model="value"
