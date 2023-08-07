@@ -1,4 +1,4 @@
-datasets==2.3.2
+datasets>=2.3.2
 rouge-score==0.0.4
 nlpaug==1.1.10
 scikit-learn==1.0.2
@@ -17,10 +17,11 @@ pytreebank==0.2.7
 setuptools==60.2.0
 numpy==1.23.5
 dill==0.3.5.1
-PyYAML==6.0
 scipy==1.9.3
 flask==2.3.2
 protobuf>=4.23
-openai
 einops
+accelerate
+bitsandbytes
+openai
 wget
