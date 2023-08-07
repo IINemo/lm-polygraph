@@ -235,7 +235,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     const prompt = _promptToRetry ?? promptInput.textContent;
 
     const model = modelSelect.__vue__.modelSelected;
-    const tok_ue = tokUeSelect.__vue__.tokueSelected;
+    var tok_ue = [];
+    if (tokUeSelect)
+        tok_ue = tokUeSelect.__vue__.tokueSelected;
     const seq_ue = seqUeSelect.__vue__.sequeSelected;
 
     let tok_str = "None";

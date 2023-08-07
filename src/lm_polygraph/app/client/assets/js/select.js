@@ -14,14 +14,14 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 const modelVue = new Vue({
     el: '#model',
     data: {
-        modelSelected: 'BLOOMz 560M',
+        modelSelected: 'Dolly 7b',
         options: toOptions([
-            'GPT-4', 'GPT-3.5-turbo',
-            'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
-            'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
-            'Llama 2 7b', 'Llama 2 13b',
-            'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b',
-            'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN']),
+            'GPT-4',
+            'GPT-3.5-turbo',
+            'Dolly 7b',
+            'BLOOMz 3b',
+            'Llama 2 7b'
+        ]),
         value: '',
     },
 });
