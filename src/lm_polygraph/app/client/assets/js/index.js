@@ -305,7 +305,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
                 model,
                 openai_key,
                 ensembles,
-                tok_ue,
                 seq_ue,
                 temperature,
                 topp,

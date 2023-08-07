@@ -18,14 +18,6 @@
     <div id="select-container">
 
         <div id="model" class="model">
-          <div class="ensemble-options">
-            <label class="ensemble-directory" v-if="modelSelected.includes('Ensemble')" for="ensemble-path-input"
-                   style="color: black; font-size: 14px">
-                Choose directory with ensemble models:</label>
-            <input v-if="modelSelected.includes('Ensemble')" v-model="value"
-                   id="ensemble-path-input" class="ensemble-path-input">
-          </div>
-
           <div class="openai-options">
             <label class="openai-secret-key"
                    v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
@@ -46,11 +38,6 @@
           <treeselect v-model="sequeSelected" :multiple="true" :options="computedOptions"
                   placeholder="Select sequence-level estimators"></treeselect>
         </div>
-
-<!--        <div id="tokue">-->
-<!--          <treeselect color="black" v-model="tokueSelected" :multiple="true" :options="computedOptions"-->
-<!--                      placeholder="Select token-level estimators"></treeselect>-->
-<!--        </div>-->
 
         <div>
           <button class="settings-button" id="settings-button" style="padding:10px">
