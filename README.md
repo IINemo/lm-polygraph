@@ -1,3 +1,6 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/IINemo/isanlp_srl_framebank/blob/master/LICENSE)
+![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)
+
 # LM-Polygraph: Uncertainty estimation for LLMs
 
 ## Installation
