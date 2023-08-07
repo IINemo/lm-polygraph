@@ -6,7 +6,7 @@ import string
 
 from typing import Optional, Dict, Tuple, List
 
-from flask import Flask, request, abort, send_from_directory, render_template
+from flask import abort
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
@@ -17,14 +17,16 @@ from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
 
-
 model: Optional[WhiteboxModel] = None
 tok_ue_methods: Dict[str, Estimator] = {}
 seq_ue_methods: Dict[str, Estimator] = {}
-cache_path: str = None
+# cache_path: str = None
+# device: str = 'cpu'
 density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
                                   "RDE", "RDE - encoder"]
-device: str = 'cpu'
+# TODO get the from argparse
+cache_path: str = os.path.expanduser('~') + '/.cache'
+device = 'cuda'
 
 
 class ResultProcessor(Processor):
