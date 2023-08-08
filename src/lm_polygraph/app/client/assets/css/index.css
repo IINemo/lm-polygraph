@@ -49,8 +49,8 @@ select {
 }
 
 .openai-secret-key-input {
-    min-width: 40%;
-    max-width: 40%;
+    min-width: 60%;
+    max-width: 60%;
 }
 
 /* Style for each response element in the list */
