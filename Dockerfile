@@ -5,4 +5,3 @@ COPY . /app
 WORKDIR /app
 RUN pip install .
 RUN rm -rf /root/.cache/*
-CMD polygraph_server

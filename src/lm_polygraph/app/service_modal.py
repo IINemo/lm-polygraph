@@ -14,7 +14,7 @@ def preload():
 
 
 static_path = '/app/src/lm_polygraph/app/client'
-polygraph_image = Image.from_dockerhub("mephodybro/polygraph_demo:0.0.16").run_function(preload)
+polygraph_image = Image.from_dockerhub("mephodybro/polygraph_demo:0.0.17").run_function(preload)
 
 
 stub = Stub(
