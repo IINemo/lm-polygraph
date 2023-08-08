@@ -4,9 +4,8 @@ from flask import Flask, send_from_directory, request
 from lm_polygraph.app.service_helpers import Responder
 
 
-# PRELOADED = ['bigscience/bloomz-560m', 'databricks/dolly-v2-3b', 'NousResearch/Llama-2-7b-chat-hf']
-# PRELOADED = ['openlm-research/open_llama_13b']
-PRELOADED = []
+PRELOADED = ['databricks/dolly-v2-7b', 'bigscience/bloomz-3b', 'NousResearch/Llama-2-7b-chat-hf']
+
 
 def preload():
     from huggingface_hub import snapshot_download
@@ -24,8 +23,7 @@ stub = Stub(
 )
 
 
-# @stub.function(gpu='a100', container_idle_timeout=300, timeout=5*60)
-@stub.function(gpu='any', container_idle_timeout=180, timeout=3*60)
+@stub.function(gpu='A10G', container_idle_timeout=180, timeout=3*60)
 @wsgi_app()
 def polygraph():
     app = Flask(__name__, static_folder=static_path)
