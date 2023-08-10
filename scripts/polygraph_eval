@@ -151,17 +151,15 @@ if __name__ == '__main__':
             dataset,
             model,
             [
-                #NumSemSets(),
-                #EigValLaplacian(similarity_score='NLI_score', affinity='entail'),
-                #DegMat(similarity_score='NLI_score', affinity='entail'),
-                #Eccentricity(similarity_score='NLI_score', affinity='entail'),
-                EigValLaplacian(similarity_score='Jaccard_score'),
-                #DegMat(similarity_score='Jaccard_score'),
-                #Eccentricity(similarity_score='Jaccard_score'),
+                MonteCarloSequenceEntropy(),
+                MonteCarloNormalizedSequenceEntropy(),
+                PTrue(),
+                PTrueSampling(),
+                LexicalSimilarity(),
             ] + density_based_ue,
             [
-                #RougeMetric('rouge1'),
-                #RougeMetric('rouge2'),
+                RougeMetric('rouge1'),
+                RougeMetric('rouge2'),
                 RougeMetric('rougeL'),
                 BartScoreSeqMetric('rh'),
                 #ModelScoreSeqMetric('model_rh'),
@@ -171,7 +169,7 @@ if __name__ == '__main__':
             [
                 #ReversedPairsProportion(),
                 #PredictionRejectionArea(),
-                #RiskCoverageCurveAUC(),
+                RiskCoverageCurveAUC(),
             ],
             [
                 Logger(),
