@@ -23,10 +23,12 @@ install_requires = [
     'dill==0.3.5.1',
     'scipy==1.9.3',
     'flask==2.3.2',
+    'protobuf>=4.23',
     'einops',
     'accelerate',
     'bitsandbytes',
-    'openai'
+    'openai',
+    'wget'
 ]
 
 package_data = ["**/*.json", "**/*.js", "**/*.css",

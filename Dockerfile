@@ -4,4 +4,4 @@ RUN pip install -r requirements.txt
 COPY . /app
 WORKDIR /app
 RUN pip install .
-CMD polygraph_server
+RUN rm -rf /root/.cache/*

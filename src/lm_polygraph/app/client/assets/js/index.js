@@ -113,6 +113,9 @@ function addResponse(selfFlag, desc, prompt) {
     return uniqueId;
 }
 
+addResponse(false, '', "This is LM-Polygraph demo: it augments LLM responses with confidence scores, " +
+    "helping you determine the reliability of the LLM's answer. Choose a model and an uncertainty estimation method first.");
+
 function dropDown(event) {
     event.target.parentElement.children[1].classList.remove("d-none");
     document.getElementById("overlay").classList.remove("d-none");
@@ -232,7 +235,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     const prompt = _promptToRetry ?? promptInput.textContent;
 
     const model = modelSelect.__vue__.modelSelected;
-    const tok_ue = tokUeSelect.__vue__.tokueSelected;
+    var tok_ue = [];
+    if (tokUeSelect)
+        tok_ue = tokUeSelect.__vue__.tokueSelected;
     const seq_ue = seqUeSelect.__vue__.sequeSelected;
 
     let tok_str = "None";
