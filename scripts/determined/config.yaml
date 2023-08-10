@@ -1,0 +1,5 @@
+environment:
+  image: 'mephodybro/det_torch2:0.1'
+work_dir: /app
+resources:
+  slots: 1

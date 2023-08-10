@@ -4,7 +4,8 @@ from flask import Flask, send_from_directory, request
 from lm_polygraph.app.service_helpers import Responder
 
 
-PRELOADED = ['databricks/dolly-v2-7b', 'bigscience/bloomz-3b', 'NousResearch/Llama-2-7b-chat-hf']
+# PRELOADED = ['databricks/dolly-v2-7b', 'bigscience/bloomz-3b', 'NousResearch/Llama-2-7b-chat-hf']
+PRELOADED = []
 
 
 def preload():
@@ -14,7 +15,7 @@ def preload():
 
 
 static_path = '/app/src/lm_polygraph/app/client'
-polygraph_image = Image.from_dockerhub("mephodybro/polygraph_demo:0.0.17").run_function(preload)
+polygraph_image = Image.from_dockerhub("mephodybro/polygraph_demo:0.0.18").run_function(preload)
 
 
 stub = Stub(
@@ -23,7 +24,7 @@ stub = Stub(
 )
 
 
-@stub.function(gpu='A10G', container_idle_timeout=180, timeout=3*60)
+@stub.function(gpu='A100', container_idle_timeout=300, timeout=5*60)
 @wsgi_app()
 def polygraph():
     app = Flask(__name__, static_folder=static_path)
