@@ -43,6 +43,7 @@ class Dataset:
             indices = list(range(len(self.x)))
         else:
             indices = np.random.choice(len(self.x), size, replace=False)
+            print(len(self.x), size, indices[:10])
         self.select(indices)
 
     @staticmethod

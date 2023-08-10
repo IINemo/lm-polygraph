@@ -17,14 +17,14 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
-                       model: PreTrainedModel) -> Dict[str, np.ndarray]:
+                       model: PreTrainedModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
 
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         generation_params = dependencies['generation_params']
 
-        max_length = generation_params.get('generation_max_length', 256)#None)
+        max_length = generation_params.get('generation_max_length', max_new_tokens)#None)
         min_length = generation_params.get('generation_min_length', 2)
         num_return_sequences = generation_params.get('num_return_sequences', 5)
         
