@@ -18,7 +18,6 @@ const modelVue = new Vue({
         options: toOptions([
             'GPT-4',
             'GPT-3.5-turbo',
-            'BLOOMz 560M',
             'Dolly 7b',
             'BLOOMz 3b',
             'Llama 2 7b'
