@@ -19,7 +19,17 @@ class LexicalSimilarity(Estimator):
         if self.metric.startswith('rouge'):
             return rouge_scorer.RougeScorer([self.metric], use_stemmer=True).score(t1, t2)[self.metric].fmeasure
         elif self.metric == 'BLEU':
-            return -(1 - sentence_bleu([t1.split()], t2.split())) ** 2
+            min_sentence_len = min(len(t1.split()), len(t2.split()))
+            if min_sentence_len == 1:
+                weights = [1.0, 0.0, 0.0, 0.0]
+            elif min_sentence_len == 2:
+                weights = [0.5, 0.5, 0.0, 0.0]
+            elif min_sentence_len == 3:
+                weights = [0.33, 0.33, 0.33, 0.0]
+            else:
+                #default weights in sentence_bleu
+                weights = [0.25, 0.25, 0.25, 0.25]
+            return -(1 - sentence_bleu([t1.split()], t2.split(), weights=weights)) ** 2
         else:
             raise Exception(f'Unknown metrics for lexical similarity: {self.metric}')
 
