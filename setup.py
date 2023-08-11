@@ -53,7 +53,7 @@ setup(
     packages=find_packages("src"),
     include_package_data=True,
     package_data={"": package_data},
-    python_requires=">=3.9.0",
+    python_requires=">=3.10.0",
     install_requires=list(install_requires),
     classifiers=[
         "Development Status :: 3 - Alpha",
