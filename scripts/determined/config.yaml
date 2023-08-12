@@ -1,0 +1,6 @@
+environment:
+  image: 'mephodybro/det_polygraph:0.0.22'
+
+work_dir: /app
+resources:
+  slots: 1

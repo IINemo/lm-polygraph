@@ -21,7 +21,7 @@ scipy==1.9.3
 flask==2.3.2
 protobuf>=4.23
 einops
-accelerate
+accelerate>=0.20.3
 bitsandbytes
 openai
 wget

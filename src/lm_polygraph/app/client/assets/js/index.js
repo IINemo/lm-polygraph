@@ -6,7 +6,6 @@ let uniqueIdToRetry = null;
 const submitButton = document.getElementById('submit-button');
 const promptInput = document.getElementById('prompt-input');
 const modelSelect = document.getElementById('model');
-const tokUeSelect = document.getElementById('tokue');
 const seqUeSelect = document.getElementById('seque');
 const responseList = document.getElementById('response-list');
 const selectContainer = document.getElementById('select-container');
@@ -235,15 +234,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     const prompt = _promptToRetry ?? promptInput.textContent;
 
     const model = modelSelect.__vue__.modelSelected;
-    var tok_ue = [];
-    if (tokUeSelect)
-        tok_ue = tokUeSelect.__vue__.tokueSelected;
     const seq_ue = seqUeSelect.__vue__.sequeSelected;
 
     let tok_str = "None";
-    if (tok_ue.length > 0) {
-        tok_str = tok_ue.join(', ');
-    }
     let seq_str = "None";
     if (seq_ue.length > 0) {
         seq_str = seq_ue.join(', ');
@@ -305,7 +298,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
                 model,
                 openai_key,
                 ensembles,
-                tok_ue,
                 seq_ue,
                 temperature,
                 topp,
