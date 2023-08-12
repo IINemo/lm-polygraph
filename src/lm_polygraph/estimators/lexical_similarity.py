@@ -29,7 +29,7 @@ class LexicalSimilarity(Estimator):
             else:
                 #default weights in sentence_bleu
                 weights = [0.25, 0.25, 0.25, 0.25]
-            return -(1 - sentence_bleu([t1.split()], t2.split(), weights=weights)) ** 2
+            return sentence_bleu([t1.split()], t2.split(), weights=weights)
         else:
             raise Exception(f'Unknown metrics for lexical similarity: {self.metric}')
 
