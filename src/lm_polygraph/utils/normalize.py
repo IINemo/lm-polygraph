@@ -14,12 +14,13 @@ DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
 
 
 def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
+    breakpoint()
     archive_path = model_path.split('/')[-1] + '.json'
     filepath = os.path.join(cache_path, archive_path)
     if os.path.exists(filepath):
         os.remove(filepath)
     try:
-        wget.download(HOST + '/normalization/' + archive_path, out = filepath)
+        wget.download(HOST + '/normalization_calib/' + archive_path, out = filepath)
     except:
         sys.stderr.write('Failed, no normalization...')
         return False
@@ -38,5 +39,15 @@ def normalize_ue(est: Estimator, model_path: str, val: float, cache_path: str = 
         sys.stderr.write(
             f'Could not find normalizing bounds for estimator: {str(est)}. Will not normalize values.')
         return val
-    q = np.array(ue_bounds[str(est)])
-    return (q < val).mean()
+
+    ue_bins = ue_bounds[est]['ues'] 
+    conf_id = np.argwhere(np.array(ue_bins) > val)
+
+    if len(conf_id) == 0:
+        conf = ue_bounds[est]['normed_conf'][-1]
+    elif conf_id[0] == 0:
+        conf = ue_bounds[est]['normed_conf'][0]
+    else:
+        conf = ue_bounds[est]['normed_conf'][conf_id[0] - 1]
+
+    return conf

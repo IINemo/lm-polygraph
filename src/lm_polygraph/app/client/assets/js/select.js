@@ -133,7 +133,6 @@ new Vue({
             } else {
                 return toOptions(curatedMethods[this.type])
             }
-
         }
     }
 });
