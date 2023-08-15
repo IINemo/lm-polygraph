@@ -1,5 +1,5 @@
 /*
-This is implementation for method and sequence uncertainty selection
+This is implementation for method selector and sequence uncertainty selector
 It works currently by you just importing the file and praying there are treebank elements with #model and #seque id
  */
 function toOptions(list) {
@@ -17,7 +17,7 @@ function toOptions(list) {
 
 
 function modelType(newModel) {
-    var newType = '';
+    var newType;
     if (newModel === 'Ensemble') {
         newType = 'ensemble';
     } else if (['BART Large CNN', 'Flan T5 XL', 'T5 XL NQ'].includes(newModel)) {
@@ -67,6 +67,15 @@ const typeMethods = {
     ]
 }
 
+const allModels = [
+    'GPT-4', 'GPT-3.5-turbo',
+    'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
+    'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
+    'Llama 2 7b', 'Llama 2 13b',
+    'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b',
+    'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN', 'Ensemble'
+]
+
 
 const curatedMethods = {
     'T5': ['Lexical Similarity'],
@@ -78,16 +87,6 @@ const curatedModels = [
     'GPT-4', 'GPT-3.5-turbo',
     'Dolly 7b', 'BLOOMz 3b', 'Llama 2 7b'
 ]
-
-const allModels = [
-    'GPT-4', 'GPT-3.5-turbo',
-    'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
-    'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
-    'Llama 2 7b', 'Llama 2 13b',
-    'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b',
-    'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN', 'Ensemble'
-]
-
 
 
 Vue.component('treeselect', VueTreeselect.Treeselect);
@@ -139,43 +138,3 @@ new Vue({
         }
     }
 });
-
-// Vue.component('treeselect', VueTreeselect.Treeselect);
-// const modelVue = new Vue({
-//     el: '#model',
-//     data: {
-//         modelSelected: 'Dolly 7b',
-//         options: toOptions([
-//             'GPT-4',
-//             'GPT-3.5-turbo',
-//             'Dolly 7b',
-//             'BLOOMz 3b',
-//             'Llama 2 7b'
-//         ]),
-//         value: '',
-//     },
-// });
-//
-//
-// Vue.component('treeselect', VueTreeselect.Treeselect);
-// new Vue({
-//     el: '#seque',
-//     data: {
-//         sequeSelected: ['Lexical Similarity'],
-//         model: '',
-//         type: ''
-//     },
-//     computed: {
-//         computedOptions() {
-//             var newModel = document.getElementById('model').__vue__.modelSelected;
-//             var newType = 'openai';
-//
-//             if (this.type != '' && this.type != newType) {
-//                 this.sequeSelected = [];
-//             }
-//             this.model = newModel;
-//             this.type = newType;
-//             return toOptions(['Lexical Similarity']);
-//         }
-//     }
-// });

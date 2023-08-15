@@ -355,12 +355,11 @@ async function checkMethods() {
         }
 
     } catch (error) {
-        throw error;
+        console.log(error)
     }
 }
 
 document.addEventListener("DOMContentLoaded", function(){
     promptInput.focus();
-
     checkMethods()
 });
