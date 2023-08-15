@@ -342,14 +342,25 @@ submitButton.addEventListener("click", () => {
 });
 
 
+async function checkMethods() {
+    try {
+        const response = await fetch(API_URL + 'methods', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+        })
+        const methods_reponse = await response.json()
+        if (methods_reponse.allow_all){
+            seqUeSelect.__vue__.allMethods=true;
+            modelSelect.__vue__.allModels=true;
+        }
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function(){
     promptInput.focus();
 
     checkMethods()
-
-    var allowAll = true;
-    if (allowAll){
-        seqUeSelect.__vue__.allMethods=true;
-        modelSelect.__vue__.allModels=true;
-    }
 });
