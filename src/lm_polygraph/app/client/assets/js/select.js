@@ -1,3 +1,7 @@
+/*
+This is implementation for method and sequence uncertainty selection
+It works currently by you just importing the file and praying there are treebank elements with #model and #seque id
+ */
 function toOptions(list) {
     var listOfObjects = [];
     for (var i = 0; i < list.length; i++) {
@@ -9,7 +13,6 @@ function toOptions(list) {
     }
     return listOfObjects;
 }
-
 
 
 
@@ -63,6 +66,7 @@ const typeMethods = {
     ]
 }
 
+
 Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#model',
@@ -84,9 +88,10 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: ['Mean Token Entropy'],
+        sequeSelected: 'Mean Token Entropy',
         model: '',
-        type: ''
+        type: '',
+        allMethods: false
     },
     computed: {
         computedOptions() {

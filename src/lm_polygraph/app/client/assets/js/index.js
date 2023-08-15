@@ -238,9 +238,9 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
     let tok_str = "None";
     let seq_str = "None";
-    if (seq_ue.length > 0) {
-        seq_str = seq_ue.join(', ');
-    }
+    // if (seq_ue.length > 0) {
+    //     seq_str = seq_ue.join(', ');
+    // }
     const modeldesc = model;
     const tokdesc = 'token-level: ' + tok_str;
     const seqdesc = 'sequence-level: ' + seq_str;
