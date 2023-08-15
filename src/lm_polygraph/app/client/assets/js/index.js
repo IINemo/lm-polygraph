@@ -8,7 +8,6 @@ const promptInput = document.getElementById('prompt-input');
 const modelSelect = document.getElementById('model');
 const seqUeSelect = document.getElementById('seque');
 const responseList = document.getElementById('response-list');
-const selectContainer = document.getElementById('select-container');
 const modal = document.getElementById("modal");
 const settingsButton = document.getElementById("settings-button");
 const span = document.getElementsByClassName("close")[0];
@@ -34,7 +33,6 @@ window.onclick = function(event) {
 }
 
 let isGeneratingResponse = false;
-
 let loadInterval = null;
 
 promptInput.addEventListener('keydown', function(event) {
@@ -238,9 +236,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
     let tok_str = "None";
     let seq_str = "None";
-    // if (seq_ue.length > 0) {
-    //     seq_str = seq_ue.join(', ');
-    // }
     const modeldesc = model;
     const tokdesc = 'token-level: ' + tok_str;
     const seqdesc = 'sequence-level: ' + seq_str;
@@ -346,6 +341,15 @@ submitButton.addEventListener("click", () => {
     getGPTResult();
 });
 
+
 document.addEventListener("DOMContentLoaded", function(){
     promptInput.focus();
+
+    checkMethods()
+
+    var allowAll = true;
+    if (allowAll){
+        seqUeSelect.__vue__.allMethods=true;
+        modelSelect.__vue__.allModels=true;
+    }
 });

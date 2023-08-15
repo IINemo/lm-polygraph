@@ -43,4 +43,10 @@ if __name__ == '__main__':
         data = request.get_json()
         return responder._generate_response(data)
 
+
+    @app.route('/methods', methods=['GET', 'POST'])
+    def methods():
+        return {'allow_all': True}
+
+
     app.run(host='0.0.0.0', port=args.port, debug=True)

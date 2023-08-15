@@ -30,6 +30,7 @@ function modelType(newModel) {
     return newType
 }
 
+
 const typeMethods = {
     'ensemble': [
         'EP-S-Total-Uncertainty', 'EP-S-RMI', 'PE-S-Total-Uncertainty',
@@ -67,19 +68,44 @@ const typeMethods = {
 }
 
 
+const curatedMethods = {
+    'T5': ['Lexical Similarity'],
+    'openai': [ 'Lexical Similarity'],
+    'seq2seq': ['Lexical Similarity']
+}
+
+const curatedModels = [
+    'GPT-4', 'GPT-3.5-turbo',
+    'Dolly 7b', 'BLOOMz 3b', 'Llama 2 7b'
+]
+
+const allModels = [
+    'GPT-4', 'GPT-3.5-turbo',
+    'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
+    'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
+    'Llama 2 7b', 'Llama 2 13b',
+    'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b',
+    'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN', 'Ensemble'
+]
+
+
+
 Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#model',
     data: {
-        modelSelected: 'BLOOMz 560M',
-        options: toOptions([
-            'GPT-4', 'GPT-3.5-turbo',
-            'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
-            'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
-            'Llama 2 7b', 'Llama 2 13b',
-            'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b',
-            'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN', 'Ensemble']),
+        modelSelected: 'Dolly 7b',
         value: '',
+        allModels: false,
+    },
+    computed: {
+        computedOptions() {
+            if (this.allModels){
+                return toOptions(allModels)
+            } else {
+                return toOptions(curatedModels)
+            }
+        }
     },
 });
 
@@ -88,7 +114,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: 'Mean Token Entropy',
+        sequeSelected: 'Lexical Similarity',
         model: '',
         type: '',
         allMethods: false
@@ -99,12 +125,17 @@ new Vue({
             newType = modelType(newModel)
 
             if (this.type !== '' && this.type !== newType) {
-                this.sequeSelected = [];
+                this.sequeSelected = 'Lexical Similarity';
             }
             this.model = newModel;
             this.type = newType;
 
-            return toOptions(typeMethods[this.type])
+            if (this.allMethods){
+                return toOptions(typeMethods[this.type])
+            } else {
+                return toOptions(curatedMethods[this.type])
+            }
+
         }
     }
 });
