@@ -45,7 +45,7 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 * [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: only `bloomz-560m`, `gpt-3.5-turbo` and `gpt-4` fits default memory limit, other models can be run only with Colab-pro subscription)
 
 
-## Benchmarks
+## Benchmark
 
 To evaluate the performance of uncertainty estimation methods run: 
 
