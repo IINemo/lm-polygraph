@@ -46,6 +46,12 @@ def MCD_covariance(X, y=None, label=None, seed=42):
         
 
 class RDESeq(Estimator):
+    """
+    The RDE method improves over MD by reducing the dimensionality of h(x) via PCA decomposition. 
+    It also computes the covariance matrix in a robust way using the Minimum Covariance Determinant
+    estimate (Rousseeuw, 1984).
+    """
+
     def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
         super().__init__(['embeddings', 'train_embeddings'], 'sequence')
         self.pca = None
@@ -70,20 +76,28 @@ class RDESeq(Estimator):
         return f'RDESeq_{self.embeddings_type}'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        embeddings = stats[f'embeddings_{self.embeddings_type}']       
-        
+         
+        # take embeddings
+        embeddings = stats[f'embeddings_{self.embeddings_type}']  
+
+
+        # define PCA with rbf kernel and n_components equal 100
         if self.pca is None:
             self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42)
             X_pca_train = self.pca.fit_transform(stats[f'train_embeddings_{self.embeddings_type}'].cpu().detach().numpy())            
             if self.parameters_path is not None:
                 self.save_pca()
                 
+        # define mean covariance distance
         if self.MCD is None:
             self.MCD = MCD_covariance(X_pca_train)
             if self.parameters_path is not None:
                 self.save_mcd()
-                
+        
+        # transform test data based on pca
         X_pca_test = self.pca.transform(embeddings.cpu().detach().numpy())
+
+        # compute MD in space of reduced dimensionality
         dists = self.MCD.mahalanobis(X_pca_test)
         
         if self.max < dists.max():

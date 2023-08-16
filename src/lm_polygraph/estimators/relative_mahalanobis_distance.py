@@ -19,6 +19,12 @@ def load_array(filename):
 
 
 class RelativeMahalanobisDistanceSeq(Estimator):
+
+    """
+    Ren et al. (2023) showed that it might be useful to adjust the Mahalanobis distance score by subtracting
+    from it the other Mahalanobis distance MD_0(x) computed for some large general purpose dataset covering many domain. 
+    RMD(x) = MD(x) - MD_0(x)
+    """
     def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
         super().__init__(['embeddings', 'train_embeddings', 'background_train_embeddings'], 'sequence')
         self.centroid_0 = None
@@ -43,8 +49,14 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         return f'RelativeMahalanobisDistanceSeq_{self.embeddings_type}'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+
+        #take the embeddings
         embeddings = stats[f'embeddings_{self.embeddings_type}']   
         
+        # since we want to adjust resulting reasure on baseline MD on train part
+        # we have to compute average train centroid and inverse cavariance matrix
+        # to obtain MD_0
+
         if self.centroid_0 is None:
             self.centroid_0 = stats[f'background_train_embeddings_{self.embeddings_type}'].mean(dim=0)
             if self.parameters_path is not None:
@@ -58,6 +70,8 @@ class RelativeMahalanobisDistanceSeq(Estimator):
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv_0, f"{self.full_path}/sigma_inv_0.pt")
                 
+        # compute MD_0
+
         dists_0 = mahalanobis_distance_with_known_centroids_sigma_inv(
             self.centroid_0.unsqueeze(0),
             None,
@@ -65,7 +79,11 @@ class RelativeMahalanobisDistanceSeq(Estimator):
             embeddings,
         )[:, 0].cpu().detach().numpy()
         
+        # compute original MD
+
         md = self.MD(stats)
+        
+        # RMD calculation
         
         dists = md - dists_0
         if self.max < dists.max():
