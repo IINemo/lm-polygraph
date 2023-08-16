@@ -70,7 +70,7 @@ The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found 
 ## Demo web application
 
  
-<img width="1128" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
+<img width="900" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
 
 
 ### Start with docker
