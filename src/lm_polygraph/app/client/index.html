@@ -24,7 +24,7 @@
                        v-if="modelSelected.includes('GPT-4') || modelSelected.includes('GPT-3.5')"
                        for="openai-secret-key-input"
                        style="color: black; font-size: 14px">
-                    Enter your OpenAI API key:</label>
+                    Enter your OpenAI API key:</label>&nbsp
             </div>
             </br>
             <input type="password"
@@ -33,10 +33,10 @@
                    id="openai-secret-key-input" class="openai-secret-key-input">
           </div>
 
-          <treeselect color="black" v-model="modelSelected" :multiple="false" :options="computedOptions" :clear-on-select="false"
+        <treeselect color="black" v-model="modelSelected" :multiple="false" :options="computedOptions" :clear-on-select="false"
                       placeholder="Select model"></treeselect>
         </div>
-
+        &nbsp
         <div id="seque">
           <treeselect v-model="sequeSelected" :multiple="false" :options="computedOptions"
                   placeholder="Select sequence-level estimators"></treeselect>
@@ -52,7 +52,7 @@
                   <div class="temp-input" id="temp-input">
                         <label class="temp-label"> Temperature:</label>
                         <div class="temp-slider">
-                          <input id="temp-slider-value" type="range" min="0" max="86.49" value="25" step="0.01"
+                          <input id="temp-slider-value" type="range" min="0" max="39.63" value="25" step="0.01"
                                  onchange="updateTemp()" oninput="updateTemp()"/>
                             <output id="temp-value">1</output>
                         </div>
@@ -72,19 +72,28 @@
                             <output id="topp-value">1</output>
                         </div>
                   </div>
-                  <div class="num-beams-input" id="num-beams-slider">
-                        <label class="num-beams-label"> Number of beams: </label>
-                        <div class="num-beams-slider">
-                          <input id="num-beams-slider-value" type="number" min="1" value="1"
-                                 onchange="updateNumBeams()" oninput="updateNumBeams()"/>
-                        </div>
-                  </div>
+<!--                  <div class="num-beams-input" id="num-beams-slider">-->
+<!--                        <label class="num-beams-label"> Number of beams: </label>-->
+<!--                        <div class="num-beams-slider">-->
+<!--                          <input id="num-beams-slider-value" type="number" min="1" value="1"-->
+<!--                                 onchange="updateNumBeams()" oninput="updateNumBeams()"/>-->
+<!--                        </div>-->
+<!--                  </div>-->
                   <div class="repetition-penalty-input" id="repetition-penalty-input">
                         <label class="repetition-penalty-label"> Repetition penalty:</label>
                         <div class="repetition-penalty-slider">
-                          <input id="repetition-penalty-slider-value" type="range" min="0" max="1" value="0.69897" step="0.01"
+                          <input id="repetition-penalty-slider-value"
+                                 type="range" min="0" max="1" value="0.69897" step="0.01"
                                  onchange="updateRepetitionPenalty()" oninput="updateRepetitionPenalty()"/>
                             <output id="repetition-penalty-value">5</output>
+                        </div>
+                  </div>
+                  <div class="presence-penalty-input" id="presence-penalty-input">
+                        <label class="presence-penalty-label"> Presence penalty:</label>
+                        <div class="presence-penalty-slider">
+                          <input id="presence-penalty-slider-value" type="range" min="-2" max="2" value="0" step="0.01"
+                                 onchange="updatePresencePenalty()" oninput="updatePresencePenalty()"/>
+                            <output id="presence-penalty-value">0</output>
                         </div>
                   </div>
               </div>
@@ -92,7 +101,6 @@
         </div>
     </div>
     <div id="input-container">
-        <input type="file" id="whisper-file" accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm" style="display:none;">
         <div id="prompt-input" contentEditable></div>
         <button id="submit-button"></button>
     </div>

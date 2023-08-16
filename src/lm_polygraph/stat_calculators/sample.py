@@ -23,6 +23,9 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                     max_tokens=256,
                     temperature=model.parameters.temperature,
                     top_p=model.parameters.topp,
+                    presence_penalty=model.parameters.presence_penalty,
+                    repetition_penalty=model.parameters.repetition_penalty,
+                    top_k=model.parameters.topk,
                     n=self.samples_n)
         else:
             for _ in range(self.samples_n):
@@ -32,6 +35,10 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                         min_length=2,
                         do_sample=True,
                         num_beams=1,
+                        temperature=model.parameters.temperature,
+                        top_p=model.parameters.topp,
+                        repetition_penalty=model.parameters.repetition_penalty,
+                        top_k=model.parameters.topk,
                         num_return_sequences=1)):
                     samples[i].append(seq)
 

@@ -11,15 +11,39 @@ const responseList = document.getElementById('response-list');
 const modal = document.getElementById("modal");
 const settingsButton = document.getElementById("settings-button");
 const span = document.getElementsByClassName("close")[0];
+const repetitionPenaltyInput = document.getElementById("repetition-penalty-input");
+const repetitionPenaltyStyle = repetitionPenaltyInput.style.display;
+const presencePenaltyInput = document.getElementById("presence-penalty-input");
+const presencePenaltyStyle = presencePenaltyInput.style.display;
+const topkInput = document.getElementById("topk-slider");
+const topkStyle = topkInput.style.display;
+
+promptInput.addEventListener('paste', function(e) {
+    // To keep same text style + disable pasting non-text stuff like images
+    e.preventDefault();
+    var pastedText = (e.originalEvent || e).clipboardData.getData('text/plain');
+    document.execCommand('insertHTML', false, pastedText);
+});
 
 var temperature = 1.0;
 var topk = 1;
 var topp = 1.0;
 var num_beams = 1;
+var presence_penalty = 0;
 var repetition_penalty = 1;
 
 settingsButton.onclick = function() {
   modal.style.display = "block";
+  const model = modelSelect.__vue__.modelSelected;
+  if ('GPT-4' === model || 'GPT-3.5-turbo' === model) {
+    topkInput.style.display = "none";
+    repetitionPenaltyInput.style.display = "none";
+    presencePenaltyInput.style.display = presencePenaltyStyle;
+  } else {
+    topkInput.style.display = topkStyle;
+    repetitionPenaltyInput.style.display = repetitionPenaltyStyle;
+    presencePenaltyInput.style.display = "none";
+  }
 }
 
 span.onclick = function() {
@@ -57,9 +81,15 @@ function generateUniqueId() {
 function updateTemp() {
     var value = document.getElementById("temp-slider-value").value;
     var logValue = document.getElementById("temp-value");
-    var logScaleValue = Math.max(Math.round(100 * (Math.pow(2, value / 25) - 1)) / 100, 0.01);
+    var logScaleValue = Math.min(Math.max(Math.round(100 * (Math.pow(2, value / 25) - 1)) / 100, 0.01), 2);
     logValue.innerHTML = logScaleValue;
     temperature = logScaleValue;
+}
+
+function updatePresencePenalty() {
+    var value = document.getElementById("presence-penalty-slider-value").value;
+    document.getElementById("presence-penalty-value").innerHTML = value;
+    presence_penalty = value;
 }
 
 function updateRepetitionPenalty() {
@@ -69,6 +99,7 @@ function updateRepetitionPenalty() {
     logValue.innerHTML = logScaleValue;
     repetition_penalty = logScaleValue;
 }
+
 
 function updateTopk() {
     var value = document.getElementById("topk-slider-value").value;
@@ -84,6 +115,13 @@ function updateTopp() {
 
 function updateNumBeams() {
     num_beams = value;
+}
+
+var escape = document.createElement('textarea');
+
+function rawHtml(text) {
+    escape.textContent = text;
+    return escape.innerHTML;
 }
 
 function addResponse(selfFlag, desc, prompt) {
@@ -110,8 +148,8 @@ function addResponse(selfFlag, desc, prompt) {
     return uniqueId;
 }
 
-addResponse(false, '', "This is LM-Polygraph demo: it augments LLM responses with confidence scores, " +
-    "helping you determine the reliability of the LLM's answer. Choose a model and an uncertainty estimation method first.");
+addResponse(false, '', rawHtml("This is LM-Polygraph demo: it augments LLM responses with confidence scores, " +
+    "helping you determine the reliability of the LLM's answer. Choose a model and an uncertainty estimation method first."));
 
 function dropDown(event) {
     event.target.parentElement.children[1].classList.remove("d-none");
@@ -151,76 +189,77 @@ function setRetryResponse(prompt, uniqueId) {
 }
 
 function formatResponse(data){
-        let generation = data.generation;
-        let tok_confidence = data.token_confidence;
-        let tok_norm = data.token_normalization;
-        let seq_confidence = data.sequence_confidence;
-        let seq_norm = data.sequence_normalization;
+    let generation = data.generation;
+    let tok_confidence = data.token_confidence;
+    let tok_norm = data.token_normalization;
+    let seq_confidence = data.sequence_confidence;
+    let seq_norm = data.sequence_normalization;
 
-        console.log('Model output:')
-        console.log('  generation: ' + generation)
-        console.log('  token confidence: ' + tok_confidence);
-        console.log('  token normalization: ' + tok_norm);
-        console.log('  sequence confidence: ' + seq_confidence);
-        console.log('  sequence normalization: ' + seq_norm);
+    console.log('Model output:')
+    console.log('  generation: ' + generation)
+    console.log('  token confidence: ' + tok_confidence);
+    console.log('  token normalization: ' + tok_norm);
+    console.log('  sequence confidence: ' + seq_confidence);
+    console.log('  sequence normalization: ' + seq_norm);
 
-        let response = '';
-        let started_border = false;
-        let confidence_thrs = 0.2;
-        for (let i = 0; i < generation.length; i++) {
-            if (tok_norm == 'none' || tok_confidence[i] >= confidence_thrs || tok_confidence.length == 0) {
-                response += generation[i];
-                continue;
-            }
-            const white = 100;
-            const green = white + Math.floor((255 - white) * tok_confidence[i]);
-            const red = white + Math.floor((255 - white) * (1 - tok_confidence[i]));
-            const color = 'rgb(' + red + ', ' + green + ', ' + white + ')';
-            for (let j = 0; j < generation[i].length - generation[i].trimLeft().length; j++) {
-                response += ' ';
-            }
-            if (generation[i].trim().length > 0) {
-                let left_border = false;
-                if (!started_border) {
-                    left_border = true;
-                    started_border = true;
-                }
-                let right_border = false;
-                if (generation[i].slice(-1) == ' ' || i + 1 == generation.length || (
-                        i + 1 < generation.length &&
-                        (generation[i + 1][0] == ' ' || tok_confidence[i + 1] >= confidence_thrs))) {
-                    right_border = true;
-                    started_border = false;
-                }
-                let border_str = '';
-                if (left_border) {
-                    border_str += 'border-top-left-radius:10px;border-bottom-left-radius:10px;padding-left:3px;';
-                }
-                if (right_border) {
-                    border_str += 'border-top-right-radius:10px;border-bottom-right-radius:10px;padding-right:3px;';
-                }
-                response += '<span style="background-color:' + color + ';' + border_str + 'padding-top:3px;padding-bottom:3px">';
-                response += generation[i].trim();
-                response += '</span>';
-            }
-            for (let j = 0; j < generation[i].length - generation[i].trimRight().length; j++) {
-                response += ' ';
-            }
+    let response = '<p style="display:inline">';
+    let started_border = false;
+    let confidence_thrs = 0.2;
+    for (let i = 0; i < generation.length; i++) {
+        if (tok_norm == 'none' || tok_confidence[i] >= confidence_thrs || tok_confidence.length == 0) {
+            response += rawHtml(generation[i]);
+            continue;
         }
-
-        if (seq_confidence.length != 0) {
-            const white = 100;
-            const green = white + Math.floor((255 - white) * seq_confidence[0]);
-            const red = white + Math.floor((255 - white) * (1 - seq_confidence[0]));
-            var colorStyle = '';
-            var ueStr = seq_confidence[0].toPrecision(3);
-            if (seq_norm != 'none') {
-                colorStyle = 'background-color:rgb(' + red + ', ' + green + ', ' + white + ');';
-                ueStr = Math.round(seq_confidence[0] * 100) + '%';
-            }
-            response += '<div style="line-height:1%;"><br></div><span style="color: rgb(77, 65, 74)">Confidence: </span>';
-            response += '<span style="' + colorStyle + 'border-radius:10px;padding: 3px;">' + ueStr + '</span>';
+        const white = 100;
+        const green = white + Math.floor((255 - white) * tok_confidence[i]);
+        const red = white + Math.floor((255 - white) * (1 - tok_confidence[i]));
+        const color = 'rgb(' + red + ', ' + green + ', ' + white + ')';
+        for (let j = 0; j < generation[i].length - generation[i].trimLeft().length; j++) {
+            response += ' ';
         }
+        if (generation[i].trim().length > 0) {
+            let left_border = false;
+            if (!started_border) {
+                left_border = true;
+                started_border = true;
+            }
+            let right_border = false;
+            if (generation[i].slice(-1) == ' ' || i + 1 == generation.length || (
+                    i + 1 < generation.length &&
+                    (generation[i + 1][0] == ' ' || tok_confidence[i + 1] >= confidence_thrs))) {
+                right_border = true;
+                started_border = false;
+            }
+            let border_str = '';
+            if (left_border) {
+                border_str += 'border-top-left-radius:10px;border-bottom-left-radius:10px;padding-left:3px;';
+            }
+            if (right_border) {
+                border_str += 'border-top-right-radius:10px;border-bottom-right-radius:10px;padding-right:3px;';
+            }
+            response += '<span style="background-color:' + color + ';' + border_str + 'padding-top:3px;padding-bottom:3px">';
+            response += rawHtml(generation[i].trim());
+            response += '</span>';
+        }
+        for (let j = 0; j < generation[i].length - generation[i].trimRight().length; j++) {
+            response += ' ';
+        }
+    }
+
+    if (seq_confidence.length != 0) {
+        const white = 100;
+        const green = white + Math.floor((255 - white) * seq_confidence[0]);
+        const red = white + Math.floor((255 - white) * (1 - seq_confidence[0]));
+        var colorStyle = '';
+        var ueStr = seq_confidence[0].toPrecision(3);
+        if (seq_norm != 'none') {
+            colorStyle = 'background-color:rgb(' + red + ', ' + green + ', ' + white + ');';
+            ueStr = Math.round(seq_confidence[0] * 100) + '%';
+        }
+        response += '<div style="line-height:30%;"><br></div><span style="color: rgb(77, 65, 74)">Confidence: </span>';
+        response += '<span style="' + colorStyle + 'border-radius:10px;padding: 3px;">' + ueStr + '</span>';
+    }
+    response += '</p>';
     return response
 }
 
@@ -254,7 +293,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
     if (!_uniqueIdToRetry) {
         // Add the prompt to the response list
-        addResponse(true, ``, `<div>${prompt}</div>`, );
+        addResponse(true, ``, `<div><p style="display:inline">${rawHtml(prompt)}</p></div>`, );
     }
 
     // Get a unique ID for the response element
@@ -298,7 +337,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
                 topp,
                 topk,
                 num_beams,
-                repetition_penalty
+                repetition_penalty,
+                presence_penalty
             })
         });
         console.log(response)
@@ -309,7 +349,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
         }
         responseRaw = await response.json()
         responseText = formatResponse(responseRaw)
-        responseElement.innerHTML = converter.makeHtml(responseText);
+        responseElement.innerHTML = responseText;
         // responseText = await response.text();
         // console.log(responseRaw)
         // console.error('response html: ' + responseElement.innerHTML);

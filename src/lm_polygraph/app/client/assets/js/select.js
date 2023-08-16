@@ -79,8 +79,8 @@ const allModels = [
 
 const curatedMethods = {
     'T5': ['Lexical Similarity'],
-    'openai': [ 'Lexical Similarity'],
-    'seq2seq': ['Lexical Similarity']
+    'openai': ['Lexical Similarity'],
+    'seq2seq': ['Lexical Similarity', 'Mean Token Entropy', 'Perplexity']
 }
 
 const curatedModels = [
@@ -93,7 +93,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#model',
     data: {
-        modelSelected: 'Dolly 7b',
+        modelSelected: 'GPT-4',
         value: '',
         allModels: false,
     },

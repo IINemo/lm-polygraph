@@ -1,4 +1,5 @@
 import torch
+import sys
 import openai
 
 from typing import List, Dict
@@ -37,13 +38,17 @@ class BlackboxModel(Model):
         if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in ['do_sample', 'num_beams', 'min_length', 'top_k']:
+        for delete_key in ['do_sample', 'min_length', 'top_k', 'repetition_penalty']:
             args.pop(delete_key, None)
         for key, replace_key in [
-            ('num_return_sequences', 'n'), ('max_length', 'max_tokens'), ('max_new_tokens', 'max_tokens')]:
+            ('num_return_sequences', 'n'),
+            ('max_length', 'max_tokens'),
+            ('max_new_tokens', 'max_tokens'),
+        ]:
             if key in args.keys():
                 args[replace_key] = args[key]
                 args.pop(key)
+        print('BlackBox.generate_texts args:', args)
         texts = []
         for prompt in input_texts:
             response = openai.ChatCompletion.create(
@@ -64,6 +69,13 @@ class BlackboxModel(Model):
         raise Exception("Cannot access logits of blackbox model")
 
 
+def _valdate_args(args):
+    if 'presence_penalty' in args.keys() and args['presence_penalty'] != 0.0:
+        sys.stderr.write('Skipping requested argument presence_penalty={}'.format(args['presence_penalty']))
+    args.pop('presence_penalty', None)
+    return args
+
+
 class WhiteboxModel(Model):
     def __init__(self, model: AutoModelForCausalLM, tokenizer: AutoTokenizer, model_path: str, model_type: str,
                  parameters: GenerationParameters = GenerationParameters()):
@@ -73,10 +85,14 @@ class WhiteboxModel(Model):
         self.parameters = parameters
 
     def generate(self, **args):
+        args = _valdate_args(args)
+        print('WhiteboxModel.generate args:', args)
         return self.model.generate(**args)
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
+        args = _valdate_args(args)
         args['return_dict_in_generate'] = True
+        print('WhiteboxModel.generate_texts args:', args)
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
         texts = [self.tokenizer.decode(x) for x in self.model.generate(**batch, **args).sequences.cpu()]

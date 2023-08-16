@@ -7,5 +7,6 @@ class GenerationParameters:
     topp: float = 1.0
     do_sample: bool = False
     num_beams: int = 1
+    presence_penalty: float = 0
     repetition_penalty: float = 1
     allow_newlines: bool = True
