@@ -20,7 +20,7 @@ class PredictionRejectionArea(UEMetric):
         sorted_metrics = np.array(target)[ue_argsort]
         # Since we want all plots to coincide when all the data is discarded
         cumsum = np.cumsum(sorted_metrics)
-        scores = (cumsum / np.arange(1, num_obs + 1))
+        scores = (cumsum / np.arange(1, num_obs + 1))[::-1]
         prr_score = np.sum(scores) / num_obs
         return prr_score
 
