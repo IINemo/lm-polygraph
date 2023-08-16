@@ -32,16 +32,17 @@ def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_
 def normalize_ue(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
     if np.isnan(val):
         return 1
+    est = str(est)
     filepath = os.path.join(cache_path, model_path.split('/')[-1] + '.json')
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)
-    if str(est) not in ue_bounds.keys():
+    if est not in ue_bounds.keys():
         sys.stderr.write(
             f'Could not find normalizing bounds for estimator: {str(est)}. Will not normalize values.')
         return val
 
     ue_bins = ue_bounds[est]['ues'] 
-    conf_id = np.argwhere(np.array(ue_bins) > val)
+    conf_id = np.argwhere(np.array(ue_bins) > val).flatten
 
     if len(conf_id) == 0:
         conf = ue_bounds[est]['normed_conf'][-1]

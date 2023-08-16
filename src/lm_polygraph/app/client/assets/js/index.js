@@ -254,7 +254,7 @@ function formatResponse(data){
         var ueStr = seq_confidence[0].toPrecision(3);
         if (seq_norm != 'none') {
             colorStyle = 'background-color:rgb(' + red + ', ' + green + ', ' + white + ');';
-            ueStr = Math.round(seq_confidence[0] * 100) + '%';
+            ueStr = Math.round(seq_confidence[0]) + '%';
         }
         response += '<div style="line-height:30%;"><br></div><span style="color: rgb(77, 65, 74)">Confidence: </span>';
         response += '<span style="' + colorStyle + 'border-radius:10px;padding: 3px;">' + ueStr + '</span>';
