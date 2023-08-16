@@ -8,7 +8,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     url = f'http://localhost:{args.port}/chat/completions'
     data = {
-        'model': 'Bloomz 560M',
+        'model': 'BLOOMz 560M',
         'ue': 'Maximum Probability, token-level',
         'messages': [{'content': 'Здарова'}],
     }

@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from transformers import LogitsProcessor, LogitsProcessorList
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class EraseHypothesesLogitsProcessor(LogitsProcessor):
@@ -58,7 +58,7 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
                 hyps_logprobs=[log_p[k] for log_p in sample_log_p],
                 input_len=input_len,
             )
-            out = model.model.generate(
+            out = model.generate(
                 **batch,
                 logits_processor=LogitsProcessorList([logits_processor]),
                 **args
@@ -82,7 +82,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
                           'adapted_sample_tokens', 'adapted_sample_texts'],
                          ['sample_log_probs', 'sample_tokens', 'sample_texts'])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
         sample_texts: List[List[str]] = \
             [samples[:(self.samples_n + 1) // 2] for samples in dependencies['sample_texts']]
         sample_tokens: List[List[List[int]]] = \
@@ -102,6 +102,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             return_dict_in_generate=True,
             max_length=256,
             min_length=2,
+            num_beams=1,
             do_sample=True)
 
         for i in range(len(importance_logits)):
