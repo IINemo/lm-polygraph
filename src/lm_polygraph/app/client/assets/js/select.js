@@ -84,8 +84,7 @@ const curatedMethods = {
 }
 
 const curatedModels = [
-    'GPT-4', 'GPT-3.5-turbo',
-    'Dolly 7b', 'BLOOMz 3b', 'Llama 2 7b'
+    'GPT-4', 'GPT-3.5-turbo'
 ]
 
 
