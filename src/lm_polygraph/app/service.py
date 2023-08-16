@@ -1,3 +1,6 @@
+"""
+Get up a server with demo on localhost:3001
+"""
 import os
 import argparse
 import torch
@@ -10,8 +13,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=3001)
     parser.add_argument("--device", type=str, default=None)
-    parser.add_argument("--cache-path", type=str,
-                        default=os.path.expanduser('~') + '/.cache')
+    parser.add_argument("--cache-path", type=str, default=os.path.expanduser('~') + '/.cache')
+    parser.add_argument(
+        "--all-methods", action='store_true',
+        help="""
+            Development options to show all known models and methods.
+            Otherwise demo will show only short curated list of known to well-working models and methods
+        """
+    )
 
     args = parser.parse_args()
     cache_path = args.cache_path
@@ -42,5 +51,11 @@ if __name__ == '__main__':
     def generate():
         data = request.get_json()
         return responder._generate_response(data)
+
+
+    @app.route('/methods', methods=['GET', 'POST'])
+    def methods():
+        return {'allow_all': args.all_methods}
+
 
     app.run(host='0.0.0.0', port=args.port, debug=True)

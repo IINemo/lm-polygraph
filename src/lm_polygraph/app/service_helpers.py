@@ -152,8 +152,13 @@ class Responder:
             model_path = parse_model(data['model'])
         self.model.parameters = parameters
 
-        tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
-        seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
+        # TODO this is temporary fix for single instead of multi-choice, should be changed with katya proper version
+        # As back expects list and front sends the string at the moment
+        tok_ue_method_names = [data.get('tok_ue')] if data.get('tok_ue') is not None else []
+        seq_ue_method_names = [data.get('seq_ue')] if data.get('seq_ue') is not None else []
+        # tok_ue_method_names = data['tok_ue'] if 'tok_ue' in data.keys() and data['tok_ue'] is not None else []
+        # seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
+
         text = data['prompt']
 
         for ue_method_name in tok_ue_method_names:

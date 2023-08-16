@@ -33,12 +33,12 @@
                    id="openai-secret-key-input" class="openai-secret-key-input">
           </div>
 
-          <treeselect color="black" v-model="modelSelected" :multiple="false" :options="options" :clear-on-select="false"
+          <treeselect color="black" v-model="modelSelected" :multiple="false" :options="computedOptions" :clear-on-select="false"
                       placeholder="Select model"></treeselect>
         </div>
 
         <div id="seque">
-          <treeselect v-model="sequeSelected" :multiple="true" :options="computedOptions"
+          <treeselect v-model="sequeSelected" :multiple="false" :options="computedOptions"
                   placeholder="Select sequence-level estimators"></treeselect>
         </div>
 
