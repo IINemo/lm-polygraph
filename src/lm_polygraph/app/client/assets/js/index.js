@@ -149,7 +149,7 @@ function addResponse(selfFlag, desc, prompt) {
 }
 
 addResponse(false, '', rawHtml("This is LM-Polygraph demo: it augments LLM responses with confidence scores, " +
-    "helping you determine the reliability of the LLM's answer. Choose a model and an uncertainty estimation method first."));
+    "helping to determine the reliability of LLM's answers. Choose a model and an uncertainty estimation method first."));
 
 function dropDown(event) {
     event.target.parentElement.children[1].classList.remove("d-none");
