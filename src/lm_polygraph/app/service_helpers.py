@@ -201,11 +201,22 @@ class Responder:
         else:
             tokens = [greedy_text]
 
-        if type(self.model) == WhiteboxModel and len(tok_methods) > 0:
+        if type(self.model) == WhiteboxModel:
+            if len(tok_methods) == 0:
+                tok_conf = [0 for _ in tokens]
             if self.model.model_type == "Seq2SeqLM":
                 tokens = self._add_spaces_to_tokens(self.model.tokenizer, processor.stats, tokens)
             tokens, tok_conf = self._split_spaces(tokens, tok_conf, model_path)
             tokens, tok_conf = self._merge_into_words(tokens, tok_conf)
+            if len(tok_methods) == 0:
+                tok_conf = []
+        if len(tokens) > 0:
+            while any(tokens[0].startswith(s) for s in [' ', '\n']):
+                tokens[0] = tokens[0][1:]
+            if len(tokens) > 0 and tokens[0] == '':
+                tokens = tokens[1:]
+                if len(tok_conf) > 0:
+                    tok_conf = tok_conf[1:]
 
         return {
             'generation': tokens,

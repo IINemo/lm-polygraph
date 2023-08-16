@@ -69,10 +69,11 @@ class BlackboxModel(Model):
         raise Exception("Cannot access logits of blackbox model")
 
 
-def _valdate_args(args):
-    if 'presence_penalty' in args.keys() and args['presence_penalty'] != 0.0:
-        sys.stderr.write('Skipping requested argument presence_penalty={}'.format(args['presence_penalty']))
-    args.pop('presence_penalty', None)
+def _validate_args(args):
+    for key in ['presence_penalty', 'token_type_ids']:
+        if key in args.keys():
+            sys.stderr.write('Skipping requested argument {}={}'.format(key, args[key]))
+        args.pop(key, None)
     return args
 
 
@@ -85,12 +86,12 @@ class WhiteboxModel(Model):
         self.parameters = parameters
 
     def generate(self, **args):
-        args = _valdate_args(args)
+        args = _validate_args(args)
         print('WhiteboxModel.generate args:', args)
         return self.model.generate(**args)
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
-        args = _valdate_args(args)
+        args = _validate_args(args)
         args['return_dict_in_generate'] = True
         print('WhiteboxModel.generate_texts args:', args)
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
