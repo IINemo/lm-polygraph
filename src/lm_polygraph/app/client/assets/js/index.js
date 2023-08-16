@@ -271,14 +271,22 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     const prompt = _promptToRetry ?? promptInput.textContent;
 
     const model = modelSelect.__vue__.modelSelected;
+    if (!model) {
+        return;
+    }
     const seq_ue = seqUeSelect.__vue__.sequeSelected;
 
     let tok_str = "None";
     let seq_str = "None";
-    const modeldesc = model;
-    const tokdesc = 'token-level: ' + tok_str;
-    const seqdesc = 'sequence-level: ' + seq_str;
-    const desc = `${modeldesc}<br>${tokdesc}<br>${seqdesc}`;
+    if (seq_ue)
+        seq_str = seq_ue;
+
+    // Left for token-level
+//    const modeldesc = model;
+//    const tokdesc = 'token-level: ' + tok_str;
+//    const seqdesc = 'sequence-level: ' + seq_str;
+//    const desc = `${modeldesc}<br>${tokdesc}<br>${seqdesc}`;
+    const desc = `${model}<br>${seq_str}`;
 
     // If a response is already being generated or the prompt is empty, return
     if (isGeneratingResponse || !prompt) {
@@ -344,7 +352,10 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
         console.log(response)
         if (!response.ok) {
             setRetryResponse(prompt, uniqueId);
-            setErrorForResponse(responseElement, `HTTP Error: ${await response.text()}`);
+            var err_text = (await response.text()).split('<p>');
+            err_text = err_text[err_text.length - 1];
+            err_text = err_text.split('</p>')[0];
+            setErrorForResponse(responseElement, `Error: ${err_text}`);
             return;
         }
         responseRaw = await response.json()
