@@ -15,7 +15,7 @@ class RiskCoverageCurveAUC(UEMetric):
         # greater is better
         risk = 1 - np.array(target)
         cr_pair = list(zip(estimator, risk))
-        cr_pair.sort(key=lambda x: x[0], reverse=True)
+        cr_pair.sort(key=lambda x: x[0])
         cumulative_risk = np.cumsum([x[1] for x in cr_pair])
         if self.normalize:
             cumulative_risk = cumulative_risk / np.arange(1, len(estimator) + 1)
