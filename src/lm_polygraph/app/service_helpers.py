@@ -12,7 +12,8 @@ from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
+from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue, \
+                                         can_get_calibration_conf, calibration_confidence 
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
@@ -53,10 +54,17 @@ class Responder:
             normalized_confidences.append([])
             for x in processor.ue_estimations[level, str(method)]:
                 condifences[-1].append(-x)
-                if not can_normalize_ue(method, model_path, self.cache_path):
-                    normalization = 'none'
+                if str(method) in ['Perplexity', 'MeanTokenEntropy']:
+                    if not can_get_calibration_conf(method, model_path, self.cache_path):
+                        normalization = 'none'
+                    else:
+                        normalized_confidences[-1].append(calibration_confidence(method, model_path, x, self.cache_path))
                 else:
-                    normalized_confidences[-1].append(normalize_ue(method, model_path, x, self.cache_path))
+                    if not can_normalize_ue(method, model_path, self.cache_path):
+                        normalization = 'none'
+                    else:
+                        normalized_confidences[-1].append(1 - normalize_ue(method, model_path, x, self.cache_path))
+
             print(' {} Confidence: {}'.format(str(method), condifences[-1]))
         if normalization != 'none':
             condifences = normalized_confidences
