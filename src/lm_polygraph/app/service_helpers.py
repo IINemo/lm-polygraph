@@ -198,13 +198,13 @@ class Responder:
 
         tok_conf, tok_norm = self._get_confidence(processor, tok_methods, 'token', model_path)
         seq_conf, seq_norm = self._get_confidence(processor, seq_methods, 'sequence', model_path)
-        #if 'greedy_tokens' in processor.stats.keys():
-        #    tokens = []
-        #    for t in processor.stats['greedy_tokens'][0][:-1]:
-        #        if t not in [self.model.tokenizer.bos_token_id, self.model.tokenizer.eos_token_id, self.model.tokenizer.pad_token_id]:
-        #            tokens.append(self.model.tokenizer.decode([t]))
-        #else:
-        tokens = [greedy_text]
+        if 'greedy_tokens' in processor.stats.keys():
+            tokens = []
+            for t in processor.stats['greedy_tokens'][0][:-1]:
+                if t not in [self.model.tokenizer.bos_token_id, self.model.tokenizer.eos_token_id, self.model.tokenizer.pad_token_id]:
+                    tokens.append(self.model.tokenizer.decode([t]))
+        else:
+            tokens = [greedy_text]
 
         if type(self.model) == WhiteboxModel:
             if len(tok_methods) == 0:
