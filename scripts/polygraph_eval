@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import os
 import copy
+import hydra
+import importlib
 import os
 import torch
 import transformers
-import argparse
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -16,26 +16,13 @@ from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str,
-                        default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
-    parser.add_argument("--train_dataset", type=str, default=None)
-    parser.add_argument("--background_train_dataset", type=str, default="allenai/c4")
-    parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
-    parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
-    parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
-    parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
-    parser.add_argument("--subsample_train_dataset", type=int, default=100)
-    parser.add_argument("--subsample_eval_dataset", type=int, default=100)
-    parser.add_argument("--batch_size", type=int, default=2)
-    parser.add_argument("--seed", nargs='+', type=int)
-    parser.add_argument("--device", type=str, default=None)
-    parser.add_argument("--save_path", type=str,
-                        default='/home/petrakov/emnlp/lm-polygraph/workdir/save')
-    parser.add_argument("--cache_path", type=str,
-                        default='/home/petrakov/emnlp/lm-polygraph/workdir')
-    args = parser.parse_args()
+@hydra.main(version_base=None, config_path="polygraph_eval_configs", config_name="default")
+def main(args):
+    additional_estimators = []
+    for module_name, estimators in args["additional_estimators"].items():
+        module = importlib.import_module('module_name')
+        for estimator in estimators:
+            additional_estimators.append(getattr(module, estimator)())
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -155,7 +142,7 @@ if __name__ == '__main__':
                 PointwiseMutualInformation(),
                 ConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
                 SemanticEntropyToken(model.model_path, args.cache_path),
-            ] + density_based_ue,
+            ] + density_based_ue + additional_estimators,
             [
                 RougeMetric('rouge1'),
                 RougeMetric('rouge2'),
@@ -179,3 +166,7 @@ if __name__ == '__main__':
         )
         man()
         man.save(args.save_path + f'_seed{seed}')
+
+
+if __name__ == '__main__':
+    main()
