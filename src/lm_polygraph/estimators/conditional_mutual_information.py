@@ -24,7 +24,7 @@ class ConditionalMutualInformationSeq(Estimator):
             for t in range(len(lp)):
                 score = lp[t]
                 if t > 0 and ent[t] >= self.tau:
-                    score -= self.lambd * lm_lp[t - 1]
+                    score -= self.lambd * lm_lp[t]
                 mi_scores[-1].append(score)
         return np.array([-np.mean(sc) for sc in mi_scores])
 
@@ -48,6 +48,6 @@ class ConditionalMutualInformationToken(Estimator):
             for t in range(len(lp)):
                 score = lp[t]
                 if t > 0 and ent[t] >= self.tau:
-                    score -= self.lambd * lm_lp[t - 1]
+                    score -= self.lambd * lm_lp[t]
                 mi_scores[-1].append(score)
         return np.concatenate([-np.array(sc[:-1]) for sc in mi_scores])
