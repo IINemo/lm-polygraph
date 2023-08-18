@@ -13,19 +13,29 @@ HOST = 'http://209.38.249.180:8000'
 DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
 
 
-def can_get_calibration_conf(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
+def normalization_bounds_present(est: Estimator, model_path: str, directory: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
     archive_path = model_path.split('/')[-1] + '.json'
     filepath = os.path.join(cache_path, archive_path)
     if os.path.exists(filepath):
         os.remove(filepath)
     try:
-        wget.download(HOST + '/normalization_calib/' + archive_path, out = filepath)
+        wget.download(HOST + directory + archive_path, out = filepath)
     except:
         sys.stderr.write('Failed, no normalization...')
         return False
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)
     return str(est) in ue_bounds.keys()
+
+
+def can_get_calibration_conf(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
+    return normalization_bounds_present(est, model_path,
+                                        'normalization_calib', cache_path)
+
+
+def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
+    return normalization_bounds_present(est, model_path,
+                                        'normalization', cache_path)
 
 
 def calibration_confidence(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
@@ -41,7 +51,7 @@ def calibration_confidence(est: Estimator, model_path: str, val: float, cache_pa
         return val
 
     ue_bins = ue_bounds[est]['ues'] 
-    conf_id = np.argwhere(np.array(ue_bins) > val).flatten
+    conf_id = np.argwhere(np.array(ue_bins) > val).flatten()
 
     if len(conf_id) == 0:
         conf = ue_bounds[est]['normed_conf'][-1]
@@ -51,20 +61,6 @@ def calibration_confidence(est: Estimator, model_path: str, val: float, cache_pa
         conf = ue_bounds[est]['normed_conf'][conf_id[0] - 1]
 
     return conf / 100
-
-def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
-    archive_path = model_path.split('/')[-1] + '.json'
-    filepath = os.path.join(cache_path, archive_path)
-    if os.path.exists(filepath):
-        os.remove(filepath)
-    try:
-        wget.download(HOST + '/normalization/' + archive_path, out = filepath)
-    except:
-        sys.stderr.write('Failed, no normalization...')
-        return False
-    with open(filepath, 'r') as f:
-        ue_bounds = json.load(f)
-    return str(est) in ue_bounds.keys()
 
 
 def normalize_ue(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
