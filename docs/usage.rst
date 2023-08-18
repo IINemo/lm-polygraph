@@ -24,7 +24,7 @@ Quick start
 ----------------
 
 1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
-.. code::python
+.. code:: python
     from lm_polygraph.utils.model import WhiteboxModel
 
     model = WhiteboxModel.from_pretrained(
@@ -34,14 +34,14 @@ Quick start
 
 
 2. Specify UE method
-.. code::python
+.. code:: python
     from lm_polygraph.estimators import *
 
     ue_method = MeanPointwiseMutualInformation()
 
 
 3. Get predictions and their uncertainty scores
-.. code::python
+.. code:: python
     from lm_polygraph.utils.manager import estimate_uncertainty
 
     input_text = "Who is George Bush?"
