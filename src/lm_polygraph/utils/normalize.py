@@ -19,7 +19,7 @@ def normalization_bounds_present(est: Estimator, model_path: str, directory: str
     if os.path.exists(filepath):
         os.remove(filepath)
     try:
-        wget.download(HOST + directory + archive_path, out = filepath)
+        wget.download(HOST + '/' + directory + '/' + archive_path, out = filepath)
     except:
         sys.stderr.write('Failed, no normalization...')
         return False
