@@ -30,7 +30,13 @@ class SemanticEntropy(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         loglikelihoods_list = stats['sample_log_probs']
-        hyps_list = stats['sample_texts']
+
+        # Concatenate hypos with input texts
+        hyps_list = [[] for _ in stats["input_texts"]]
+        for i, input_text in enumerate(stats["input_texts"]):
+            for hyp in stats["sample_texts"][i]:
+                hyps_list[i].append(" ".join([input_text, hyp]))
+
         return self.batched_call(hyps_list, loglikelihoods_list)
 
     def batched_call(self, hyps_list: List[List[str]], loglikelihoods_list: List[List[float]],
@@ -41,6 +47,7 @@ class SemanticEntropy(Estimator):
         self.get_classes(hyps_list)
 
         semantic_logits = {}
+        # Iteration over batch
         for i in range(len(hyps_list)):
             class_likelihoods = [np.array(loglikelihoods_list[i])[np.array(class_idx)]
                                  for class_idx in self._class_to_sample[i]]

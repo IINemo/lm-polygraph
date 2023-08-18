@@ -94,7 +94,7 @@ class SamplingGenerationCalculator(StatCalculator):
             inp_size = len(batch['input_ids'][int(i / self.samples_n)]) if model.model_type == "CausalLM" else 0
             for j in range(len(sequences[i]) - inp_size):
                 cur_token = sequences[i][j + inp_size].item()
-                log_prob += max(logits[i][j][cur_token].item(), -10)
+                log_prob += logits[i][j][cur_token].item()
                 if cur_token == model.tokenizer.eos_token_id:
                     break
                 toks.append(cur_token)
