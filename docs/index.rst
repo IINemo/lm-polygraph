@@ -30,6 +30,7 @@ Contents
 .. toctree::
 
    usage
+   web_demo
    
 
    
