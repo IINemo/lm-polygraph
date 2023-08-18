@@ -79,7 +79,7 @@ class Responder:
             curr_len += len(token)
         return tokens_with_spaces
 
-    def _split_spaces(self, tokens, conf, model_path, split=string.punctuation.replace("'", '') + " \n", strip=(' ', '\n')):
+    def _split_spaces(self, tokens, conf, split=string.punctuation.replace("'", '') + " \n", strip=(' ', '\n')):
         new_tokens, new_conf = [], []
         for i, (t, c) in enumerate(zip(tokens, conf)):
             while any(t.startswith(s) for s in split):
@@ -96,9 +96,6 @@ class Responder:
                 new_conf.append(c)
             new_tokens += stack_tokens[::-1]
             new_conf += stack_conf[::-1]
-            if 'llama' in model_path.lower():
-                new_tokens.append(' ')
-                new_conf.append(1.0)
         while len(new_tokens) > 0 and new_tokens[0] in strip:
             new_tokens = new_tokens[1:]
             new_conf = new_conf[1:]
@@ -201,11 +198,15 @@ class Responder:
         else:
             tokens = [greedy_text]
 
-        if type(self.model) == WhiteboxModel and len(tok_methods) > 0:
-            if self.model.model_type == "Seq2SeqLM":
+        if type(self.model) == WhiteboxModel:
+            if len(tok_methods) == 0:
+                tok_conf = [0 for _ in tokens]
+            if self.model.model_type == "Seq2SeqLM" or 'llama' in self.model.model_path.lower():
                 tokens = self._add_spaces_to_tokens(self.model.tokenizer, processor.stats, tokens)
-            tokens, tok_conf = self._split_spaces(tokens, tok_conf, model_path)
+            tokens, tok_conf = self._split_spaces(tokens, tok_conf)
             tokens, tok_conf = self._merge_into_words(tokens, tok_conf)
+            if len(tok_methods) == 0:
+                tok_conf = []
 
         return {
             'generation': tokens,
