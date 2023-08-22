@@ -84,7 +84,7 @@ const curatedMethods = {
 }
 
 const curatedModels = [
-    'GPT-4', 'GPT-3.5-turbo'
+    'GPT-4', 'GPT-3.5-turbo', 'Llama 2 7b'
 ]
 
 
@@ -133,7 +133,6 @@ new Vue({
             } else {
                 return toOptions(curatedMethods[this.type])
             }
-
         }
     }
 });
