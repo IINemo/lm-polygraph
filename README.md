@@ -52,7 +52,7 @@ To evaluate the performance of uncertainty estimation methods run:
 ```
 polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
 # or
-polygraph_eval --use-hydra
+polygraph_eval --use_hydra
 ```
 
 Parameters:
