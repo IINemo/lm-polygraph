@@ -1,10 +1,10 @@
 additional_estimators: {}
 
-dataset: trivia_qa
+dataset: ../triviaqa.csv
 train_dataset: null
 background_train_dataset: allenai/c4
 
-model: databricks/dolly-v2-3b
+model: hf-internal-testing/tiny-random-BartForCausalLM
 
 use_density_based_ue: false
 ignore_exceptions: true
@@ -15,7 +15,7 @@ subsample_eval_dataset: 10
 batch_size: 2
 seed:
     - 1
-device: null
+device: cpu
 
 save_path: test.man
 cache_path: .

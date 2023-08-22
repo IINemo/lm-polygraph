@@ -3,9 +3,11 @@
 import copy
 import hydra
 import importlib
+import omegaconf
 import os
 import torch
 import transformers
+import argparse
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -16,10 +18,46 @@ from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
 
-@hydra.main(version_base=None, config_path="polygraph_eval_configs", config_name="default")
-def main(args):
+def get_hydra_args(config_path, config_name):
+    with hydra.initialize(version_base=None, config_path=config_path):
+        return hydra.compose(config_name=config_name)
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str,
+                        default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
+    parser.add_argument("--train_dataset", type=str, default=None)
+    parser.add_argument("--background_train_dataset", type=str, default="allenai/c4")
+    parser.add_argument("--model", type=str, default='databricks/dolly-v2-3b')
+    parser.add_argument("--use_density_based_ue", type=bool, default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--ignore_exceptions", type=bool, default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--subsample_background_train_dataset", type=int, default=1000)
+    parser.add_argument("--subsample_train_dataset", type=int, default=100)
+    parser.add_argument("--subsample_eval_dataset", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=2)
+    parser.add_argument("--seed", nargs='+', type=int)
+    parser.add_argument("--device", type=str, default=None)
+    parser.add_argument("--save_path", type=str,
+                        default='/home/petrakov/emnlp/lm-polygraph/workdir/save')
+    parser.add_argument("--cache_path", type=str,
+                        default='/home/petrakov/emnlp/lm-polygraph/workdir')
+    parser.add_argument("--use_hydra", type=bool, default=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument("-cp", "--config_path", type=str, default="polygraph_eval_configs")
+    parser.add_argument("-cn", "--config_name", type=str, default="default")
+
+    args = parser.parse_args()
+    if args.use_hydra:
+        return get_hydra_args(args.config_path, args.config_name)
+    else:
+        return args
+
+
+def main():
+    args = get_args()
+
     additional_estimators = []
-    for module_name, estimators in args["additional_estimators"].items():
+    for module_name, estimators in getattr(args, "additional_estimators", {}).items():
         module = importlib.import_module(module_name)
         for estimator in estimators:
             additional_estimators.append(getattr(module, estimator)())
