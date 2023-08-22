@@ -6,6 +6,7 @@ import argparse
 import torch
 from flask import Flask, request, send_from_directory
 
+from huggingface_hub import login
 from lm_polygraph.app.service_helpers import Responder
 
 
@@ -21,6 +22,8 @@ if __name__ == '__main__':
             Otherwise demo will show only short curated list of known to well-working models and methods
         """
     )
+
+    login(os.environ.get('HF_ACCESS_TOKEN'))
 
     args = parser.parse_args()
     cache_path = args.cache_path
