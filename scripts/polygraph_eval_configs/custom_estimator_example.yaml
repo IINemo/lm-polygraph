@@ -5,5 +5,5 @@ defaults:
 additional_estimators:  # Estimators that will be added to UEManager
   # Write config in the following format:
   # module to import: class names of estimators that will be added to UEManager
-  custom_estimator_example:
-    - DoubleMaximumSequenceProbability 
+  polygraph_eval_configs.custom_estimator_example:
+    - CustomEstimatorExample

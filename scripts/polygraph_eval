@@ -20,7 +20,7 @@ from lm_polygraph.ue_metrics import ReversedPairsProportion, PredictionRejection
 def main(args):
     additional_estimators = []
     for module_name, estimators in args["additional_estimators"].items():
-        module = importlib.import_module('module_name')
+        module = importlib.import_module(module_name)
         for estimator in estimators:
             additional_estimators.append(getattr(module, estimator)())
 
@@ -29,8 +29,8 @@ def main(args):
 
     device = args.device
     if device is None:
-        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-
+        device = 'cuda:0' if torch.cuda.device_count() > 0 else 'cpu'
+    print(device)
     for seed in args.seed:
         print('=' * 150)
         print('SEED:', seed)
