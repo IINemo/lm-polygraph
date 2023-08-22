@@ -4,7 +4,7 @@ dataset: ../triviaqa.csv
 train_dataset: null
 background_train_dataset: allenai/c4
 
-model: hf-internal-testing/tiny-random-BartForCausalLM
+model: databricks/dolly-v2-3b
 
 use_density_based_ue: false
 ignore_exceptions: true

@@ -50,7 +50,9 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 To evaluate the performance of uncertainty estimation methods run: 
 
 ```
-polygraph_eval
+polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
+# or
+polygraph_eval --use-hydra
 ```
 
 Parameters:
