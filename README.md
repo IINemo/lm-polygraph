@@ -44,11 +44,11 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 
 ### Other examples:
 
-* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): simple examples of scoring individual queries;
-* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): an example of scoring the `bigscience/bloomz-3b` model on the `TriviaQA` dataset;
-* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): an of scoring the `facebook/wmt19-en-de` model on the `WMT14 En-De` dataset;
-* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
-* [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
+* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/example.ipynb): simple examples of scoring individual queries;
+* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/qa_example.ipynb): an example of scoring the `bigscience/bloomz-3b` model on the `TriviaQA` dataset;
+* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/mt_example.ipynb): an of scoring the `facebook/wmt19-en-de` model on the `WMT14 En-De` dataset;
+* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
+* [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in Colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
 
 
 ## Benchmark
@@ -56,10 +56,11 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 To evaluate the performance of uncertainty estimation methods consider a quick example: 
 
 ```
-polygraph_eval --dataset triviaqa.csv \
-    --model databricks/dolly-v2-3b --save_path test.man \
-    --cache_path . \
-    --seed 1 2 3 4 5
+HYDRA_CONFIG=../configs/polygraph_eval/polygraph_eval.yaml python ./scripts/polygraph_eval \
+    dataset="./workdir/data/triviaqa.csv" \
+    model="databricks/dolly-v2-3b" \
+    save_path="./workdir/output" \
+    seed=[1,2,3,4,5]
 ```
 
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) to generate the summarizing tables for an experiment.

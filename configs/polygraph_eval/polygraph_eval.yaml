@@ -1,0 +1,28 @@
+save_path: '../workdir/output'
+
+hydra:
+  run:
+    dir: ${save_path}/${task}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+device: cpu
+
+task: qa
+dataset: ../workdir/data/triviaqa.csv
+train_dataset: null
+background_train_dataset: allenai/c4
+subsample_background_train_dataset: 100
+subsample_train_dataset: 10
+subsample_eval_dataset: 10
+
+model: databricks/dolly-v2-3b
+
+additional_estimators: {}
+use_density_based_ue: false
+ignore_exceptions: true
+
+batch_size: 2
+
+seed:
+    - 1
+
+cache_path: .
