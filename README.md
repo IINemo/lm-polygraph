@@ -5,6 +5,10 @@
 
 [Installation](#installation) | [Basic usage](#basic_usage) | [Docs](https://lm-polygraph.readthedocs.io/) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
 
+LM-Polygraph provides a battery of state-of-the-art of uncertainty estimation (UE) methods for LMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertinaty can help to make applications of LLMs safer.
+
+The framework also introduces an extendable benchmark for consistent evaluation of UE techniques by researchers and a demo web application that enriches the standard chat dialog with confidence scores, empowering end-users to discern unreliable responses.
+
 ## Installation
 
 ```
