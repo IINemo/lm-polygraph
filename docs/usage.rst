@@ -1,5 +1,5 @@
 Basic usage
-=====
+===========
 
 .. _installation:
 
@@ -21,10 +21,10 @@ Code example is presented below:
 .. _quick_start:
 
 Quick start
-----------------
+-----------
 
-1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
-.. code:: python
+1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`::
+    
     from lm_polygraph.utils.model import WhiteboxModel
 
     model = WhiteboxModel.from_pretrained(
@@ -33,15 +33,15 @@ Quick start
     )
 
 
-2. Specify UE method
-.. code:: python
+2. Specify UE method::
+
     from lm_polygraph.estimators import *
 
     ue_method = MeanPointwiseMutualInformation()
 
 
-3. Get predictions and their uncertainty scores
-.. code:: python
+3. Get predictions and their uncertainty scores::
+
     from lm_polygraph.utils.manager import estimate_uncertainty
 
     input_text = "Who is George Bush?"
@@ -61,11 +61,10 @@ Other examples:
 .. _benchmarks:
 
 Benchmarks
-----------------
+----------
 
-To evaluate the performance of uncertainty estimation methods run: 
+To evaluate the performance of uncertainty estimation methods run::
 
-.. code-block::console
     polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
 
 

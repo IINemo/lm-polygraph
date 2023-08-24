@@ -1,5 +1,10 @@
+.. LM-Polygraph documentation master file, created by
+   sphinx-quickstart on Thu Aug 24 05:45:45 2023.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
 Welcome to LM-Polygraph's documentation!
-===================================
+========================================
 
 **LM-Polygraph** is a Python library that specialises on uncertainty estimation for LLMs.
 
@@ -19,18 +24,25 @@ with unified program interfaces in Python.
 Check out the :doc:`usage` section for further information, including several subsections:
 - How to conduct :ref:`installation` the project.
 - Several jupyter notebooks for :ref:`quick_start`.
-- It is also available to discover the performance of the framework online, corresponding links 
-are available in :ref:`demo_web_application` section.
 - To reproduce expiremental results we provide innstructions for benchmarks in :ref:`benchmarks` section.
 
+Web demo illustration colud be found in :doc:`web_demo` section. It is presented in subsection :ref:`demo_illustration`.
+Detailed information about modules is available in the :doc:`modules` section.
 
-Contents
---------
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
    usage
    web_demo
-   
+   modules
 
-   
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
