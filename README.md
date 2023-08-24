@@ -40,11 +40,11 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 
 ### Other examples:
 
-* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): examples of library usage
-* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): examples of library usage for the QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset
-* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): examples of library usage for the NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset
-* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): examples of library usage for the ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset
-* [Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): example of running interface from notebook (careful: only `bloomz-560m`, `gpt-3.5-turbo` and `gpt-4` fits default memory limit, other models can be run only with Colab-pro subscription)
+* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb): simple examples of scoring individual queries;
+* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb): an example of scoring the `bigscience/bloomz-3b` model on the `TriviaQA` dataset;
+* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb): an of scoring the `facebook/wmt19-en-de` model on the `WMT14 En-De` dataset;
+* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
+* [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
 
 
 ## Benchmark
@@ -68,7 +68,7 @@ A detailed description of the benchmark is in the [docs](https://lm-polygraph.re
 <img width="850" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
 
 
-### Start with docker
+### Start with Docker
 
 ```sh
 docker run -p 3001:3001 -it \
