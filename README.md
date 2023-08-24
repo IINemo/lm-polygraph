@@ -3,7 +3,7 @@
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
-[Installation](#installation) | [Basic usage](#basic_usage) | [Docs](https://lm-polygraph.readthedocs.io/) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
+[Installation](#installation) | [Basic usage](#basic_usage) | [Documentation](https://lm-polygraph.readthedocs.io/) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
 
 LM-Polygraph provides a battery of state-of-the-art of uncertainty estimation (UE) methods for LMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertinaty can help to make applications of LLMs safer.
 
@@ -64,7 +64,7 @@ polygraph_eval --dataset triviaqa.csv \
 
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) to generate the summarizing tables for an experiment.
 
-A detailed description of the benchmark is in the [docs](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
+A detailed description of the benchmark is in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
 
 ## <a name="demo_web_application"></a>Demo web application
 
@@ -81,7 +81,7 @@ docker run -p 3001:3001 -it \
 ```
 The server should be available on `http://localhost:3001`
 
-A more detailed description of the demo is available in the [docs](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
+A more detailed description of the demo is available in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
 
 ### Original implementation
 
