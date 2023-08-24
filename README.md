@@ -3,6 +3,8 @@
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
+[Installation](#installation) | [Basic usage](#Basic usage) | [Overview](#Benchmark) | [Docs](https://lm-polygraph.readthedocs.io/)
+
 ## Installation
 
 ```
