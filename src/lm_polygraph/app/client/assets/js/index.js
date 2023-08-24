@@ -25,6 +25,23 @@ promptInput.addEventListener('paste', function(e) {
     document.execCommand('insertHTML', false, pastedText);
 });
 
+const placeholder = `<div style="color: gray">` + promptInput.getAttribute('placeholder') + `</div>`;
+
+// Set the placeholder as initial content if it's empty
+promptInput.innerHTML === '' && (promptInput.innerHTML = placeholder);
+
+promptInput.addEventListener('focus', function (e) {
+    const value = e.target.innerHTML;
+    value === placeholder && (e.target.innerHTML = '');
+});
+
+promptInput.addEventListener('blur', function (e) {
+    const value = e.target.innerHTML;
+    value === '' && (e.target.innerHTML = placeholder);
+});
+
+contentEditable.blur();
+
 var temperature = 1.0;
 var topk = 1;
 var topp = 1.0;

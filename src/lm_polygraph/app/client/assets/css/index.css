@@ -3,6 +3,7 @@
   --background_half: rgba(255, 255, 255, 0.5);
   --prompt: #e8f4f8;
   --input: #d1e9f1;
+  --prompt_input: #edf7fa;
   --light_text: rgba(65, 65, 65, 1);
   --text: rgba(30, 30, 30, 1);
   --white: #faf0e6;
@@ -315,6 +316,7 @@ select {
     min-height: 20px;
     color: black;
     overflow: auto;
+    background-color: var(--prompt_input);
 }
 
 #prompt-input:focus {
