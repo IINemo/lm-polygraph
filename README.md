@@ -3,7 +3,7 @@
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
-[Installation](#installation) | [Basic usage](#Basic_usage) | [Overview](#Benchmark) | [Docs](https://lm-polygraph.readthedocs.io/)
+[Installation](#installation) | [Basic usage](#basic_usage) | [Docs](https://lm-polygraph.readthedocs.io/) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
 
 ## Installation
 
@@ -11,7 +11,7 @@
 git clone https://github.com/IINemo/lm-polygraph.git && cd lm-polygraph && pip install .
 ```
 
-## Basic usage
+## <a name="basic_usage"></a>Basic usage
 
 1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`
 ```python
@@ -52,7 +52,10 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 To evaluate the performance of uncertainty estimation methods run: 
 
 ```
-polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
+polygraph_eval --dataset triviaqa.csv \
+    --model databricks/dolly-v2-3b --save_path test.man \
+    --cache_path . \
+    --seed 1 2 3 4 5
 ```
 
 Parameters:
@@ -69,16 +72,18 @@ Use `visualization_tables.ipynb` to generate the summarizing tables for an exper
 
 The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found [here](https://drive.google.com/drive/folders/1bQlvPRZHdZvdpAyBQ_lQiXLq9t5whTfi?usp=sharing).
 
-## Demo web application
+## <a name="demo_web_application"></a>Demo web application
 
  
-<img width="900" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
+<img width="850" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
 
 
 ### Start with docker
 
 ```sh
-docker run -p 3001:3001 -it -v $HOME/.cache/huggingface/hub:/root/.cache/huggingface/hub --gpus all mephodybro/polygraph_demo:0.0.17 polygraph_server
+docker run -p 3001:3001 -it \
+    -v $HOME/.cache/huggingface/hub:/root/.cache/huggingface/hub \
+    --gpus all mephodybro/polygraph_demo:0.0.17 polygraph_server
 ```
 The server should be available on `http://localhost:3001`
 
