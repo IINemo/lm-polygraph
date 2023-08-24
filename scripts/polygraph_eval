@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import copy
+import hydra
+import importlib
+import omegaconf
 import os
 import torch
 import transformers
@@ -16,7 +18,12 @@ from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import ReversedPairsProportion, PredictionRejectionArea, RiskCoverageCurveAUC
 
 
-if __name__ == '__main__':
+def get_hydra_args(config_path, config_name):
+    with hydra.initialize(version_base=None, config_path=config_path):
+        return hydra.compose(config_name=config_name)
+
+
+def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str,
                         default='/Users/ekaterinafadeeva/work/data/uncertainty_datasets/triviaqa.csv')
@@ -35,15 +42,32 @@ if __name__ == '__main__':
                         default='/home/petrakov/emnlp/lm-polygraph/workdir/save')
     parser.add_argument("--cache_path", type=str,
                         default='/home/petrakov/emnlp/lm-polygraph/workdir')
+    parser.add_argument("--use_hydra", type=bool, default=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument("-cp", "--config_path", type=str, default="polygraph_eval_configs")
+    parser.add_argument("-cn", "--config_name", type=str, default="default")
+
     args = parser.parse_args()
+    if args.use_hydra:
+        return get_hydra_args(args.config_path, args.config_name)
+    else:
+        return args
+
+
+def main():
+    args = get_args()
+
+    additional_estimators = []
+    for module_name, estimators in getattr(args, "additional_estimators", {}).items():
+        module = importlib.import_module(module_name)
+        for estimator in estimators:
+            additional_estimators.append(getattr(module, estimator)())
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
     device = args.device
     if device is None:
-        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-
+        device = 'cuda:0' if torch.cuda.device_count() > 0 else 'cpu'
     for seed in args.seed:
         print('=' * 150)
         print('SEED:', seed)
@@ -155,7 +179,7 @@ if __name__ == '__main__':
                 PointwiseMutualInformation(),
                 ConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
                 SemanticEntropyToken(model.model_path, args.cache_path),
-            ] + density_based_ue,
+            ] + density_based_ue + additional_estimators,
             [
                 RougeMetric('rouge1'),
                 RougeMetric('rouge2'),
@@ -179,3 +203,7 @@ if __name__ == '__main__':
         )
         man()
         man.save(args.save_path + f'_seed{seed}')
+
+
+if __name__ == '__main__':
+    main()
