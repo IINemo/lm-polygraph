@@ -6,7 +6,7 @@ build:
     python: "3.10"
 
 sphinx:
-   configuration: src/docs/conf.py
+   configuration: src/lm_polygraph/docs/conf.py
 
 formats:
    - pdf
@@ -14,4 +14,4 @@ formats:
 
 python:
   install:
-    - requirements: src/docs/requirements.txt
+    - requirements: src/lm_polygraph/docs/requirements.txt
