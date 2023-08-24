@@ -19,7 +19,7 @@ class MutualInformationSeq(Estimator):
         for lp, lm_lp in zip(logprobs, lm_logprobs):
             mi_scores.append([])
             for t in range(len(lp)):
-                mi_scores[-1].append(lp[t] - (lm_lp[t - 1] if t > 0 else 0))
+                mi_scores[-1].append(lp[t] - (lm_lp[t] if t > 0 else 0))
         return np.array([-np.mean(sc) for sc in mi_scores])
 
 
@@ -37,5 +37,5 @@ class MutualInformationToken(Estimator):
         for lp, lm_lp in zip(logprobs, lm_logprobs):
             mi_scores.append([])
             for t in range(len(lp)):
-                mi_scores[-1].append(lp[t] - (lm_lp[t - 1] if t > 0 else 0))
+                mi_scores[-1].append(lp[t] - (lm_lp[t] if t > 0 else 0))
         return np.concatenate([-np.array(sc[:-1]) for sc in mi_scores])
