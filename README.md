@@ -49,7 +49,7 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 
 ## Benchmark
 
-To evaluate the performance of uncertainty estimation methods run: 
+To evaluate the performance of uncertainty estimation methods consider a quick example: 
 
 ```
 polygraph_eval --dataset triviaqa.csv \
@@ -58,19 +58,9 @@ polygraph_eval --dataset triviaqa.csv \
     --seed 1 2 3 4 5
 ```
 
-Parameters:
+Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) to generate the summarizing tables for an experiment.
 
-* `dataset`: path to .csv dataset
-* `model`: path to huggingface model
-* `batch_size`: batch size for generation (default: 2)
-* `seed`: seed for generation (default: 1; can specify several seeds for multiple tests)
-* `device`: `cpu` or `cuda:N` (default: `cuda:0` if avaliable, `cpu` otherwise)
-* `save_path`: file path to save test results (the directory better be existing)
-* `cache_path`: directory path to cache intermediate calculations (the directory better be existing)
-
-Use `visualization_tables.ipynb` to generate the summarizing tables for an experiment.
-
-The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found [here](https://drive.google.com/drive/folders/1bQlvPRZHdZvdpAyBQ_lQiXLq9t5whTfi?usp=sharing).
+A detailed description of the benchmark is in the [docs](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
 
 ## <a name="demo_web_application"></a>Demo web application
 
@@ -86,6 +76,8 @@ docker run -p 3001:3001 -it \
     --gpus all mephodybro/polygraph_demo:0.0.17 polygraph_server
 ```
 The server should be available on `http://localhost:3001`
+
+A more detailed description of the demo is available in the [docs](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
 
 ### Original implementation
 
