@@ -28,20 +28,19 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                     top_k=model.parameters.topk,
                     n=self.samples_n)
         else:
-            for _ in range(self.samples_n):
-                for i, seq in enumerate(model.generate_texts(
-                        input_texts=texts,
-                        max_length=256,
-                        min_length=2,
-                        do_sample=True,
-                        num_beams=1,
-                        temperature=model.parameters.temperature,
-                        top_p=model.parameters.topp,
-                        repetition_penalty=model.parameters.repetition_penalty,
-                        top_k=model.parameters.topk,
-                        num_return_sequences=1)):
-                    samples[i].append(seq)
-
+            for i, seq in enumerate(model.generate_texts(
+                    input_texts=texts,
+                    max_length=256,
+                    min_length=2,
+                    do_sample=True,
+                    num_beams=1,
+                    temperature=model.parameters.temperature,
+                    top_p=model.parameters.topp,
+                    repetition_penalty=model.parameters.repetition_penalty,
+                    top_k=model.parameters.topk,
+                    num_return_sequences=self.samples_n)):
+                samples[i].append(seq)
+        
         return {
             'blackbox_sample_texts': samples,
         }
