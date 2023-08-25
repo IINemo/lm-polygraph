@@ -40,8 +40,6 @@ promptInput.addEventListener('blur', function (e) {
     value === '' && (e.target.innerHTML = placeholder);
 });
 
-contentEditable.blur();
-
 var temperature = 1.0;
 var topk = 1;
 var topp = 1.0;
