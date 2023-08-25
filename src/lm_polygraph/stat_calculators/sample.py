@@ -40,7 +40,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                     top_k=model.parameters.topk,
                     num_return_sequences=self.samples_n)
             for i in range(len(texts)):
-                for j in range(self.samples_n)
+                for j in range(self.samples_n):
                     samples[i].append(out[i + j])
         
         return {
