@@ -11,7 +11,7 @@ from lm_polygraph.estimators import *
 HOST = 'http://209.38.249.180:8000'
 
 DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
-DEFAULT_NORM_HOST_PATH = 'normalization'
+DEFAULT_NORM_HOST_PATH = 'normalization_token_level'
 
 
 def normalization_bounds_present(est: Estimator, model_path: str, directory: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
