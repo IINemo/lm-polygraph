@@ -6,7 +6,8 @@ let uniqueIdToRetry = null;
 const submitButton = document.getElementById('submit-button');
 const promptInput = document.getElementById('prompt-input');
 const modelSelect = document.getElementById('model');
-const seqUeSelect = document.getElementById('seque');
+//const seqUeSelect = document.getElementById('seque');
+const tokUeSelect = document.getElementById('tokue');
 const responseList = document.getElementById('response-list');
 const modal = document.getElementById("modal");
 const settingsButton = document.getElementById("settings-button");
@@ -289,19 +290,14 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     if (!model) {
         return;
     }
-    const seq_ue = seqUeSelect.__vue__.sequeSelected;
+//    const seq_ue = seqUeSelect.__vue__.sequeSelected;
+    const tok_ue = tokUeSelect.__vue__.tokueSelected;
 
     let tok_str = "None";
-    let seq_str = "None";
-    if (seq_ue)
-        seq_str = seq_ue;
+    if (tok_ue)
+        tok_str = tok_ue;
 
-    // Left for token-level
-//    const modeldesc = model;
-//    const tokdesc = 'token-level: ' + tok_str;
-//    const seqdesc = 'sequence-level: ' + seq_str;
-//    const desc = `${modeldesc}<br>${tokdesc}<br>${seqdesc}`;
-    const desc = `${model}<br>${seq_str}`;
+    const desc = `${model}<br>${tok_str}`;
 
     // If a response is already being generated or the prompt is empty, return
     if (isGeneratingResponse || !prompt) {
@@ -355,7 +351,7 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
                 model,
                 openai_key,
                 ensembles,
-                seq_ue,
+                tok_ue,
                 temperature,
                 topp,
                 topk,

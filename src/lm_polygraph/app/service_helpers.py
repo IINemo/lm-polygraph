@@ -13,7 +13,7 @@ from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue, \
-                                         can_get_calibration_conf, calibration_confidence 
+    can_get_calibration_conf, calibration_confidence
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
@@ -39,11 +39,12 @@ class Responder:
         self.tok_ue_methods: Dict[str, Estimator] = {}
         self.seq_ue_methods: Dict[str, Estimator] = {}
         self.density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
-                                          "RDE", "RDE - encoder"]
+                                               "RDE", "RDE - encoder"]
         self.cache_path: str = cache_path
         self.device = device
 
-    def _get_confidence(self, processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> Tuple[
+    def _get_confidence(self, processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> \
+    Tuple[
         List, str]:
         if len(methods) == 0:
             return [], 'none'
@@ -58,7 +59,8 @@ class Responder:
                     if not can_get_calibration_conf(method, model_path, self.cache_path):
                         normalization = 'none'
                     else:
-                        normalized_confidences[-1].append(calibration_confidence(method, model_path, x, self.cache_path))
+                        normalized_confidences[-1].append(
+                            calibration_confidence(method, model_path, x, self.cache_path))
                 else:
                     if not can_normalize_ue(method, model_path, self.cache_path):
                         normalization = 'none'
@@ -140,7 +142,7 @@ class Responder:
             num_beams=int(data['num_beams']),
             presence_penalty=float(data['presence_penalty']),
             repetition_penalty=float(data['repetition_penalty']),
-            allow_newlines=('Dolly' not in data['model']),
+            allow_newlines=True,
         )
         ensemble_model = None
         if data['model'] == 'Ensemble':
@@ -166,6 +168,10 @@ class Responder:
         # seq_ue_method_names = data['seq_ue'] if 'seq_ue' in data.keys() and data['seq_ue'] is not None else []
 
         text = data['prompt']
+
+        if 'dolly' in model_path.lower():
+            text = f'Below is an instruction that describes a task. Write a response that appropriately completes ' \
+                   f'the request.\n### Instruction:\n{text}\n### Response:\n'
 
         for ue_method_name in tok_ue_method_names:
             if (ue_method_name not in self.tok_ue_methods.keys()) or (ue_method_name in self.density_based_names):
@@ -201,10 +207,17 @@ class Responder:
         if 'greedy_tokens' in processor.stats.keys():
             tokens = []
             for t in processor.stats['greedy_tokens'][0][:-1]:
-                if t not in [self.model.tokenizer.bos_token_id, self.model.tokenizer.eos_token_id, self.model.tokenizer.pad_token_id]:
+                if t not in [self.model.tokenizer.bos_token_id, self.model.tokenizer.eos_token_id,
+                             self.model.tokenizer.pad_token_id]:
                     tokens.append(self.model.tokenizer.decode([t]))
         else:
             tokens = [greedy_text]
+
+        for i in range(len(tokens)):
+            if '### End' in tokens[i]:
+                tokens = tokens[:i]
+                tok_conf = tok_conf[:i]
+                break
 
         if type(self.model) == WhiteboxModel:
             if len(tok_methods) == 0:

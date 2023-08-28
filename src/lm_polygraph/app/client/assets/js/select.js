@@ -78,21 +78,27 @@ const allModels = [
 
 
 const curatedMethods = {
-    'T5': ['Lexical Similarity'],
-    'openai': ['Lexical Similarity'],
-    'seq2seq': ['Lexical Similarity', 'Mean Token Entropy', 'Perplexity']
+    'T5': [],
+    'openai': [],
+    'seq2seq': [
+        "Maximum Token Probability", "Token Entropy",
+        "Pointwise Mutual Information",
+        "Conditional Pointwise Mutual Information",
+        "Semantic Token Entropy",
+    ]
 }
 
 const curatedModels = [
-    'GPT-4', 'GPT-3.5-turbo', 'Llama 2 7b'
+    'BLOOMz 560M', 'Llama 2 7b', 'Dolly 3b', 'BLOOMz 3b'
 ]
 
+const defaultModel = curatedModels[0];
 
 Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#model',
     data: {
-        modelSelected: 'GPT-4',
+        modelSelected: defaultModel,
         value: '',
         allModels: false,
     },
@@ -108,11 +114,40 @@ new Vue({
 });
 
 
+//Vue.component('treeselect', VueTreeselect.Treeselect);
+//new Vue({
+//    el: '#seque',
+//    data: {
+//        sequeSelected: curatedMethods[modelType(defaultModel)][0],
+//        model: '',
+//        type: '',
+//        allMethods: false
+//    },
+//    computed: {
+//        computedOptions() {
+//            var newModel = document.getElementById('model').__vue__.modelSelected;
+//            newType = modelType(newModel)
+//
+//            if (this.type !== '' && this.type !== newType) {
+//                this.sequeSelected = curatedMethods[newType][0];
+//            }
+//            this.model = newModel;
+//            this.type = newType;
+//
+//            if (this.allMethods){
+//                return toOptions(typeMethods[this.type])
+//            } else {
+//                return toOptions(curatedMethods[this.type])
+//            }
+//        }
+//    }
+//});
+
 Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
-    el: '#seque',
+    el: '#tokue',
     data: {
-        sequeSelected: 'Lexical Similarity',
+        tokueSelected: curatedMethods[modelType(defaultModel)][0],
         model: '',
         type: '',
         allMethods: false
@@ -123,7 +158,7 @@ new Vue({
             newType = modelType(newModel)
 
             if (this.type !== '' && this.type !== newType) {
-                this.sequeSelected = 'Lexical Similarity';
+                this.tokueSelected = curatedMethods[newType][0];
             }
             this.model = newModel;
             this.type = newType;

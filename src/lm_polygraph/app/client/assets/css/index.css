@@ -370,7 +370,7 @@ select {
 
 #tokue {
     color: var(--text);
-    width: 35%;
+    width: 50%;
 }
 
 #model select {

@@ -11,6 +11,7 @@ from lm_polygraph.estimators import *
 HOST = 'http://209.38.249.180:8000'
 
 DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
+DEFAULT_NORM_HOST_PATH = 'normalization'
 
 
 def normalization_bounds_present(est: Estimator, model_path: str, directory: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
@@ -18,10 +19,11 @@ def normalization_bounds_present(est: Estimator, model_path: str, directory: str
     filepath = os.path.join(cache_path, archive_path)
     if os.path.exists(filepath):
         os.remove(filepath)
+    host_path = HOST + '/' + directory + '/' + archive_path
     try:
-        wget.download(HOST + '/' + directory + '/' + archive_path, out = filepath)
+        wget.download(host_path, out = filepath)
     except:
-        sys.stderr.write('Failed, no normalization...')
+        sys.stderr.write(f'Failed, no {str(est)} normalization for {model_path} at {host_path}\n')
         return False
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)
@@ -34,8 +36,7 @@ def can_get_calibration_conf(est: Estimator, model_path: str, cache_path: str = 
 
 
 def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
-    return normalization_bounds_present(est, model_path,
-                                        'normalization', cache_path)
+    return normalization_bounds_present(est, model_path, DEFAULT_NORM_HOST_PATH, cache_path)
 
 
 def calibration_confidence(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:

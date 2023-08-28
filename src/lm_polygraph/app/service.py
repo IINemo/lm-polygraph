@@ -4,11 +4,12 @@ Get up a server with demo on localhost:3001
 import os
 import argparse
 import torch
+import pathlib
+import lm_polygraph.utils.normalize as normalize
 from flask import Flask, request, send_from_directory
 
 from huggingface_hub import login
 from lm_polygraph.app.service_helpers import Responder
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -22,6 +23,7 @@ if __name__ == '__main__':
             Otherwise demo will show only short curated list of known to well-working models and methods
         """
     )
+    parser.add_argument("--normalization-cache-path", type=str, default=None)
 
     login(os.environ.get('HF_ACCESS_TOKEN'))
 
@@ -33,6 +35,9 @@ if __name__ == '__main__':
         device = 'cuda:0'
     else:
         device = 'cpu'
+
+    if args.normalization_cache_path is not None:
+        normalize.DEFAULT_NORM_HOST_PATH = args.normalization_cache_path
 
     responder = Responder(cache_path, device)
 
