@@ -40,7 +40,7 @@ def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_
 
 
 def calibration_confidence(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
-    if np.isnan(val):
+    if val is None:
         return 1
     est = str(est)
     filepath = os.path.join(cache_path, model_path.split('/')[-1] + '.json')
@@ -65,8 +65,8 @@ def calibration_confidence(est: Estimator, model_path: str, val: float, cache_pa
 
 
 def normalize_ue(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
-    if np.isnan(val):
-        return 1
+    if val is None:
+        return 0
     filepath = os.path.join(cache_path, model_path.split('/')[-1] + '.json')
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)

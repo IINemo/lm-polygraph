@@ -11,11 +11,11 @@ from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
+from lm_polygraph.token_clusterer.token_clusterer import TokenClusterer, IdClusterer
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
 from lm_polygraph.ue_metrics.ue_metric import UEMetric
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
-from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
 
 def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
@@ -95,6 +95,7 @@ class UEManager:
             background_train_data: Dataset = None,
             ignore_exceptions: bool = True,
             ensemble_model: Optional[WhiteboxModel] = None,
+            token_clusterer: TokenClusterer = IdClusterer(),
             verbose: bool = True,
     ):
         self.model: WhiteboxModel = model
@@ -122,18 +123,21 @@ class UEManager:
             print('Stat calculators:', self.stat_calculators)
 
         train_stats = [s for e in estimators for s in e.stats_dependencies if s.startswith("train")]
-        train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []     
+        train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []
         train_stats, _ = _order_calculators(train_stats)
         self.train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in train_stats]
-        background_train_stats = [s for e in estimators for s in e.stats_dependencies if s.startswith("background_train")]
+        background_train_stats = [s for e in estimators for s in e.stats_dependencies if
+                                  s.startswith("background_train")]
         background_train_stats, _ = _order_calculators(background_train_stats)
-        self.background_train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in background_train_stats]
+        self.background_train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in
+                                                                        background_train_stats]
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
         self.stats: Dict[str, List] = defaultdict(list)
 
+        self.token_clusterer = token_clusterer
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
@@ -186,6 +190,10 @@ class UEManager:
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for estimator in self.estimators:
                 e = estimator(batch_stats).tolist()
+                if estimator.level == 'token':
+                    e = self.token_clusterer(batch_stats['greedy_texts'],
+                                             [[self.model.tokenizer.decode([t]) for t in toks] for toks in
+                                              batch_stats['greedy_tokens']], e)
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
@@ -218,15 +226,15 @@ class UEManager:
             processor.on_eval(self.metrics)
 
         return self.metrics
-    
-    def extract_train_embeddings(self, background: bool=False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+
+    def extract_train_embeddings(self, background: bool = False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_stats = {}
         result_train_stat = {}
         if background:
-            data = self.background_train_data 
+            data = self.background_train_data
             stat_calculators = self.background_train_stat_calculators
         else:
-            data = self.train_data 
+            data = self.train_data
             stat_calculators = self.train_stat_calculators
         if len(stat_calculators) and (data is not None):
             for inp_texts, target_texts in tqdm(data):
@@ -241,14 +249,14 @@ class UEManager:
                 ]:
                     self.stats[key] += val
                     batch_stats[key] = val
-                    
+
                 for stat_calculator in stat_calculators:
                     new_stats = stat_calculator(batch_stats, inp_texts, self.model)
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue
                         batch_stats[stat] = stat_value
-                        
+
                 for stat in batch_stats.keys():
                     if stat in ["input_tokens", "input_texts", "target_texts", "target_tokens"]:
                         continue
@@ -256,14 +264,14 @@ class UEManager:
                         train_stats[stat].append(batch_stats[stat])
                     else:
                         train_stats[stat] = [batch_stats[stat]]
-                            
+
             key_prefix = "background_train_" if background else "train_"
             for stat in train_stats.keys():
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[key_prefix + stat] = [item for sublist in train_stats[stat] for item in sublist]
                 else:
                     result_train_stat[key_prefix + stat] = torch.cat(train_stats[stat])
-                    
+
         return result_train_stat
 
     def save(self, save_path: str):

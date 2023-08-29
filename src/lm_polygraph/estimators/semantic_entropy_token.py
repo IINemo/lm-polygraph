@@ -84,6 +84,8 @@ class SemanticEntropyToken(Estimator):
             for lp in s_lp[:-1]:
                 p = np.exp(lp)[:len(self.classes)]
                 class_probs = np.bincount(self.classes, weights=p)
+                class_probs = class_probs[~np.isnan(class_probs)]
+                class_probs = class_probs[class_probs > 1e-100]
                 sem_ent[-1].append(-np.mean(class_probs * np.log(class_probs)))
         return np.concatenate(sem_ent)
 

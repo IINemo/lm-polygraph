@@ -3,10 +3,12 @@ import numpy as np
 import argparse
 import torch
 import string
+import traceback
 
 from typing import Optional, Dict, Tuple, List
 
 from flask import abort
+from lm_polygraph.token_clusterer import IdClusterer
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.manager import UEManager
@@ -44,8 +46,8 @@ class Responder:
         self.device = device
 
     def _get_confidence(self, processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> \
-    Tuple[
-        List, str]:
+            Tuple[
+                List, str]:
         if len(methods) == 0:
             return [], 'none'
         condifences, normalized_confidences = [], []
@@ -54,7 +56,7 @@ class Responder:
             condifences.append([])
             normalized_confidences.append([])
             for x in processor.ue_estimations[level, str(method)]:
-                condifences[-1].append(-x)
+                condifences[-1].append(-x if x is not None else None)
                 if str(method) in ['Perplexity', 'MeanTokenEntropy']:
                     if not can_get_calibration_conf(method, model_path, self.cache_path):
                         normalization = 'none'
@@ -125,7 +127,7 @@ class Responder:
                 words.append(token)
                 word_start = i + 1
             elif i + 1 == len(tokens) or tokens[i + 1] in split:
-                word_conf.append(np.min(confidences[word_start:i + 1]))
+                word_conf.append(np.min([c for c in confidences[word_start:i + 1] if not np.isnan(c)]))
                 words.append(''.join(tokens[word_start:i + 1]))
                 word_start = i + 1
         return words, word_conf
@@ -191,9 +193,13 @@ class Responder:
             man = UEManager(dataset, self.model, tok_methods + seq_methods, [], [],
                             [processor],
                             ensemble_model=ensemble_model,
-                            ignore_exceptions=False)
+                            ignore_exceptions=False,
+                            token_clusterer=IdClusterer())
             man()
         except Exception as e:
+            trace = traceback.format_exc()
+            print('Error: ' + str(e))
+            print('Stack trace:\n' + trace)
             abort(400, str(e))
 
         if len(processor.ue_estimations) != len(tok_methods) + len(seq_methods):
