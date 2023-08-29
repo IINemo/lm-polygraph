@@ -1,4 +1,4 @@
 from lm_polygraph.token_clusterer.token_clusterer import IdClusterer
-from lm_polygraph.token_clusterer.keyword_clusterer import KeyWordsClusterer
-from lm_polygraph.token_clusterer.atomic_clusterer import AtomicClusterer
-from lm_polygraph.token_clusterer.matcher import KeyWordMatcher
+# from lm_polygraph.token_clusterer.keyword_clusterer import KeyWordsClusterer
+# from lm_polygraph.token_clusterer.atomic_clusterer import AtomicClusterer
+# from lm_polygraph.token_clusterer.matcher import KeyWordMatcher
