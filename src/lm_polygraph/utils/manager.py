@@ -1,4 +1,4 @@
-import numpy as np
+zimport numpy as np
 import torch
 import sys
 
@@ -119,6 +119,7 @@ class UEManager:
             verbose: bool = True,
             max_new_tokens: int = 100,
             background_train_dataset_max_new_tokens: int = 100,
+            ood_detection: bool = False,
     ):
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -158,6 +159,7 @@ class UEManager:
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
         self.stats: Dict[str, List] = defaultdict(list)
 
+        self.ood_detection = ood_detection
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
@@ -169,11 +171,12 @@ class UEManager:
         background_train_stats = self.extract_train_embeddings(background=True)
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
-        for inp_texts, target_texts in iterable_data:
+        for inp_texts, target_texts, ood_labels in iterable_data:
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ('input_texts', inp_texts),
                 ('target_texts', target_texts),
+                ('ood_labels', ood_labels),
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
@@ -240,7 +243,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ['blackbox_greedy_texts', 'greedy_texts', 'greedy_tokens']:
+            for key in ['blackbox_greedy_texts', 'greedy_texts', 'greedy_tokens', 'ood_labels']:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
@@ -254,11 +257,18 @@ class UEManager:
                     if len(estimator_values) != len(generation_metric):
                         raise Exception(f'Got different number of metrics for {e_name} and {gen_name}: '
                                         f'{len(estimator_values)} and {len(generation_metric)}')
+                        
+                    if hasattr(ue_metric, 'is_ood_metric') and ue_metric.is_ood_metric and self.ood_detection:
+                        generation_metric = self.stats['ood_labels']
+                        gen_name = "ood"
+                    
+                    if (e_level, e_name, gen_name, str(ue_metric)) in self.metrics.keys():
+                        continue
                     # TODO: Report how many nans!
                     # This is important to know for a user
                     ue, metric, selected_ids = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
+                        self.metrics[dict_key] = np.nan
                     else:
                         inputs_no_nans = np.array(self.stats['input_texts'])[selected_ids]
                         rec_ue, rec_metric = _recombine_data(ue, metric,
@@ -283,7 +293,7 @@ class UEManager:
             stat_calculators = self.train_stat_calculators
             max_new_tokens = self.max_new_tokens
         if len(stat_calculators) and (data is not None):
-            for inp_texts, target_texts in tqdm(data):
+            for inp_texts, target_texts, _ in tqdm(data):
                 target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
                                  for text in target_texts]
 

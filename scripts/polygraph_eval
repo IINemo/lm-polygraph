@@ -12,6 +12,9 @@ import json
 import logging
 
 log = logging.getLogger()
+from numpy.random import default_rng
+from transformers import AutoTokenizer
+
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -25,10 +28,12 @@ from lm_polygraph.generation_metrics.model_score import (
 )
 from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.estimators import *
+from lm_polygraph.utils.add_ood import add_ood_from_dataset
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
     PredictionRejectionArea,
     RiskCoverageCurveAUC,
+    ROCAUC
 )
 
 DENSITY_BASED_ESTIMATORS = [
@@ -157,7 +162,31 @@ def main(args):
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
+            
+        if args.ood_detection:
+            ood_dataset = Dataset.load(
+                args.ood_dataset,
+                args.ood_input_column, 'answer',
+                batch_size=args.batch_size,
+            )
+            if args.subsample_ood_dataset != -1:
+                ood_dataset.subsample(args.subsample_ood_dataset, seed=seed)
+            
+            tokenizer = AutoTokenizer.from_pretrained(
+                args.model, truncation=True, padding=True, max_length=512
+            )
 
+            random_gen = default_rng(seed=seed)
+            dataset = add_ood_from_dataset(
+                dataset,
+                ood_dataset,
+                random_gen,
+                corrupt_samples=args.ood_corrupt,
+                text_field='question',
+                ood_text_field=args.ood_input_column,
+                tokenizer=tokenizer,
+            )        
+        
         man = UEManager(
             dataset,
             model,
@@ -175,6 +204,7 @@ def main(args):
                 ReversedPairsProportion(),
                 PredictionRejectionArea(),
                 RiskCoverageCurveAUC(),
+                ROCAUC(),
             ],
             [
                 Logger(),
@@ -184,6 +214,7 @@ def main(args):
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
+            ood_detection=args.ood_detection,
         )
 
         man()

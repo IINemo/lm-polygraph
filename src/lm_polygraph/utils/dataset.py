@@ -12,10 +12,11 @@ class Dataset:
         self.x = x
         self.y = y
         self.batch_size = batch_size
+        self.ood_label = [0]*len(self.x)
 
     def __iter__(self) -> Iterable[Tuple[List[str], List[str]]]:
         for i in range(0, len(self.x), self.batch_size):
-            yield self.x[i:i + self.batch_size], self.y[i:i + self.batch_size]
+            yield self.x[i:i + self.batch_size], self.y[i:i + self.batch_size], self.ood_label[i:i + self.batch_size]
 
     def __len__(self):
         return (len(self.x) + self.batch_size - 1) // self.batch_size
