@@ -6,14 +6,14 @@ import os
 import torch
 import transformers
 import argparse
+from numpy.random import default_rng
+from transformers import AutoTokenizer
 from pathlib import Path
 import json
 
 import logging
 
 log = logging.getLogger()
-from numpy.random import default_rng
-from transformers import AutoTokenizer
 
 
 from lm_polygraph.utils.manager import UEManager
@@ -163,6 +163,7 @@ def main(args):
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
             
+        ood_metrics = []
         if args.ood_detection:
             ood_dataset = Dataset.load(
                 args.ood_dataset,
@@ -185,7 +186,8 @@ def main(args):
                 text_field='question',
                 ood_text_field=args.ood_input_column,
                 tokenizer=tokenizer,
-            )        
+            )       
+            ood_metrics = [ROCAUC()]    
         
         man = UEManager(
             dataset,
@@ -204,8 +206,7 @@ def main(args):
                 ReversedPairsProportion(),
                 PredictionRejectionArea(),
                 RiskCoverageCurveAUC(),
-                ROCAUC(),
-            ],
+            ]+ood_metrics,
             [
                 Logger(),
             ],
