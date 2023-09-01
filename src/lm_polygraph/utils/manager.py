@@ -243,12 +243,14 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ['blackbox_greedy_texts', 'greedy_texts', 'greedy_tokens', 'ood_labels']:
+            for key in ['blackbox_greedy_texts', 'greedy_texts', 'greedy_tokens']:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
+
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
+        print(self.gen_metrics)
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:

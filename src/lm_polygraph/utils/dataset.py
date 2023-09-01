@@ -24,6 +24,7 @@ class Dataset:
     def select(self, indices: List[int]):
         self.x = np.array(self.x)[indices].tolist()
         self.y = np.array(self.y)[indices].tolist()
+        self.ood_label = np.array(self.ood_label)[indices].tolist()
         return self
     
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):

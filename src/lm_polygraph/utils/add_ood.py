@@ -22,7 +22,7 @@ def add_ood_from_dataset(
     tokenizer=None,
 ) -> Dataset:
     if len(ood) > len(dataset):
-        ood = ood.select(range(len(dataset)))
+        ood = ood.subsample(size=len(dataset.x), seed=42)
 
     if corrupt_samples:
         ood.x = [corrupt(x, tokenizer, random_gen) for x in ood.x]

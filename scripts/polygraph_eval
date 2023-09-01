@@ -206,7 +206,8 @@ def main(args):
                 ReversedPairsProportion(),
                 PredictionRejectionArea(),
                 RiskCoverageCurveAUC(),
-            ]+ood_metrics,
+            ]
+            + ood_metrics,
             [
                 Logger(),
             ],
