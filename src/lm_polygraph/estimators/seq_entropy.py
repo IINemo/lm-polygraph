@@ -13,7 +13,7 @@ class SeqEntropySeq(Estimator):
         self.gen_max_len = gen_max_len
 
     def __str__(self):
-        return 'SeqEntropy'
+        return f'SeqEntropy_{self.normalization_method}'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_logprobs = stats['sample_log_probs']
