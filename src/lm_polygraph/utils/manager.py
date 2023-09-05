@@ -250,7 +250,6 @@ class UEManager:
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
-        print(self.gen_metrics)
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
