@@ -126,6 +126,8 @@ class MahalanobisDistanceSeq(Estimator):
             self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
+        else:
+            self.centroid = self.centroid.to(embeddings.device)
         
         # compute inverse covariance matrix if not given
         if self.sigma_inv is None:
@@ -133,8 +135,11 @@ class MahalanobisDistanceSeq(Estimator):
             self.sigma_inv, _ = compute_inv_covariance(
                 self.centroid.unsqueeze(0), train_embeddings
             )
+            self.sigma_inv = self.sigma_inv.to(embeddings.device)
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
+        else:
+            self.sigma_inv = self.sigma_inv.to(embeddings.device)
         
         if torch.cuda.is_available():
             if not self.centroid.is_cuda:
