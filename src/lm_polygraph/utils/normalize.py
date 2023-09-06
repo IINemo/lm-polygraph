@@ -14,7 +14,6 @@ DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
 
 
 def normalization_bounds_present(est: Estimator, model_path: str, directory: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
-    print("model_path", model_path)
     archive_path = model_path.split('/')[-1] + '.json'
     filepath = os.path.join(cache_path, archive_path)
     if os.path.exists(filepath):

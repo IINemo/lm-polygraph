@@ -47,7 +47,7 @@ class BlackboxModel(Model):
 
     @staticmethod
     def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
-        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id)
+        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id, model_path = hf_model_id)
     
     @staticmethod
     def from_openai(openai_api_key: str, model_path: str, **kwargs):
@@ -68,7 +68,6 @@ class BlackboxModel(Model):
             if key in args.keys():
                 args[replace_key] = args[key]
                 args.pop(key)
-        print('BlackBox.generate_texts args:', args)
         texts = []
 
         openai = False
@@ -83,7 +82,6 @@ class BlackboxModel(Model):
             hf = True
         
         if openai:
-            print("openai")
             for prompt in input_texts:
                 response = openai.ChatCompletion.create(
                     model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
@@ -92,13 +90,9 @@ class BlackboxModel(Model):
                 else:
                     texts.append([resp.message.content for resp in response.choices])
         elif hf:
-            print("hf")
             for prompt in input_texts:
                 output = self.query({"inputs": prompt})
-                print("output", output)
                 texts.append(output[0]['generated_text'])
-
-            print("texts", texts)
         return texts
 
     def generate(self, **args):
