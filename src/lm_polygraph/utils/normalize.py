@@ -21,7 +21,7 @@ def normalization_bounds_present(est: Estimator, model_path: str, directory: str
     try:
         wget.download(HOST + '/' + directory + '/' + archive_path, out = filepath)
     except:
-        sys.stderr.write('Failed, no normalization...')
+        sys.stderr.write('Warning: no normalization bounds found')
         return False
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)

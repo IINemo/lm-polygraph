@@ -3,6 +3,8 @@ import requests
 import torch
 import sys
 import openai
+import time
+import pdb
 
 from typing import List, Dict
 from abc import abstractmethod, ABC
@@ -35,6 +37,7 @@ class BlackboxModel(Model):
                  parameters: GenerationParameters = GenerationParameters()):
         super().__init__(model_path, 'Blackbox')
         self.parameters = parameters
+        self.openai_api_key = openai_api_key
         openai.api_key = openai_api_key
         self.hf_api_token = hf_api_token
         self.hf_model_id = hf_model_id
@@ -70,18 +73,7 @@ class BlackboxModel(Model):
                 args.pop(key)
         texts = []
 
-        openai = False
-        hf = False
-        try:
-            openai_api_key = self.openai_api_key
-            model_path = self.model_path
-            openai = True
-        except:
-            hf_api_token = self.hf_api_token
-            hf_model_id = self.hf_model_id
-            hf = True
-        
-        if openai:
+        if self.openai_api_key is not None:
             for prompt in input_texts:
                 response = openai.ChatCompletion.create(
                     model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
@@ -89,10 +81,30 @@ class BlackboxModel(Model):
                     texts.append(response.choices[0].message.content)
                 else:
                     texts.append([resp.message.content for resp in response.choices])
-        elif hf:
+        elif (self.hf_api_token is not None) & (self.hf_model_id is not None):
             for prompt in input_texts:
-                output = self.query({"inputs": prompt})
+                
+                start = time.time()
+                while True:
+                    current_time = time.time()
+                    output = self.query({"inputs": prompt})
+
+                    if isinstance(output, dict):
+                        if (list(output.keys())[0] == 'error') & ('estimated_time'in output.keys()):
+                            estimated_time = float(output['estimated_time'])
+                            elapsed_time = current_time - start
+                            print(f"{output['error']}. Estimated time: {round(estimated_time - elapsed_time, 2)} sec.")
+                            time.sleep(5)
+                        elif (list(output.keys())[0] == 'error') & ('estimated_time'not in output.keys()):
+                            print(f"{output['error']}")
+                            break
+                    elif isinstance(output, list):
+                        break
+                    
                 texts.append(output[0]['generated_text'])
+        else:
+            print("Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models")
+
         return texts
 
     def generate(self, **args):
@@ -122,13 +134,11 @@ class WhiteboxModel(Model):
 
     def generate(self, **args):
         args = _valdate_args(args)
-        print('WhiteboxModel.generate args:', args)
         return self.model.generate(**args)
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         args = _valdate_args(args)
         args['return_dict_in_generate'] = True
-        print('WhiteboxModel.generate_texts args:', args)
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
         texts = [self.tokenizer.decode(x) for x in self.model.generate(**batch, **args).sequences.cpu()]
