@@ -1,3 +1,5 @@
+import json
+import requests
 import torch
 import sys
 import openai
@@ -28,11 +30,29 @@ class Model(ABC):
 
 
 class BlackboxModel(Model):
-    def __init__(self, openai_api_key: str, openai_model_path: str,
+    def __init__(self, openai_api_key: str = None, model_path: str = None, 
+                 hf_api_token: str = None, hf_model_id: str = None,
                  parameters: GenerationParameters = GenerationParameters()):
-        super().__init__(openai_model_path, 'Blackbox')
+        super().__init__(model_path, 'Blackbox')
         self.parameters = parameters
         openai.api_key = openai_api_key
+        self.hf_api_token = hf_api_token
+        self.hf_model_id = hf_model_id
+
+    def query(self, payload):
+        API_URL = f"https://api-inference.huggingface.co/models/{self.hf_model_id}"
+        headers = {"Authorization": f"Bearer {self.hf_api_token}"}
+        response = requests.post(API_URL, headers=headers, json=payload)
+        return response.json() 
+
+    @staticmethod
+    def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
+        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id)
+    
+    @staticmethod
+    def from_openai(openai_api_key: str, model_path: str, **kwargs):
+        return BlackboxModel(openai_api_key = openai_api_key, model_path = model_path)
+    
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
@@ -50,13 +70,35 @@ class BlackboxModel(Model):
                 args.pop(key)
         print('BlackBox.generate_texts args:', args)
         texts = []
-        for prompt in input_texts:
-            response = openai.ChatCompletion.create(
-                model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
-            if args['n'] == 1:
-                texts.append(response.choices[0].message.content)
-            else:
-                texts.append([resp.message.content for resp in response.choices])
+
+        openai = False
+        hf = False
+        try:
+            openai_api_key = self.openai_api_key
+            model_path = self.model_path
+            openai = True
+        except:
+            hf_api_token = self.hf_api_token
+            hf_model_id = self.hf_model_id
+            hf = True
+        
+        if openai:
+            print("openai")
+            for prompt in input_texts:
+                response = openai.ChatCompletion.create(
+                    model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
+                if args['n'] == 1:
+                    texts.append(response.choices[0].message.content)
+                else:
+                    texts.append([resp.message.content for resp in response.choices])
+        elif hf:
+            print("hf")
+            for prompt in input_texts:
+                output = self.query({"inputs": prompt})
+                print("output", output)
+                texts.append(output[0]['generated_text'])
+
+            print("texts", texts)
         return texts
 
     def generate(self, **args):
