@@ -56,7 +56,6 @@ if __name__ == '__main__':
         model = WhiteboxModel.from_pretrained(
             args.model,
             device=device,
-            load_in_8bit=load_in_8bit,
         )
 
         dataset, max_new_tokens = Dataset.load(
@@ -169,7 +168,7 @@ if __name__ == '__main__':
             [
                 #ReversedPairsProportion(),
                 #PredictionRejectionArea(),
-                RiskCoverageCurveAUC(),
+                #RiskCoverageCurveAUC(),
             ],
             [
                 Logger(),
@@ -177,7 +176,7 @@ if __name__ == '__main__':
             train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
-            max_new_tokens=max_new_tokens
+            max_new_tokens=max_new_tokens,
         )
         man()
         man.save(args.save_path + f'_seed{seed}')
