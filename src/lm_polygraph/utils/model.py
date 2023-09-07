@@ -1,6 +1,10 @@
+import json
+import requests
 import torch
 import sys
 import openai
+import time
+import pdb
 
 from typing import List, Dict
 from abc import abstractmethod, ABC
@@ -28,11 +32,30 @@ class Model(ABC):
 
 
 class BlackboxModel(Model):
-    def __init__(self, openai_api_key: str, openai_model_path: str,
+    def __init__(self, openai_api_key: str = None, model_path: str = None, 
+                 hf_api_token: str = None, hf_model_id: str = None,
                  parameters: GenerationParameters = GenerationParameters()):
-        super().__init__(openai_model_path, 'Blackbox')
+        super().__init__(model_path, 'Blackbox')
         self.parameters = parameters
+        self.openai_api_key = openai_api_key
         openai.api_key = openai_api_key
+        self.hf_api_token = hf_api_token
+        self.hf_model_id = hf_model_id
+
+    def query(self, payload):
+        API_URL = f"https://api-inference.huggingface.co/models/{self.hf_model_id}"
+        headers = {"Authorization": f"Bearer {self.hf_api_token}"}
+        response = requests.post(API_URL, headers=headers, json=payload)
+        return response.json() 
+
+    @staticmethod
+    def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
+        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id, model_path = hf_model_id)
+    
+    @staticmethod
+    def from_openai(openai_api_key: str, model_path: str, **kwargs):
+        return BlackboxModel(openai_api_key = openai_api_key, model_path = model_path)
+    
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
@@ -48,15 +71,40 @@ class BlackboxModel(Model):
             if key in args.keys():
                 args[replace_key] = args[key]
                 args.pop(key)
-        print('BlackBox.generate_texts args:', args)
         texts = []
-        for prompt in input_texts:
-            response = openai.ChatCompletion.create(
-                model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
-            if args['n'] == 1:
-                texts.append(response.choices[0].message.content)
-            else:
-                texts.append([resp.message.content for resp in response.choices])
+
+        if self.openai_api_key is not None:
+            for prompt in input_texts:
+                response = openai.ChatCompletion.create(
+                    model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
+                if args['n'] == 1:
+                    texts.append(response.choices[0].message.content)
+                else:
+                    texts.append([resp.message.content for resp in response.choices])
+        elif (self.hf_api_token is not None) & (self.hf_model_id is not None):
+            for prompt in input_texts:
+                
+                start = time.time()
+                while True:
+                    current_time = time.time()
+                    output = self.query({"inputs": prompt})
+
+                    if isinstance(output, dict):
+                        if (list(output.keys())[0] == 'error') & ('estimated_time'in output.keys()):
+                            estimated_time = float(output['estimated_time'])
+                            elapsed_time = current_time - start
+                            print(f"{output['error']}. Estimated time: {round(estimated_time - elapsed_time, 2)} sec.")
+                            time.sleep(5)
+                        elif (list(output.keys())[0] == 'error') & ('estimated_time'not in output.keys()):
+                            print(f"{output['error']}")
+                            break
+                    elif isinstance(output, list):
+                        break
+                    
+                texts.append(output[0]['generated_text'])
+        else:
+            print("Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models")
+
         return texts
 
     def generate(self, **args):
@@ -86,13 +134,11 @@ class WhiteboxModel(Model):
 
     def generate(self, **args):
         args = _valdate_args(args)
-        print('WhiteboxModel.generate args:', args)
         return self.model.generate(**args)
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         args = _valdate_args(args)
         args['return_dict_in_generate'] = True
-        print('WhiteboxModel.generate_texts args:', args)
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
         texts = [self.tokenizer.decode(x) for x in self.model.generate(**batch, **args).sequences.cpu()]

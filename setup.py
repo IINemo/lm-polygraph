@@ -5,7 +5,7 @@ install_requires = [
     'datasets>=2.3.2',
     'rouge-score>=0.0.4',
     'nlpaug>=1.1.10',
-    'scikit-learn>=1.0.2',
+    'scikit-learn',
     'tqdm>=4.64.1',
     'matplotlib>=3.6',
     'pandas>=1.3.5',

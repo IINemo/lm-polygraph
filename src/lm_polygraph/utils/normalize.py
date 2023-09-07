@@ -21,7 +21,7 @@ def normalization_bounds_present(est: Estimator, model_path: str, directory: str
     try:
         wget.download(HOST + '/' + directory + '/' + archive_path, out = filepath)
     except:
-        sys.stderr.write('Failed, no normalization...')
+        sys.stderr.write('Warning: no normalization bounds found')
         return False
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)
@@ -29,13 +29,11 @@ def normalization_bounds_present(est: Estimator, model_path: str, directory: str
 
 
 def can_get_calibration_conf(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
-    return normalization_bounds_present(est, model_path,
-                                        'normalization_calib', cache_path)
+    return normalization_bounds_present(est, model_path, 'normalization_calib', cache_path)
 
 
 def can_normalize_ue(est: Estimator, model_path: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
-    return normalization_bounds_present(est, model_path,
-                                        'normalization', cache_path)
+    return normalization_bounds_present(est, model_path, 'normalization', cache_path)
 
 
 def calibration_confidence(est: Estimator, model_path: str, val: float, cache_path: str = DEFAULT_CACHE_PATH) -> float:
