@@ -15,7 +15,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
     dataset_name = "triviaqa"
     model_name = model_path.split('/')[-1]
-    density_based_ue_params_path = f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"    
+    density_based_ue_params_path = f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"
     match method_name:
         case "Maximum Sequence Probability":
             return MaximumSequenceProbability()
@@ -54,7 +54,7 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "RDE":
             return RDESeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "RDE - Encoder":
-            return RDESeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)  
+            return RDESeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)
         case "HUQ - Decoder":
             return PPLMDSeq("decoder", md_type="MD", parameters_path=density_based_ue_params_path)
         case "HUQ - Encoder":
@@ -143,6 +143,10 @@ def parse_model(model: str) -> str:
             return 'meta-llama/Llama-2-7b-chat-hf'
         case "Llama 2 13b":
             return 'meta-llama/Llama-2-13b-chat-hf'
+        case "Vicuna 7b":
+            return 'lmsys/vicuna-7b-v1.5'
+        case "Vicuna 13b":
+            return 'lmsys/vicuna-13b-v1.5'
         case "Open Llama 3b":
             return 'openlm-research/open_llama_3b'
         case "Open Llama 7b":
@@ -158,9 +162,10 @@ def parse_model(model: str) -> str:
         case _:
             raise Exception(f'Unknown model: {model}')
 
+
 def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[WhiteboxModel, WhiteboxModel]:
     if os.path.exists(path):
-        path = Path(path) 
+        path = Path(path)
         model_paths = [model_dir for model_dir in path.iterdir()]
     else:
         model_paths = path.split(',')
@@ -170,11 +175,11 @@ def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[WhiteboxModel, White
 
     model = WhiteboxModel.from_pretrained(model_paths[0])
     ensemble_model = WhiteboxModel.from_pretrained(model_paths[0])
-    
+
     ensemble_model.model.__class__ = type('EnsembleModel',
                                           (ensemble_model.model.__class__,
                                            EnsembleGenerationMixin),
-                                          {}) 
+                                          {})
 
     models = [WhiteboxModel.from_pretrained(path).model for path in model_paths[1:]]
     ensemble_model.model.add_ensemble_models(models, devices)

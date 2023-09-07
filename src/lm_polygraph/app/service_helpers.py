@@ -13,7 +13,7 @@ from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue, \
-                                         can_get_calibration_conf, calibration_confidence 
+                                         can_get_calibration_conf, calibration_confidence
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
@@ -167,6 +167,10 @@ class Responder:
 
         text = data['prompt']
 
+        if 'dolly' in model_path.lower():
+            text = f'Below is an instruction that describes a task. Write a response that appropriately completes ' \
+                   f'the request.\n### Instruction:\n{text}\n### Response:\n'
+
         for ue_method_name in tok_ue_method_names:
             if (ue_method_name not in self.tok_ue_methods.keys()) or (ue_method_name in self.density_based_names):
                 self.tok_ue_methods[ue_method_name] = parse_tok_ue_method(ue_method_name, model_path, self.cache_path)
@@ -188,6 +192,10 @@ class Responder:
                             ignore_exceptions=False)
             man()
         except Exception as e:
+            import traceback
+            trace = traceback.format_exc()
+            print('Error: ' + str(e))
+            print('Stack trace:\n' + trace)
             abort(400, str(e))
 
         if len(processor.ue_estimations) != len(tok_methods) + len(seq_methods):
@@ -206,15 +214,26 @@ class Responder:
         else:
             tokens = [greedy_text]
 
+        for i in range(len(tokens)):
+            if '### End' in tokens[i]:  # for dolly
+                tokens = tokens[:i]
+                tok_conf = tok_conf[:i]
+                break
+
         if type(self.model) == WhiteboxModel:
             if len(tok_methods) == 0:
                 tok_conf = [0 for _ in tokens]
-            if self.model.model_type == "Seq2SeqLM" or 'llama' in self.model.model_path.lower():
+            if self.model.model_type == "Seq2SeqLM" or any(
+                    x in self.model.model_path.lower() for x in ['llama', 'vicuna']):
                 tokens = self._add_spaces_to_tokens(self.model.tokenizer, processor.stats, tokens)
             tokens, tok_conf = self._split_spaces(tokens, tok_conf)
             tokens, tok_conf = self._merge_into_words(tokens, tok_conf)
             if len(tok_methods) == 0:
                 tok_conf = []
+
+        for i in range(1, len(tokens)):
+            if tokens[i] == '\n' and tokens[i - 1] == '\n':
+                tokens[i - 1] = ''  # prevent multiple newlines (for vicuna)
 
         return {
             'generation': tokens,
