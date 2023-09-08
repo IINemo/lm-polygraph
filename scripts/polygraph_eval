@@ -200,7 +200,7 @@ def main_run(config, save_path):
         
         estimators += get_ue_methods(False, args.use_density_based_ue, model.model_type)
 
-        if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in all_estimators]):
+        if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in estimators]):
             if (args.train_dataset is not None) and (
                 args.train_dataset != args.dataset
             ):
@@ -273,7 +273,7 @@ def main_run(config, save_path):
         man = UEManager(
             dataset,
             model,
-            all_estimators,
+            estimators,
             [
                 RougeMetric("rouge1"),
                 RougeMetric("rouge2"),
