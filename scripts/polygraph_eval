@@ -213,6 +213,7 @@ def main_run(config, save_path):
             train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
+            max_new_tokens=max_new_tokens,
         )
 
         man()
