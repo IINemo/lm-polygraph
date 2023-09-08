@@ -26,6 +26,7 @@ model: databricks/dolly-v2-3b
 
 additional_estimators: {}
 use_density_based_ue: false
+use_all_ue: false
 ignore_exceptions: true
 
 batch_size: 2
