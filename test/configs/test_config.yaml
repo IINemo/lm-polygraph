@@ -1,5 +1,0 @@
-estimator: LexicalSimilarity
-estimator_kwargs:
-  metric: rouge2
-dataset: SpeedOfMagic/trivia_qa_tiny
-model: databricks/dolly-v2-3b

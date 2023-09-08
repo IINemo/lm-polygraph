@@ -111,6 +111,7 @@ def main_run(config, save_path):
             args.text_column,
             args.label_column,
             batch_size=args.batch_size,
+            split="test",
         )
 
         if args.estimator in DENSITY_BASED_ESTIMATORS:

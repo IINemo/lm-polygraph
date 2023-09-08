@@ -1,0 +1,19 @@
+estimator: LexicalSimilarity
+estimator_kwargs:
+  metric: rouge2
+estimator_module: null
+
+dataset: SpeedOfMagic/trivia_qa_tiny
+text_column: question
+label_column: answer
+
+
+model: bigscience/bloomz-560m
+ignore_exceptions: false
+
+subsample_eval_dataset: 10
+batch_size: 2
+seed: null
+device: null
+save_path: ""
+cache_path: ""
