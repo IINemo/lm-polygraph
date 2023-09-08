@@ -6,6 +6,10 @@ hydra:
 
 device: cpu
 
+estimator: MaximumSequenceProbability`
+estimator_module: null
+estimator_kwargs: {}
+
 task: qa
 dataset: ../workdir/data/triviaqa.csv
 train_dataset: null

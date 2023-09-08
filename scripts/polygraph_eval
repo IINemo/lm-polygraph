@@ -48,6 +48,8 @@ def get_args():
     parser.add_argument("--estimator", type=str, required=True)
     parser.add_argument("--estimator_kwargs", type=json.loads, required=True)
     parser.add_argument("--estimator_module", type=str, default=None)
+    
+    parser.add_argument("--additional_estimators", type=json.loads, default={})
 
     parser.add_argument("--dataset", type=str, required=True)
     parser.add_argument("--train_dataset", type=str)
@@ -83,9 +85,16 @@ def main_run(config, save_path):
     if args.estimator_module is None:
         estimator_class = globals()[args.estimator]
     else:
-        module = importlib.import_module(module_name)
+        module = importlib.import_module(args.estimator_module)
         estimator_class = getattr(module, args.estimator)
     estimator = estimator_class(**args.estimator_kwargs)
+    
+    all_estimators = [estimator]
+
+    for module_name, estimators in getattr(args, "additional_estimators", {}).items():
+        module = importlib.import_module(module_name)
+        for estimator in estimators:
+            all_estimators.append(getattr(module, estimator)())
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -116,7 +125,7 @@ def main_run(config, save_path):
             split="test",
         )
 
-        if args.estimator in DENSITY_BASED_ESTIMATORS:
+        if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in all_estimators]):
             if (args.train_dataset is not None) and (
                 args.train_dataset != args.dataset
             ):
@@ -189,9 +198,7 @@ def main_run(config, save_path):
         man = UEManager(
             dataset,
             model,
-            [
-                estimator,
-            ],
+            all_estimators,
             [
                 RougeMetric("rouge1"),
                 RougeMetric("rouge2"),
