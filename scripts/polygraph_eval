@@ -23,7 +23,8 @@ from lm_polygraph.generation_metrics import (
     WERTokenwiseMetric,
     BartScoreSeqMetric,
     ModelScoreSeqMetric,
-    ModelScoreTokenwiseMetric,
+    ModelScoreTokenwiseMetric, 
+    AccuracyMetric
 )
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import (
@@ -53,6 +54,7 @@ def get_args():
     parser.add_argument("--background_train_dataset", type=str)
     parser.add_argument("--text_column", type=str, default="question")
     parser.add_argument("--label_column", type=str, default="answer")
+    parser.add_argument("--prompt", type=str, default='')
 
     parser.add_argument("--model", type=str, required=True)
     parser.add_argument(
@@ -68,7 +70,6 @@ def get_args():
     parser.add_argument("--seed", nargs="+", type=int)
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--save_path", type=str, default="")
-    parser.add_argument("--cache_path", type=str, default="")
 
     args = parser.parse_args()
 
@@ -106,22 +107,36 @@ def main_run(config, save_path):
         log.info("Done with loading model.")
 
         log.info(f"Loading dataset {args.dataset}...")
-        dataset = Dataset.load(
+        dataset, max_new_tokens = Dataset.load(
             args.dataset,
             args.text_column,
             args.label_column,
             batch_size=args.batch_size,
+            prompt=args.prompt,
+            split="test",
         )
 
         if args.estimator in DENSITY_BASED_ESTIMATORS:
             if (args.train_dataset is not None) and (
                 args.train_dataset != args.dataset
             ):
-                train_dataset = Dataset.load(
+                train_dataset, _ = Dataset.load(
                     args.train_dataset,
                     args.text_column,
                     args.label_column,
                     batch_size=args.batch_size,
+                    prompt=args.prompt,
+                    split="train",
+                )
+            elif not args.dataset.endswith("csv"):
+                train_dataset, _ = Dataset.load(
+                    args.train_dataset,
+                    args.text_column,
+                    args.label_column,
+                    batch_size=args.batch_size,
+                    prompt=args.prompt,
+                    split="train",
+                    size=10_000,
                 )
             else:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
@@ -141,6 +156,14 @@ def main_run(config, save_path):
                 },  # TODO: What is this ????
                 max_size=100_000,  # TODO:!
                 split="train",
+            )
+            background_train_dataset, _ = Dataset.load(
+                    args.background_train_dataset,
+                    'text', 'url',
+                    batch_size=args.batch_size,
+                    size=100_000,
+                    split="train",
+                    data_files="en/c4-train.00000-of-01024.json.gz",
             )
 
             if args.subsample_train_dataset != -1:
@@ -177,6 +200,7 @@ def main_run(config, save_path):
                 ModelScoreSeqMetric("model_rh"),
                 ModelScoreTokenwiseMetric("model_rh"),
                 WERTokenwiseMetric(),
+                AccuracyMetric()
             ],
             [
                 ReversedPairsProportion(),
