@@ -11,16 +11,25 @@ estimator_module: null
 estimator_kwargs: {}
 
 task: qa
-dataset: ../workdir/data/triviaqa.csv
+
+dataset: ./workdir/data/triviaqa.csv
+text_column: question
+label_column: answer
+prompt: ""
+train_split: train
+eval_split: test
+max_new_tokens: 256
+
 train_dataset: null
+
 background_train_dataset: allenai/c4
+background_train_dataset_text_column: text
+background_train_dataset_label_column: url
+background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+
 subsample_background_train_dataset: 100
 subsample_train_dataset: 10
 subsample_eval_dataset: 10
-
-text_column: question
-label_column: answer
-prompt: null
 
 model: databricks/dolly-v2-3b
 

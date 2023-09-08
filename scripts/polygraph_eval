@@ -193,13 +193,13 @@ def main_run(config, save_path):
         log.info("Done with loading model.")
 
         log.info(f"Loading dataset {args.dataset}...")
-        dataset, max_new_tokens = Dataset.load(
+        dataset = Dataset.load(
             args.dataset,
             args.text_column,
             args.label_column,
             batch_size=args.batch_size,
             prompt=args.prompt,
-            split="test",
+            split=args.eval_split,
         )
         
         estimators += get_ue_methods(False, args.use_density_based_ue, args, model.model_type)
@@ -208,16 +208,16 @@ def main_run(config, save_path):
             if (args.train_dataset is not None) and (
                 args.train_dataset != args.dataset
             ):
-                train_dataset, _ = Dataset.load(
+                train_dataset = Dataset.load(
                     args.train_dataset,
                     args.text_column,
                     args.label_column,
                     batch_size=args.batch_size,
                     prompt=args.prompt,
-                    split="train",
+                    split=args.train_split,
                 )
             elif not args.dataset.endswith("csv"):
-                train_dataset, _ = Dataset.load(
+                train_dataset = Dataset.load(
                     args.train_dataset,
                     args.text_column,
                     args.label_column,
@@ -234,13 +234,14 @@ def main_run(config, save_path):
                     x=X_train, y=y_train, batch_size=args.batch_size
                 )
                 
-            background_train_dataset, _ = Dataset.load(
+            background_train_dataset = Dataset.load(
                     args.background_train_dataset,
-                    'text', 'url',
+                    args.background_train_dataset_text_column, 
+                    args.background_train_dataset_label_column,
                     batch_size=args.batch_size,
-                    size=100_000,
+                    data_files=args.background_train_dataset_data_files,
                     split="train",
-                    data_files="en/c4-train.00000-of-01024.json.gz",
+                    size=100_000,
             )
 
             if args.subsample_train_dataset != -1:
@@ -288,7 +289,7 @@ def main_run(config, save_path):
             train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
-            max_new_tokens=max_new_tokens,
+            max_new_tokens=args.max_new_tokens,
         )
 
         man()
