@@ -14,7 +14,7 @@ class StatCalculator(ABC):
         self._stat_dependencies = stat_dependencies
 
     @abstractmethod
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
         raise Exception('Not implemented')
 
     @property
