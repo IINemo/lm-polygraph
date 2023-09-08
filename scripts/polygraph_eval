@@ -155,7 +155,10 @@ if __name__ == '__main__':
                 MonteCarloNormalizedSequenceEntropy(),
                 PTrue(),
                 PTrueSampling(),
-                LexicalSimilarity(),
+                LexicalSimilarity(metric='rouge1'),
+                LexicalSimilarity(metric='rouge2'),
+                LexicalSimilarity(metric='rougeL'),
+                LexicalSimilarity(metric='BLEU'),
             ] + density_based_ue,
             [
                 RougeMetric('rouge1'),
