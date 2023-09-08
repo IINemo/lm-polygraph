@@ -4,6 +4,7 @@ import numpy as np
 import os
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset
+import datasets
 
 from typing import Iterable, Tuple, List
 
@@ -71,7 +72,7 @@ class Dataset:
         if "trivia_qa" in csv_path.lower():
             dataset = load_dataset(csv_path, "rc.nocontext", split=split, **kwargs)
         elif "babi_qa" in csv_path.lower():
-            dataset = load_dataset(csv_path, "en-10k-qa1", split=split, **kwargs)
+            dataset = datasets.Dataset.load_from_disk('babi_qa')
         elif "wmt" in csv_path.lower():
             dataset_subset = "de-en" if "de" in [x_column, y_column] else "fr-en"
             dataset = load_dataset(csv_path, dataset_subset, split=split, **kwargs)
