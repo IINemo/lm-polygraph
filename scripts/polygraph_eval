@@ -234,17 +234,6 @@ def main_run(config, save_path):
                     x=X_train, y=y_train, batch_size=args.batch_size
                 )
                 
-            background_train_dataset = Dataset.load(
-                args.background_train_dataset,
-                "text",
-                "url",
-                batch_size=args.batch_size,
-                data={
-                    "data_files": "en/c4-train.00000-of-01024.json.gz"
-                },  # TODO: What is this ????
-                max_size=100_000,  # TODO:!
-                split="train",
-            )
             background_train_dataset, _ = Dataset.load(
                     args.background_train_dataset,
                     'text', 'url',
