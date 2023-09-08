@@ -64,6 +64,36 @@ class Dataset:
         **kwargs
     ):
         dataset = load_dataset(csv_path, split=split, **kwargs)
+        if "translation" in dataset.column_names:
+            x, y = [], []
+            source_lang = (
+                "German"
+                if x_column == "de"
+                else "French"
+                if x_column == "fr"
+                else "English"
+            )
+            target_lang = (
+                "German"
+                if y_column == "de"
+                else "French"
+                if y_column == "fr"
+                else "English"
+            )
+            for inst in dataset["translation"]:
+                x.append(
+                    prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column])
+                )
+                    #f"Translate from {source_lang} into {target_lang}:\n{inst[x_column]}\nTranslation:\n"
+                y.append(inst[y_column])
+        else:
+            if len(prompt):
+                x = [prompt.format(text=text)
+                for text in dataset[x_column]]
+            else:
+                x = dataset[x_column]
+            y = dataset[y_column]
+        
         if len(prompt):
             x = [prompt.format(text=text)
                 for text in dataset[x_column]]
