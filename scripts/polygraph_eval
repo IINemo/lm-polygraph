@@ -127,32 +127,32 @@ def get_ue_methods(use_all_ue, use_density_based_ue, model_type = None):
             ]
     if use_density_based_ue and (model_type is not None):
         if model_type == "Seq2SeqLM":
-                estimators += [
-                    MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
-                    MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                    RelativeMahalanobisDistanceSeq(
-                        "encoder", parameters_path=parameters_path
-                    ),
-                    RelativeMahalanobisDistanceSeq(
-                        "decoder", parameters_path=parameters_path
-                    ),
-                    RDESeq("encoder", parameters_path=parameters_path),
-                    RDESeq("decoder", parameters_path=parameters_path),
-                    PPLMDSeq("encoder", md_type="MD", parameters_path=parameters_path),
-                    PPLMDSeq("encoder", md_type="RMD", parameters_path=parameters_path),
-                    PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-                    PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
-                ]
-            else:
-                estimators += [
-                    MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                    RelativeMahalanobisDistanceSeq(
-                        "decoder", parameters_path=parameters_path
-                    ),
-                    RDESeq("decoder", parameters_path=parameters_path),
-                    PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-                    PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
-                ]
+            estimators += [
+                MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
+                MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+                RelativeMahalanobisDistanceSeq(
+                    "encoder", parameters_path=parameters_path
+                ),
+                RelativeMahalanobisDistanceSeq(
+                    "decoder", parameters_path=parameters_path
+                ),
+                RDESeq("encoder", parameters_path=parameters_path),
+                RDESeq("decoder", parameters_path=parameters_path),
+                PPLMDSeq("encoder", md_type="MD", parameters_path=parameters_path),
+                PPLMDSeq("encoder", md_type="RMD", parameters_path=parameters_path),
+                PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
+                PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
+            ]
+        else:
+            estimators += [
+                MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+                RelativeMahalanobisDistanceSeq(
+                    "decoder", parameters_path=parameters_path
+                ),
+                RDESeq("decoder", parameters_path=parameters_path),
+                PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
+                PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
+            ]
     return estimators
 
 def main_run(config, save_path):
