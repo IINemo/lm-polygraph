@@ -92,9 +92,10 @@ def get_args():
 def get_density_based_ue_methods(args, model_type):
     estimators = []
     if args.use_density_based_ue:
-        dataset_name = args.dataset.split("/")[-1].split(".")[0]
+        dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
+        dataset_name = dataset_name.split("/")[-1].split(".")[0]
         model_name = args.model.split("/")[-1]
-        parameters_path = f"{args.cache_path}/{dataset_name}/{model_name}"
+        parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
             
         if model_type == "Seq2SeqLM":
             estimators += [
@@ -311,7 +312,7 @@ if "HYDRA_CONFIG" in os.environ:
     )
     def main_hydra(config):
         output_dir = os.getcwd()
-        log.info(f"Output directory: {output_dir}")
+        log.info(f"Main directory: {output_dir}")
         os.chdir(hydra.utils.get_original_cwd())
         main_run(config, output_dir)
 
