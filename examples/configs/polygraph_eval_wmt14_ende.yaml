@@ -1,0 +1,46 @@
+save_path: '../workdir/output'
+
+hydra:
+  run:
+    dir: ${save_path}/${task}/${dataset}_${text_column}_${label_column}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+device: cpu
+
+estimator: MaximumSequenceProbability
+estimator_module: null
+estimator_kwargs: {}
+
+task: nmt
+
+dataset: wmt14
+text_column: en
+label_column: de
+prompt: "Translate from {source_lang} into {target_lang}:\n{text}\nTranslation:\n"
+train_split: train
+eval_split: test
+max_new_tokens: null
+
+train_dataset: null
+
+background_train_dataset: allenai/c4
+background_train_dataset_text_column: text
+background_train_dataset_label_column: url
+background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+
+subsample_background_train_dataset: 100
+subsample_train_dataset: 10
+subsample_eval_dataset: 10
+
+model: databricks/dolly-v2-3b
+
+additional_estimators: {}
+use_density_based_ue: true
+use_all_ue: true
+ignore_exceptions: true
+
+batch_size: 2
+
+seed:
+    - 1
+
+cache_path: .
