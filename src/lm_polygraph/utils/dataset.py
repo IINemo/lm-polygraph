@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.model_selection import train_test_split
-from datasets import load_dataset, DatasetDict
+from datasets import load_dataset, DatasetDict, Dataset as hf_dataset 
 
 from typing import Iterable, Tuple, List
 
@@ -65,7 +65,10 @@ class Dataset:
         size: int = None,
         **kwargs
     ):
-        if isinstance(dataset_path, str):
+        load_from_disk = kwargs.pop("load_from_disk", False)
+        if load_from_disk:
+            dataset = hf_dataset.load_from_disk(dataset_path)
+        elif isinstance(dataset_path, str):
             dataset = load_dataset(dataset_path, split=split, **kwargs)
         else:
             dataset = load_dataset(*dataset_path, split=split, **kwargs)
@@ -105,11 +108,11 @@ class Dataset:
             for inst in dataset:
                 inst = inst["story"]
                 context = ""
-                for question, answer in zip(inst[x_column], inst[y_column]):
+                for text, answer in zip(inst[x_column], inst[y_column]):
                     if answer == "":
                         context += text + " "
                     else:
-                        x.append(prompt.format(context=context.strip(), question=question))
+                        x.append(prompt.format(context=context.strip(), question=text))
                         y.append(answer)
         elif len(prompt):
             x = [prompt.format(text=text) for text in dataset[x_column]]
@@ -122,6 +125,6 @@ class Dataset:
 
     @staticmethod
     def load(csv_path, *args, **kwargs):
-        if isinstance(csv_path, str) and os.path.exists(csv_path):
+        if isinstance(csv_path, str) and os.path.isfile(csv_path):
             return Dataset.from_csv(csv_path, *args, **kwargs)
         return Dataset.from_datasets(csv_path, *args, **kwargs)

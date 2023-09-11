@@ -55,7 +55,10 @@ def _delete_nans(ue, metric):
     new_ue, new_metric = [], []
     for i in range(len(metric)):
         if not np.isnan(metric[i]) and not np.isnan(ue[i]):
-            new_ue.append(ue[i])
+            if not isinstance(ue[i], complex):
+                new_ue.append(ue[i])
+            else:
+                new_ue.append(ue[i].real)
             new_metric.append(metric[i])
     return new_ue, new_metric
 

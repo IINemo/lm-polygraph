@@ -207,6 +207,7 @@ def main_run(config, save_path):
             batch_size=args.batch_size,
             prompt=args.prompt,
             split=args.eval_split,
+            load_from_disk=args.load_from_disk
         )
         
         estimators += get_ue_methods(args, model)
@@ -224,6 +225,7 @@ def main_run(config, save_path):
                     prompt=args.prompt,
                     split=args.train_split,
                     size=10_000,
+                    load_from_disk=args.load_from_disk
                 )
             elif args.train_test_split:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
@@ -241,6 +243,7 @@ def main_run(config, save_path):
                     prompt=args.prompt,
                     split=args.train_split,
                     size=10_000,
+                    load_from_disk=args.load_from_disk,
                 )
                    
             background_train_dataset = Dataset.load(
@@ -299,7 +302,7 @@ def main_run(config, save_path):
 
         man()
 
-        man.save(save_path + f"_seed{seed}")
+        man.save(save_path + f"/ue_manager_seed{seed}")
 
 
 if "HYDRA_CONFIG" in os.environ:
