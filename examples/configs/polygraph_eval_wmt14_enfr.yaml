@@ -30,9 +30,9 @@ background_train_dataset_text_column: text
 background_train_dataset_label_column: url
 background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
 
-subsample_background_train_dataset: 100
-subsample_train_dataset: 10
-subsample_eval_dataset: 10
+subsample_background_train_dataset: 10_000
+subsample_train_dataset: 10_000
+subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
 
