@@ -89,43 +89,9 @@ def get_args():
 
     return args
 
-def get_ue_methods(use_all_ue, use_density_based_ue, args, model_type = None):
+def get_density_based_ue_methods(args, model_type = None)
     estimators = []
-    if use_all_ue:
-        estimators += [
-                MaximumSequenceProbability(),
-                Perplexity(),
-                MeanTokenEntropy(),
-                MeanPointwiseMutualInformation(),
-                MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
-                PTrue(),
-                PTrueSampling(),
-                MonteCarloSequenceEntropy(),
-                MonteCarloNormalizedSequenceEntropy(),
-                LexicalSimilarity(metric="rouge1"),
-                LexicalSimilarity(metric="rouge2"),
-                LexicalSimilarity(metric="rougeL"),
-                LexicalSimilarity(metric="BLEU"),
-                NumSemSets(),
-                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-                EigValLaplacian(similarity_score="Jaccard_score"),
-                DegMat(similarity_score="NLI_score", affinity="entail"),
-                DegMat(similarity_score="NLI_score", affinity="contra"),
-                DegMat(similarity_score="Jaccard_score"),
-                Eccentricity(similarity_score="NLI_score", affinity="entail"),
-                Eccentricity(similarity_score="NLI_score", affinity="contra"),
-                Eccentricity(similarity_score="Jaccard_score"),
-                SemanticEntropy(),
-                MaximumTokenProbability(),
-                TokenEntropy(),
-                PointwiseMutualInformation(),
-                ConditionalPointwiseMutualInformation(
-                    tau=0.0656, lambd=3.599
-                ),  # TODO: What is this ????
-                SemanticEntropyToken(model.model_path, args.cache_path),
-            ]
-    if use_density_based_ue and (model_type is not None):
+    if args.use_density_based_ue and (model_type is not None):
         dataset_name = args.dataset.split("/")[-1].split(".")[0]
         model_name = args.model.split("/")[-1]
         parameters_path = f"{args.cache_path}/{dataset_name}/{model_name}"
@@ -159,6 +125,44 @@ def get_ue_methods(use_all_ue, use_density_based_ue, args, model_type = None):
             ]
     return estimators
 
+def get_ue_methods(args):
+    estimators = []
+    if args.use_all_ue:
+        estimators += [
+                MaximumSequenceProbability(),
+                Perplexity(),
+                MeanTokenEntropy(),
+                MeanPointwiseMutualInformation(),
+                MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
+                PTrue(),
+                PTrueSampling(),
+                MonteCarloSequenceEntropy(),
+                MonteCarloNormalizedSequenceEntropy(),
+                LexicalSimilarity(metric="rouge1"),
+                LexicalSimilarity(metric="rouge2"),
+                LexicalSimilarity(metric="rougeL"),
+                LexicalSimilarity(metric="BLEU"),
+                NumSemSets(),
+                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
+                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
+                EigValLaplacian(similarity_score="Jaccard_score"),
+                DegMat(similarity_score="NLI_score", affinity="entail"),
+                DegMat(similarity_score="NLI_score", affinity="contra"),
+                DegMat(similarity_score="Jaccard_score"),
+                Eccentricity(similarity_score="NLI_score", affinity="entail"),
+                Eccentricity(similarity_score="NLI_score", affinity="contra"),
+                Eccentricity(similarity_score="Jaccard_score"),
+                SemanticEntropy(),
+                MaximumTokenProbability(),
+                TokenEntropy(),
+                PointwiseMutualInformation(),
+                ConditionalPointwiseMutualInformation(
+                    tau=0.0656, lambd=3.599
+                ),  # TODO: What is this ????
+                SemanticEntropyToken(model.model_path, args.cache_path),
+            ]
+    return estimators
+
 def main_run(config, save_path):
     args = get_args() if config is None else config
     save_path = args.save_path if "save_path" in args else save_path
@@ -171,7 +175,7 @@ def main_run(config, save_path):
     estimator = estimator_class(**args.estimator_kwargs)
     
     estimators = [estimator]
-    estimators += get_ue_methods(args.use_all_ue, args.use_density_based_ue, args)
+    estimators += get_ue_methods(args)
         
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -202,7 +206,7 @@ def main_run(config, save_path):
             split=args.eval_split,
         )
         
-        estimators += get_ue_methods(False, args.use_density_based_ue, args, model.model_type)
+        estimators += get_density_based_ue_methods(args, model.model_type)
 
         if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in estimators]):
             if (args.train_dataset is not None) and (
