@@ -87,9 +87,7 @@ class Dataset:
                 else "English"
             )
             for inst in dataset["translation"]:
-                x.append(
-                    prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column])
-                )
+                x.append(prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column]))
                 y.append(inst[y_column])
         elif ("coqa" in dataset_path.lower()) and len(prompt):
             x, y = [], []
@@ -97,9 +95,7 @@ class Dataset:
                 for question, answer in zip(
                     inst[x_column], inst[y_column]["input_text"]
                 ):
-                    x.append(
-                        prompt.format(story=inst["story"], question=question)
-                    )
+                    x.append(prompt.format(story=inst["story"], question=question))
                     y.append(answer)
         elif ("babi_qa" in dataset_path.lower()) and len(prompt):
             x, y = [], []
