@@ -42,6 +42,8 @@ class Dataset:
         if len(self.x) < size:
             indices = list(range(len(self.x)))
         else:
+            if size < 1:
+                size = int(size * len(self.x))
             indices = np.random.choice(len(self.x), size, replace=False)
         self.select(indices)
 
@@ -99,7 +101,7 @@ class Dataset:
                         prompt.format(story=inst["story"], question=question)
                     )
                     y.append(answer)
-        elif ("babi_qa" in dataset_path.lower()) and len(prompt):
+         elif ("babi_qa" in dataset_path.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
                 inst = inst["story"]
