@@ -1,26 +1,29 @@
-save_path: '../workdir/output'
+save_path: './workdir/output'
 
 hydra:
   run:
-    dir: ${save_path}/${task}/${dataset}_${text_column}_${label_column}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${save_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 device: cpu
 
-estimator: MaximumSequenceProbability
+estimator: null
 estimator_module: null
 estimator_kwargs: {}
 
 task: nmt
 
-dataset: wmt14
+dataset: [wmt14, de-en]
 text_column: en
 label_column: de
 prompt: "Translate from {source_lang} into {target_lang}:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
 max_new_tokens: null
+load_from_disk: false
 
 train_dataset: null
+train_test_split: false
+test_split_size: 1
 
 background_train_dataset: allenai/c4
 background_train_dataset_text_column: text
@@ -35,7 +38,8 @@ model: databricks/dolly-v2-3b
 
 additional_estimators: {}
 use_density_based_ue: true
-use_all_ue: true
+use_seq_ue: true
+use_tok_ue: false
 ignore_exceptions: true
 
 batch_size: 2
@@ -43,4 +47,4 @@ batch_size: 2
 seed:
     - 1
 
-cache_path: .
+cache_path: ./workdir

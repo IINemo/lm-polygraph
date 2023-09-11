@@ -1,12 +1,13 @@
-save_path: '../workdir/output'
-
 hydra:
   run:
-    dir: ${save_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
 
 device: cpu
 
-estimator: MaximumSequenceProbability
+estimator: null
 estimator_module: null
 estimator_kwargs: {}
 
@@ -19,8 +20,11 @@ prompt: "Write a headline for the email.\n\nEmail:\n{text}\n\nHeadline:\n"
 train_split: train
 eval_split: test
 max_new_tokens: 20
+load_from_disk: false
 
 train_dataset: null
+train_test_split: false
+test_split_size: 1
 
 background_train_dataset: allenai/c4
 background_train_dataset_text_column: text
@@ -35,12 +39,11 @@ model: databricks/dolly-v2-3b
 
 additional_estimators: {}
 use_density_based_ue: true
-use_all_ue: true
+use_seq_ue: true
+use_tok_ue: false
 ignore_exceptions: true
 
 batch_size: 2
 
 seed:
     - 1
-
-cache_path: .

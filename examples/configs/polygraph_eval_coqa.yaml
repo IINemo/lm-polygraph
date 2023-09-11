@@ -1,4 +1,4 @@
-save_path: '../workdir/output'
+save_path: './workdir/output'
 
 hydra:
   run:
@@ -6,7 +6,7 @@ hydra:
 
 device: cpu
 
-estimator: MaximumSequenceProbability
+estimator: null
 estimator_module: null
 estimator_kwargs: {}
 
@@ -19,8 +19,11 @@ prompt: "Answer the question given a story.\nStory:\n{story}\n\nQuestion:\n{ques
 train_split: train
 eval_split: validation
 max_new_tokens: 14
+load_from_disk: false
 
 train_dataset: null
+train_test_split: false
+test_split_size: 1
 
 background_train_dataset: allenai/c4
 background_train_dataset_text_column: text
@@ -35,7 +38,8 @@ model: databricks/dolly-v2-3b
 
 additional_estimators: {}
 use_density_based_ue: true
-use_all_ue: true
+use_seq_ue: true
+use_tok_ue: false
 ignore_exceptions: true
 
 batch_size: 2
@@ -43,4 +47,4 @@ batch_size: 2
 seed:
     - 1
 
-cache_path: .
+cache_path: ./workdir
