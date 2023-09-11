@@ -127,7 +127,7 @@ def get_density_based_ue_methods(args, model_type):
 
 def get_ue_methods(args, model):
     estimators = []
-    if args.use_all_ue:
+    if args.use_seq_ue:
         estimators += [
                 MaximumSequenceProbability(),
                 Perplexity(),
@@ -153,6 +153,9 @@ def get_ue_methods(args, model):
                 Eccentricity(similarity_score="NLI_score", affinity="contra"),
                 Eccentricity(similarity_score="Jaccard_score"),
                 SemanticEntropy(),
+            ]
+    if args.use_tok_ue:
+        estimators += [
                 MaximumTokenProbability(),
                 TokenEntropy(),
                 PointwiseMutualInformation(),
@@ -166,14 +169,15 @@ def get_ue_methods(args, model):
 def main_run(config, save_path):
     args = get_args() if config is None else config
     save_path = args.save_path if "save_path" in args else save_path
+    estimators = []
 
-    if args.estimator_module is None:
-        estimator_class = globals()[args.estimator]
-    else:
-        module = importlib.import_module(args.estimator_module)
-        estimator_class = getattr(module, args.estimator)
-    estimator = estimator_class(**args.estimator_kwargs)
-    estimators = [estimator]
+    if args.estimator is not None:
+        if args.estimator_module is None:
+            estimator_class = globals()[args.estimator]
+        else:
+            module = importlib.import_module(args.estimator_module)
+            estimator_class = getattr(module, args.estimator)
+        estimators.append(estimator_class(**args.estimator_kwargs))
         
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -218,25 +222,26 @@ def main_run(config, save_path):
                     batch_size=args.batch_size,
                     prompt=args.prompt,
                     split=args.train_split,
-                )
-            elif not args.dataset.endswith("csv"):
-                train_dataset = Dataset.load(
-                    args.train_dataset,
-                    args.text_column,
-                    args.label_column,
-                    batch_size=args.batch_size,
-                    prompt=args.prompt,
-                    split="train",
                     size=10_000,
                 )
-            else:
+            elif args.train_test_split:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
-                    test_size=0.7, seed=seed, split="eval"  # TODO: !
+                    test_size=args.test_split_size, seed=seed, split=args.eval_split
                 )
                 train_dataset = Dataset(
                     x=X_train, y=y_train, batch_size=args.batch_size
                 )
-                
+            else:
+                train_dataset = Dataset.load(
+                    args.dataset,
+                    args.text_column,
+                    args.label_column,
+                    batch_size=args.batch_size,
+                    prompt=args.prompt,
+                    split=args.train_split,
+                    size=10_000,
+                )
+                   
             background_train_dataset = Dataset.load(
                     args.background_train_dataset,
                     args.background_train_dataset_text_column, 
@@ -255,10 +260,6 @@ def main_run(config, save_path):
                 )
 
             log.info("Done with loading data.")
-
-            dataset_name = args.dataset.split("/")[-1].split(".")[0]
-            model_name = args.model.split("/")[-1]
-            parameters_path = f"{args.cache_path}/{dataset_name}/{model_name}"
         else:
             train_dataset = None
             background_train_dataset = None
@@ -277,9 +278,9 @@ def main_run(config, save_path):
                 RougeMetric("rougeL"),
                 BartScoreSeqMetric("rh"),
                 ModelScoreSeqMetric("model_rh"),
+                AccuracyMetric(),
                 ModelScoreTokenwiseMetric("model_rh"),
                 WERTokenwiseMetric(),
-                AccuracyMetric()
             ],
             [
                 ReversedPairsProportion(),
