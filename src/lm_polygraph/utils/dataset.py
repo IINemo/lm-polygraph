@@ -54,7 +54,7 @@ class Dataset:
 
     @staticmethod
     def from_datasets(
-        csv_path: str,
+        dataset_path: str,
         x_column: str,
         y_column: str,
         batch_size: int,
@@ -63,7 +63,10 @@ class Dataset:
         size: int = None,
         **kwargs
     ):
-        dataset = load_dataset(csv_path, split=split, **kwargs)
+        dataset = load_dataset(dataset_path, split=split, **kwargs)
+        if size is not None and size < len(dataset):
+            dataset = dataset.select(range(size))
+            
         if "translation" in dataset.column_names:
             x, y = [], []
             source_lang = (
@@ -86,20 +89,33 @@ class Dataset:
                 )
                     #f"Translate from {source_lang} into {target_lang}:\n{inst[x_column]}\nTranslation:\n"
                 y.append(inst[y_column])
-        else:
-            if len(prompt):
-                x = [prompt.format(text=text)
-                for text in dataset[x_column]]
-            else:
-                x = dataset[x_column]
+        elif ("coqa" in dataset_path.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                for question, answer in zip(
+                    inst[x_column], inst[y_column]["input_text"]
+                ):
+                    x.append(
+                        prompt.format(story=inst["story"], question=question)
+                    )
+                    y.append(answer)
+        elif ("babi_qa" in dataset_path.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                inst = inst["story"]
+                context = ""
+                for question, answer in zip(inst[x_column], inst[y_column]):
+                    if answer == "":
+                        context += text + " "
+                    else:
+                        x.append(prompt.format(context=context.strip(), question=question))
+                        y.append(answer)
+        elif len(prompt):
+            x = [prompt.format(text=text) for text in dataset[x_column]]
             y = dataset[y_column]
-        
-        if len(prompt):
-            x = [prompt.format(text=text)
-                for text in dataset[x_column]]
         else:
             x = dataset[x_column]
-        y = dataset[y_column]
+            y = dataset[y_column]
         
         # if "coqa" in csv_path and split == "test":
         #     split = "validation"
@@ -112,8 +128,7 @@ class Dataset:
         #     dataset = load_dataset(csv_path, dataset_subset, split=split, **kwargs)
         # else:
         #     dataset = load_dataset(csv_path, split=split, **kwargs)
-        # if size is not None and size < len(dataset):
-        #     dataset = dataset.select(range(size))
+        # 
         # # In this case this is a NMT dataset
         # if "translation" in dataset.column_names:
         #     x, y = [], []
