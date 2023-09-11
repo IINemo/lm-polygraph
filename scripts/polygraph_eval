@@ -33,7 +33,6 @@ from lm_polygraph.ue_metrics import (
     RiskCoverageCurveAUC,
 )
 
-
 DENSITY_BASED_ESTIMATORS = [
     "MahalanobisDistanceSeq",
     "RelativeMahalanobisDistanceSeq",
@@ -57,6 +56,9 @@ def get_args():
     parser.add_argument("--text_column", type=str, default="question")
     parser.add_argument("--label_column", type=str, default="answer")
     parser.add_argument("--prompt", type=str, default='')
+    parser.add_argument("--train_split", type=str, default="train")
+    parser.add_argument("--eval_split", type=str, default="test")
+    parser.add_argument("--max_new_tokens", type=int, default=256)
 
     parser.add_argument("--model", type=str, required=True)
     parser.add_argument(
@@ -68,15 +70,40 @@ def get_args():
     parser.add_argument(
         "--use_density_based_ue",
         type=bool,
-        default=True,
+        default=False,
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
-        "--use_all_ue",
+        "--use_seq_ue",
         type=bool,
         default=True,
         action=argparse.BooleanOptionalAction,
     )
+    parser.add_argument(
+        "--use_tok_ue",
+        type=bool,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--load_from_disk",
+        type=bool,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--train_test_split",
+        type=bool,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument("--test_split_size", type=float, default=1)
+    
+    parser.add_argument("--background_train_dataset", type=str, default="allenai/c4")
+    parser.add_argument("--background_train_dataset_text_column", type=str, default="text")
+    parser.add_argument("--background_train_dataset_label_column", type=str, default="url")
+    parser.add_argument("--background_train_dataset_data_files", type=str, default="en/c4-train.00000-of-01024.json.gz")
+
     parser.add_argument("--subsample_background_train_dataset", type=int, default=-1)
     parser.add_argument("--subsample_train_dataset", type=int, default=-1)
     parser.add_argument("--subsample_eval_dataset", type=int, default=-1)
