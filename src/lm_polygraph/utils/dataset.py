@@ -65,7 +65,10 @@ class Dataset:
         size: int = None,
         **kwargs
     ):
-        dataset = load_dataset(dataset_path, split=split, **kwargs)
+        if isinstance(dataset_path, str):
+            dataset = load_dataset(dataset_path, split=split, **kwargs)
+        else:
+            dataset = load_dataset(*dataset_path, split=split, **kwargs)
         
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
@@ -119,6 +122,6 @@ class Dataset:
 
     @staticmethod
     def load(csv_path, *args, **kwargs):
-        if os.path.exists(csv_path):
+        if isinstance(csv_path, str) and os.path.exists(csv_path):
             return Dataset.from_csv(csv_path, *args, **kwargs)
         return Dataset.from_datasets(csv_path, *args, **kwargs)
