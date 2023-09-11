@@ -87,12 +87,29 @@ const curatedModels = [
     'GPT-4', 'GPT-3.5-turbo', 'Llama 2 7b'
 ]
 
+var defaultPrompt = '';
+var defaultModel = 'GPT-4';
+var defaultMethod = 'Lexical Similarity';
+
+fetch('./example_requests.json')
+    .then((response) => response.json())
+    .then((requests) => {
+    if (requests.length !== 0) {
+        let i = Math.floor(Math.random() * requests.length);
+        const promptInput = document.getElementById('prompt-input');
+        promptInput.innerHTML = requests[i].prompt;
+        defaultModel = requests[i].model;
+        defaultMethod = requests[i].method;
+        document.getElementById('model').__vue__.modelSelected = defaultModel;
+        document.getElementById('seque').__vue__.sequeSelected = defaultMethod;
+    }
+});
 
 Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#model',
     data: {
-        modelSelected: 'GPT-4',
+        modelSelected: defaultModel,
         value: '',
         allModels: false,
     },
@@ -112,7 +129,7 @@ Vue.component('treeselect', VueTreeselect.Treeselect);
 new Vue({
     el: '#seque',
     data: {
-        sequeSelected: 'Lexical Similarity',
+        sequeSelected: defaultMethod,
         model: '',
         type: '',
         allMethods: false
@@ -123,7 +140,11 @@ new Vue({
             newType = modelType(newModel)
 
             if (this.type !== '' && this.type !== newType) {
-                this.sequeSelected = 'Lexical Similarity';
+                if (defaultModel == newModel) {
+                    this.sequeSelected = defaultMethod;
+                } else {
+                    this.sequeSelected = curatedMethods[this.type][0];
+                }
             }
             this.model = newModel;
             this.type = newType;

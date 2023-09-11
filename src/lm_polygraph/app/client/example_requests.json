@@ -1,0 +1,57 @@
+[
+  {
+    "prompt": "Translate into French language: I want a small cup of coffee.",
+    "model": "GPT-4",
+    "method": "Lexical Similarity"
+  },
+  {
+    "prompt": "Translate into Wizzaggjanian language: I want a small cup of coffee.",
+    "model": "GPT-3.5-turbo",
+    "method": "Lexical Similarity"
+  },
+  {
+    "prompt": "How to cure an alien from pneumonia?",
+    "model": "GPT-3.5-turbo",
+    "method": "Lexical Similarity"
+  },
+  {
+    "prompt": "What is uncertainty estimation?",
+    "model": "GPT-3.5-turbo",
+    "method": "Lexical Similarity"
+  },
+  {
+    "prompt": "Who is the president of Qualiabian Republic?",
+    "model": "GPT-3.5-turbo",
+    "method": "Lexical Similarity"
+  },
+  {
+    "prompt": "Summarize this article: https://nytimes.com/2023/03/11/chatgpt-hallucinations.html.",
+    "model": "GPT-3.5-turbo",
+    "method": "Lexical Similarity"
+  },
+  {
+    "prompt": "Who is the current president of France?",
+    "model": "Llama 2 7b",
+    "method": "Mean Token Entropy"
+  },
+  {
+    "prompt": "Tell me a bio of John Smith.",
+    "model": "Llama 2 7b",
+    "method": "Mean Token Entropy"
+  },
+  {
+    "prompt": "Tell me a bio of Barack Obama.",
+    "model": "Llama 2 7b",
+    "method": "Mean Token Entropy"
+  },
+  {
+    "prompt": "What month is it now?",
+    "model": "Llama 2 7b",
+    "method": "Perplexity"
+  },
+  {
+    "prompt": "List all the members of The Beatles.",
+    "model": "Llama 2 7b",
+    "method": "Perplexity"
+  }
+]
