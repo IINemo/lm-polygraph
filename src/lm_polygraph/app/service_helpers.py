@@ -170,6 +170,8 @@ class Responder:
         if 'dolly' in model_path.lower():
             text = f'Below is an instruction that describes a task. Write a response that appropriately completes ' \
                    f'the request.\n### Instruction:\n{text}\n### Response:\n'
+        if any(x in model_path.lower() for x in ['vicuna', 'llama']):
+            text += '\n\n'
 
         for ue_method_name in tok_ue_method_names:
             if (ue_method_name not in self.tok_ue_methods.keys()) or (ue_method_name in self.density_based_names):
