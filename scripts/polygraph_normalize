@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from lm_polygraph.utils.manager import UEManager
 import numpy as np
 from scipy.stats import spearmanr, binned_statistic, sem
@@ -29,17 +31,43 @@ def fill(data, invalid=None):
 
 archive = {}
 
-ues = [('sequence', 'MaximumSequenceProbability'), ('sequence', 'Perplexity'), ('sequence', 'MeanTokenEntropy'), ('sequence', 'MeanPointwiseMutualInformation'), ('sequence', 'MeanConditionalPointwiseMutualInformation'), ('sequence', 'PTrue'), ('sequence', 'PTrueSampling'), ('sequence', 'MonteCarloSequenceEntropy'), ('sequence', 'MonteCarloNormalizedSequenceEntropy'), ('sequence', 'LexicalSimilarity_rouge1'), ('sequence', 'LexicalSimilarity_rouge2'), ('sequence', 'LexicalSimilarity_rougeL'), ('sequence', 'LexicalSimilarity_BLEU'), ('sequence', 'EigValLaplacian_Jaccard_score'), ('sequence', 'DegMat_Jaccard_score'), ('sequence', 'Eccentricity_Jaccard_score'), ('sequence', 'SemanticEntropy'), ('sequence', 'MahalanobisDistanceSeq_decoder'), ('sequence', 'RelativeMahalanobisDistanceSeq_decoder'), ('sequence', 'RDESeq_decoder'), ('sequence', 'PPLMDSeq_decoder'), ('sequence', 'PPLRMDSeq_decoder')]
+ues = [('sequence', 'MaximumSequenceProbability'),
+       ('sequence', 'Perplexity'),
+       ('sequence', 'MeanTokenEntropy'),
+       ('sequence', 'MeanPointwiseMutualInformation'),
+       ('sequence', 'MeanConditionalPointwiseMutualInformation'),
+       ('sequence', 'PTrue'),
+       ('sequence', 'PTrueSampling'),
+       ('sequence', 'MonteCarloSequenceEntropy'),
+       ('sequence', 'MonteCarloNormalizedSequenceEntropy'),
+       ('sequence', 'LexicalSimilarity_rouge1'),
+       ('sequence', 'LexicalSimilarity_rouge2'),
+       ('sequence', 'LexicalSimilarity_rougeL'),
+       ('sequence', 'LexicalSimilarity_BLEU'),
+       ('sequence', 'EigValLaplacian_Jaccard_score'),
+       ('sequence', 'DegMat_Jaccard_score'),
+       ('sequence', 'Eccentricity_Jaccard_score'),
+       ('sequence', 'SemanticEntropy'),
+       ('sequence', 'MahalanobisDistanceSeq_decoder'),
+       ('sequence', 'RelativeMahalanobisDistanceSeq_decoder'),
+       ('sequence', 'RDESeq_decoder'),
+       ('sequence', 'PPLMDSeq_decoder'),
+       ('sequence', 'PPLRMDSeq_decoder')]
 
-gen_metrics = [('sequence', 'Rouge_rouge1'), ('sequence', 'Rouge_rouge2'), ('sequence', 'Rouge_rougeL'), ('sequence', 'BARTScoreSeq-rh'), ('sequence', 'ModelScoreSeq-rh'), ('sequence', 'Accuracy')]
+gen_metrics = [('sequence', 'Rouge_rouge1'),
+               ('sequence', 'Rouge_rouge2'),
+               ('sequence', 'Rouge_rougeL'),
+               ('sequence', 'BARTScoreSeq-rh'),
+               ('sequence', 'ModelScoreSeq-rh'),
+               ('sequence', 'Accuracy')]
 
-ues = [('sequence', 'Perplexity'), ('sequence', 'MeanTokenEntropy')]
 base_ue_names = [name[1] for name in ues]
-gen_metrics = [('sequence', 'Rouge_rougeL')]
 
-man_names = ['llama2-chat-hf/aescllama.man_seed42', 'llama2-chat-hf/coqa_llama.man_seed42',
+man_names = ['llama2-chat-hf/aescllama.man_seed42',
+             'llama2-chat-hf/coqa_llama.man_seed42',
              'llama2-chat-hf/wmt14endelama.man_seed42',
-             'llama2-chat-hf/wmt14enfr_llama.man_seed42', 'llama2-chat-hf/xsumlama.man_seed42']
+             'llama2-chat-hf/wmt14enfr_llama.man_seed42',
+             'llama2-chat-hf/xsumlama.man_seed42']
 
 mans = []
 for man_name in man_names:
