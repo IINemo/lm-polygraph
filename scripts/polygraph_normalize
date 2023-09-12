@@ -141,17 +141,17 @@ for metric_name in gen_metrics:
         fig.suptitle(metric_name[1])
 
         ax[0].plot(range(len(bin_metric)), bin_metric)
-        ax[0].set_ylabel('RougeL')
+        ax[0].set_ylabel(metric_name[1])
         ax[0].set_xlabel('Bin')
         ax[0].grid()
         
         ax[1].plot(range(len(bin_std)), bin_std)
-        ax[1].set_ylabel('RougeL StD')
+        ax[1].set_ylabel(f'{metric_name[1]} StD')
         ax[1].set_xlabel('Bin')
         ax[1].grid()
 
         ax[2].plot(range(len(bin_sem)), bin_sem)
-        ax[2].set_ylabel('RougeL Standard Error')
+        ax[2].set_ylabel(f'{metric_name[1]} Standard Error')
         ax[2].set_xlabel('Bin')
         ax[2].grid()
 
