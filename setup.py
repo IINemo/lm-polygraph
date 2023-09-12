@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 install_requires = [
-    'datasets>=2.3.2',
+    'datasets>=2.14.2',
     'rouge-score>=0.0.4',
     'nlpaug>=1.1.10',
     'scikit-learn',

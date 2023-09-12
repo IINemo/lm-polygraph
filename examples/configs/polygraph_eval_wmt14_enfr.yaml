@@ -1,25 +1,24 @@
+save_path: './workdir/output'
+
 hydra:
   run:
-    dir: ${cache_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
-
-cache_path: ./workdir/output
-save_path: '${hydra:run.dir}'
+    dir: ${save_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 device: cpu
 
-estimator: MaximumSequenceProbability
+estimator: null
 estimator_module: null
 estimator_kwargs: {}
 
-task: qa
+task: nmt
 
-dataset: ./workdir/data/triviaqa.csv
-text_column: question
-label_column: answer
-prompt: ""
+dataset: [wmt14, fr-en]
+text_column: en
+label_column: fr
+prompt: "Translate from {source_lang} into {target_lang}:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
-max_new_tokens: 256
+max_new_tokens: null
 load_from_disk: false
 
 train_dataset: null
@@ -31,15 +30,15 @@ background_train_dataset_text_column: text
 background_train_dataset_label_column: url
 background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
 
-subsample_background_train_dataset: 100
-subsample_train_dataset: 10
-subsample_eval_dataset: 10
+subsample_background_train_dataset: 10_000
+subsample_train_dataset: 10_000
+subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
 
 additional_estimators: {}
-use_density_based_ue: false
-use_seq_ue: false
+use_density_based_ue: true
+use_seq_ue: true
 use_tok_ue: false
 ignore_exceptions: true
 
@@ -47,3 +46,5 @@ batch_size: 2
 
 seed:
     - 1
+
+cache_path: ./workdir

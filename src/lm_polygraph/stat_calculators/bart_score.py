@@ -13,7 +13,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 
 class BartScoreCalculator(StatCalculator):
-    def __init__(self, device=None, max_length=1024, checkpoint='facebook/bart-large-cnn'):
+    def __init__(self, device=None, max_length=256, checkpoint='facebook/bart-large-cnn'):
         super().__init__(['rh'],
                          ['greedy_tokens', 'input_tokens'])
         self.max_length = max_length
@@ -135,7 +135,7 @@ class BartScoreCalculator(StatCalculator):
 
         print(self.score(src_list, tgt_list, batch_size))
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
         if self.model is None:
             self._setup()
         srcs, tgts = dependencies['greedy_texts'], dependencies['target_texts']

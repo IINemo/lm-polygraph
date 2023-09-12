@@ -92,7 +92,7 @@ def get_embeddings_from_output(
                 last_decoder_hidden_states = decoder_hidden_states[-1, -1, :, 0]
                 batch_embeddings_decoder = last_decoder_hidden_states.reshape(batch_size, -1, last_decoder_hidden_states.shape[-1])[:, 0]
             if "encoder" in hidden_state:
-                batch_embeddings = predictions.encoder_hidden_states[-1][:, 0] 
+                batch_embeddings = output.encoder_hidden_states[-1][:, 0] 
             if not ("encoder" in hidden_state) and not ("decoder" in hidden_state):
                 raise NotImplementedError
     else:
@@ -114,7 +114,7 @@ class EmbeddingsCalculator(StatCalculator):
         super().__init__(['train_embeddings', 'background_train_embeddings'], [])
         self.hidden_layer = -1
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
@@ -122,7 +122,7 @@ class EmbeddingsCalculator(StatCalculator):
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,
-                max_new_tokens=256,
+                max_new_tokens=max_new_tokens,
                 min_length=2,
                 output_attentions=True,
                 output_hidden_states=True,

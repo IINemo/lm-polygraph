@@ -12,7 +12,7 @@ class EntropyCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['entropy'], ['greedy_log_probs'])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
         logprobs = dependencies['greedy_log_probs']
         entropies = []
         for s_lp in logprobs:

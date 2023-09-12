@@ -55,7 +55,10 @@ def _delete_nans(ue, metric):
     new_ue, new_metric = [], []
     for i in range(len(metric)):
         if not np.isnan(metric[i]) and not np.isnan(ue[i]):
-            new_ue.append(ue[i])
+            if not isinstance(ue[i], complex):
+                new_ue.append(ue[i])
+            else:
+                new_ue.append(ue[i].real)
             new_metric.append(metric[i])
     return new_ue, new_metric
 
@@ -96,6 +99,7 @@ class UEManager:
             ignore_exceptions: bool = True,
             ensemble_model: Optional[WhiteboxModel] = None,
             verbose: bool = True,
+            max_new_tokens: int = 100,
     ):
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -137,10 +141,11 @@ class UEManager:
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
-
+        self.max_new_tokens = max_new_tokens
+        
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         train_stats = self.extract_train_embeddings()
-        backgound_train_stats = self.extract_train_embeddings(background=True)
+        background_train_stats = self.extract_train_embeddings(background=True)
         if self.verbose:
             self.data = tqdm(self.data)
         for inp_texts, target_texts in self.data:
@@ -163,7 +168,7 @@ class UEManager:
 
             try:
                 for stat_calculator in self.stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue
@@ -172,22 +177,31 @@ class UEManager:
                             batch_stats[f'blackbox_{stat}'] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
-                    sys.stderr.write(f'Caught exception while calculating stats: {e}')
-                    print(f'Caught exception while calculating stats: {e}')
+                    sys.stderr.write(f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}')
+                    print(f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}')
                     continue
                 else:
                     raise e
 
             for stat in train_stats.keys():
                 batch_stats[stat] = train_stats[stat]
-            for stat in backgound_train_stats.keys():
-                batch_stats[stat] = backgound_train_stats[stat]
+            for stat in background_train_stats.keys():
+                batch_stats[stat] = background_train_stats[stat]
 
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+            bad_estimators = []
+            
             for estimator in self.estimators:
-                e = estimator(batch_stats).tolist()
-                self.estimations[estimator.level, str(estimator)] += e
-                batch_estimations[estimator.level, str(estimator)] += e
+                try:
+                    e = estimator(batch_stats).tolist()
+                    self.estimations[estimator.level, str(estimator)] += e
+                    batch_estimations[estimator.level, str(estimator)] += e
+                except:
+                    bad_estimators.append(estimator)
+            for bad_estimator in bad_estimators:
+                self.estimators.remove(bad_estimator)
+                
+                
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
                 m = generation_metric(batch_stats, target_texts=target_texts, target_tokens=target_tokens).tolist()
@@ -219,7 +233,7 @@ class UEManager:
 
         return self.metrics
     
-    def extract_train_embeddings(self, background: bool=False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+    def extract_train_embeddings(self, background: bool = False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_stats = {}
         result_train_stat = {}
         if background:
@@ -243,7 +257,7 @@ class UEManager:
                     batch_stats[key] = val
                     
                 for stat_calculator in stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model)
+                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue
