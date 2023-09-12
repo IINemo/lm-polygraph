@@ -46,10 +46,12 @@ class EraseHypothesesLogitsProcessor(LogitsProcessor):
         return scores
 
 
-def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
+def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **kwargs):
     batch_size = len(batch['input_ids'])
     logits, importance_logits = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     sequences = [[] for _ in range(batch_size)]
+    if kwargs.get("max_new_tokens", 0) is None:
+        kwargs["max_new_tokens"] = int(batch["input_ids"].shape[1] * 1.5)
     with torch.no_grad():
         for k in range(n_samples):
             input_len = batch['input_ids'].shape[1] if model.model_type == "CausalLM" else 0
@@ -61,7 +63,7 @@ def gen_samples(n_samples, model, batch, sample_tokens, sample_log_p, **args):
             out = model.generate(
                 **batch,
                 logits_processor=LogitsProcessorList([logits_processor]),
-                **args
+                **kwargs
             )
             cur_logits = torch.stack(logits_processor.logits, dim=1).log_softmax(-1)
             cur_importance_logits = torch.stack(logits_processor.importance_logits, dim=1).log_softmax(-1)
@@ -82,7 +84,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
                           'adapted_sample_tokens', 'adapted_sample_texts'],
                          ['sample_log_probs', 'sample_tokens', 'sample_texts'])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         sample_texts: List[List[str]] = \
             [samples[:(self.samples_n + 1) // 2] for samples in dependencies['sample_texts']]
         sample_tokens: List[List[List[int]]] = \
@@ -100,7 +102,7 @@ class AdaptedSamplingGenerationCalculator(StatCalculator):
             n_importance_samples, model, batch, sample_tokens, sample_log_p,
             output_scores=True,
             return_dict_in_generate=True,
-            max_length=256,
+            max_new_tokens=max_new_tokens,
             min_length=2,
             num_beams=1,
             do_sample=True)

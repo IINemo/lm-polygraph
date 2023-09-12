@@ -7,19 +7,19 @@ save_path: '${hydra:run.dir}'
 
 device: cpu
 
-estimator: MaximumSequenceProbability
+estimator: null
 estimator_module: null
 estimator_kwargs: {}
 
-task: qa
+task: ats
 
-dataset: ./workdir/data/triviaqa.csv
-text_column: question
-label_column: answer
-prompt: ""
+dataset: xsum
+text_column: document
+label_column: summary
+prompt: "Summarize the text in a one-sentence headline.\n\nText:\n{text}\n\nSummary (one sentence):\n"
 train_split: train
 eval_split: test
-max_new_tokens: 256
+max_new_tokens: 42
 load_from_disk: false
 
 train_dataset: null
@@ -31,15 +31,15 @@ background_train_dataset_text_column: text
 background_train_dataset_label_column: url
 background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
 
-subsample_background_train_dataset: 100
-subsample_train_dataset: 10
-subsample_eval_dataset: 10
+subsample_background_train_dataset: 10_000
+subsample_train_dataset: 10_000
+subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
 
 additional_estimators: {}
-use_density_based_ue: false
-use_seq_ue: false
+use_density_based_ue: true
+use_seq_ue: true
 use_tok_ue: false
 ignore_exceptions: true
 

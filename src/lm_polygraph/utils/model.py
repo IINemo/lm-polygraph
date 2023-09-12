@@ -156,23 +156,24 @@ class WhiteboxModel(Model):
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs)
+                model_path, max_length=256, trust_remote_code=True, **kwargs).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
-            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=256, **kwargs)
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
             if 'falcon' in model_path:
                 model.transformer.alibi = True
         elif any(["BartModel" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
-            model = BartForCausalLM.from_pretrained(model_path, max_length=256, **kwargs)
+            model = BartForCausalLM.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
         else:
             raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
         if not kwargs.get('load_in_8bit', False) and not kwargs.get('load_in_4bit', False):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True, model_max_length=256)
+            model_path, padding_side="left", add_bos_token=True, 
+            model_max_length=256 if model_type == "CausalLM" else 1024)
 
         model.eval()
         if tokenizer.pad_token is None:
@@ -188,7 +189,7 @@ class WhiteboxModel(Model):
         return WhiteboxModel(model, tokenizer, model_path)
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        if ("falcon" in self.model.config._name_or_path) or ("Llama" in self.model.config._name_or_path):
+        if ("falcon" in self.model.config._name_or_path.lower()) or ("llama" in self.model.config._name_or_path.lower()):
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
                                        return_token_type_ids=False)
         else:

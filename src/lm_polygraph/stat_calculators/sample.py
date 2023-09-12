@@ -14,12 +14,12 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
-                       model: BlackboxModel) -> Dict[str, np.ndarray]:
+                       model: BlackboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
 
         if type(model) == BlackboxModel:
             samples = model.generate_texts(
                     input_texts=texts,
-                    max_tokens=256,
+                    max_new_tokens=max_new_tokens,
                     temperature=model.parameters.temperature,
                     top_p=model.parameters.topp,
                     presence_penalty=model.parameters.presence_penalty,
@@ -30,7 +30,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             samples = [[] for _ in range(len(texts))]
             out = model.generate_texts(
                     input_texts=texts,
-                    max_length=256,
+                    max_new_tokens=max_new_tokens,
                     min_length=2,
                     do_sample=True,
                     num_beams=1,
@@ -48,14 +48,14 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         }
 
 
-def gen_samples(n_samples, model, batch, **args):
+def gen_samples(n_samples, model, batch, **kwargs):
     batch_size = len(batch['input_ids'])
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
             out = model.generate(
                 **batch,
-                **args
+                **kwargs
             )
             cur_logits = torch.stack(out.scores, dim=1).log_softmax(-1)
             for i in range(batch_size):
@@ -71,7 +71,7 @@ class SamplingGenerationCalculator(StatCalculator):
         self.samples_n = samples_n
         super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
@@ -79,7 +79,7 @@ class SamplingGenerationCalculator(StatCalculator):
             self.samples_n, model, batch,
             output_scores=True,
             return_dict_in_generate=True,
-            max_length=256,
+            max_new_tokens=max_new_tokens,
             min_length=2,
             do_sample=True,
             num_beams=1,
