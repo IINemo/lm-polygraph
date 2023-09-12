@@ -1,0 +1,157 @@
+from lm_polygraph.utils.manager import UEManager
+import numpy as np
+from scipy.stats import spearmanr, binned_statistic, sem
+from scipy import ndimage as nd
+import matplotlib.pyplot as plt
+import sys
+import json
+
+def fill(data, invalid=None):
+    """
+    Replace the value of invalid 'data' cells (indicated by 'invalid') 
+    by the value of the nearest valid data cell
+
+    Input:
+        data:    numpy array of any dimension
+        invalid: a binary array of same shape as 'data'. 
+                 data value are replaced where invalid is True
+                 If None (default), use: invalid  = np.isnan(data)
+
+    Output: 
+        Return a filled array. 
+    """    
+    if invalid is None: invalid = np.isnan(data)
+
+    ind = nd.distance_transform_edt(invalid, 
+                                    return_distances=False, 
+                                    return_indices=True)
+    return data[tuple(ind)]
+
+archive = {}
+
+ues = [('sequence', 'MaximumSequenceProbability'), ('sequence', 'Perplexity'), ('sequence', 'MeanTokenEntropy'), ('sequence', 'MeanPointwiseMutualInformation'), ('sequence', 'MeanConditionalPointwiseMutualInformation'), ('sequence', 'PTrue'), ('sequence', 'PTrueSampling'), ('sequence', 'MonteCarloSequenceEntropy'), ('sequence', 'MonteCarloNormalizedSequenceEntropy'), ('sequence', 'LexicalSimilarity_rouge1'), ('sequence', 'LexicalSimilarity_rouge2'), ('sequence', 'LexicalSimilarity_rougeL'), ('sequence', 'LexicalSimilarity_BLEU'), ('sequence', 'EigValLaplacian_Jaccard_score'), ('sequence', 'DegMat_Jaccard_score'), ('sequence', 'Eccentricity_Jaccard_score'), ('sequence', 'SemanticEntropy'), ('sequence', 'MahalanobisDistanceSeq_decoder'), ('sequence', 'RelativeMahalanobisDistanceSeq_decoder'), ('sequence', 'RDESeq_decoder'), ('sequence', 'PPLMDSeq_decoder'), ('sequence', 'PPLRMDSeq_decoder')]
+
+gen_metrics = [('sequence', 'Rouge_rouge1'), ('sequence', 'Rouge_rouge2'), ('sequence', 'Rouge_rougeL'), ('sequence', 'BARTScoreSeq-rh'), ('sequence', 'ModelScoreSeq-rh'), ('sequence', 'Accuracy')]
+
+ues = [('sequence', 'Perplexity'), ('sequence', 'MeanTokenEntropy')]
+base_ue_names = [name[1] for name in ues]
+gen_metrics = [('sequence', 'Rouge_rougeL')]
+
+man_names = ['llama2-chat-hf/aescllama.man_seed42', 'llama2-chat-hf/coqa_llama.man_seed42',
+             'llama2-chat-hf/wmt14endelama.man_seed42',
+             'llama2-chat-hf/wmt14enfr_llama.man_seed42', 'llama2-chat-hf/xsumlama.man_seed42']
+
+mans = []
+for man_name in man_names:
+    mans.append(UEManager.load(man_name))
+
+for metric_name in gen_metrics:
+    metrics = []
+    for man in mans:
+        metrics.append(man.gen_metrics[metric_name])
+
+    metric = np.concatenate(metrics)
+    metric_nans = np.argwhere(np.isnan(metric)).flatten()
+    metric = np.delete(metric, metric_nans)
+    for i, ue_name in enumerate(ues):
+        man_ues = []
+        for man in mans:
+            man_ue = np.array(man.estimations[ue_name])
+            #man_tokens = np.array(man.stats['greedy_tokens'])
+            #man_lengths = np.array([len(tokens) for tokens in man_tokens])
+            man_ues.append(man_ue)
+
+        ue = np.concatenate(man_ues)
+        ue = np.delete(ue, metric_nans)
+    
+        ue_nans  = np.argwhere(np.isnan(ue)).flatten()
+
+        filtered_ue = np.delete(ue, ue_nans)
+
+        filtered_metric = np.delete(metric, ue_nans)
+
+        shifted_metric = (filtered_metric - filtered_metric.min())
+        normed_metric = shifted_metric / shifted_metric.max()
+
+        
+        num_bins = 100
+        metric_bins = binned_statistic(filtered_ue,
+                                       normed_metric,
+                                       bins=num_bins, statistic='mean')
+
+        std_bins = binned_statistic(filtered_ue,
+                                    normed_metric,
+                                    bins=num_bins, statistic='std')
+        
+        sem_bins = binned_statistic(filtered_ue,
+                                    normed_metric,
+                                    bins=num_bins, statistic=sem)
+
+        counts = []
+        for bin_number in range(num_bins):
+            counts.append((metric_bins.binnumber == (bin_number + 1)).sum())
+
+        # fill bins with low support with nans
+        bin_metric = metric_bins.statistic
+        bin_metric[np.array(counts) < 50] = np.nan
+        bin_metric = fill(bin_metric)
+
+        bin_std = std_bins.statistic
+        bin_std[np.array(counts) < 50] = np.nan
+        bin_std = fill(bin_std)
+
+        bin_sem = sem_bins.statistic
+        bin_sem[np.array(counts) < 50] = np.nan
+        bin_sem = fill(bin_sem)
+
+        unnormalized_conf = bin_metric * 100
+        min_metric = bin_metric.min()
+        max_metric = bin_metric.max()
+        normalized_conf = (bin_metric - min_metric) / (max_metric - min_metric)
+        normalized_conf = normalized_conf * 100
+
+        fig, ax = plt.subplots(6, 1, figsize=(5, 25))
+        fig.suptitle(metric_name[1])
+
+        ax[0].plot(range(len(bin_metric)), bin_metric)
+        ax[0].set_ylabel('RougeL')
+        ax[0].set_xlabel('Bin')
+        ax[0].grid()
+        
+        ax[1].plot(range(len(bin_std)), bin_std)
+        ax[1].set_ylabel('RougeL StD')
+        ax[1].set_xlabel('Bin')
+        ax[1].grid()
+
+        ax[2].plot(range(len(bin_sem)), bin_sem)
+        ax[2].set_ylabel('RougeL Standard Error')
+        ax[2].set_xlabel('Bin')
+        ax[2].grid()
+
+        ax[3].plot(range(len(unnormalized_conf)), unnormalized_conf)
+        ax[3].set_ylabel('Unnormalized conf, %')
+        ax[3].set_xlabel('Bin')
+        ax[3].grid()
+
+        ax[4].plot(range(len(normalized_conf)), normalized_conf)
+        ax[4].set_ylabel('Normalized conf, %')
+        ax[4].set_xlabel('Bin')
+        ax[4].grid()
+        
+        ax[5].stairs(counts, metric_bins.bin_edges)
+        ax[5].set_ylabel('Num points in bin')
+        ax[5].set_xlabel('UE in bin')
+        ax[5].grid()
+
+        archive[base_ue_names[i]] = {
+            'ues': list(metric_bins.bin_edges),
+            'normed_conf': list(normalized_conf),
+            'unnormed_conf': list(unnormalized_conf),
+        }
+
+        plt.tight_layout()
+        plt.savefig(f'{base_ue_names[i]}_{metric_name[1]}.jpg')
+        plt.clf()
+
+with open('llama_chat_norms.json', 'w') as handle:
+    handle.write(json.dumps(archive))
