@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
-from lm_polygraph.utils.manager import UEManager
-import numpy as np
-from scipy.stats import spearmanr, binned_statistic, sem
-from scipy import ndimage as nd
-import matplotlib.pyplot as plt
 import sys
 import json
 import argparse
+from pathlib import Path
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import spearmanr, binned_statistic, sem
+from scipy import ndimage as nd
+
+from lm_polygraph.utils.manager import UEManager
+
 
 def fill(data, invalid=None):
     """
@@ -30,19 +34,25 @@ def fill(data, invalid=None):
                                     return_indices=True)
     return data[tuple(ind)]
 
+
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--ue_methods", nargs='+', default=[])
+    parser.add_argument("--ue_methods", nargs="+", default=[])
     parser.add_argument("--generation_metrics", nargs='+', default=[])
-    parser.add_argument("--man_paths", nargs='+', default=[])
+    parser.add_argument("--man_paths", nargs="+", default=[])
+    parser.add_argument("--output_dir", default="./workdir")
 
     args = parser.parse_args()
 
     return args
 
+
 def main():
     args = get_args()
+    
+    out = Path(args.output_dir)
+    out.mkdir(parents=True, exist_ok=True)
 
     man_names = args.man_paths
     ues = args.ue_methods
@@ -164,10 +174,10 @@ def main():
             }
 
             plt.tight_layout()
-            plt.savefig(f'workidr/{ue_name[1]}_{metric_name[1]}.jpg')
+            plt.savefig(out / f'{ue_name[1]}_{metric_name[1]}.jpg')
             plt.clf()
 
-    with open('workdir/calibrated_ues.json', 'w') as handle:
+    with open(out / 'calibrated_ues.json', 'w') as handle:
         handle.write(json.dumps(archive))
 
 
