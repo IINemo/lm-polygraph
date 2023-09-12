@@ -71,7 +71,7 @@ const allModels = [
     'GPT-4', 'GPT-3.5-turbo',
     'Dolly 3b', 'Dolly 7b', 'Dolly 12b',
     'BLOOMz 560M', 'BLOOMz 3b', 'BLOOMz 7b', 'Falcon 7b',
-    'Llama 2 7b', 'Llama 2 13b',
+    'Llama 2 7b', 'Llama 2 13b', 'Vicuna 7b', 'Vicuna 13b',
     'Open Llama 3b', 'Open Llama 7b', 'Open Llama 13b',
     'Flan T5 XL', 'T5 XL NQ', 'BART Large CNN', 'Ensemble'
 ]

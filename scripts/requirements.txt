@@ -26,3 +26,4 @@ bitsandbytes
 openai
 wget
 hydra-core==1.3.2
+pytest==7.4.2
