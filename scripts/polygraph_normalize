@@ -164,10 +164,10 @@ def main():
             }
 
             plt.tight_layout()
-            plt.savefig(f'{ue_name[1]}_{metric_name[1]}.jpg')
+            plt.savefig(f'workidr/{ue_name[1]}_{metric_name[1]}.jpg')
             plt.clf()
 
-    with open('llama_chat_norms.json', 'w') as handle:
+    with open('workdir/calibrated_ues.json', 'w') as handle:
         handle.write(json.dumps(archive))
 
 
