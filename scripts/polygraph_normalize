@@ -31,37 +31,35 @@ def fill(data, invalid=None):
 
 archive = {}
 
-ues = [('sequence', 'MaximumSequenceProbability'),
-       ('sequence', 'Perplexity'),
-       ('sequence', 'MeanTokenEntropy'),
-       ('sequence', 'MeanPointwiseMutualInformation'),
-       ('sequence', 'MeanConditionalPointwiseMutualInformation'),
-       ('sequence', 'PTrue'),
-       ('sequence', 'PTrueSampling'),
-       ('sequence', 'MonteCarloSequenceEntropy'),
-       ('sequence', 'MonteCarloNormalizedSequenceEntropy'),
-       ('sequence', 'LexicalSimilarity_rouge1'),
-       ('sequence', 'LexicalSimilarity_rouge2'),
-       ('sequence', 'LexicalSimilarity_rougeL'),
-       ('sequence', 'LexicalSimilarity_BLEU'),
-       ('sequence', 'EigValLaplacian_Jaccard_score'),
-       ('sequence', 'DegMat_Jaccard_score'),
-       ('sequence', 'Eccentricity_Jaccard_score'),
-       ('sequence', 'SemanticEntropy'),
-       ('sequence', 'MahalanobisDistanceSeq_decoder'),
-       ('sequence', 'RelativeMahalanobisDistanceSeq_decoder'),
-       ('sequence', 'RDESeq_decoder'),
-       ('sequence', 'PPLMDSeq_decoder'),
-       ('sequence', 'PPLRMDSeq_decoder')]
+ues = ['MaximumSequenceProbability',
+       'Perplexity',
+       'MeanTokenEntropy',
+       'MeanPointwiseMutualInformation',
+       'MeanConditionalPointwiseMutualInformation',
+       'PTrue',
+       'PTrueSampling',
+       'MonteCarloSequenceEntropy',
+       'MonteCarloNormalizedSequenceEntropy',
+       'LexicalSimilarity_rouge1',
+       'LexicalSimilarity_rouge2',
+       'LexicalSimilarity_rougeL',
+       'LexicalSimilarity_BLEU',
+       'EigValLaplacian_Jaccard_score',
+       'DegMat_Jaccard_score',
+       'Eccentricity_Jaccard_score',
+       'SemanticEntropy',
+       'MahalanobisDistanceSeq_decoder',
+       'RelativeMahalanobisDistanceSeq_decoder',
+       'RDESeq_decoder',
+       'PPLMDSeq_decoder',
+       'PPLRMDSeq_decoder']
 
-gen_metrics = [('sequence', 'Rouge_rouge1'),
-               ('sequence', 'Rouge_rouge2'),
-               ('sequence', 'Rouge_rougeL'),
-               ('sequence', 'BARTScoreSeq-rh'),
-               ('sequence', 'ModelScoreSeq-rh'),
-               ('sequence', 'Accuracy')]
-
-base_ue_names = [name[1] for name in ues]
+gen_metrics = ['Rouge_rouge1',
+               'Rouge_rouge2',
+               'Rouge_rougeL',
+               'BARTScoreSeq-rh',
+               'ModelScoreSeq-rh',
+               'Accuracy']
 
 man_names = ['llama2-chat-hf/aescllama.man_seed42',
              'llama2-chat-hf/coqa_llama.man_seed42',
@@ -74,6 +72,8 @@ for man_name in man_names:
     mans.append(UEManager.load(man_name))
 
 for metric_name in gen_metrics:
+    # that's just the way keys are in man archive
+    metric_name = ('sequence', metric_name)
     metrics = []
     for man in mans:
         metrics.append(man.gen_metrics[metric_name])
@@ -82,11 +82,10 @@ for metric_name in gen_metrics:
     metric_nans = np.argwhere(np.isnan(metric)).flatten()
     metric = np.delete(metric, metric_nans)
     for i, ue_name in enumerate(ues):
+        ue_name = ('sequence', ue_name)
         man_ues = []
         for man in mans:
             man_ue = np.array(man.estimations[ue_name])
-            #man_tokens = np.array(man.stats['greedy_tokens'])
-            #man_lengths = np.array([len(tokens) for tokens in man_tokens])
             man_ues.append(man_ue)
 
         ue = np.concatenate(man_ues)
@@ -171,14 +170,14 @@ for metric_name in gen_metrics:
         ax[5].set_xlabel('UE in bin')
         ax[5].grid()
 
-        archive[base_ue_names[i]] = {
+        archive[ue_name[1]] = {
             'ues': list(metric_bins.bin_edges),
             'normed_conf': list(normalized_conf),
             'unnormed_conf': list(unnormalized_conf),
         }
 
         plt.tight_layout()
-        plt.savefig(f'{base_ue_names[i]}_{metric_name[1]}.jpg')
+        plt.savefig(f'{ue_name[1]}_{metric_name[1]}.jpg')
         plt.clf()
 
 with open('llama_chat_norms.json', 'w') as handle:
