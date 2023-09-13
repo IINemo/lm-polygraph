@@ -6,7 +6,7 @@ estimator_module: null
 dataset: SpeedOfMagic/trivia_qa_tiny
 text_column: question
 label_column: answer
-
+prompt: ""
 
 model: bigscience/bloomz-560m
 ignore_exceptions: false
