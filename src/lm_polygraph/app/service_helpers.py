@@ -151,7 +151,8 @@ class Responder:
             if model_path.startswith('openai-'):
                 self.model = BlackboxModel(data['openai_key'], model_path[len('openai-'):])
             else:
-                load_in_8bit = ('cuda' in self.device) and any(s in model_path for s in ['7b', '12b', '13b'])
+                #load_in_8bit = ('cuda' in self.device) and any(s in model_path for s in ['7b', '12b', '13b'])
+                load_in_8bit = False
                 self.model = WhiteboxModel.from_pretrained(
                     model_path, device=self.device, load_in_8bit=load_in_8bit)
         else:
