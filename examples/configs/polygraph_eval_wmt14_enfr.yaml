@@ -31,6 +31,7 @@ ood_dataset: [wmt14, fr-en]
 ood_text_column: en
 ood_label_column: fr
 ood_corrupt: true
+ood_prompt: null
 
 background_train_dataset: allenai/c4
 background_train_dataset_text_column: text

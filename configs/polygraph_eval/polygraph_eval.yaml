@@ -10,6 +10,11 @@ task: qa
 dataset: ../workdir/data/triviaqa.csv
 ood_dataset: ../workdir/data/triviaqa.csv
 train_dataset: null
+ood_text_column: question
+ood_label_column: answer
+ood_corrupt: true
+ood_prompt: null
+
 background_train_dataset: allenai/c4
 subsample_background_train_dataset: 100
 subsample_train_dataset: 10
