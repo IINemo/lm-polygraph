@@ -26,6 +26,13 @@ train_dataset: null
 train_test_split: false
 test_split_size: 1
 
+ood_detection: false
+ood_dataset: xsum
+ood_text_column: document
+ood_label_column: summary
+ood_corrupt: true
+ood_prompt: null
+
 background_train_dataset: allenai/c4
 background_train_dataset_text_column: text
 background_train_dataset_label_column: url
@@ -34,6 +41,7 @@ background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
 subsample_background_train_dataset: 10_000
 subsample_train_dataset: 10_000
 subsample_eval_dataset: -1
+subsample_ood_dataset: -1
 
 model: databricks/dolly-v2-3b
 

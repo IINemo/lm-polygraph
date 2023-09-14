@@ -167,8 +167,12 @@ def main(args):
         if args.ood_detection:
             ood_dataset = Dataset.load(
                 args.ood_dataset,
-                args.ood_input_column, 'answer',
+                args.ood_text_column, 
+                args.ood_label_column,
                 batch_size=args.batch_size,
+                prompt=args.prompt if args.ood_prompt is None else args.ood_prompt,
+                split=args.eval_split,
+                load_from_disk=args.load_from_disk
             )
             if args.subsample_ood_dataset != -1:
                 ood_dataset.subsample(args.subsample_ood_dataset, seed=seed)
