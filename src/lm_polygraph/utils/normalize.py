@@ -16,13 +16,16 @@ DEFAULT_CACHE_PATH = f'{pathlib.Path(__file__).parent.resolve()}/normalization'
 def normalization_bounds_present(est: Estimator, model_path: str, directory: str, cache_path: str = DEFAULT_CACHE_PATH) -> bool:
     archive_path = model_path.split('/')[-1] + '.json'
     filepath = os.path.join(cache_path, archive_path)
-    if os.path.exists(filepath):
-        os.remove(filepath)
-    try:
-        wget.download(HOST + '/' + directory + '/' + archive_path, out = filepath)
-    except:
+    if not os.path.exists(filepath):
         sys.stderr.write('Warning: no normalization bounds found')
         return False
+    # if os.path.exists(filepath):
+    #     os.remove(filepath)
+    # try:
+    #     wget.download(HOST + '/' + directory + '/' + archive_path, out = filepath)
+    # except:
+    #     sys.stderr.write('Warning: no normalization bounds found')
+    #     return False
     with open(filepath, 'r') as f:
         ue_bounds = json.load(f)
     return str(est) in ue_bounds.keys()
