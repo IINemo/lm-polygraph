@@ -24,6 +24,7 @@ from lm_polygraph.generation_metrics.model_score import (
     ModelScoreSeqMetric,
     ModelScoreTokenwiseMetric,
 )
+from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.generation_metrics.wer_tokenwise import WERTokenwiseMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import (
