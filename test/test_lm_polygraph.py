@@ -7,7 +7,7 @@ def exec_bash(s):
 
 
 def test_just_works_cli():
-    command = 'scripts/polygraph_eval --estimator LexicalSimilarity --estimator_kwargs \'{"metric": "rouge2"}\' --dataset SpeedOfMagic/trivia_qa_tiny --model bigscience/bloomz-560m --no-ignore_exceptions --subsample_eval_dataset 10'
+    command = 'scripts/polygraph_eval --estimator LexicalSimilarity --estimator_kwargs \'{"metric": "rouge2"}\' --dataset SpeedOfMagic/trivia_qa_tiny --model bigscience/bloomz-560m --no-ignore_exceptions --subsample_eval_dataset 10 --no-use_seq_ue'
     exec_result = exec_bash(command)
     assert (
         exec_result.returncode == 0

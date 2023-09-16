@@ -10,6 +10,7 @@ prompt: ""
 
 model: bigscience/bloomz-560m
 ignore_exceptions: false
+use_seq_ue: false
 
 subsample_eval_dataset: 10
 batch_size: 2
