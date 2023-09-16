@@ -18,14 +18,13 @@ from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.processor import Logger
-from lm_polygraph.generation_metrics import (
-    RougeMetric,
-    WERTokenwiseMetric,
-    BartScoreSeqMetric,
+from lm_polygraph.generation_metrics.accuracy import AccuracyMetric
+from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
+from lm_polygraph.generation_metrics.model_score import (
     ModelScoreSeqMetric,
-    ModelScoreTokenwiseMetric, 
-    AccuracyMetric
+    ModelScoreTokenwiseMetric,
 )
+from lm_polygraph.generation_metrics.wer_tokenwise import WERTokenwiseMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
@@ -52,7 +51,6 @@ def get_args():
 
     parser.add_argument("--dataset", type=str, required=True)
     parser.add_argument("--train_dataset", type=str)
-    parser.add_argument("--background_train_dataset", type=str)
     parser.add_argument("--text_column", type=str, default="question")
     parser.add_argument("--label_column", type=str, default="answer")
     parser.add_argument("--prompt", type=str, default='')
