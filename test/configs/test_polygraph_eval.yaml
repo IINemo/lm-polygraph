@@ -4,17 +4,23 @@ estimator_kwargs:
 estimator_module: null
 
 dataset: SpeedOfMagic/trivia_qa_tiny
+train_split: train
+eval_split: test
 text_column: question
+load_from_disk: false
 label_column: answer
 prompt: ""
 
 model: bigscience/bloomz-560m
 ignore_exceptions: false
 use_seq_ue: false
+use_tok_ue: false
+use_density_based_ue: false
 
 subsample_eval_dataset: 10
 batch_size: 2
 seed: null
 device: null
-save_path: ""
+save_path: "."
 cache_path: ""
+max_new_tokens: 256

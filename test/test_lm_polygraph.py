@@ -12,7 +12,7 @@ def test_just_works_cli():
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
-    os.remove("_seed1")
+    os.remove("ue_manager_seed1")
 
 
 def test_just_works_hydra():
@@ -23,4 +23,4 @@ def test_just_works_hydra():
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
-    os.remove("_seed1")
+    os.remove("ue_manager_seed1")
