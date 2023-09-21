@@ -82,31 +82,26 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 
 | Uncertainty Estimation Method                                       | Type        | Category            | Compute | Memory | Need Training Data? |
 | ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
-| Maximum sequence probability                                        |             |                     | Low     | Low    |                     |
-| Perplexity (Fomicheva et al., 2020a)                                |             |                     | Low     | Low    |                     |
-| Mean token entropy (Fomicheva et al., 2020a)                        | White-box   | Information-Based  | Low     | Low    |                     |
-| Monte Carlo sequence entropy (Kuhn et al., 2023)                    |             | based               | High    | Low    | No                  |
-| Pointwise mutual information (PMI) (Takayama and Arase, 2019)       |             |                     | Medium  | Low    |                     |
-| Conditional PMI (van der Poel et al., 2022)                         |             |                     | Medium  | Medium |                     |
-| ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
-| Semantic entropy (Kuhn et al., 2023)                                | White-box   | Meaning diversity   | High    | Low    | No                  |
-| ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
-| Sentence-level ensemble-based measures (Malinin and Gales, 2020)    |             |                     |         |        |                     |
-| Token-level ensemble-based measures (Malinin and Gales, 2020)       | White-box   | Ensembling          | High    | High   | Yes                 |
-| ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
-| Mahalanobis distance (MD) (Lee et al., 2018)                        |             |                     |         |        |                     |
-| Robust density estimation (RDE) (Yoo et al., 2022)                  |             | Density-Based       |         |        |                     |
-| Relative Mahalanobis distance (RMD) (Ren et al., 2023)              | White-box   | based               | Low     | Low    | Yes                 |
-| Hybrid Uncertainty Quantification (HUQ) (Vazhentsev et al., 2023a)  |             |                     |         |        |                     |
-| ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
-| p(True) (Kadavath et al., 2022)                                     | White-box   | Reflexive           | Medium  | Low    | No                  |
-| ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
-| Number of semantic sets (NumSets) (Kuhn et al., 2023)               |             |                     |         |        |                     |
-| Sum of eigenvalues of the graph Laplacian (EigV) (Lin et al., 2023) |             | Meaning             |         |        |                     |
-| Degree matrix (Deg) (Lin et al., 2023)                              | Black-box   | Diversity           | High    | Low    | No                  |
-| Eccentricity (Ecc) (Lin et al., 2023)                               |             |                     |         |        |                     |
-| Lexical similarity (LexSim) (Fomicheva et al., 2020a)               |             |                     |         |        |                     |
-| ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
+| Maximum sequence probability                                        | White-box   | Information-based   | Low     | Low    |         No          |
+| Perplexity (Fomicheva et al., 2020a)                                | White-box   | Information-based   | Low     | Low    |         No          |
+| Mean token entropy (Fomicheva et al., 2020a)                        | White-box   | Information-based   | Low     | Low    |         No          |
+| Monte Carlo sequence entropy (Kuhn et al., 2023)                    | White-box   | Information-based   | High    | Low    |         No          |
+| Pointwise mutual information (PMI) (Takayama and Arase, 2019)       | White-box   | Information-based   | Medium  | Low    |         No          |
+| Conditional PMI (van der Poel et al., 2022)                         | White-box   | Information-based   | Medium  | Medium |         No          |
+| Semantic entropy (Kuhn et al., 2023)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| Sentence-level ensemble-based measures (Malinin and Gales, 2020)    | White-box   | Ensembling          | High    | High   |         Yes         |
+| Token-level ensemble-based measures (Malinin and Gales, 2020)       | White-box   | Ensembling          | High    | High   |         Yes         |
+| Mahalanobis distance (MD) (Lee et al., 2018)                        | White-box   | Density-based       | Low     | Low    |         Yes         |
+| Robust density estimation (RDE) (Yoo et al., 2022)                  | White-box   | Density-based       | Low     | Low    |         Yes         |
+| Relative Mahalanobis distance (RMD) (Ren et al., 2023)              | White-box   | Density-based       | Low     | Low    |         Yes         |
+| Hybrid Uncertainty Quantification (HUQ) (Vazhentsev et al., 2023a)  | White-box   | Density-based       | Low     | Low    |         Yes         |
+| p(True) (Kadavath et al., 2022)                                     | White-box   | Reflexive           | Medium  | Low    |         No          |
+| Number of semantic sets (NumSets) (Kuhn et al., 2023)               | Black-box   | Meaning Diversity   | High    | Low    |         No          |
+| Sum of eigenvalues of the graph Laplacian (EigV) (Lin et al., 2023) | Black-box   | Meaning Diversity   | High    | Low    |         No          |
+| Degree matrix (Deg) (Lin et al., 2023)                              | Black-box   | Meaning Diversity   | High    | Low    |         No          |
+| Eccentricity (Ecc) (Lin et al., 2023)                               | Black-box   | Meaning Diversity   | High    | Low    |         No          |
+| Lexical similarity (LexSim) (Fomicheva et al., 2020a)               | Black-box   | Meaning Diversity   | High    | Low    |         No          |
+
 
 
 
