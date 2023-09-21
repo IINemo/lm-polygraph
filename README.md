@@ -3,7 +3,7 @@
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
-[Installation](#installation) | [Basic usage](#basic_usage) | [Documentation](https://lm-polygraph.readthedocs.io/) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
+[Installation](#installation) | [Basic usage](#basic_usage) | [Documentation](https://lm-polygraph.readthedocs.io/) | [Methods](#methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
 
 LM-Polygraph provides a battery of state-of-the-art of uncertainty estimation (UE) methods for LMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertinaty can help to make applications of LLMs safer.
 
@@ -49,6 +49,36 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 * [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/mt_example.ipynb): an of scoring the `facebook/wmt19-en-de` model on the `WMT14 En-De` dataset;
 * [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
 * [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in Colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
+
+## Methods
+
+| Uncertainty Estimation Method                                       | Type         | Category         | Compute | Memory | Need Training Data? |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
+| Maximum sequence probability                                        |              |                  |  Low    | Low    |                     |
+| Perplexity (Fomicheva et al., 2020a)                                |              |                  |  Low    | Low    |                     |
+| Mean token entropy (Fomicheva et al., 2020a)                        |  White-box   |   Information-   |  Low    | Low    |                     |
+| Monte Carlo sequence entropy (Kuhn et al., 2023)                    |              |       based      |  High   | Low    |         No          |
+| Pointwise mutual information (PMI) (Takayama and Arase, 2019)       |              |                  |  Medium | Low    |                     |
+| Conditional PMI (van der Poel et al., 2022)                         |              |                  |  Medium | Medium |                     |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
+| Semantic entropy (Kuhn et al., 2023)                                |  White-box   | Meaning diversity|  High   | Low    |         No          |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
+| Sentence-level ensemble-based measures (Malinin and Gales, 2020)    |              |                  |         |        |                     |
+| Token-level ensemble-based measures (Malinin and Gales, 2020)       |  White-box   | Ensembling       |  High   | High   |         Yes         |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
+| Mahalanobis distance (MD) (Lee et al., 2018)                        |              |                  |         |        |                     |
+| Robust density estimation (RDE) (Yoo et al., 2022)                  |              |     Density-     |         |        |                     |
+| Relative Mahalanobis distance (RMD) (Ren et al., 2023)              |  White-box   |      based       |  Low    | Low    |         Yes         |
+| Hybrid Uncertainty Quantification (HUQ) (Vazhentsev et al., 2023a)  |              |                  |         |        |                     |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
+| p(True) (Kadavath et al., 2022)                                     |  White-box   |    Reflexive     |  Medium | Low    |         No          |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
+| Number of semantic sets (NumSets) (Kuhn et al., 2023)               |              |                  |         |        |                     |
+| Sum of eigenvalues of the graph Laplacian (EigV) (Lin et al., 2023) |              |     Meaning      |         |        |                     |
+| Degree matrix (Deg) (Lin et al., 2023)                              |  Black-box   |    diversity     |  High   | Low    |         No          |
+| Eccentricity (Ecc) (Lin et al., 2023)                               |              |                  |         |        |                     |
+| Lexical similarity (LexSim) (Fomicheva et al., 2020a)               |              |                  |         |        |                     |
+| ------------------------------------------------------------------- | ------------ | ---------------- | ------- | ------ | ------------------- |
 
 
 ## Benchmark
