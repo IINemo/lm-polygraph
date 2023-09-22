@@ -48,7 +48,7 @@ def get_args():
     parser.add_argument("--estimator_kwargs", type=json.loads, required=True)
     parser.add_argument("--estimator_module", type=str, default=None)
     
-    parser.add_argument("--additional_estimators", type=json.loads, default={})
+    parser.add_argument("--additional_estimators", nargs='+', default=[])
 
     parser.add_argument("--dataset", type=str, required=True)
     parser.add_argument("--train_dataset", type=str)
@@ -191,6 +191,15 @@ def get_ue_methods(args, model):
                 ),  # TODO: What is this ????
                 SemanticEntropyToken(model.model_path, args.cache_path),
             ]
+
+    for estimator_name in args.additional_estimators:
+        try:
+            # TODO: How to pass arguments to the estimator constructor call?
+            # args.estimator_kwargs?
+            estimators.append(globals()[estimator_name]())
+        except KeyError:
+            raise ValueError(f"No such estimator: {estimator_name}")
+
     return estimators
 
 def main_run(config, save_path):
@@ -235,7 +244,7 @@ def main_run(config, save_path):
             split=args.eval_split,
             load_from_disk=args.load_from_disk
         )
-        
+
         estimators += get_ue_methods(args, model)
         estimators += get_density_based_ue_methods(args, model.model_type)
 
