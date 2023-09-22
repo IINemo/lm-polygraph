@@ -50,7 +50,7 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 * [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
 * [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in Colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
 
-## <a name="overview_of_methods"></a>Overview of Methods
+## <a name="overview_of_methods"></a>Overview of methods
 
 <!-- | Uncertainty Estimation Method                                       | Type        | Category            | Compute | Memory | Need Training Data? |
 | ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
