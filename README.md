@@ -1,9 +1,9 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/IINemo/isanlp_srl_framebank/blob/master/LICENSE)
-![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/IINemo/isanlp_srl_framebank/blob/master/LICENSE)
+![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
-[Installation](#installation) | [Basic usage](#basic_usage) | [Documentation](https://lm-polygraph.readthedocs.io/) | [Methods](#methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application)
+[Installation](#installation) | [Basic usage](#basic_usage) | [Overview](#overview_of_methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application) | [Documentation](https://lm-polygraph.readthedocs.io/)
 
 LM-Polygraph provides a battery of state-of-the-art of uncertainty estimation (UE) methods for LMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertinaty can help to make applications of LLMs safer.
 
@@ -50,7 +50,7 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 * [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
 * [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in Colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
 
-## Methods
+## <a name="overview_of_methods"></a>Overview of Methods
 
 <!-- | Uncertainty Estimation Method                                       | Type        | Category            | Compute | Memory | Need Training Data? |
 | ------------------------------------------------------------------- | ----------- | ------------------- | ------- | ------ | ------------------- |
@@ -132,6 +132,6 @@ The server should be available on `http://localhost:3001`
 
 A more detailed description of the demo is available in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
 
-### Original implementation
+## Acknowledgements
 
-The chat GUI is based on the following project: https://github.com/ioanmo226/chatgpt-web-application
+The chat GUI implementation is based on the [chatgpt-web-application](https://github.com/ioanmo226/chatgpt-web-application) project.
