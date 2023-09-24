@@ -6,7 +6,7 @@ import openai
 import time
 import pdb
 
-from typing import List, Dict, Bool
+from typing import List, Dict
 from abc import abstractmethod, ABC
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, \
     LogitsProcessorList
