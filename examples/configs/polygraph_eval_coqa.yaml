@@ -36,10 +36,20 @@ subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
 
-additional_estimators: {}
-use_density_based_ue: true
+use_density_based_ue: false
 use_seq_ue: true
 use_tok_ue: false
+
+# Examples of providing additional UE methods:
+# additional_estimators: {
+#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
+#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
+# }
+# additional_estimators_kwargs: {
+#   'Perplexity': {},
+#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
+# }
+
 ignore_exceptions: true
 
 batch_size: 2

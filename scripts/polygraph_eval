@@ -257,16 +257,21 @@ def get_ue_methods(args, model):
                 SemanticEntropyToken(model.model_path, args.cache_path),
             ]
     
-    additional_estimators_names = getattr(args, "additional_estimators", {})
-    additional_estimatros_kwargs = getattr(args, "additional_estimators_kwargs", [])
-    assert len(additional_estimators_names) == len(additional_estimatros_kwargs)
+    additional_estimators = getattr(args, "additional_estimators", {})
+    additional_estimators_kwargs = getattr(args, "additional_estimators_kwargs", {})
 
-    additional_estimators = []
-    for i, (module_name, estimators) in additional_estimators_arg.items():
+    for i, (module_name, estimator_classes) in enumerate(additional_estimators.items()):
         module = importlib.import_module(module_name)
-        for j, estimator in enumerate(estimators):
-            estimator_kwargs = additional_estimatros_kwargs[i][j]
-            additional_estimators.append(getattr(module, estimator)(**estimator_kwargs))
+        for j, estimator_class in enumerate(estimator_classes):
+            try:
+                estimator_kwargs = additional_estimators_kwargs[estimator_class]
+            except KeyError:
+                raise TypeError(f'Arguments for {estimator} were not passed')
+
+            estimators.append(getattr(module, estimator_class)(**estimator_kwargs))
+    
+    breakpoint()
+    pass
 
     return estimators
 
