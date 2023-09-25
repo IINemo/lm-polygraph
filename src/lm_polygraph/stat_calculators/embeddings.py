@@ -92,7 +92,7 @@ def get_embeddings_from_output(
                 last_decoder_hidden_states = decoder_hidden_states[-1, -1, :, 0]
                 batch_embeddings_decoder = last_decoder_hidden_states.reshape(batch_size, -1, last_decoder_hidden_states.shape[-1])[:, 0]
             if "encoder" in hidden_state:
-                batch_embeddings = output.encoder_hidden_states[-1][:, 0] 
+                batch_embeddings = output.encoder_hidden_states[-1][:, 0]
             if not ("encoder" in hidden_state) and not ("decoder" in hidden_state):
                 raise NotImplementedError
     else:

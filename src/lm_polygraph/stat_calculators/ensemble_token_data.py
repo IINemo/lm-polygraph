@@ -34,10 +34,9 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
         model_config = ensemble_model.config
         if "mbart" in model_config._name_or_path:
-            model_config.decoder_start_token_id = tokenizer.lang_code_to_id[
-                tokenizer.tgt_lang
+            model_config.decoder_start_token_id = model.tokenizer.lang_code_to_id[
+                model.tokenizer.tgt_lang
             ]
-            kwargs["decoder_start_token_id"] = model_config.decoder_start_token_id
 
         ensembling_mode = generation_params.get("ensembling_mode", "pe")
         ensemble_model.ensembling_mode = ensembling_mode
