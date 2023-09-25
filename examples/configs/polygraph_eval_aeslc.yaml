@@ -37,7 +37,7 @@ subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
 
-use_density_based_ue: false
+use_density_based_ue: true
 use_seq_ue: true
 use_tok_ue: false
 
