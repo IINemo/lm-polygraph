@@ -17,6 +17,13 @@ use_seq_ue: false
 use_tok_ue: false
 use_density_based_ue: false
 
+additional_estimators: {
+  'lm_polygraph.estimators.perplexity': ['Perplexity'],
+}
+additional_estimators_kwargs: {
+  'Perplexity': {},
+}
+
 subsample_eval_dataset: 10
 batch_size: 2
 seed: null
