@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${dataset_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -13,6 +13,7 @@ estimator_kwargs: {}
 
 task: qa
 
+dataset_name: babi_qa
 dataset: [facebook/babi_qa, en-10k-qa1]
 text_column: text
 label_column: answer

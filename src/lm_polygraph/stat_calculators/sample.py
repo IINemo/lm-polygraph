@@ -24,7 +24,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                     top_p=model.parameters.topp,
                     presence_penalty=model.parameters.presence_penalty,
                     repetition_penalty=model.parameters.repetition_penalty,
-                    top_k=model.parameters.topk,
+                    top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
                     n=self.samples_n)
         else:
             samples = [[] for _ in range(len(texts))]
@@ -37,11 +37,11 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                     temperature=model.parameters.temperature,
                     top_p=model.parameters.topp,
                     repetition_penalty=model.parameters.repetition_penalty,
-                    top_k=model.parameters.topk,
+                    top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
                     num_return_sequences=self.samples_n)
             for i in range(len(texts)):
                 for j in range(self.samples_n):
-                    samples[i].append(out[i + j])
+                    samples[i].append(out[i*self.samples_n + j])
         
         return {
             'blackbox_sample_texts': samples,

@@ -141,7 +141,14 @@ class WhiteboxModel(Model):
         args['return_dict_in_generate'] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
-        texts = [self.tokenizer.decode(x) for x in self.model.generate(**batch, **args).sequences.cpu()]
+        sequences = self.model.generate(**batch, **args).sequences.cpu()
+        input_len = batch['input_ids'].shape[1]
+        texts = []
+        for seq in sequences:
+            if self.model_type == "CausalLM":
+                texts.append(self.tokenizer.decode(seq[input_len:]))
+            else:
+                texts.append(self.tokenizer.decode(seq[1:]))                  
         return texts
 
     def __call__(self, **args):

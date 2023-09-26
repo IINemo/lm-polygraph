@@ -1,8 +1,9 @@
-save_path: './workdir/output'
-
 hydra:
   run:
-    dir: ${save_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
 
 device: cpu
 
@@ -56,5 +57,4 @@ batch_size: 2
 
 seed:
     - 1
-
-cache_path: ./workdir
+    
