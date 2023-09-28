@@ -59,7 +59,7 @@ def main(args):
         
     model_kwargs = {}
     cache_kwargs = {}
-    if os.environ.get('HF_DATASETS_OFFLINE').strip() == '1':
+    if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
         cache_kwargs = {'cache_dir': args.cache_dir}
     if use_auth_token := getattr(args, 'use_auth_token', None) is not None:
         model_kwargs['use_auth_token'] = use_auth_token
