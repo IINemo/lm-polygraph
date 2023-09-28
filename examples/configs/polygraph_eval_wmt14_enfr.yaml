@@ -19,7 +19,7 @@ label_column: fr
 prompt: "Translate from {source_lang} into {target_lang}:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
-max_new_tokens: null
+max_new_tokens: 256
 load_from_disk: false
 
 train_dataset: null

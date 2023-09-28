@@ -75,7 +75,7 @@ class GreedyProbsCalculator(StatCalculator):
             )
             logits = torch.stack([s for s in processor.scores], dim=1)
             logits = logits.log_softmax(-1)
-
+            
             if model.model_type == "Seq2SeqLM":
                 attentions = out.decoder_attentions
             elif model.model_type == "CausalLM":
@@ -101,15 +101,15 @@ class GreedyProbsCalculator(StatCalculator):
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
 
-        attn_mask = []
-        for i in range(len(texts)):
-            c = len(cut_sequences[i])
-            attn_mask.append(np.zeros(shape=(c, c)))
-            for j in range(1, c):
-                attn_mask[i][j, :j] = torch.vstack(
-                    [attentions[j][l][i][h][0][-j:]
-                     for l in range(len(attentions[j]))
-                     for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
+#         attn_mask = []
+#         for i in range(len(texts)):
+#             c = len(cut_sequences[i])
+#             attn_mask.append(np.zeros(shape=(c, c)))
+#             for j in range(1, c):
+#                 attn_mask[i][j, :j] = torch.vstack(
+#                     [attentions[j][l][i][h][0][-j:]
+#                      for l in range(len(attentions[j]))
+#                      for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
 
         ll = []
         for i in range(len(texts)):
@@ -136,7 +136,7 @@ class GreedyProbsCalculator(StatCalculator):
             'greedy_log_probs': cut_logits,
             'greedy_tokens': cut_sequences,
             'greedy_texts': cut_texts,
-            'attention': attn_mask,
+            'attention': None,
             'greedy_log_likelihoods': ll,
         }
         result_dict.update(embeddings_dict)
