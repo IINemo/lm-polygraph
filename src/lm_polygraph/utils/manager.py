@@ -100,6 +100,7 @@ class UEManager:
             ensemble_model: Optional[WhiteboxModel] = None,
             verbose: bool = True,
             max_new_tokens: int = 100,
+            background_train_dataset_max_new_tokens: int = 100,
     ):
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -142,6 +143,7 @@ class UEManager:
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
         self.max_new_tokens = max_new_tokens
+        self.background_train_dataset_max_new_tokens = background_train_dataset_max_new_tokens
         
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         train_stats = self.extract_train_embeddings()
@@ -239,9 +241,11 @@ class UEManager:
         if background:
             data = self.background_train_data 
             stat_calculators = self.background_train_stat_calculators
+            max_new_tokens = self.background_train_dataset_max_new_tokens
         else:
             data = self.train_data 
             stat_calculators = self.train_stat_calculators
+            max_new_tokens = self.max_new_tokens
         if len(stat_calculators) and (data is not None):
             for inp_texts, target_texts in tqdm(data):
                 target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
@@ -257,7 +261,7 @@ class UEManager:
                     batch_stats[key] = val
                     
                 for stat_calculator in stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
+                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, max_new_tokens)
                     for stat, stat_value in new_stats.items():
                         if stat in batch_stats.keys():
                             continue
@@ -276,7 +280,7 @@ class UEManager:
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[key_prefix + stat] = [item for sublist in train_stats[stat] for item in sublist]
                 else:
-                    result_train_stat[key_prefix + stat] = torch.cat(train_stats[stat])
+                    result_train_stat[key_prefix + stat] = np.concatenate(train_stats[stat])
                     
         return result_train_stat
 
