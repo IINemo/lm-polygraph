@@ -32,9 +32,9 @@ def get_embeddings_from_output(
             if len(output.hidden_states)>1:
                 generated_tokens_hs = torch.cat([h.mean(axis=0) for h in output.hidden_states[1:]], dim=1)
         if len(output.hidden_states)>1:
-            batch_embeddings_decoder = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1).mean(axis=1)
+            batch_embeddings_decoder = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1).mean(axis=1).cpu().detach()
         else:
-            batch_embeddings_decoder = input_tokens_hs.mean(axis=1)
+            batch_embeddings_decoder = input_tokens_hs.mean(axis=1).cpu().detach()
         batch_embeddings = None
     elif model_type == "Seq2SeqLM":
         if use_averaging:
@@ -52,7 +52,7 @@ def get_embeddings_from_output(
                         agg_decoder_hidden_states = decoder_hidden_states[:, -1, :, 0]
 
                     batch_embeddings_decoder = aggregate(agg_decoder_hidden_states, aggregation_method, axis=0)
-                    batch_embeddings_decoder = batch_embeddings_decoder.reshape(batch_size, -1, agg_decoder_hidden_states.shape[-1])[:, 0]
+                    batch_embeddings_decoder = batch_embeddings_decoder.cpu().detach().reshape(batch_size, -1, agg_decoder_hidden_states.shape[-1])[:, 0]
                 except:
                     if all_layers:
                         agg_decoder_hidden_states = torch.stack(output.decoder_hidden_states).mean(axis=0)
@@ -74,11 +74,11 @@ def get_embeddings_from_output(
                     if aggregation_method == "mean":
                         batch_embeddings = (
                             encoder_embeddings
-                        ).sum(1) / seq_lens
+                        ).sum(1).cpu().detach() / seq_lens
                     else:
-                        batch_embeddings = aggregate(encoder_embeddings, aggregation_method, axis=1)
+                        batch_embeddings = aggregate(encoder_embeddings, aggregation_method, axis=1).cpu().detach()
                 else:
-                    batch_embeddings = aggregate(encoder_embeddings, aggregation_method, axis=1)
+                    batch_embeddings = aggregate(encoder_embeddings, aggregation_method, axis=1).cpu().detach()
             if not ("encoder" in hidden_state) and not ("decoder" in hidden_state):
                 raise NotImplementedError
         else:
@@ -90,9 +90,9 @@ def get_embeddings_from_output(
                     ]
                 )
                 last_decoder_hidden_states = decoder_hidden_states[-1, -1, :, 0]
-                batch_embeddings_decoder = last_decoder_hidden_states.reshape(batch_size, -1, last_decoder_hidden_states.shape[-1])[:, 0]
+                batch_embeddings_decoder = last_decoder_hidden_states.reshape(batch_size, -1, last_decoder_hidden_states.shape[-1])[:, 0].cpu().detach()
             if "encoder" in hidden_state:
-                batch_embeddings = output.encoder_hidden_states[-1][:, 0]
+                batch_embeddings = output.encoder_hidden_states[-1][:, 0].cpu().detach()
             if not ("encoder" in hidden_state) and not ("decoder" in hidden_state):
                 raise NotImplementedError
     else:
