@@ -2,6 +2,9 @@
 src/lm_polygraph/app/node_modules
 **/.DStore
 workdir/
+experiments
+experiments/*
+cache
 **/normalization/*
 
 *.npy

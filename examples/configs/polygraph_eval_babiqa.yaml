@@ -31,12 +31,15 @@ background_train_dataset: allenai/c4
 background_train_dataset_text_column: text
 background_train_dataset_label_column: url
 background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+background_load_from_disk: false
 
 subsample_background_train_dataset: 10_000
 subsample_train_dataset: 10_000
 subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
+use_auth_token: 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
+use_flash_attention_2: True
 
 use_density_based_ue: true
 use_seq_ue: true

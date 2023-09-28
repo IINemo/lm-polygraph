@@ -159,11 +159,12 @@ class WhiteboxModel(Model):
 
     @staticmethod
     def from_pretrained(model_path: str, device: str = 'cpu', **kwargs):
-        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True, **kwargs)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs).to(device)
+                model_path, max_length=256, trust_remote_code=True, **kwargs
+            ).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
@@ -180,7 +181,9 @@ class WhiteboxModel(Model):
 
         tokenizer = AutoTokenizer.from_pretrained(
             model_path, padding_side="left", add_bos_token=True, 
-            model_max_length=256 if model_type == "CausalLM" else 1024)
+            model_max_length=256 if model_type == "CausalLM" else 1024,
+            **kwargs
+        )
 
         model.eval()
         if tokenizer.pad_token is None:
