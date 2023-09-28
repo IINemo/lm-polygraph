@@ -100,6 +100,7 @@ class UEManager:
             ensemble_model: Optional[WhiteboxModel] = None,
             verbose: bool = True,
             max_new_tokens: int = 100,
+            background_train_dataset_max_new_tokens: int = 100,
     ):
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -142,6 +143,7 @@ class UEManager:
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
         self.max_new_tokens = max_new_tokens
+        self.background_train_dataset_max_new_tokens = background_train_dataset_max_new_tokens
         
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         train_stats = self.extract_train_embeddings()
@@ -239,7 +241,7 @@ class UEManager:
         if background:
             data = self.background_train_data 
             stat_calculators = self.background_train_stat_calculators
-            max_new_tokens = 100
+            max_new_tokens = self.background_train_dataset_max_new_tokens
         else:
             data = self.train_data 
             stat_calculators = self.train_stat_calculators
