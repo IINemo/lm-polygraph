@@ -350,7 +350,7 @@ class WhiteboxModel(Model):
 
         tokenizer = AutoTokenizer.from_pretrained(
             model_path, padding_side="left", add_bos_token=True, 
-            model_max_length=1024,
+            model_max_length=256 if model_type == "CausalLM" else 1024,
             **kwargs
         )
 
