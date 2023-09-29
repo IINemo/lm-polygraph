@@ -94,7 +94,7 @@ def main(args):
                     x_proc.append(x)
                     y_proc.append(y_i)
         
-        dataset = Dataset(x_proc, y_proc, args.batch_size) 
+            dataset = Dataset(x_proc, y_proc, args.batch_size) 
 
         estimators = []
         estimators += get_ue_methods(args, model)
