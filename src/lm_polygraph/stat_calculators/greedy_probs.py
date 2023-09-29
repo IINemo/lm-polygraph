@@ -101,16 +101,6 @@ class GreedyProbsCalculator(StatCalculator):
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
 
-#         attn_mask = []
-#         for i in range(len(texts)):
-#             c = len(cut_sequences[i])
-#             attn_mask.append(np.zeros(shape=(c, c)))
-#             for j in range(1, c):
-#                 attn_mask[i][j, :j] = torch.vstack(
-#                     [attentions[j][l][i][h][0][-j:]
-#                      for l in range(len(attentions[j]))
-#                      for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
-
         ll = []
         for i in range(len(texts)):
             log_probs = cut_logits[i]
