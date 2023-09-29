@@ -209,7 +209,7 @@ class UEManager:
                     else:
                         raise e
             for bad_estimator in bad_estimators:
-                del self.estimations[(bad_estimator.level, str(bad_estimator)]
+                del self.estimations[(bad_estimator.level, str(bad_estimator))]
                 self.estimators.remove(bad_estimator)
                 
                 
