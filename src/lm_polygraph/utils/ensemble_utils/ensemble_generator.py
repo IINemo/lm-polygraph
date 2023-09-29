@@ -7,7 +7,7 @@ from scipy.stats import entropy
 import torch
 import torch.distributed as dist
 from torch import nn
-from transformers import GenerationMixin
+from transformers import GenerationMixin, T5ForConditionalGeneration
 from transformers.generation.logits_process import (
     LogitsProcessorList,
     MinLengthLogitsProcessor,
