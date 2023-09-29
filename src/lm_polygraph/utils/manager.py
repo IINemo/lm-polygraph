@@ -52,7 +52,7 @@ def _check_unique_names(xs):
 
 
 def _delete_nans(ue, metric):
-    new_ue, new_metric = [], []
+    new_ue, new_metric, selected_ids = [], [], []
     for i in range(len(metric)):
         if not np.isnan(metric[i]) and not np.isnan(ue[i]):
             if not isinstance(ue[i], complex):
@@ -60,7 +60,8 @@ def _delete_nans(ue, metric):
             else:
                 new_ue.append(ue[i].real)
             new_metric.append(metric[i])
-    return new_ue, new_metric
+            selected_ids.append(i)
+    return new_ue, new_metric, selected_ids
 
 
 def _recombine_data(ue, gen_metric, inputs):
@@ -253,12 +254,14 @@ class UEManager:
                                         f'{len(estimator_values)} and {len(generation_metric)}')
                     # TODO: Report how many nans!
                     # This is important to know for a user
-                    ue, metric = _delete_nans(estimator_values, generation_metric)
+                    ue, metric, selected_ids = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
+                        inputs_no_nans = np.array(self.stats['input_texts'])[selected_ids]
                         rec_ue, rec_metric = _recombine_data(ue, metric,
-                                                             self.stats['input_texts'])
+                                                             inputs_no_nans)
+
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric(rec_ue, rec_metric)
 
         for processor in self.processors:
