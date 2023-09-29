@@ -179,8 +179,9 @@ class UEManager:
                             batch_stats[f'blackbox_{stat}'] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
-                    sys.stderr.write(f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}')
-                    print(f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}')
+                    log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
+                    sys.stderr.write(log_msg)
+                    print(log_msg)
                     continue
                 else:
                     raise e
@@ -198,9 +199,17 @@ class UEManager:
                     e = estimator(batch_stats).tolist()
                     self.estimations[estimator.level, str(estimator)] += e
                     batch_estimations[estimator.level, str(estimator)] += e
-                except:
-                    bad_estimators.append(estimator)
+                except Exception as e:
+                    if self.ignore_exceptions:
+                        bad_estimators.append(estimator)
+                        log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
+                        sys.stderr.write(log_msg)
+                        print(log_msg)
+                        continue
+                    else:
+                        raise e
             for bad_estimator in bad_estimators:
+                del self.estimations[(bad_estimator.level, str(bad_estimator))]
                 self.estimators.remove(bad_estimator)
                 
                 
