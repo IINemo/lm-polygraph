@@ -36,6 +36,7 @@ additional_estimators_kwargs: {
   'Perplexity': {},
 }
 
+ignore_exceptions: false
 subsample_eval_dataset: 10
 batch_size: 2
 seed: null
