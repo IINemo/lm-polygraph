@@ -17,12 +17,9 @@ class SemanticEntropy(Estimator):
             batch_size: int = 10,
             verbose: bool = False
     ):
-        super().__init__(['sample_log_probs', 'sample_texts'], 'sequence')
+        super().__init__(['sample_log_probs', 'sample_texts', 'semantic_matrix_entail'], 'sequence')
         self.batch_size = batch_size
         DEBERTA.setup()
-        self._sample_to_class = {}
-        self._class_to_sample: Dict[int, List] = defaultdict(list)
-        self._is_entailment = {}
         self.verbose = verbose
 
     def __str__(self):
@@ -30,6 +27,9 @@ class SemanticEntropy(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         loglikelihoods_list = stats['sample_log_probs']
+
+        entailment_id = DEBERTA.deberta.config.label2id['ENTAILMENT']]
+        self._is_entailment = (stats['semantic_matrix_classes'] == entailment_id)
 
         # Concatenate hypos with input texts
         hyps_list = [[] for _ in stats["input_texts"]]
@@ -62,80 +62,31 @@ class SemanticEntropy(Estimator):
     def get_classes(self, hyps_list: List[List[str]]):
         self._sample_to_class = {}
         self._class_to_sample: Dict[int, List] = defaultdict(list)
-        self._is_entailment = {}
 
-        generators = [self._determine_class(idx, i, hyp)
-                      for idx, hyp in enumerate(hyps_list)
-                      for i in range(len(hyp))]
-        rng = zip(*generators)
-        if self.verbose:
-            max_len = max(len(hyp) for hyp in hyps_list)
-            rng = tqdm(rng, total=max_len, desc='DeBERTa inference')
-        for queries in rng:
-            not_nan_queries = [(t[0], t[1]) for t in queries if t is not None]
-            if len(not_nan_queries) == 0:
-                break
-            ent = self.is_entailment(not_nan_queries)
-            for t in queries:
-                if t is None:
-                    continue
-                self._is_entailment[t[0], t[1]] = ent[0]
-                ent = ent[1:]
+        [self._determine_class(idx, i)
+         for idx, hyp in enumerate(hyps_list)
+         for i in range(len(hyp))]
 
         return self._sample_to_class, self._class_to_sample
 
-    def is_entailment(self, texts: List[Tuple[str, str]]):
-        res = []
-        for i in range(0, len(texts), self.batch_size):
-            texts1 = [t1 for t1, _ in texts[i:i + self.batch_size]]
-            texts2 = [t2 for _, t2 in texts[i:i + self.batch_size]]
-            encoded = DEBERTA.deberta_tokenizer.batch_encode_plus(
-                ['[CLS] {} [SEP] {} [SEP]'.format(t1, t2) for t1, t2 in zip(texts1, texts2)],
-                add_special_tokens=True, padding='max_length',
-                truncation=True, return_attention_mask=True, return_tensors="pt")
-            inp = {k: v.to(DEBERTA.device) for k, v in encoded.items()}
-            with torch.no_grad():
-                if self.verbose:
-                    sys.stderr.write('Inference...')
-                    sys.stderr.flush()
-                logits = DEBERTA.deberta(**inp).logits
-                if self.verbose:
-                    sys.stderr.write('Done')
-                    sys.stderr.flush()
-            res.append((logits.argmax(-1) == DEBERTA.deberta.config.label2id['ENTAILMENT']).cpu().numpy())
-        return np.concatenate(res)
-
-    def _determine_class(self, idx: int, i: int, texts: List[str]):
+    def _determine_class(self, idx: int, i: int):
         if i == 0:
             self._class_to_sample[idx] = [[0]]
             self._sample_to_class[idx] = {0: 0}
-            while True:
-                yield None
 
-        cur_text = texts[i]
-        found_class = False
+            return 0
+
         class_id = 0
-        while True:
-            if class_id >= len(self._class_to_sample[idx]):
-                if i - 1 not in self._sample_to_class[idx].keys():
-                    yield None
-                    continue
-                else:
-                    break
-            class_text = texts[self._class_to_sample[idx][class_id][0]]
-            if (class_text, cur_text) not in self._is_entailment.keys():
-                yield class_text, cur_text
-            if (cur_text, class_text) not in self._is_entailment.keys():
-                yield cur_text, class_text
-            if self._is_entailment[class_text, cur_text] and self._is_entailment[cur_text, class_text]:
+        for class_id in range(len(self._class_to_sample[idx]):
+            class_text_id = self._class_to_sample[idx][class_id][0]
+            if self._is_entailment[idx, class_text_id, i] and self._is_entailment[idx, i, class_text_id]:
                 self._class_to_sample[idx][class_id].append(i)
                 self._sample_to_class[idx][i] = class_id
-                found_class = True
-                break
-            class_id += 1
 
-        if not found_class:
-            self._sample_to_class[idx][i] = len(self._class_to_sample[idx])
-            self._class_to_sample[idx].append([i])
-        while True:
-            yield None
+                return class_id
+        
+        new_class_id = len(self._class_to_sample[idx])
+        self._sample_to_class[idx][i] = new_class_id
+        self._class_to_sample[idx].append([i])
+
+        return new_class_id

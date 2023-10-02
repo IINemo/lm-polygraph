@@ -24,14 +24,17 @@ class SemanticMatrixCalculator(StatCalculator):
         for texts in batch_texts:
             batch_pairs.append(itertools.product(texts, texts))
 
-        W = np.eye(len(texts))
         device = DEBERTA.device 
         softmax = nn.Softmax(dim=1)
+        
+        E = []
+        C = []
+        P = []
 
         for pairs in batch_pairs:
             encoded = DEBERTA.deberta_tokenizer.batch_encode_plus(pairs, padding=True, return_tensors='pt').to(device)
             logits = DEBERTA.deberta(**encoded).logits.detach().to(device)
-            probs = softmax(logits)
+            probs = softmax(logits).cpu().detach()
 
             entail_probs = probs[:, DEBERTA.deberta.config.label2id['ENTAILMENT']]
             contra_probs = probs[:, DEBERTA.deberta.config.label2id['CONTRADICTION']]
@@ -39,9 +42,13 @@ class SemanticMatrixCalculator(StatCalculator):
 
             mat_shape = (len(texts), len(texts))
 
-            E = entail_probs.view(mat_shape)
-            C = contra_probs.view(mat_shape)
-            P = class_preds.view(mat_shape)
+            E.append(entail_probs.view(mat_shape).numpy())
+            C.append(contra_probs.view(mat_shape).numpy())
+            P.append(class_preds.view(mat_shape).numpy())
+
+        E = np.stack(E)
+        C = np.stack(C)
+        P = np.stack(P)
 
         return {'semantic_matrix_entail': E,
                 'semantic_matrix_contra': C,
