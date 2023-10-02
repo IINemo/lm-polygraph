@@ -8,6 +8,7 @@ workdir/
 *.csv
 models--*/
 test.man_seed*
+check.ipynb
 
 app/.env
 app/uploads/*
