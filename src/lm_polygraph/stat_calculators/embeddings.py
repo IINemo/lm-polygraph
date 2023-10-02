@@ -63,12 +63,12 @@ def get_embeddings_from_output(
                     batch_embeddings_decoder = batch_embeddings_decoder.cpu().detach().reshape(-1, agg_decoder_hidden_states.shape[-1])
 
             if "encoder" in hidden_state:
-                mask = batch["attention_mask"][:, :, None]
-                seq_lens = batch["attention_mask"].sum(-1)[:, None]
+                mask = batch["attention_mask"][:, :, None].cpu().detach()
+                seq_lens = batch["attention_mask"].sum(-1)[:, None].cpu().detach()
                 if all_layers:
-                    encoder_embeddings = aggregate(torch.stack(output.encoder_hidden_states), "mean", axis=0) * mask
+                    encoder_embeddings = aggregate(torch.stack(output.encoder_hidden_states), "mean", axis=0).cpu().detach() * mask
                 else:
-                    encoder_embeddings = output.encoder_hidden_states[-1] * mask
+                    encoder_embeddings = output.encoder_hidden_states[-1].cpu().detach() * mask
 
                 if ignore_padding:
                     if aggregation_method == "mean":
