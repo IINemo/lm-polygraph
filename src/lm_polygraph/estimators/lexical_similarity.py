@@ -10,6 +10,8 @@ from .estimator import Estimator
 class LexicalSimilarity(Estimator):
     def __init__(self, metric: str = 'rougeL'):
         self.metric = metric
+        if self.metric.startswith('rouge'):
+            self.scorer = rouge_scorer.RougeScorer([self.metric], use_stemmer=True)
         super().__init__(['blackbox_sample_texts'], 'sequence')
 
     def __str__(self):
@@ -17,7 +19,7 @@ class LexicalSimilarity(Estimator):
 
     def _score_single(self, t1: str, t2: str):
         if self.metric.startswith('rouge'):
-            return rouge_scorer.RougeScorer([self.metric], use_stemmer=True).score(t1, t2)[self.metric].fmeasure
+            return self.scorer.score(t1, t2)[self.metric].fmeasure
         elif self.metric == 'BLEU':
             min_sentence_len = min(len(t1.split()), len(t2.split()))
             if min_sentence_len == 1:
