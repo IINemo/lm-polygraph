@@ -51,7 +51,7 @@ def _compute_Jaccard_score(lst):
     return jaccard_sim_mat
 
 
-def _compute_adjaency_mat(answers, affinity):
+def _compute_adjacency_mat(answers, affinity):
     W = np.eye(len(answers))
     pairs = _get_pairs(answers)
     device = DEBERTA.device 
@@ -93,6 +93,6 @@ def _compute_adjaency_mat(answers, affinity):
 
 def compute_sim_score(answers, affinity, similarity_score):
     if similarity_score == "NLI_score":
-        return _compute_adjaency_mat(answers, affinity)
+        return _compute_adjacency_mat(answers, affinity)
     elif similarity_score == "Jaccard_score":
         return _compute_Jaccard_score(answers)
