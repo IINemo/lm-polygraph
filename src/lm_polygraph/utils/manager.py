@@ -52,7 +52,7 @@ def _check_unique_names(xs):
 
 
 def _delete_nans(ue, metric):
-    new_ue, new_metric = [], []
+    new_ue, new_metric, selected_ids = [], [], []
     for i in range(len(metric)):
         if not np.isnan(metric[i]) and not np.isnan(ue[i]):
             if not isinstance(ue[i], complex):
@@ -60,7 +60,26 @@ def _delete_nans(ue, metric):
             else:
                 new_ue.append(ue[i].real)
             new_metric.append(metric[i])
-    return new_ue, new_metric
+            selected_ids.append(i)
+    return new_ue, new_metric, selected_ids
+
+
+def _recombine_data(ue, gen_metric, inputs):
+    ue = np.array(ue)
+    gen_metric = np.array(gen_metric)
+     
+    # np.unique() with return_counts=True?
+    recombined_inputs = defaultdict(list)
+    for i, input_text in enumerate(inputs):
+        recombined_inputs[input_text].append(i)
+    
+    recombined_ue, recombined_gen_metric = [], []
+    for input_text, ids in recombined_inputs.items():
+        recombined_ue.append(ue[ids].mean()) 
+        # Assumes that metric is bigger for better generations!
+        recombined_gen_metric.append(gen_metric[ids].max()) 
+
+    return recombined_ue, recombined_gen_metric
 
 
 @dataclass
@@ -148,9 +167,9 @@ class UEManager:
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         train_stats = self.extract_train_embeddings()
         background_train_stats = self.extract_train_embeddings(background=True)
-        if self.verbose:
-            self.data = tqdm(self.data)
-        for inp_texts, target_texts in self.data:
+
+        iterable_data = tqdm(self.data) if self.verbose else self.data
+        for inp_texts, target_texts in iterable_data:
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ('input_texts', inp_texts),
@@ -233,11 +252,17 @@ class UEManager:
                     if len(estimator_values) != len(generation_metric):
                         raise Exception(f'Got different number of metrics for {e_name} and {gen_name}: '
                                         f'{len(estimator_values)} and {len(generation_metric)}')
-                    ue, metric = _delete_nans(estimator_values, generation_metric)
+                    # TODO: Report how many nans!
+                    # This is important to know for a user
+                    ue, metric, selected_ids = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric(ue, metric)
+                        inputs_no_nans = np.array(self.stats['input_texts'])[selected_ids]
+                        rec_ue, rec_metric = _recombine_data(ue, metric,
+                                                             inputs_no_nans)
+
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric(rec_ue, rec_metric)
 
         for processor in self.processors:
             processor.on_eval(self.metrics)

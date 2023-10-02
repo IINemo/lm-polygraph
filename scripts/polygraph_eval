@@ -83,6 +83,18 @@ def main(args):
             split=args.eval_split,
             load_from_disk=args.load_from_disk
         )
+        
+        if type(dataset.y[0]) is list:
+            # We have several labels per input
+            # Duplicate inputs for each label
+            x_proc, y_proc = [], []
+            
+            for x, y in zip(dataset.x, dataset.y):
+                for y_i in y:
+                    x_proc.append(x)
+                    y_proc.append(y_i)
+        
+            dataset = Dataset(x_proc, y_proc, args.batch_size) 
 
         estimators = []
         estimators += get_ue_methods(args, model)
