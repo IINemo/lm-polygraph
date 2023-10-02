@@ -58,16 +58,21 @@ def _compute_adjaency_mat(answers, affinity):
 
     softmax = nn.Softmax(dim=1)
 
-    for (sentence_1, sentence_2, i, j) in pairs:
-        # Tokenize input sentences
-        encoded_input_forward = DEBERTA.deberta_tokenizer(sentence_1, sentence_2, return_tensors='pt').to(device)
-        encoded_input_backward = DEBERTA.deberta_tokenizer(sentence_2, sentence_1, return_tensors='pt').to(device)
+    forward_texts = [pair[:2] for pair in pairs]
+    backward_texts = [pair[:2][::-1] for pair in pairs]
 
-        logits_forward = DEBERTA.deberta(**encoded_input_forward).logits.detach().to(device)
-        logits_backward = DEBERTA.deberta(**encoded_input_backward).logits.detach()
+    encoded_forward_batch = DEBERTA.deberta_tokenizer.batch_encode_plus(forward_texts, padding=True, return_tensors='pt').to(device)
+    encoded_backward_batch = DEBERTA.deberta_tokenizer.batch_encode_plus(backward_texts, padding=True, return_tensors='pt').to(device)
 
-        probs_forward = softmax(logits_forward).to(device)
-        probs_backward = softmax(logits_backward).to(device)
+    logits_forward_batch = DEBERTA.deberta(**encoded_forward_batch).logits.detach().to(device)
+    logits_backward_batch = DEBERTA.deberta(**encoded_backward_batch).logits.detach().to(device)
+
+    probs_forward_batch = softmax(logits_forward_batch)
+    probs_backward_batch = softmax(logits_backward_batch)
+
+    for n, (sentence_1, sentence_2, i, j) in enumerate(pairs):
+        probs_forward = probs_forward_batch[n].unsqueeze(0)
+        probs_backward = probs_backward_batch[n].unsqueeze(0)
 
         a_nli_entail_forward = probs_forward[0][2]
         a_nli_entail_backward = probs_backward[0][2]
