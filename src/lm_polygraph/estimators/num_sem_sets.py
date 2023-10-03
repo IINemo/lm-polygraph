@@ -29,7 +29,7 @@ class NumSemSets(Estimator):
     def __str__(self):
         return f'NumSemSets'
 
-    def find_connected_components(graph):
+    def find_connected_components(self, graph):
         def dfs(node, component):
             visited[node] = True
             component.append(node)
@@ -83,7 +83,7 @@ class NumSemSets(Estimator):
                 graph[sublist[i + 1]].append(sublist[i])
 
         # Find the connected components
-        connected_components = find_connected_components(graph)
+        connected_components = self.find_connected_components(graph)
 
         # Calculate the number of connected components
         num_components = len(connected_components)
