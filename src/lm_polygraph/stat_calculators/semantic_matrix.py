@@ -18,34 +18,54 @@ class SemanticMatrixCalculator(StatCalculator):
                          ['blackbox_sample_texts'])
         DEBERTA.setup()
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
+    def __call__(self, dependencies: Dict[str, np.array],
+                       texts: List[str],
+                       model: WhiteboxModel,
+                       max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
+
         batch_texts = dependencies['blackbox_sample_texts']
 
         batch_pairs = []
+        batch_invs = []
+        batch_counts = []
         for texts in batch_texts:
-            batch_pairs.append(itertools.product(texts, texts))
+            # Sampling from LLM often produces significant number of identical
+            # outputs. We only need to score pairs of unqiue outputs
+            unique_texts, inv = np.unique(texts, return_inverse=True)
+            batch_pairs.append(itertools.product(unique_texts, texts))
+            batch_invs.append(inv)
+            batch_counts.append(len(unique_texts))
 
         device = DEBERTA.device 
+        ent_id = DEBERTA.deberta.config.label2id['ENTAILMENT']
+        contra_id = DEBERTA.deberta.config.label2id['CONTRADICTION']
+
         softmax = nn.Softmax(dim=1)
         
         E = []
         C = []
         P = []
 
-        for pairs in batch_pairs:
+        for i, pairs in enumerate(batch_pairs):
             encoded = DEBERTA.deberta_tokenizer.batch_encode_plus(pairs, padding=True, return_tensors='pt').to(device)
             logits = DEBERTA.deberta(**encoded).logits.detach().to(device)
             probs = softmax(logits).cpu().detach()
 
-            entail_probs = probs[:, DEBERTA.deberta.config.label2id['ENTAILMENT']]
-            contra_probs = probs[:, DEBERTA.deberta.config.label2id['CONTRADICTION']]
+            entail_probs = probs[:, ent_id]
+            contra_probs = probs[:, contra_id]
             class_preds = probs.argmax(-1)
 
-            mat_shape = (len(texts), len(texts))
+            unique_mat_shape = (batch_counts[i], batch_counts[i])
 
-            E.append(entail_probs.view(mat_shape).numpy())
-            C.append(contra_probs.view(mat_shape).numpy())
-            P.append(class_preds.view(mat_shape).numpy())
+            unique_E = entail_probs.view(unique_mat_shape).numpy()
+            unique_C = contra_probs.view(unique_mat_shape).numpy()
+            unique_P = class_preds.view(unique_mat_shape).numpy()
+            
+            inv = batch_invs[i]
+
+            E.append(unique_E[inv, inv])
+            C.append(unique_C[inv, inv])
+            P.append(unique_P[inv, inv])
 
         E = np.stack(E)
         C = np.stack(C)
