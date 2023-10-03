@@ -44,7 +44,10 @@ def _compute_Jaccard_score(lst):
             set2 = set(lst[j].lower().split())
             intersection = len(set1 & set2)
             union = len(set1 | set2)
-            jaccard_score = intersection / union
+            if union == 0:
+                jaccard_score = 0
+            else:
+                jaccard_score = intersection / union
             jaccard_sim_mat[i, j] = jaccard_score
             jaccard_sim_mat[j, i] = jaccard_score
 
