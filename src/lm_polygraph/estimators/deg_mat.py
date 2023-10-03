@@ -7,8 +7,6 @@ from .estimator import Estimator
 from .common import DEBERTA, compute_sim_score
 import torch.nn as nn
 
-softmax = nn.Softmax(dim=1)
-
 
 class DegMat(Estimator):
     def __init__(

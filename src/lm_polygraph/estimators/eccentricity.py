@@ -7,8 +7,6 @@ from .common import DEBERTA, compute_sim_score
 from scipy.linalg import eigh
 import torch.nn as nn
 
-softmax = nn.Softmax(dim=1)
-
 
 class Eccentricity(Estimator):
     def __init__(

@@ -6,8 +6,6 @@ from .common import DEBERTA, compute_sim_score
 from .estimator import Estimator
 import torch.nn as nn
 
-softmax = nn.Softmax(dim=1)
-
 
 class EigValLaplacian(Estimator):
     def __init__(
