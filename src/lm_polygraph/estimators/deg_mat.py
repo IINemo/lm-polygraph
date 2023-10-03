@@ -61,7 +61,6 @@ class DegMat(Estimator):
         else:
             W = compute_sim_score(answers = answers, affinity = self.affinity, similarity_score = self.similarity_score)
 
-        W = compute_sim_score(answers, self.affinity, self.similarity_score)
         D = np.diag(W.sum(axis=1))
         return np.trace(len(answers) - D) / (len(answers) ** 2)
 
