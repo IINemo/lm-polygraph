@@ -36,6 +36,8 @@ class EigValLaplacian(Estimator):
             else:
                 super().__init__(['semantic_matrix_contra',
                                   'blackbox_sample_texts'], 'sequence')
+        else:
+            super().__init__(['blackbox_sample_texts'], 'sequence')
 
         self.similarity_score = similarity_score
         self.batch_size = batch_size
