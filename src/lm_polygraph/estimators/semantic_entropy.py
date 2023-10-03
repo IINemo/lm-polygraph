@@ -28,7 +28,7 @@ class SemanticEntropy(Estimator):
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         loglikelihoods_list = stats['sample_log_probs']
 
-        entailment_id = DEBERTA.deberta.config.label2id['ENTAILMENT']]
+        entailment_id = DEBERTA.deberta.config.label2id['ENTAILMENT']
         self._is_entailment = (stats['semantic_matrix_classes'] == entailment_id)
 
         # Concatenate hypos with input texts
@@ -70,21 +70,25 @@ class SemanticEntropy(Estimator):
         return self._sample_to_class, self._class_to_sample
 
     def _determine_class(self, idx: int, i: int):
+        # For first hypo just create a zeroth class
         if i == 0:
             self._class_to_sample[idx] = [[0]]
             self._sample_to_class[idx] = {0: 0}
 
             return 0
-
-        class_id = 0
-        for class_id in range(len(self._class_to_sample[idx]):
+        
+        # Iterate over existing classes and return if hypo belongs to one of them
+        for class_id in range(len(self._class_to_sample[idx])):
             class_text_id = self._class_to_sample[idx][class_id][0]
-            if self._is_entailment[idx, class_text_id, i] and self._is_entailment[idx, i, class_text_id]:
+            forward_entailment = self._is_entailment[idx, class_text_id, i]
+            backward_entailment = self._is_entailment[idx, i, class_text_id]:
+            if forward_entailment and backward_entailment
                 self._class_to_sample[idx][class_id].append(i)
                 self._sample_to_class[idx][i] = class_id
 
                 return class_id
         
+        # If none of the existing classes satisfy - create new one
         new_class_id = len(self._class_to_sample[idx])
         self._sample_to_class[idx][i] = new_class_id
         self._class_to_sample[idx].append([i])
