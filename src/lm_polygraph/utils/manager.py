@@ -117,6 +117,7 @@ class UEManager:
             background_train_data: Dataset = None,
             ignore_exceptions: bool = True,
             ensemble_model: Optional[WhiteboxModel] = None,
+            deberta_batch_size: int = 10,
             verbose: bool = True,
             max_new_tokens: int = 100,
             background_train_dataset_max_new_tokens: int = 100,
@@ -125,6 +126,7 @@ class UEManager:
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
+        self.deberta_batch_size = deberta_batch_size
         self.data: Dataset = data
         self.estimators: List[Estimator] = estimators
         self.generation_metrics: List[GenerationMetric] = generation_metrics
@@ -186,6 +188,7 @@ class UEManager:
 
             batch_stats['generation_params'] = {}
             batch_stats['ensemble_model'] = self.ensemble_model
+            batch_stats['deberta_batch_size'] = self.deberta_batch_size
 
             try:
                 for stat_calculator in self.stat_calculators:

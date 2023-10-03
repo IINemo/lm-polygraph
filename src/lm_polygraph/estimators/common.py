@@ -44,55 +44,15 @@ def _compute_Jaccard_score(lst):
             set2 = set(lst[j].lower().split())
             intersection = len(set1 & set2)
             union = len(set1 | set2)
-            jaccard_score = intersection / union
+            if union == 0:
+                jaccard_score = 0
+            else:
+                jaccard_score = intersection / union
             jaccard_sim_mat[i, j] = jaccard_score
             jaccard_sim_mat[j, i] = jaccard_score
 
     return jaccard_sim_mat
 
 
-def _compute_adjaency_mat(answers, affinity):
-    W = np.eye(len(answers))
-    pairs = _get_pairs(answers)
-    device = DEBERTA.device 
-
-    softmax = nn.Softmax(dim=1)
-
-    forward_texts = [pair[:2] for pair in pairs]
-    backward_texts = [pair[:2][::-1] for pair in pairs]
-
-    encoded_forward_batch = DEBERTA.deberta_tokenizer.batch_encode_plus(forward_texts, padding=True, return_tensors='pt').to(device)
-    encoded_backward_batch = DEBERTA.deberta_tokenizer.batch_encode_plus(backward_texts, padding=True, return_tensors='pt').to(device)
-
-    logits_forward_batch = DEBERTA.deberta(**encoded_forward_batch).logits.detach().to(device)
-    logits_backward_batch = DEBERTA.deberta(**encoded_backward_batch).logits.detach().to(device)
-
-    probs_forward_batch = softmax(logits_forward_batch)
-    probs_backward_batch = softmax(logits_backward_batch)
-
-    for n, (sentence_1, sentence_2, i, j) in enumerate(pairs):
-        probs_forward = probs_forward_batch[n].unsqueeze(0)
-        probs_backward = probs_backward_batch[n].unsqueeze(0)
-
-        a_nli_entail_forward = probs_forward[0][2]
-        a_nli_entail_backward = probs_backward[0][2]
-
-        a_nli_contra_forward = 1 - probs_forward[0][0]
-        a_nli_contra_backward = 1 - probs_backward[0][0]
-
-        if affinity == "entail":
-            _w = (a_nli_entail_forward.item() + a_nli_entail_backward.item()) / 2
-        elif affinity == "contra":
-            _w = (a_nli_contra_forward.item() + a_nli_contra_backward.item()) / 2
-
-        W[i, j] = _w
-        W[j, i] = _w
-
-    return W
-
-
 def compute_sim_score(answers, affinity, similarity_score):
-    if similarity_score == "NLI_score":
-        return _compute_adjaency_mat(answers, affinity)
-    elif similarity_score == "Jaccard_score":
-        return _compute_Jaccard_score(answers)
+    return _compute_Jaccard_score(answers)
