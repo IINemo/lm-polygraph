@@ -1,5 +1,6 @@
 import numpy as np
 
+import itertools
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
