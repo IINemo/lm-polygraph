@@ -62,10 +62,12 @@ class SemanticMatrixCalculator(StatCalculator):
             unique_P = class_preds.view(unique_mat_shape).numpy()
             
             inv = batch_invs[i]
-
-            E.append(unique_E[inv, inv])
-            C.append(unique_C[inv, inv])
-            P.append(unique_P[inv, inv])
+            
+            # Recover full matrices from unques by gathering along both axes
+            # using inverse index
+            E.append(unique_E[inv, :][:, inv])
+            C.append(unique_C[inv, :][:, inv])
+            P.append(unique_P[inv, :][:, inv])
 
         E = np.stack(E)
         C = np.stack(C)
