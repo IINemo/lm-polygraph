@@ -229,8 +229,7 @@ class UEManager:
                         raise e
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
-                if key in self.estimations:
-                    del self.estimations[key]
+                self.estimations.pop(key, None)
                 self.estimators.remove(bad_estimator)
                 
                 
