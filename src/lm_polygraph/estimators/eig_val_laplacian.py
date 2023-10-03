@@ -12,7 +12,6 @@ class EigValLaplacian(Estimator):
             self,
             similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
-            batch_size: int = 10,
             verbose: bool = False
     ):
         """
@@ -38,10 +37,8 @@ class EigValLaplacian(Estimator):
             super().__init__(['blackbox_sample_texts'], 'sequence')
 
         self.similarity_score = similarity_score
-        self.batch_size = batch_size
         self.affinity = affinity
         self.verbose = verbose
-        self.device = DEBERTA.device
 
     def __str__(self):
         if self.similarity_score == 'NLI_score':

@@ -7,6 +7,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.estimators.common import DEBERTA
 import torch.nn as nn
+import torch
 
 softmax = nn.Softmax(dim=1)
 
@@ -22,7 +23,7 @@ class SemanticMatrixCalculator(StatCalculator):
                        texts: List[str],
                        model: WhiteboxModel,
                        max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
-
+        deberta_batch_size = dependencies['deberta_batch_size']
         batch_texts = dependencies['blackbox_sample_texts']
 
         batch_pairs = []
@@ -48,8 +49,12 @@ class SemanticMatrixCalculator(StatCalculator):
 
         for i, pairs in enumerate(batch_pairs):
             encoded = DEBERTA.deberta_tokenizer.batch_encode_plus(pairs, padding=True, return_tensors='pt').to(device)
-            logits = DEBERTA.deberta(**encoded).logits.detach().to(device)
-            probs = softmax(logits).cpu().detach()
+            dl = torch.utils.data.DataLoader(dataset, batch_size=deberta_batch_size)
+            probs = []
+            for batch in dl:
+                logits = DEBERTA.deberta(**batch).logits.detach().to(device)
+                probs.append(softmax(logits).cpu().detach())
+            probs = torch.stack(probs, dim=0]
 
             entail_probs = probs[:, ent_id]
             contra_probs = probs[:, contra_id]

@@ -14,11 +14,9 @@ from .common import DEBERTA
 class SemanticEntropy(Estimator):
     def __init__(
             self,
-            batch_size: int = 10,
             verbose: bool = False
     ):
         super().__init__(['sample_log_probs', 'sample_texts', 'semantic_matrix_entail'], 'sequence')
-        self.batch_size = batch_size
         DEBERTA.setup()
         self.verbose = verbose
 
