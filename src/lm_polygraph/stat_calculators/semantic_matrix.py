@@ -33,7 +33,7 @@ class SemanticMatrixCalculator(StatCalculator):
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
             unique_texts, inv = np.unique(texts, return_inverse=True)
-            batch_pairs.append(itertools.product(unique_texts, unique_texts))
+            batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
 
@@ -42,19 +42,23 @@ class SemanticMatrixCalculator(StatCalculator):
         contra_id = DEBERTA.deberta.config.label2id['CONTRADICTION']
 
         softmax = nn.Softmax(dim=1)
-        
+        tokenizer = DEBERTA.deberta_tokenizer
+
         E = []
         C = []
         P = []
 
         for i, pairs in enumerate(batch_pairs):
-            encoded = DEBERTA.deberta_tokenizer.batch_encode_plus(pairs, padding=True, return_tensors='pt').to(device)
-            dl = torch.utils.data.DataLoader(dataset, batch_size=deberta_batch_size)
+            dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
             probs = []
-            for batch in dl:
-                logits = DEBERTA.deberta(**batch).logits.detach().to(device)
+            for first_texts, second_texts in dl:
+                batch = list(zip(first_texts, second_texts))
+                encoded = tokenizer.batch_encode_plus(batch,
+                                                      padding=True,
+                                                      return_tensors='pt').to(device)
+                logits = DEBERTA.deberta(**encoded).logits.detach().to(device)
                 probs.append(softmax(logits).cpu().detach())
-            probs = torch.stack(probs, dim=0]
+            probs = torch.cat(probs, dim=0]
 
             entail_probs = probs[:, ent_id]
             contra_probs = probs[:, contra_id]
