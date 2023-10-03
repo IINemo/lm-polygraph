@@ -84,7 +84,7 @@ class RDESeq(Estimator):
         # define PCA with rbf kernel and n_components equal 100
         if self.pca is None:
             self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42)
-            X_pca_train = self.pca.fit_transform(stats[f'train_embeddings_{self.embeddings_type}'].cpu().detach().numpy())            
+            X_pca_train = self.pca.fit_transform(stats[f'train_embeddings_{self.embeddings_type}'])            
             if self.parameters_path is not None:
                 self.save_pca()
                 
@@ -95,7 +95,7 @@ class RDESeq(Estimator):
                 self.save_mcd()
         
         # transform test data based on pca
-        X_pca_test = self.pca.transform(embeddings.cpu().detach().numpy())
+        X_pca_test = self.pca.transform(embeddings)
 
         # compute MD in space of reduced dimensionality
         dists = self.MCD.mahalanobis(X_pca_test)
