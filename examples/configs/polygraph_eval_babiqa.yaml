@@ -55,6 +55,7 @@ use_tok_ue: false
 ignore_exceptions: true
 
 batch_size: 2
+deberta_batch_size: 10
 
 seed:
     - 1
