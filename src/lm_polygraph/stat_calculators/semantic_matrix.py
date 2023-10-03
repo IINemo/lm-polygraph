@@ -58,7 +58,7 @@ class SemanticMatrixCalculator(StatCalculator):
                                                       return_tensors='pt').to(device)
                 logits = DEBERTA.deberta(**encoded).logits.detach().to(device)
                 probs.append(softmax(logits).cpu().detach())
-            probs = torch.cat(probs, dim=0]
+            probs = torch.cat(probs, dim=0)
 
             entail_probs = probs[:, ent_id]
             contra_probs = probs[:, contra_id]
