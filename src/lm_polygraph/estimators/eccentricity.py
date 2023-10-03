@@ -47,7 +47,7 @@ class Eccentricity(Estimator):
         return f'Eccentricity_{self.similarity_score}'
 
     def U_Eccentricity(self, i, stats, k=2):
-        answers = stats['blackbox_sample_texts']
+        answers = stats['blackbox_sample_texts'][i]
 
         if self.similarity_score == 'NLI_score':
             if self.affinity == 'entail':

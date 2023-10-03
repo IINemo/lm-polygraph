@@ -46,7 +46,7 @@ class EigValLaplacian(Estimator):
         return f'EigValLaplacian_{self.similarity_score}'
 
     def U_EigVal_Laplacian(self, i, stats):
-        answers = stats['blackbox_sample_texts']
+        answers = stats['blackbox_sample_texts'][i]
 
         if self.similarity_score == 'NLI_score':
             if self.affinity == 'entail':

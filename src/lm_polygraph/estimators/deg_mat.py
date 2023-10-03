@@ -48,7 +48,7 @@ class DegMat(Estimator):
 
     def U_DegMat(self, i, stats):
         # The Degree Matrix
-        answers = stats['blackbox_sample_texts']
+        answers = stats['blackbox_sample_texts'][i]
 
         if self.similarity_score == 'NLI_score':
             if self.affinity == 'entail':
