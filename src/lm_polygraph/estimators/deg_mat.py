@@ -29,9 +29,9 @@ class DegMat(Estimator):
                 - 'entail': similarity(response_1, response_2) = p_entail(response_1, response_2)
                 - 'contra': similarity(response_1, response_2) = 1 - p_contra(response_1, response_2)
         """
-        if self.similarity_score == 'NLI_score':
+        if similarity_score == 'NLI_score':
             DEBERTA.setup()
-            if self.affinity == 'entail':
+            if affinity == 'entail':
                 super().__init__(['semantic_matrix_entail',
                                   'blackbox_sample_texts'], 'sequence')
             else:
