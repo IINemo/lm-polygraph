@@ -32,7 +32,7 @@ class SemanticMatrixCalculator(StatCalculator):
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
             unique_texts, inv = np.unique(texts, return_inverse=True)
-            batch_pairs.append(itertools.product(unique_texts, texts))
+            batch_pairs.append(itertools.product(unique_texts, unique_texts))
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
 
