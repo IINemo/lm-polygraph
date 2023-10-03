@@ -113,6 +113,7 @@ class Dataset:
                         context += text + " "
                     else:
                         x.append(prompt.format(context=context.strip(), question=text))
+                        y.append(answer)
         elif ("natural_questions" in dataset_path.lower()):
             x, y = [], []
             for inst in dataset:
@@ -122,7 +123,7 @@ class Dataset:
                         sas.extend(sa['text'])
                 if len(sas) > 0:
                     x.append(inst['question']['text'])
-                    y.append(list(set(sas)))                        y.append(answer)
+                    y.append(list(set(sas)))
         elif len(prompt):
             x = [prompt.format(text=text) for text in dataset[x_column]]
             y = dataset[y_column]
