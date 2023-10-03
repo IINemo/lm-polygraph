@@ -67,7 +67,7 @@ class EigValLaplacian(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         res = []
-        for i, answers in enumerate(stats['blackbox_sample_texts']:
+        for i, answers in enumerate(stats['blackbox_sample_texts']):
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_EigVal_Laplacian(i, stats))
