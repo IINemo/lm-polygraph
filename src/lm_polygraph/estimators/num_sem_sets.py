@@ -109,7 +109,7 @@ class NumSemSets(Estimator):
             W_contra_forward[i, j] = forward_contra_w
             W_contra_backward[i, j] = backward_contra_w
 
-        W = (W_entail_forward > W_contra_forward).astype(int)+(W_entail_backward > W_contra_backward).astype(int)
+        W = (W_entail_forward > W_contra_forward).astype(int) * (W_entail_backward > W_contra_backward).astype(int)
 
         a = [[i] for i in range(W.shape[0])]
 
