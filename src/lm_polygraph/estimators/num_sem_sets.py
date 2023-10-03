@@ -88,7 +88,7 @@ class NumSemSets(Estimator):
         # Calculate the number of connected components
         num_components = len(connected_components)
 
-        return num_sets
+        return num_components
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         res = []
