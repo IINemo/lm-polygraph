@@ -81,8 +81,8 @@ class SemanticEntropy(Estimator):
         for class_id in range(len(self._class_to_sample[idx])):
             class_text_id = self._class_to_sample[idx][class_id][0]
             forward_entailment = self._is_entailment[idx, class_text_id, i]
-            backward_entailment = self._is_entailment[idx, i, class_text_id]:
-            if forward_entailment and backward_entailment
+            backward_entailment = self._is_entailment[idx, i, class_text_id]
+            if forward_entailment and backward_entailment:
                 self._class_to_sample[idx][class_id].append(i)
                 self._sample_to_class[idx][i] = class_id
 
