@@ -6,7 +6,20 @@ from transformers import DebertaForSequenceClassification, DebertaTokenizer
 
 
 class CommonDeberta:
+    """
+    Allows for the implementation of a singleton DeBERTa model which can be shared across
+    different uncertainty estimation methods in the code.
+    """
+
     def __init__(self, deberta_path='microsoft/deberta-large-mnli', device=None):
+        """
+        Parameters
+        ----------
+        deberta_path : str
+            huggingface path of the pretrained DeBERTa (default 'microsoft/deberta-large-mnli')
+        device : str
+            device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
+        """
         self.deberta_path = deberta_path
         self.deberta = None
         self.deberta_tokenizer = None
@@ -15,6 +28,9 @@ class CommonDeberta:
             self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     def setup(self):
+        """
+        Loads and prepares the DeBERTa model from the specified path.
+        """
         if self.deberta is not None:
             return
         self.deberta = DebertaForSequenceClassification.from_pretrained(
@@ -36,7 +52,7 @@ def _get_pairs(lst):
 
 
 def _compute_Jaccard_score(lst):
-    #device = DEBERTA.device 
+    # device = DEBERTA.device
     jaccard_sim_mat = np.eye(len(lst))
     for i in range(len(lst)):
         for j in range(i + 1, len(lst)):

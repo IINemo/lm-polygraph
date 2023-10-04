@@ -8,7 +8,24 @@ from .estimator import Estimator
 
 
 class LexicalSimilarity(Estimator):
+    """
+    Estimates the sequence-level uncertainty of a language model following the method of
+    "Lexical Similarity" as provided in the paper https://arxiv.org/abs/2302.09664.
+    Works with both whitebox and blackbox models (initialized using
+    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+
+    The method calculates mean similarity between all pairs of sampled generations with minus sign.
+    The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator
+    'samples_n' parameter.
+    """
+
     def __init__(self, metric: str = 'rougeL'):
+        """
+        Parameters:
+            metric (str): similarity metric (default: 'rougeL'). Possible values:
+                * rouge1 / rouge2 / rougeL
+                * BLEU
+        """
         self.metric = metric
         if self.metric.startswith('rouge'):
             self.scorer = rouge_scorer.RougeScorer([self.metric], use_stemmer=True)
@@ -29,13 +46,23 @@ class LexicalSimilarity(Estimator):
             elif min_sentence_len == 3:
                 weights = [0.33, 0.33, 0.33, 0.0]
             else:
-                #default weights in sentence_bleu
+                # default weights in sentence_bleu
                 weights = [0.25, 0.25, 0.25, 0.25]
             return sentence_bleu([t1.split()], t2.split(), weights=weights)
         else:
             raise Exception(f'Unknown metrics for lexical similarity: {self.metric}')
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the mean similarity with minus sign for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * several sampled texts in 'blackbox_sample_texts'
+        Returns:
+            np.ndarray: float uncertainty for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
         batch_texts = stats['blackbox_sample_texts']
         res = []
         for texts in batch_texts:

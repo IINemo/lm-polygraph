@@ -26,7 +26,7 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "Mean Pointwise Mutual Information":
             return MeanPointwiseMutualInformation()
         case "Mean Conditional Pointwise Mutual Information":
-            return MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599)
+            return MeanConditionalPointwiseMutualInformation()
         case "P(True)":
             return PTrue()
         case "P(True) Sampling":
