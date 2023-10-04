@@ -33,7 +33,7 @@ class MeanConditionalPointwiseMutualInformation(Estimator):
         Estimates the mean CPMI uncertainties for each sample in the input statistics.
 
         Parameters:
-            stats (Dict[str, np.ndarray]): input statistics, which for multple samples includes:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * log p(y_i | y_<i, x) in 'greedy_log_likelihoods',
                 * log p(y_i | y_<i) in 'greedy_lm_log_likelihoods',
                 * Entropy(* | y_<i, x) in 'entropy'.
@@ -59,6 +59,7 @@ class ConditionalPointwiseMutualInformation(Estimator):
     """
     Estimates the token-level uncertainty of a language model following the method of
     Conditional Pointwise Mutual Information (CPMI) as provided in the paper https://arxiv.org/abs/2210.13210.
+    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
     """
 
     def __init__(self, tau: float = 0.0656, lambd: float = 3.599):
@@ -81,7 +82,7 @@ class ConditionalPointwiseMutualInformation(Estimator):
         Estimates the CPMI uncertainties for each token in the input statistics.
 
         Parameters:
-            stats (Dict[str, np.ndarray]): input statistics, which for multple samples includes:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * p(y_i | y_<i, x) in 'greedy_log_likelihoods',
                 * p(y_i | y_<i) in 'greedy_lm_log_likelihoods',
                 * Entropy(* | y_<i, x) in 'entropy'.

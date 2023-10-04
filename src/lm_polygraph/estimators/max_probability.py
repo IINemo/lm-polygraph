@@ -24,7 +24,7 @@ class MaximumSequenceProbability(Estimator):
         Estimates the minus log-probability of each sample in input statistics.
 
         Parameters:
-            stats (Dict[str, np.ndarray]): input statistics, which for multple samples includes:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * log p(y_i | y_<i, x) in 'greedy_log_likelihoods'
         Returns:
             np.ndarray: minus log probabilities for each sample.
@@ -51,7 +51,7 @@ class MaximumTokenProbability(Estimator):
         Estimates the minus log-probability of each token in input statistics.
 
         Parameters:
-            stats (Dict[str, np.ndarray]): input statistics, which for multple samples includes:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * log p(y_i | y_<i, x) in 'greedy_log_likelihoods'
         Returns:
             np.ndarray: concatenated minus log probabilities for each token.

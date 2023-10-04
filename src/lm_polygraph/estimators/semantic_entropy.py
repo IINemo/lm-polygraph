@@ -12,6 +12,16 @@ from .common import DEBERTA
 
 
 class SemanticEntropy(Estimator):
+    """
+    Estimates the sequence-level uncertainty of a language model following the method of
+    "Semantic entropy" as provided in the paper https://arxiv.org/abs/2302.09664.
+    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+
+    This method calculates the generation entropy estimations merged by semantic classes using Monte-Carlo.
+    The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator
+    'samples_n' parameter.
+    """
+
     def __init__(
             self,
             verbose: bool = False
@@ -24,6 +34,18 @@ class SemanticEntropy(Estimator):
         return 'SemanticEntropy'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the semantic entropy for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * generated samples in 'sample_texts',
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with semantic similarities in 'semantic_matrix_entail'
+        Returns:
+            np.ndarray: float semantic entropy for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
         loglikelihoods_list = stats['sample_log_probs']
 
         entailment_id = DEBERTA.deberta.config.label2id['ENTAILMENT']
@@ -74,7 +96,7 @@ class SemanticEntropy(Estimator):
             self._sample_to_class[idx] = {0: 0}
 
             return 0
-        
+
         # Iterate over existing classes and return if hypo belongs to one of them
         for class_id in range(len(self._class_to_sample[idx])):
             class_text_id = self._class_to_sample[idx][class_id][0]
@@ -85,7 +107,7 @@ class SemanticEntropy(Estimator):
                 self._sample_to_class[idx][i] = class_id
 
                 return class_id
-        
+
         # If none of the existing classes satisfy - create new one
         new_class_id = len(self._class_to_sample[idx])
         self._sample_to_class[idx][i] = new_class_id

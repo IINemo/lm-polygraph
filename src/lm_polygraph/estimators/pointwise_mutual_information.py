@@ -6,6 +6,12 @@ from .estimator import Estimator
 
 
 class MeanPointwiseMutualInformation(Estimator):
+    """
+    Estimates the sequence-level uncertainty of a language model using Pointwise Mutual Information.
+    The sequence-level estimation is calculated as average token-level PMI estimations.
+    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    """
+
     def __init__(self):
         super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods'], 'sequence')
 
@@ -13,6 +19,17 @@ class MeanPointwiseMutualInformation(Estimator):
         return 'MeanPointwiseMutualInformation'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the mean CPMI uncertainties with minus sign for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * log p(y_i | y_<i, x) in 'greedy_log_likelihoods',
+                * log p(y_i | y_<i) in 'greedy_lm_log_likelihoods'.
+        Returns:
+            np.ndarray: float uncertainty for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
         logprobs = stats['greedy_log_likelihoods']
         lm_logprobs = stats['greedy_lm_log_likelihoods']
         mi_scores = []
@@ -24,6 +41,11 @@ class MeanPointwiseMutualInformation(Estimator):
 
 
 class PointwiseMutualInformation(Estimator):
+    """
+    Estimates the token-level uncertainty of a language model using Pointwise Mutual Information.
+    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    """
+
     def __init__(self):
         super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods'], 'token')
 
@@ -31,6 +53,17 @@ class PointwiseMutualInformation(Estimator):
         return 'PointwiseMutualInformation'
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the PMI uncertainties with minus sign for each token in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * p(y_i | y_<i, x) in 'greedy_log_likelihoods',
+                * p(y_i | y_<i) in 'greedy_lm_log_likelihoods'.
+        Returns:
+            np.ndarray: concatenated float uncertainty for each token in input statistics.
+                Higher values indicate more uncertain samples.
+        """
         logprobs = stats['greedy_log_likelihoods']
         lm_logprobs = stats['greedy_lm_log_likelihoods']
         mi_scores = []
