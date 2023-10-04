@@ -25,7 +25,6 @@ from lm_polygraph.generation_metrics.model_score import (
     ModelScoreTokenwiseMetric,
 )
 from lm_polygraph.generation_metrics.rouge import RougeMetric
-from lm_polygraph.generation_metrics.wer_tokenwise import WERTokenwiseMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
@@ -171,7 +170,6 @@ def main(args):
                 ModelScoreSeqMetric("model_rh"),
                 AccuracyMetric(),
                 ModelScoreTokenwiseMetric("model_rh"),
-                WERTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
