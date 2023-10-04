@@ -271,7 +271,7 @@ function formatResponse(data){
             colorStyle = 'background-color:rgb(' + red + ', ' + green + ', ' + white + ');';
             ueStr = Math.round(seq_confidence[0] * 100) + '%';
         }
-        response += '<div style="line-height:30%;"><br></div><span style="color: rgb(77, 65, 74)">Confidence: </span>';
+        response += '<div style="line-height:30%;"><br></div>Confidence: </span>';
         response += '<span style="' + colorStyle + 'border-radius:10px;padding: 3px;">' + ueStr + '</span>';
     }
     response += '</p>';
