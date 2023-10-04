@@ -5,6 +5,7 @@ from .generation_metric import GenerationMetric
 
 MODEL_SCORES = ['model_rh']
 
+
 class ModelScoreTokenwiseMetric(GenerationMetric):
     def __init__(self, score: str):
         assert score in MODEL_SCORES
