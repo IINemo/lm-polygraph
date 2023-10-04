@@ -57,13 +57,12 @@ def main(args):
         args.seed = [1]
         
     model_kwargs = {}
+    model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
+    model_kwargs['use_flash_attention_2'] = getattr(args, 'use_flash_attention_2', False):
+
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
         cache_kwargs = {'cache_dir': args.cache_dir}
-    if use_auth_token := getattr(args, 'use_auth_token', None) is not None:
-        model_kwargs['use_auth_token'] = use_auth_token
-    if use_flash_attention_2 := getattr(args, 'use_flash_attention_2', False):
-        model_kwargs['use_flash_attention_2'] = use_flash_attention_2
 
     device = args.device
     if device is None:
