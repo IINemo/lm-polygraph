@@ -13,7 +13,6 @@ import logging
 
 log = logging.getLogger()
 
-
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel
@@ -40,6 +39,7 @@ DENSITY_BASED_ESTIMATORS = [
 ]
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
+
 
 @hydra.main(
     version_base=None,
@@ -82,18 +82,18 @@ def main(args):
             split=args.eval_split,
             load_from_disk=args.load_from_disk
         )
-        
+
         if type(dataset.y[0]) is list:
             # We have several labels per input
             # Duplicate inputs for each label
             x_proc, y_proc = [], []
-            
+
             for x, y in zip(dataset.x, dataset.y):
                 for y_i in y:
                     x_proc.append(x)
                     y_proc.append(y_i)
-        
-            dataset = Dataset(x_proc, y_proc, args.batch_size) 
+
+            dataset = Dataset(x_proc, y_proc, args.batch_size)
 
         estimators = []
         estimators += get_ue_methods(args, model)
@@ -101,7 +101,7 @@ def main(args):
 
         if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in estimators]):
             if (args.train_dataset is not None) and (
-                args.train_dataset != args.dataset
+                    args.train_dataset != args.dataset
             ):
                 train_dataset = Dataset.load(
                     args.train_dataset,
@@ -131,15 +131,15 @@ def main(args):
                     size=10_000,
                     load_from_disk=args.load_from_disk,
                 )
-                   
+
             background_train_dataset = Dataset.load(
-                    args.background_train_dataset,
-                    args.background_train_dataset_text_column, 
-                    args.background_train_dataset_label_column,
-                    batch_size=args.batch_size,
-                    data_files=args.background_train_dataset_data_files,
-                    split="train",
-                    size=100_000,
+                args.background_train_dataset,
+                args.background_train_dataset_text_column,
+                args.background_train_dataset_label_column,
+                batch_size=args.batch_size,
+                data_files=args.background_train_dataset_data_files,
+                split="train",
+                size=100_000,
             )
 
             if args.subsample_train_dataset != -1:
@@ -167,9 +167,9 @@ def main(args):
                 RougeMetric("rouge2"),
                 RougeMetric("rougeL"),
                 BartScoreSeqMetric("rh"),
-                ModelScoreSeqMetric("model_rh"),
+                ModelScoreSeqMetric(),
                 AccuracyMetric(),
-                ModelScoreTokenwiseMetric("model_rh"),
+                ModelScoreTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
@@ -198,7 +198,7 @@ def get_density_based_ue_methods(args, model_type):
         dataset_name = dataset_name.split("/")[-1].split(".")[0]
         model_name = args.model.split("/")[-1]
         parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
-            
+
         if model_type == "Seq2SeqLM":
             estimators += [
                 MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
@@ -228,46 +228,45 @@ def get_density_based_ue_methods(args, model_type):
             ]
     return estimators
 
+
 def get_ue_methods(args, model):
     estimators = []
     if args.use_seq_ue:
         estimators += [
-                MaximumSequenceProbability(),
-                Perplexity(),
-                MeanTokenEntropy(),
-                MeanPointwiseMutualInformation(),
-                MeanConditionalPointwiseMutualInformation(tau=0.0656, lambd=3.599),
-                PTrue(),
-                PTrueSampling(),
-                MonteCarloSequenceEntropy(),
-                MonteCarloNormalizedSequenceEntropy(),
-                LexicalSimilarity(metric="rouge1"),
-                LexicalSimilarity(metric="rouge2"),
-                LexicalSimilarity(metric="rougeL"),
-                LexicalSimilarity(metric="BLEU"),
-                NumSemSets(),
-                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-                EigValLaplacian(similarity_score="Jaccard_score"),
-                DegMat(similarity_score="NLI_score", affinity="entail"),
-                DegMat(similarity_score="NLI_score", affinity="contra"),
-                DegMat(similarity_score="Jaccard_score"),
-                Eccentricity(similarity_score="NLI_score", affinity="entail"),
-                Eccentricity(similarity_score="NLI_score", affinity="contra"),
-                Eccentricity(similarity_score="Jaccard_score"),
-                SemanticEntropy(),
-            ]
+            MaximumSequenceProbability(),
+            Perplexity(),
+            MeanTokenEntropy(),
+            MeanPointwiseMutualInformation(),
+            MeanConditionalPointwiseMutualInformation(),
+            PTrue(),
+            PTrueSampling(),
+            MonteCarloSequenceEntropy(),
+            MonteCarloNormalizedSequenceEntropy(),
+            LexicalSimilarity(metric="rouge1"),
+            LexicalSimilarity(metric="rouge2"),
+            LexicalSimilarity(metric="rougeL"),
+            LexicalSimilarity(metric="BLEU"),
+            NumSemSets(),
+            EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
+            EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
+            EigValLaplacian(similarity_score="Jaccard_score"),
+            DegMat(similarity_score="NLI_score", affinity="entail"),
+            DegMat(similarity_score="NLI_score", affinity="contra"),
+            DegMat(similarity_score="Jaccard_score"),
+            Eccentricity(similarity_score="NLI_score", affinity="entail"),
+            Eccentricity(similarity_score="NLI_score", affinity="contra"),
+            Eccentricity(similarity_score="Jaccard_score"),
+            SemanticEntropy(),
+        ]
     if args.use_tok_ue:
         estimators += [
-                MaximumTokenProbability(),
-                TokenEntropy(),
-                PointwiseMutualInformation(),
-                ConditionalPointwiseMutualInformation(
-                    tau=0.0656, lambd=3.599
-                ),  # TODO: What is this ????
-                SemanticEntropyToken(model.model_path, args.cache_path),
-            ]
-    
+            MaximumTokenProbability(),
+            TokenEntropy(),
+            PointwiseMutualInformation(),
+            ConditionalPointwiseMutualInformation(),
+            SemanticEntropyToken(model.model_path, args.cache_path),
+        ]
+
     additional_estimators = getattr(args, "additional_estimators", {})
     additional_estimators_kwargs = getattr(args, "additional_estimators_kwargs", {})
 
