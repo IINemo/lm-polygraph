@@ -10,14 +10,21 @@ softmax = nn.Softmax(dim=1)
 
 
 class NumSemSets(Estimator):
+    """
+    Estimates the sequence-level uncertainty of a language model following the method of
+    "Number of Semantic Sets" as provided in the paper https://arxiv.org/abs/2305.19187.
+    Works with both whitebox and blackbox models (initialized using
+    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+    """
+
     def __init__(
             self,
             batch_size: int = 10,
             verbose: bool = False,
     ):
         """
-        A number of semantic sets in response (higher = bigger uncertainty).
-
+        Parameters:
+            batch_size (int): batch size for Deberta model.
         """
         super().__init__(['semantic_matrix_entail',
                           'semantic_matrix_contra',
@@ -56,7 +63,7 @@ class NumSemSets(Estimator):
         # parts of the semantic matrices
         W_entail = stats['semantic_matrix_entail'][i, :, :]
         W_contra = stats['semantic_matrix_contra'][i, :, :]
-        
+
         # We check that for every pairing (both forward and backward)
         # the condition satisfies
         W = (W_entail > W_contra).astype(int)
@@ -71,7 +78,7 @@ class NumSemSets(Estimator):
         for i, row in enumerate(W):
             # Find the indices of non-zero elements in the current row
             non_zero_indices = np.where(row != 0)[0]
-            
+
             # Append the non-zero indices to the corresponding row in 'a'
             a[i].extend(non_zero_indices.tolist())
 
@@ -91,6 +98,18 @@ class NumSemSets(Estimator):
         return num_components
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the number of semantic sets for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * generation text in 'blackbox_sample_texts',
+                * matrix with corresponding semantic similarities in
+                  'semantic_matrix_entail' and 'semantic_matrix_contra'
+        Returns:
+            np.ndarray: number of semantic sets for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
         res = []
         for i, answers in enumerate(stats['blackbox_sample_texts']):
             if self.verbose:
