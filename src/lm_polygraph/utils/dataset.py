@@ -191,7 +191,7 @@ class Dataset:
             for inst in dataset:
                 sas = []
                 for sa in inst['annotations']['short_answers']:
-                    if len(sa['text'] > 0):
+                    if len(sa['text']) > 0:
                         sas.append(sa[text])
                 if len(sas) > 0:
                     x.append(inst['question'])
