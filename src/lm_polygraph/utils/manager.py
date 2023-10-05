@@ -348,10 +348,11 @@ class UEManager:
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
         
-        device = self.model.device
+        device = self.model.model.device
         self.model.model.to('cpu')
         self.ensemble_model.model.to(device)
-
+        
+        iterable_data = tqdm(self.data) if self.verbose else self.data
         for inp_texts, target_texts in iterable_data:
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
@@ -386,7 +387,7 @@ class UEManager:
             batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             bad_estimators = []
             
-            for estimator in self.estimators:
+            for estimator in self.ensemble_estimators:
                 try:
                     e = estimator(batch_stats).tolist()
                     self.estimations[estimator.level, str(estimator)] += e
@@ -403,17 +404,8 @@ class UEManager:
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
                 self.estimations.pop(key, None)
-                self.estimators.remove(bad_estimator)
+                self.ensemble_estimators.remove(bad_estimator)
                 
-                
-            batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-            for generation_metric in self.generation_metrics:
-                m = generation_metric(batch_stats, target_texts=target_texts, target_tokens=target_tokens).tolist()
-                self.gen_metrics[generation_metric.level, str(generation_metric)] += m
-                batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
-
-            for processor in self.processors:
-                processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
         if self.ensemble_model is not None:
             # Now do the same for ensemble calculators
