@@ -347,6 +347,73 @@ class UEManager:
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
+        
+        device = self.model.device
+        self.model.model.to('cpu')
+        self.ensemble_model.model.to(device)
+
+        for inp_texts, target_texts in iterable_data:
+            batch_stats: Dict[str, np.ndarray] = {}
+            for key, val in [
+                ('input_texts', inp_texts),
+                ('target_texts', target_texts),
+            ]:
+                batch_stats[key] = val
+
+            target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
+                             for text in target_texts]
+            batch_stats['target_tokens'] = target_tokens
+
+            batch_stats['ensemble_generation_params'] = {}
+            batch_stats['ensemble_model'] = self.ensemble_model
+
+            try:
+                for stat_calculator in self.ensemble_stat_calculators:
+                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
+                    for stat, stat_value in new_stats.items():
+                        if stat in batch_stats.keys():
+                            continue
+                        batch_stats[stat] = stat_value
+            except Exception as e:
+                if self.ignore_exceptions:
+                    log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
+                    sys.stderr.write(log_msg)
+                    print(log_msg)
+                    continue
+                else:
+                    raise e
+
+            batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+            bad_estimators = []
+            
+            for estimator in self.estimators:
+                try:
+                    e = estimator(batch_stats).tolist()
+                    self.estimations[estimator.level, str(estimator)] += e
+                    batch_estimations[estimator.level, str(estimator)] += e
+                except Exception as e:
+                    if self.ignore_exceptions:
+                        bad_estimators.append(estimator)
+                        log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
+                        sys.stderr.write(log_msg)
+                        print(log_msg)
+                        continue
+                    else:
+                        raise e
+            for bad_estimator in bad_estimators:
+                key = (bad_estimator.level, str(bad_estimator))
+                self.estimations.pop(key, None)
+                self.estimators.remove(bad_estimator)
+                
+                
+            batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+            for generation_metric in self.generation_metrics:
+                m = generation_metric(batch_stats, target_texts=target_texts, target_tokens=target_tokens).tolist()
+                self.gen_metrics[generation_metric.level, str(generation_metric)] += m
+                batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
+
+            for processor in self.processors:
+                processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
         if self.ensemble_model is not None:
             # Now do the same for ensemble calculators
