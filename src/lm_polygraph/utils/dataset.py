@@ -194,8 +194,8 @@ class Dataset:
                     if len(sa['text']) > 0:
                         sas.extend(sa['text'])
                 if len(sas) > 0:
-                    x.append(inst['question'])
-                    y.append(sas)
+                    x.append(inst['question']['text'])
+                    y.append(list(set(sas)))
 
         elif len(prompt):
             x = [prompt.format(text=text) for text in dataset[x_column]]
