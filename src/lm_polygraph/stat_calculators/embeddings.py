@@ -121,7 +121,7 @@ class EmbeddingsCalculator(StatCalculator):
             **batch,
             output_scores=True,
             return_dict_in_generate=True,
-            max_new_tokens=batch['input_ids'].shape[1] * 2,
+            max_new_tokens=max_new_tokens,
             min_length=2,
             output_attentions=False,
             output_hidden_states=True,
