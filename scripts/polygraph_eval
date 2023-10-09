@@ -182,9 +182,7 @@ def main(args):
                 RougeMetric("rouge2"),
                 RougeMetric("rougeL"),
                 BartScoreSeqMetric("rh"),
-                ModelScoreSeqMetric(),
                 AccuracyMetric(),
-                ModelScoreTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
