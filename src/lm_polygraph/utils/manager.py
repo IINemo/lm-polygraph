@@ -295,7 +295,6 @@ class UEManager:
                     ('target_texts', target_texts),
                     ('target_tokens', target_tokens),
                 ]:
-                    self.stats[key] += val
                     batch_stats[key] = val
                     
                 for stat_calculator in stat_calculators:
