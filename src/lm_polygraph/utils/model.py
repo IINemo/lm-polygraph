@@ -371,13 +371,8 @@ class WhiteboxModel(Model):
         Returns:
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
-<<<<<<< HEAD
         model_type = self.model.config._name_or_path.lower()
         if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
-=======
-        model_type = self.model.config._name_or_path.lower())
-        if "falcon" in model_type or "llama" in model_type:
->>>>>>> 8be456e (Use correct chat template for llama 2 chat and vicuna models)
             prompted_texts = []
             for text in texts:
                 if "llama" in model_type:
