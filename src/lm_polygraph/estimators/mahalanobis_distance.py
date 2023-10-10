@@ -24,28 +24,15 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
     jitter = 0
     jitter_eps = None
 
-    # a zero-initialized covariance matrix is created based on the shape of centroids.
-
-    cov = torch.zeros(
-        centroids.shape[1], centroids.shape[1], device=centroids.device
-    ).float()
-
     # A nested loop iterates over each centroid (mu_c) and the corresponding training features (x) for that centroid.
     # and for each pair of centroid and feature, the difference (d) between the feature and centroid is computed and 
     # the outer product of d with itself is added to the covariance matrix.
     
     if torch.cuda.is_available():
-        cov = cov.cuda()
         centroids = centroids.cuda()
         train_features = train_features.cuda()
 
-    for x in train_features:
-        d = (x - centroids)
-        cov += d @ d.T
-
-    # Once the loops finish, the covariance matrix is divided by the number of training features minus 1 to get the scaled covariance.
-
-    cov_scaled = cov / (train_features.shape[0] - 1)
+    cov_scaled = torch.cov(train_features.T)
 
     # The function then iterates over each jitter_eps value in jitters and adds jitter to the scaled covariance matrix.
     # And the eigenvalues of the updated covariance matrix are computed, and if all eigenvalues are non-negative, the loop breaks.
