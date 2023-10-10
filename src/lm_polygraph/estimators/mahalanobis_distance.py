@@ -95,6 +95,14 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
         dists = dists.masked_fill_(centroids_mask, float("inf")).to(device)
     return dists  # np.min(dists, axis=1)
 
+def create_cuda_tensor_from_numpy(array):
+    if not isinstance(array, torch.Tensor):
+        tensor = torch.from_numpy(array)
+    if torch.cuda.is_available():
+        tensor = tensor.cuda()
+    return tensor
+    
+
 class MahalanobisDistanceSeq(Estimator):
     def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
         super().__init__(['embeddings', 'train_embeddings'], 'sequence')
@@ -123,28 +131,20 @@ class MahalanobisDistanceSeq(Estimator):
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
 
         # take the embeddings
-        embeddings = stats[f'embeddings_{self.embeddings_type}']  
-        if not isinstance(embeddings, torch.Tensor):
-            embeddings = torch.from_numpy(embeddings)
-        if torch.cuda.is_available():
-            embeddings = embeddings.cuda()
+        embeddings = create_cuda_tensor_from_numpy(stats[f'embeddings_{self.embeddings_type}'])
             
         # compute centroids if not given     
         if self.centroid is None:
-            train_embeddings = stats[f'train_embeddings_{self.embeddings_type}']  
-            if not isinstance(train_embeddings, torch.Tensor):
-                train_embeddings = torch.from_numpy(train_embeddings)
-            if torch.cuda.is_available():
-                train_embeddings = train_embeddings.cuda()
-            
+            train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])            
             self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
         
         # compute inverse covariance matrix if not given
         if self.sigma_inv is None:
+            train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])  
             self.sigma_inv, _ = compute_inv_covariance(
-                self.centroid.unsqueeze(0), torch.from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])
+                self.centroid.unsqueeze(0), train_embeddings
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
