@@ -62,7 +62,13 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         # to obtain MD_0
 
         if self.centroid_0 is None:
-            self.centroid_0 = torch.from_numpy(stats[f'background_train_embeddings_{self.embeddings_type}']).mean(axis=0)
+            background_train_embeddings = stats[f'background_train_embeddings_{self.embeddings_type}']  
+            if not isinstance(background_train_embeddings, torch.Tensor):
+                background_train_embeddings = torch.from_numpy(background_train_embeddings)
+            if torch.cuda.is_available():
+                background_train_embeddings = background_train_embeddings.cuda()
+                
+            self.centroid_0 = background_train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid_0, f"{self.full_path}/centroid_0.pt")
                 

@@ -129,10 +129,16 @@ class MahalanobisDistanceSeq(Estimator):
             embeddings = torch.from_numpy(embeddings)
         if torch.cuda.is_available():
             embeddings = embeddings.cuda()
-
+            
         # compute centroids if not given     
         if self.centroid is None:
-            self.centroid = torch.from_numpy(stats[f'train_embeddings_{self.embeddings_type}']).mean(axis=0)
+            train_embeddings = stats[f'train_embeddings_{self.embeddings_type}']  
+            if not isinstance(train_embeddings, torch.Tensor):
+                train_embeddings = torch.from_numpy(train_embeddings)
+            if torch.cuda.is_available():
+                train_embeddings = train_embeddings.cuda()
+            
+            self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
         
