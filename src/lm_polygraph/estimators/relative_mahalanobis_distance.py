@@ -81,7 +81,7 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         # compute MD_0
 
         dists_0 = mahalanobis_distance_with_known_centroids_sigma_inv(
-            self.centroid_0.unsqueeze(0),
+            self.centroid_0,
             None,
             self.sigma_inv_0,
             embeddings,
