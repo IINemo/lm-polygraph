@@ -121,11 +121,11 @@ class MahalanobisDistanceSeq(Estimator):
         # take the embeddings
         embeddings = stats[f'embeddings_{self.embeddings_type}']  
         if not isinstance(embeddings, torch.Tensor):
-            embeddings = torch.tensor(embeddings)
+            embeddings = torch.from_numpy(embeddings)
 
         # compute centroids if not given     
         if self.centroid is None:
-            self.centroid = torch.tensor(stats[f'train_embeddings_{self.embeddings_type}'].mean(axis=0))
+            self.centroid = torch.from_numpy(stats[f'train_embeddings_{self.embeddings_type}']).mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
         
