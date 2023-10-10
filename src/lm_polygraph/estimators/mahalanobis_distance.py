@@ -33,6 +33,11 @@ def compute_inv_covariance(centroids, train_features, train_labels, jitters=None
     # A nested loop iterates over each centroid (mu_c) and the corresponding training features (x) for that centroid.
     # and for each pair of centroid and feature, the difference (d) between the feature and centroid is computed and 
     # the outer product of d with itself is added to the covariance matrix.
+    
+    if torch.cuda.is_available():
+        cov = cov.cuda()
+        centroids = centroids.cuda()
+        train_features = train_features.cuda()
 
     for c, mu_c in tqdm(enumerate(centroids)):
         for x in train_features[train_labels == c]:
@@ -70,7 +75,7 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
     - tensor of Mahalanobis distances is returned.
     """
     # step 1: calculate the difference (diff) between each evaluation feature and each centroid by subtracting the centoids from the features.
-
+    
     diff = eval_features.unsqueeze(1) - centroids.unsqueeze(
         0
     )  # bs (b), num_labels (c / s), dim (d / a)
@@ -122,6 +127,8 @@ class MahalanobisDistanceSeq(Estimator):
         embeddings = stats[f'embeddings_{self.embeddings_type}']  
         if not isinstance(embeddings, torch.Tensor):
             embeddings = torch.from_numpy(embeddings)
+        if torch.cuda.is_available():
+            embeddings = embeddings.cuda()
 
         # compute centroids if not given     
         if self.centroid is None:
@@ -137,6 +144,12 @@ class MahalanobisDistanceSeq(Estimator):
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
+        
+        if torch.cuda.is_available():
+            if not self.centroid.is_cuda:
+                self.centroid = self.centroid.cuda()
+            if not self.sigma_inv.is_cuda:
+                self.sigma_inv = self.sigma_inv.cuda()
         
         # compute MD given centroids and inverse covariance matrix   
         dists = mahalanobis_distance_with_known_centroids_sigma_inv(

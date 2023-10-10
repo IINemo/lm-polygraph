@@ -54,6 +54,8 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         embeddings = stats[f'embeddings_{self.embeddings_type}']   
         if not isinstance(embeddings, torch.Tensor):
             embeddings = torch.from_numpy(embeddings)
+        if torch.cuda.is_available():
+            embeddings = embeddings.cuda()
         
         # since we want to adjust resulting reasure on baseline MD on train part
         # we have to compute average train centroid and inverse cavariance matrix
@@ -72,6 +74,13 @@ class RelativeMahalanobisDistanceSeq(Estimator):
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv_0, f"{self.full_path}/sigma_inv_0.pt")
                 
+                
+        if torch.cuda.is_available():
+            if not self.centroid_0.is_cuda:
+                self.centroid_0 = self.centroid_0.cuda()
+            if not self.sigma_inv_0.is_cuda:
+                self.sigma_inv_0 = self.sigma_inv_0.cuda()
+        
         # compute MD_0
 
         dists_0 = mahalanobis_distance_with_known_centroids_sigma_inv(
