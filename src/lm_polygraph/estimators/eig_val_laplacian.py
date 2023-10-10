@@ -2,9 +2,11 @@ import numpy as np
 
 from typing import Dict, Literal
 
+from scipy.linalg import eigh
+import torch.nn as nn
+
 from .common import DEBERTA, compute_sim_score
 from .estimator import Estimator
-import torch.nn as nn
 
 
 class EigValLaplacian(Estimator):
@@ -71,7 +73,8 @@ class EigValLaplacian(Estimator):
         D = np.diag(W.sum(axis=1))
         D_inverse_sqrt = np.linalg.inv(np.sqrt(D))
         L = np.eye(D.shape[0]) - D_inverse_sqrt @ W @ D_inverse_sqrt
-        return sum([max(0, 1 - lambda_k) for lambda_k in np.linalg.eig(L)[0]])
+
+        return sum([max(0, 1 - lambda_k) for lambda_k in eigh(L, eigvals_only=True)])
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
