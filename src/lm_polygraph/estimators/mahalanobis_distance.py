@@ -40,7 +40,7 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
         train_features = train_features.cuda()
 
     for x in train_features:
-        d = (x - centroids).unsqueeze(1)
+        d = (x - centroids)
         cov += d @ d.T
 
     # Once the loops finish, the covariance matrix is divided by the number of training features minus 1 to get the scaled covariance.
@@ -97,10 +97,10 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
 
 def create_cuda_tensor_from_numpy(array):
     if not isinstance(array, torch.Tensor):
-        tensor = torch.from_numpy(array)
+        array = torch.from_numpy(array)
     if torch.cuda.is_available():
-        tensor = tensor.cuda()
-    return tensor
+        array = array.cuda()
+    return array
     
 
 class MahalanobisDistanceSeq(Estimator):
