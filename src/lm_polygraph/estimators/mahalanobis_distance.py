@@ -10,7 +10,7 @@ from .estimator import Estimator
 DOUBLE_INFO = torch.finfo(torch.double)
 JITTERS = [10**exp for exp in range(-15, 0, 1)]
 
-def compute_inv_covariance(centroids, train_features, train_labels, jitters=None):
+def compute_inv_covariance(centroids, train_features, jitters=None):
     """
     This function computes inverse covariance matrix that is required by Mahalanobis distance:
     MD = \sqrt((h(x) - \mu)^{T} \Sigma^{-1} (h(x) - \mu))
@@ -39,10 +39,9 @@ def compute_inv_covariance(centroids, train_features, train_labels, jitters=None
         centroids = centroids.cuda()
         train_features = train_features.cuda()
 
-    for c, mu_c in tqdm(enumerate(centroids)):
-        for x in train_features[train_labels == c]:
-            d = (x - mu_c).unsqueeze(1)
-            cov += d @ d.T
+    for x in train_features:
+        d = (x - centroids).unsqueeze(1)
+        cov += d @ d.T
 
     # Once the loops finish, the covariance matrix is divided by the number of training features minus 1 to get the scaled covariance.
 
@@ -144,9 +143,8 @@ class MahalanobisDistanceSeq(Estimator):
         
         # compute inverse covariance matrix if not given
         if self.sigma_inv is None:
-            train_labels = np.zeros(stats[f'train_embeddings_{self.embeddings_type}'].shape[0])
             self.sigma_inv, _ = compute_inv_covariance(
-                self.centroid.unsqueeze(0), torch.from_numpy(stats[f'train_embeddings_{self.embeddings_type}']), train_labels
+                self.centroid.unsqueeze(0), torch.from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
