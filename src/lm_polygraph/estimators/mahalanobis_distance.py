@@ -133,7 +133,7 @@ class MahalanobisDistanceSeq(Estimator):
         if self.sigma_inv is None:
             train_labels = np.zeros(stats[f'train_embeddings_{self.embeddings_type}'].shape[0])
             self.sigma_inv, _ = compute_inv_covariance(
-                self.centroid.unsqueeze(0), torch.tensor(stats[f'train_embeddings_{self.embeddings_type}']), train_labels
+                self.centroid.unsqueeze(0), torch.from_numpy(stats[f'train_embeddings_{self.embeddings_type}']), train_labels
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
