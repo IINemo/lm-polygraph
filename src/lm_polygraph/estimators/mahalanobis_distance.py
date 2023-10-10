@@ -56,7 +56,7 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
             device=cov_scaled.device,
         )
         cov_scaled_update = cov_scaled + jitter
-        eigenvalues = torch.linalg.eigh(cov_scaled_update.cpu()).eigenvalues
+        eigenvalues = torch.linalg.eigh(cov_scaled_update).eigenvalues
         if (eigenvalues >= 0).all():
             break
     cov_scaled = cov_scaled + jitter
