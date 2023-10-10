@@ -1,10 +1,12 @@
 import torch
 import numpy as np
+from transformers import LogitsProcessorList
 
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
+from lm_polygraph.estimators.greedy_probs import ScoresProcessor
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
@@ -72,11 +74,13 @@ def _gen_samples(n_samples, model, batch, **kwargs):
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
+            processor = ScoresProcessor()
+            kwargs['logits_processor'] = LogitsProcessorList([processor])
             out = model.generate(
                 **batch,
                 **kwargs
             )
-            cur_logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+            cur_logits = torch.stack(processor.scores, dim=1).log_softmax(-1)
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])

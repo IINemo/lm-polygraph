@@ -1,11 +1,12 @@
 import torch
 import numpy as np
+from transformers import LogitsProcessorList
 
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-
+from lm_polygraph.estimators.greedy_probs import ScoresProcessor
 
 class PromptCalculator(StatCalculator):
     """
@@ -61,6 +62,8 @@ class PromptCalculator(StatCalculator):
 
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
+        processor = ScoresProcessor()
+
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -69,8 +72,10 @@ class PromptCalculator(StatCalculator):
                 min_new_tokens=1,
                 max_new_tokens=1,
                 num_beams=1,
+                logits_processor=LogitsProcessorList([processor])
             )
-        logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+
+        logits = torch.stack(processor.scores, dim=1).log_softmax(-1)
         log_probs = logits[:, -1, expected_token].cpu().numpy()
 
         return {self.method: log_probs}
