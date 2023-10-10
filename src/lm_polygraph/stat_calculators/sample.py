@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
-from lm_polygraph.estimators.greedy_probs import ScoresProcessor
+from lm_polygraph.stat_calculators.greedy_probs import ScoresProcessor
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
