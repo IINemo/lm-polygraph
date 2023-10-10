@@ -10,7 +10,7 @@ from .estimator import Estimator
 DOUBLE_INFO = torch.finfo(torch.double)
 JITTERS = [10**exp for exp in range(-15, 0, 1)]
 
-def compute_inv_covariance(centroids, train_features, train_labels, jitters=None):
+def compute_inv_covariance(centroids, train_features, jitters=None):
     """
     This function computes inverse covariance matrix that is required by Mahalanobis distance:
     MD = \sqrt((h(x) - \mu)^{T} \Sigma^{-1} (h(x) - \mu))
@@ -33,11 +33,15 @@ def compute_inv_covariance(centroids, train_features, train_labels, jitters=None
     # A nested loop iterates over each centroid (mu_c) and the corresponding training features (x) for that centroid.
     # and for each pair of centroid and feature, the difference (d) between the feature and centroid is computed and 
     # the outer product of d with itself is added to the covariance matrix.
+    
+    if torch.cuda.is_available():
+        cov = cov.cuda()
+        centroids = centroids.cuda()
+        train_features = train_features.cuda()
 
-    for c, mu_c in tqdm(enumerate(centroids)):
-        for x in train_features[train_labels == c]:
-            d = (x - mu_c).unsqueeze(1)
-            cov += d @ d.T
+    for x in train_features:
+        d = (x - centroids)
+        cov += d @ d.T
 
     # Once the loops finish, the covariance matrix is divided by the number of training features minus 1 to get the scaled covariance.
 
@@ -70,7 +74,7 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
     - tensor of Mahalanobis distances is returned.
     """
     # step 1: calculate the difference (diff) between each evaluation feature and each centroid by subtracting the centoids from the features.
-
+    
     diff = eval_features.unsqueeze(1) - centroids.unsqueeze(
         0
     )  # bs (b), num_labels (c / s), dim (d / a)
@@ -90,6 +94,14 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
     if centroids_mask is not None:
         dists = dists.masked_fill_(centroids_mask, float("inf")).to(device)
     return dists  # np.min(dists, axis=1)
+
+def create_cuda_tensor_from_numpy(array):
+    if not isinstance(array, torch.Tensor):
+        array = torch.from_numpy(array)
+    if torch.cuda.is_available():
+        array = array.cuda()
+    return array
+    
 
 class MahalanobisDistanceSeq(Estimator):
     def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
@@ -119,26 +131,33 @@ class MahalanobisDistanceSeq(Estimator):
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
 
         # take the embeddings
-        embeddings = stats[f'embeddings_{self.embeddings_type}']  
-
+        embeddings = create_cuda_tensor_from_numpy(stats[f'embeddings_{self.embeddings_type}'])
+            
         # compute centroids if not given     
         if self.centroid is None:
-            self.centroid = stats[f'train_embeddings_{self.embeddings_type}'].mean(axis=0)
+            train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])            
+            self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
         
         # compute inverse covariance matrix if not given
         if self.sigma_inv is None:
-            train_labels = np.zeros(stats[f'train_embeddings_{self.embeddings_type}'].shape[0])
+            train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])  
             self.sigma_inv, _ = compute_inv_covariance(
-                self.centroid.unsqueeze(0), stats[f'train_embeddings_{self.embeddings_type}'], train_labels
+                self.centroid.unsqueeze(0), train_embeddings
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
         
+        if torch.cuda.is_available():
+            if not self.centroid.is_cuda:
+                self.centroid = self.centroid.cuda()
+            if not self.sigma_inv.is_cuda:
+                self.sigma_inv = self.sigma_inv.cuda()
+        
         # compute MD given centroids and inverse covariance matrix   
         dists = mahalanobis_distance_with_known_centroids_sigma_inv(
-            self.centroid.unsqueeze(0),
+            self.centroid,
             None,
             self.sigma_inv,
             embeddings,

@@ -6,7 +6,7 @@ from tqdm import tqdm
 from typing import Dict
 
 from .estimator import Estimator
-from .mahalanobis_distance import compute_inv_covariance, mahalanobis_distance_with_known_centroids_sigma_inv, MahalanobisDistanceSeq
+from .mahalanobis_distance import compute_inv_covariance, mahalanobis_distance_with_known_centroids_sigma_inv, MahalanobisDistanceSeq, create_cuda_tensor_from_numpy
 
 def save_array(array, filename):
     with open(filename, 'wb') as f:
@@ -51,29 +51,37 @@ class RelativeMahalanobisDistanceSeq(Estimator):
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
 
         #take the embeddings
-        embeddings = stats[f'embeddings_{self.embeddings_type}']   
+        embeddings = create_cuda_tensor_from_numpy(stats[f'embeddings_{self.embeddings_type}'])
         
         # since we want to adjust resulting reasure on baseline MD on train part
         # we have to compute average train centroid and inverse cavariance matrix
         # to obtain MD_0
 
         if self.centroid_0 is None:
-            self.centroid_0 = stats[f'background_train_embeddings_{self.embeddings_type}'].mean(axis=0)
+            background_train_embeddings = create_cuda_tensor_from_numpy(stats[f'background_train_embeddings_{self.embeddings_type}'])  
+            self.centroid_0 = background_train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid_0, f"{self.full_path}/centroid_0.pt")
                 
         if self.sigma_inv_0 is None:
-            train_labels = np.zeros(stats[f'background_train_embeddings_{self.embeddings_type}'].shape[0])
+            background_train_embeddings = create_cuda_tensor_from_numpy(stats[f'background_train_embeddings_{self.embeddings_type}'])  
             self.sigma_inv_0, _ = compute_inv_covariance(
-                self.centroid_0.unsqueeze(0), stats[f'background_train_embeddings_{self.embeddings_type}'], train_labels
+                self.centroid_0.unsqueeze(0), background_train_embeddings
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv_0, f"{self.full_path}/sigma_inv_0.pt")
                 
+                
+        if torch.cuda.is_available():
+            if not self.centroid_0.is_cuda:
+                self.centroid_0 = self.centroid_0.cuda()
+            if not self.sigma_inv_0.is_cuda:
+                self.sigma_inv_0 = self.sigma_inv_0.cuda()
+        
         # compute MD_0
 
         dists_0 = mahalanobis_distance_with_known_centroids_sigma_inv(
-            self.centroid_0.unsqueeze(0),
+            self.centroid_0,
             None,
             self.sigma_inv_0,
             embeddings,

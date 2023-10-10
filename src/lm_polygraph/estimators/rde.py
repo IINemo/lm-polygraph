@@ -83,7 +83,7 @@ class RDESeq(Estimator):
 
         # define PCA with rbf kernel and n_components equal 100
         if self.pca is None:
-            self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42)
+            self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42, gamma=None)
             X_pca_train = self.pca.fit_transform(stats[f'train_embeddings_{self.embeddings_type}'])            
             if self.parameters_path is not None:
                 self.save_pca()
@@ -134,13 +134,14 @@ class RDESeq(Estimator):
         return self.MCD
 
     def load_pca(self):
-        self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42)
+        self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42, gamma=None)
         self.pca._centerer = KernelCenterer()
         self.pca.eigenvalues_ = load_array(f"{self.full_path}/eigenvalues.npy")
         self.pca.eigenvectors_ = load_array(f"{self.full_path}/eigenvectors.npy")
         self.pca.X_fit_ = load_array(f"{self.full_path}/X_fit.npy")
         self.pca._centerer.K_fit_rows_ = load_array(f"{self.full_path}/K_fit_rows.npy")
         self.pca._centerer.K_fit_all_ = load_array(f"{self.full_path}/K_fit_all.npy")
+        self.pca.gamma_ = None
         return self.pca
 
     
