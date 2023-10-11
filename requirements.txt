@@ -26,3 +26,4 @@ bitsandbytes
 openai
 wget
 sentence-transformers
+bert-score
