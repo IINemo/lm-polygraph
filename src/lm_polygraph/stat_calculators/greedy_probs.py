@@ -63,7 +63,7 @@ class GreedyProbsCalculator(StatCalculator):
                                  [t for t in range(len(model.tokenizer)) if '\n' in model.tokenizer.decode([t])]),
                 num_return_sequences=1,
             )
-            logits = torch.stack([s for s in out.scores], dim=1)
+            logits = torch.stack(out.scores, dim=1)
             logits = logits.log_softmax(-1)
 
             if model.model_type == "Seq2SeqLM":
