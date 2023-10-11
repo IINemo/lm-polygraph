@@ -5,12 +5,6 @@ from typing import List, Dict
 from .generation_metric import GenerationMetric
 
 
-# Use a pipeline as a high-level helper
-from transformers import pipeline
-
-pipe = pipeline("fill-mask", model="microsoft/deberta-v3-base")
-
-
 class SbertMetric(GenerationMetric):
     def __init__(self, sbert_name):
         super().__init__(['greedy_texts'], 'sequence')
