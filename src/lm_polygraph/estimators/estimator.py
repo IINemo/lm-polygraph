@@ -26,7 +26,7 @@ class Estimator(ABC):
     @abstractmethod
     def __str__(self):
         """
-        Returns unique name of the estimator.
+        Abstract method. Returns unique name of the estimator.
         Class parameters which affect uncertainty estimates should also be included in the unique name
         to diversify between estimators.
         """
@@ -35,6 +35,8 @@ class Estimator(ABC):
     @abstractmethod
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
+        Abstract method. Calculates the uncertainty for each text in input statistics.
+
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which includes values from
                 statistics calculators for each self.stat_dependencies.

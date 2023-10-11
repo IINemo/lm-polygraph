@@ -6,10 +6,26 @@ from .ue_metric import UEMetric, normalize
 
 
 class PredictionRejectionArea(UEMetric):
+    """
+    Calculates area under Prediction-Rejection curve.
+    """
+
     def __str__(self):
         return 'prr'
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
+        """
+        Measures the area under the Prediction-Rejection curve between `estimator` and `target`.
+
+        Parameters:
+            estimator (List[int]): a batch of uncertainty estimations.
+                Higher values indicate more uncertainty.
+            target (List[int]): a batch of ground-truth uncertainty estimations.
+                Higher values indicate less uncertainty.
+        Returns:
+            float: area under the Prediction-Rejection curve.
+                Higher values indicate better uncertainty estimations.
+        """
         target = normalize(target)
         # ue: greater is more uncertain
         ue = np.array(estimator)
@@ -23,4 +39,3 @@ class PredictionRejectionArea(UEMetric):
         scores = (cumsum / np.arange(1, num_obs + 1))[::-1]
         prr_score = np.sum(scores) / num_obs
         return prr_score
-

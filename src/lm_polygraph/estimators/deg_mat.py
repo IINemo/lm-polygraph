@@ -77,7 +77,7 @@ class DegMat(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * generation text in 'blackbox_sample_texts',
+                * generated samples in 'blackbox_sample_texts',
                 * matrix with semantic similarities in 'semantic_matrix_entail'/'semantic_matrix_contra'
         Returns:
             np.ndarray: float uncertainty for each sample in input statistics.
