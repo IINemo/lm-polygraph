@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-from transformers import LogitsProcessorList
 
 from typing import Dict, List
 
@@ -13,7 +12,8 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['blackbox_greedy_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel, max_new_tokens: int = 100) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel,
+                 max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
         with torch.no_grad():
             sequences = model.generate_texts(
@@ -30,15 +30,6 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         return {'blackbox_greedy_texts': sequences}
 
 
-class ScoresProcessor:
-    # Stores original token scores instead of the ones modified with generation parameters
-    def __init__(self):
-        self.scores = []
-    def __call__(self, input_ids=None, scores=None):
-        self.scores.append(scores.log_softmax(-1))
-        return scores
-
-
 class GreedyProbsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
@@ -46,12 +37,12 @@ class GreedyProbsCalculator(StatCalculator):
                           'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
                           'embeddings'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
+                 max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
-        processor = ScoresProcessor()
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -71,9 +62,8 @@ class GreedyProbsCalculator(StatCalculator):
                 suppress_tokens=([] if model.parameters.allow_newlines else
                                  [t for t in range(len(model.tokenizer)) if '\n' in model.tokenizer.decode([t])]),
                 num_return_sequences=1,
-                logits_processor=LogitsProcessorList([processor]),
             )
-            logits = torch.stack([s for s in processor.scores], dim=1)
+            logits = torch.stack([s for s in out.scores], dim=1)
             logits = logits.log_softmax(-1)
 
             if model.model_type == "Seq2SeqLM":

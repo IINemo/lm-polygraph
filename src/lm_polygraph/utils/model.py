@@ -8,7 +8,8 @@ import pdb
 
 from typing import List, Dict
 from abc import abstractmethod, ABC
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, \
+    LogitsProcessorList
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 
@@ -32,7 +33,7 @@ class Model(ABC):
 
 
 class BlackboxModel(Model):
-    def __init__(self, openai_api_key: str = None, model_path: str = None, 
+    def __init__(self, openai_api_key: str = None, model_path: str = None,
                  hf_api_token: str = None, hf_model_id: str = None,
                  parameters: GenerationParameters = GenerationParameters()):
         super().__init__(model_path, 'Blackbox')
@@ -46,16 +47,15 @@ class BlackboxModel(Model):
         API_URL = f"https://api-inference.huggingface.co/models/{self.hf_model_id}"
         headers = {"Authorization": f"Bearer {self.hf_api_token}"}
         response = requests.post(API_URL, headers=headers, json=payload)
-        return response.json() 
+        return response.json()
 
     @staticmethod
     def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
-        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id, model_path = hf_model_id)
-    
+        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id, model_path=hf_model_id)
+
     @staticmethod
     def from_openai(openai_api_key: str, model_path: str, **kwargs):
-        return BlackboxModel(openai_api_key = openai_api_key, model_path = model_path)
-    
+        return BlackboxModel(openai_api_key=openai_api_key, model_path=model_path)
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
@@ -83,27 +83,28 @@ class BlackboxModel(Model):
                     texts.append([resp.message.content for resp in response.choices])
         elif (self.hf_api_token is not None) & (self.hf_model_id is not None):
             for prompt in input_texts:
-                
+
                 start = time.time()
                 while True:
                     current_time = time.time()
                     output = self.query({"inputs": prompt})
 
                     if isinstance(output, dict):
-                        if (list(output.keys())[0] == 'error') & ('estimated_time'in output.keys()):
+                        if (list(output.keys())[0] == 'error') & ('estimated_time' in output.keys()):
                             estimated_time = float(output['estimated_time'])
                             elapsed_time = current_time - start
                             print(f"{output['error']}. Estimated time: {round(estimated_time - elapsed_time, 2)} sec.")
                             time.sleep(5)
-                        elif (list(output.keys())[0] == 'error') & ('estimated_time'not in output.keys()):
+                        elif (list(output.keys())[0] == 'error') & ('estimated_time' not in output.keys()):
                             print(f"{output['error']}")
                             break
                     elif isinstance(output, list):
                         break
-                    
+
                 texts.append(output[0]['generated_text'])
         else:
-            print("Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models")
+            print(
+                "Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models")
 
         return texts
 
@@ -132,9 +133,34 @@ class WhiteboxModel(Model):
         self.tokenizer = tokenizer
         self.parameters = parameters
 
+    class _ScoresProcessor:
+        # Stores original token scores instead of the ones modified with generation parameters
+        def __init__(self):
+            self.scores = []
+
+        def __call__(self, input_ids=None, scores=None):
+            self.scores.append(scores.log_softmax(-1))
+            return scores
+
     def generate(self, **args):
         args = _valdate_args(args)
-        return self.model.generate(**args)
+
+        # add ScoresProcessor to collect original scores
+        processor = self._ScoresProcessor()
+        if 'logits_processor' in args.keys():
+            logits_processor = LogitsProcessorList([processor, args['logits_processor']])
+        else:
+            logits_processor = LogitsProcessorList([processor])
+        args['logits_processor'] = logits_processor
+        generation = self.model.generate(**args)
+
+        orig_scores = [s.log_softmax(-1) for s in processor.scores]
+
+        # override generation.scores with original scores from model
+        generation.generation_scores = generation.scores
+        generation.scores = orig_scores
+
+        return generation
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         args = _valdate_args(args)
@@ -148,7 +174,7 @@ class WhiteboxModel(Model):
             if self.model_type == "CausalLM":
                 texts.append(self.tokenizer.decode(seq[input_len:]))
             else:
-                texts.append(self.tokenizer.decode(seq[1:]))                  
+                texts.append(self.tokenizer.decode(seq[1:]))
         return texts
 
     def __call__(self, **args):
@@ -179,7 +205,7 @@ class WhiteboxModel(Model):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True, 
+            model_path, padding_side="left", add_bos_token=True,
             model_max_length=256 if model_type == "CausalLM" else 1024)
 
         model.eval()
@@ -196,7 +222,8 @@ class WhiteboxModel(Model):
         return WhiteboxModel(model, tokenizer, model_path)
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        if ("falcon" in self.model.config._name_or_path.lower()) or ("llama" in self.model.config._name_or_path.lower()):
+        if ("falcon" in self.model.config._name_or_path.lower()) or (
+                "llama" in self.model.config._name_or_path.lower()):
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
                                        return_token_type_ids=False)
         else:
