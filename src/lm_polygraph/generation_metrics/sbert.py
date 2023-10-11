@@ -6,13 +6,12 @@ from .generation_metric import GenerationMetric
 
 
 class SbertMetric(GenerationMetric):
-    def __init__(self, sbert_name):
+    def __init__(self):
         super().__init__(['greedy_texts'], 'sequence')
-        self.sbert_name = sbert_name
         self.sbert = SentenceTransformer("all-mpnet-base-v2")
 
     def __str__(self):
-        return f'Sbert_{self.sbert_name}'
+        return f'Sbert'
 
     def _score_single(self, t1: str, t2: str):
         return util.cos_sim(self.sbert.encode(t1), self.sbert.encode(t2)).item()
@@ -26,7 +25,7 @@ if __name__ == '__main__':
     """
     Kind of tests, while there is no test suite
     """
-    metric = SbertMetric('sbert')
+    metric = SbertMetric()
     stats = {
         'greedy_texts': [
             "Apple",
