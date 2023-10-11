@@ -18,7 +18,7 @@ class PTrue(Estimator):
          (A) True
          (B) False
         The possible answer is:
-    and calculates the log-probability of '(A)' token with minus sign.
+    and calculates the log-probability of 'True' token with minus sign.
     """
 
     def __init__(self):
