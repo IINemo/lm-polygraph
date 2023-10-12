@@ -23,7 +23,8 @@ class Eccentricity(Estimator):
             self,
             similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
             affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
-            verbose: bool = False
+            verbose: bool = False,
+            thres: float = 0.9
     ):
         """
         See parameters descriptions in https://arxiv.org/abs/2305.19187.
@@ -49,15 +50,16 @@ class Eccentricity(Estimator):
         self.similarity_score = similarity_score
         self.affinity = affinity
         self.verbose = verbose
+        self.thres = thres
 
     def __str__(self):
         if self.similarity_score == 'NLI_score':
             return f'Eccentricity_{self.similarity_score}_{self.affinity}'
         return f'Eccentricity_{self.similarity_score}'
 
-    def U_Eccentricity(self, i, stats, k=2):
+    def U_Eccentricity(self, i, stats):
         answers = stats['blackbox_sample_texts'][i]
-
+        
         if self.similarity_score == 'NLI_score':
             if self.affinity == 'entail':
                 W = stats['semantic_matrix_entail'][i, :, :]
@@ -66,7 +68,7 @@ class Eccentricity(Estimator):
             W = (W + np.transpose(W)) / 2
         else:
             W = compute_sim_score(answers=answers, affinity=self.affinity, similarity_score=self.similarity_score)
-
+   
         D = np.diag(W.sum(axis=1))
         D_inverse_sqrt = np.linalg.inv(np.sqrt(D))
         L = np.eye(D.shape[0]) - D_inverse_sqrt @ W @ D_inverse_sqrt
@@ -74,12 +76,16 @@ class Eccentricity(Estimator):
         # k is hyperparameter  - Number of smallest eigenvectors to retrieve
         # Compute eigenvalues and eigenvectors
         eigenvalues, eigenvectors = eigh(L)
-        smallest_eigenvectors = eigenvectors[:, :k]
-        V_mat = smallest_eigenvectors - smallest_eigenvectors.mean(axis=0)
 
-        norms = np.linalg.norm(V_mat, ord=2, axis=0)
-        U_Ecc = np.linalg.norm(norms, 2)
-        C_Ecc_s_j = norms
+        if self.thres is not None:
+            keep_mask = eigenvalues < self.thres
+            eigenvalues, smallest_eigenvectors = eigenvalues[keep_mask], eigenvectors[:, keep_mask]
+        
+        smallest_eigenvectors = smallest_eigenvectors.T
+        
+        C_Ecc_s_j = (-1) * np.asarray([np.linalg.norm(x - x.mean(0),2) for x in smallest_eigenvectors])
+        U_Ecc = np.linalg.norm(C_Ecc_s_j, 2)
+
         return U_Ecc, C_Ecc_s_j
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
