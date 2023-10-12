@@ -18,7 +18,11 @@ class SbertMetric(GenerationMetric):
 
     def __call__(self, stats: Dict[str, np.ndarray], target_texts: List[str],
                  target_tokens: List[List[int]]) -> np.ndarray:
-        return np.array([self._score_single(hyp, ref) for hyp, ref in zip(stats['greedy_texts'], target_texts)])
+
+        embeddings = self.sbert.encode(stats['greedy_texts'])
+        references = self.sbert.encode(target_texts)
+        return util.pairwise_cos_sim(embeddings, references).numpy()
+
 
 
 if __name__ == '__main__':
