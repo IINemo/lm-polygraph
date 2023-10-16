@@ -85,11 +85,7 @@ def _recombine_data(ue, gen_metric, inputs):
 @dataclass
 class UncertaintyOutput:
     generation_text: str
-    generation_tokens: Optional[List[int]]
     uncertainty: Union[List[float], float]
-
-    def __repr__(self):
-        return "UncertaintyOutput(generation_text={}, uncertainty={})".format(self.generation_text, self.uncertainty)
 
 
 def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text: str):
@@ -103,12 +99,7 @@ def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text:
         else:
             ue = [normalize_ue(estimator, model.model_path, i) for i in ue]
     texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
-    if isinstance(texts, list) and len(texts) == 1:
-        texts = texts[0]
-    if isinstance(ue, list) and len(ue) == 1:
-        ue = ue[0]
-    tokens = man.stats.get('greedy_tokens', None)
-    return UncertaintyOutput(texts, tokens, ue)
+    return UncertaintyOutput(texts[0], ue[0])
 
 
 class UEManager:
