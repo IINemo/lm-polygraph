@@ -88,12 +88,17 @@ class UncertaintyOutput:
     generation_tokens: Optional[List[int]]
     uncertainty: Union[List[float], float]
 
+    def __repr__(self):
+        return "UncertaintyOutput(generation_text={}, uncertainty={})".format(self.generation_text, self.uncertainty)
 
-def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text: str, target_text: str = ''):
-    man = UEManager(Dataset([input_text], [target_text], batch_size=1), model,
+
+def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text: str):
+    man = UEManager(Dataset([input_text], [''], batch_size=1), model,
                     [estimator], [], [], [], ignore_exceptions=False, verbose=False)
     man()
     ue = man.estimations[estimator.level, str(estimator)]
+    if isinstance(ue, list) and len(ue) == 1:
+        ue = ue[0]
     if can_normalize_ue(estimator, model.model_path):
         if estimator.level == 'sequence':
             ue = normalize_ue(estimator, model.model_path, ue[0])
