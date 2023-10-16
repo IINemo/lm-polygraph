@@ -97,14 +97,16 @@ def estimate_uncertainty(model: WhiteboxModel, estimator: Estimator, input_text:
                     [estimator], [], [], [], ignore_exceptions=False, verbose=False)
     man()
     ue = man.estimations[estimator.level, str(estimator)]
-    if isinstance(ue, list) and len(ue) == 1:
-        ue = ue[0]
     if can_normalize_ue(estimator, model.model_path):
         if estimator.level == 'sequence':
             ue = normalize_ue(estimator, model.model_path, ue[0])
         else:
             ue = [normalize_ue(estimator, model.model_path, i) for i in ue]
     texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
+    if isinstance(texts, list) and len(texts) == 1:
+        texts = texts[0]
+    if isinstance(ue, list) and len(ue) == 1:
+        ue = ue[0]
     tokens = man.stats.get('greedy_tokens', None)
     return UncertaintyOutput(texts, tokens, ue)
 
