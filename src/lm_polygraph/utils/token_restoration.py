@@ -166,7 +166,7 @@ def collect_token_level_uncertainties(
 
     # For some reason, beam search can truncate generation iterations, so
     # seq len from beam_ids can be less than iterations steps number
-    unc_length = len(model_output.generation_scores])
+    unc_length = len(model_output.generation_scores)
     unc_shape = (batch_size, beam_size, unc_length)
     output_uncertainties_reshaped = {
         key: torch.stack(ensemble_uncertainties[key], dim=-1).reshape(unc_shape) \
