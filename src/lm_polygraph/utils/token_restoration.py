@@ -31,7 +31,7 @@ def collect_sample_token_level_uncertainties(
     # 0 - iters
     # 1 - num_obs * num_ret_seq
     # 2 - vocab_size
-    scores = torch.stack(model_output['scores']).permute(1, 0, 2)
+    scores = torch.stack(model_output.generation_scores).permute(1, 0, 2)
     scores_shape = base_shape + [seq_length - 1, vocab_size]
     scores = scores.reshape(scores_shape)
     device = scores.device
@@ -166,7 +166,7 @@ def collect_token_level_uncertainties(
 
     # For some reason, beam search can truncate generation iterations, so
     # seq len from beam_ids can be less than iterations steps number
-    unc_length = len(model_output['scores'])
+    unc_length = len(model_output.generation_scores])
     unc_shape = (batch_size, beam_size, unc_length)
     output_uncertainties_reshaped = {
         key: torch.stack(ensemble_uncertainties[key], dim=-1).reshape(unc_shape) \
@@ -189,7 +189,7 @@ def collect_token_level_uncertainties(
                 if beam_id == -1:
                     continue
                 else:
-                    posterior = model_output['scores'][_iter].reshape(batch_size,
+                    posterior = model_output.generation_scores[_iter].reshape(batch_size,
                                                                       beam_size,
                                                                       vocab_size)[obs_id, beam_id].exp()
                     if aggregate_models:
