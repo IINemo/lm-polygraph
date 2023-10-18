@@ -19,11 +19,9 @@ from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics.accuracy import AccuracyMetric
 from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
-from lm_polygraph.generation_metrics.model_score import (
-    ModelScoreSeqMetric,
-    ModelScoreTokenwiseMetric,
-)
 from lm_polygraph.generation_metrics.rouge import RougeMetric
+from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
+from lm_polygraph.generation_metrics.sbert import SbertMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
@@ -200,6 +198,8 @@ def main(args):
                 RougeMetric("rougeL"),
                 BartScoreSeqMetric("rh"),
                 AccuracyMetric(),
+                BertScoreMetric(),
+                SbertMetric()
             ],
             [
                 ReversedPairsProportion(),
