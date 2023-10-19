@@ -12,7 +12,7 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
-from lm_polygraph.ue_metrics.ue_metric import UEMetric
+from lm_polygraph.ue_metrics.ue_metric import UEMetric, get_random_scores, normalize_metric
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
 from lm_polygraph.stat_calculators import EmbeddingsCalculator
@@ -246,6 +246,7 @@ class UEManager:
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
+    
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
@@ -263,8 +264,13 @@ class UEManager:
                         inputs_no_nans = np.array(self.stats['input_texts'])[selected_ids]
                         rec_ue, rec_metric = _recombine_data(ue, metric,
                                                              inputs_no_nans)
-
+                        
+                        rec_metric = np.array(rec_metric)
+                        oracle_score = ue_metric(-rec_metric, rec_metric)
+                        random_score = get_random_scores(ue_metric, rec_metric)
+                        ue_metric_val = ue_metric(rec_ue, rec_metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric(rec_ue, rec_metric)
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)+"_normalized"] = normalize_metric(ue_metric_val, oracle_score, random_score, str(ue_metric))
 
         for processor in self.processors:
             processor.on_eval(self.metrics)
