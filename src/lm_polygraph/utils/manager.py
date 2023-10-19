@@ -1,4 +1,4 @@
-zimport numpy as np
+import numpy as np
 import torch
 import sys
 
@@ -269,7 +269,7 @@ class UEManager:
                     # This is important to know for a user
                     ue, metric, selected_ids = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
-                        self.metrics[dict_key] = np.nan
+                        self.metrics[(e_level, e_name, gen_name, str(ue_metric))] = np.nan
                     else:
                         inputs_no_nans = np.array(self.stats['input_texts'])[selected_ids]
                         rec_ue, rec_metric = _recombine_data(ue, metric,
