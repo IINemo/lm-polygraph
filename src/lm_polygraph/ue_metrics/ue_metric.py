@@ -58,7 +58,7 @@ def get_random_scores(function, metrics, num_iter=1000, seed=42):
         value.append(rand_val)
     return np.mean(value)
 
-def normalize_metric(target_score, oracle_score, random_score, metric_name='prr'):
+def normalize_metric(target_score, oracle_score, random_score):
     if not (oracle_score == random_score):
         target_score = (target_score - random_score) / (oracle_score - random_score)
     return target_score
