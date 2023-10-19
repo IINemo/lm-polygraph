@@ -11,6 +11,13 @@ load_from_disk: false
 label_column: answer
 prompt: ""
 
+ood_detection: false
+ood_dataset: xsum
+ood_text_column: document
+ood_label_column: summary
+ood_corrupt: true
+ood_prompt: null
+
 model: bigscience/bloomz-560m
 ignore_exceptions: false
 use_seq_ue: false
