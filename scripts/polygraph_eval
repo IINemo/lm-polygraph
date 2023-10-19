@@ -188,7 +188,7 @@ def main(args):
                 random_gen,
                 corrupt_samples=args.ood_corrupt,
                 text_field='question',
-                ood_text_field=args.ood_input_column,
+                ood_text_field=args.ood_text_column,
                 tokenizer=tokenizer,
             )       
             ood_metrics = [ROCAUC()]    

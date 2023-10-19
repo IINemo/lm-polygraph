@@ -261,7 +261,7 @@ class UEManager:
                         
                     if hasattr(ue_metric, 'is_ood_metric') and ue_metric.is_ood_metric and self.ood_detection:
                         generation_metric = self.stats['ood_labels']
-                        gen_name = "ood"
+                        gen_name = "OOD"
                     
                     if (e_level, e_name, gen_name, str(ue_metric)) in self.metrics.keys():
                         continue
