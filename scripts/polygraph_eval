@@ -172,7 +172,7 @@ def main(args):
                 batch_size=args.batch_size,
                 prompt=args.prompt if args.ood_prompt is None else args.ood_prompt,
                 split=args.eval_split,
-                load_from_disk=args.load_from_disk
+                load_from_disk=args.load_ood_from_disk
             )
             if args.subsample_ood_dataset != -1:
                 ood_dataset.subsample(args.subsample_ood_dataset, seed=seed)

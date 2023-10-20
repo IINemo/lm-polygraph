@@ -17,6 +17,7 @@ ood_text_column: document
 ood_label_column: summary
 ood_corrupt: true
 ood_prompt: null
+load_ood_from_disk: false
 
 model: bigscience/bloomz-560m
 ignore_exceptions: false
