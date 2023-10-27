@@ -322,13 +322,17 @@ class WhiteboxModel(Model):
         return self.model.device
 
     @staticmethod
-    def from_pretrained(model_path: str, device: str = 'cpu', **kwargs):
+    def from_pretrained(model_path: str, device: str = 'cpu',
+                        generation_config: dict = {},
+                        tokenizer_kwargs: dict = {}, **kwargs):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
 
         Parameters:
             model_path (str): model path in HuggingFace.
             device (str): device to load the model on.
+            generation_config (dict): will be passed to model.generate()
+            tokenizer_kwargs (dict): will be passed to tokenizer.from_pretrained()
         """
         config = AutoConfig.from_pretrained(model_path, trust_remote_code=True, **kwargs)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
@@ -350,10 +354,11 @@ class WhiteboxModel(Model):
         if not kwargs.get('load_in_8bit', False) and not kwargs.get('load_in_4bit', False):
             model = model.to(device)
 
+       model.generation_config.update(**generation_config) 
+
         tokenizer = AutoTokenizer.from_pretrained(
             model_path, padding_side="left", add_bos_token=True, 
-            model_max_length=1024,
-            **kwargs
+            model_max_length=1024, **tokenizer_kwargs
         )
 
         model.eval()

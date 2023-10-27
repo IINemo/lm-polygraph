@@ -75,6 +75,8 @@ def main(args):
         model = WhiteboxModel.from_pretrained(
             args.model,
             device=device,
+            generation_config=generation_config,
+            tokenizer_kwargs=tokenizer_kwargs
             **cache_kwargs,
             **model_kwargs
         )
