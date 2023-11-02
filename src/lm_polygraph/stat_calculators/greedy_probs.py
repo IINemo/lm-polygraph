@@ -9,12 +9,27 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 
 
 class BlackboxGreedyTextsCalculator(StatCalculator):
+    """
+    Calculates generation texts for Blackbox model (lm_polygraph.BlackboxModel).
+    """
+
     def __init__(self):
         super().__init__(['blackbox_greedy_texts'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel,
                  max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
+        """
+        Calculates generation texts for Blackbox model on the input batch.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'blackbox_greedy_texts' key.
+        """
         with torch.no_grad():
             sequences = model.generate_texts(
                 input_texts=texts,
@@ -31,6 +46,15 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
 
 
 class GreedyProbsCalculator(StatCalculator):
+    """
+    For Whitebox model (lm_polygraph.WhiteboxModel), at input texts batch calculates:
+    * generation texts
+    * tokens of the generation texts
+    * probabilities distribution of the generated tokens
+    * attention masks across the model (if applicable)
+    * embeddings from the model
+    """
+
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
                           'greedy_log_probs', 'greedy_tokens',
@@ -40,6 +64,25 @@ class GreedyProbsCalculator(StatCalculator):
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
                  max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
+        """
+        Calculates the statistics of probabilities at each token position in the generation.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with the following items:
+                - 'input_texts' (List[str]): input texts batch,
+                - 'input_tokens' (List[List[int]]): tokenized input texts,
+                - 'greedy_log_probs' (List[List[np.array]]): logarithms of autoregressive
+                        probability distributions at each token,
+                - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
+                - 'greedy_tokens' (List[List[int]]): tokenized model generations,
+                - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
+                - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
+        """
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}

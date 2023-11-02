@@ -8,47 +8,66 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
+    """
+    Calculates several sampled texts for Blackbox model (lm_polygraph.BlackboxModel).
+    """
+
     def __init__(self, samples_n: int = 10):
+        """
+        Parameters:
+            samples_n (int): number of samples to generate per input text. Default: 10
+        """
         self.samples_n = samples_n
         super().__init__(['blackbox_sample_texts'], [])
 
     def __call__(self, dependencies: Dict[str, np.array],
-                       texts: List[str],
-                       model: BlackboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
+                 texts: List[str],
+                 model: BlackboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
+        """
+        Calculates sampled texts for Blackbox model on the input batch.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'blackbox_sample_texts' key.
+        """
 
         if type(model) == BlackboxModel:
             samples = model.generate_texts(
-                    input_texts=texts,
-                    max_new_tokens=max_new_tokens,
-                    temperature=model.parameters.temperature,
-                    top_p=model.parameters.topp,
-                    presence_penalty=model.parameters.presence_penalty,
-                    repetition_penalty=model.parameters.repetition_penalty,
-                    top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
-                    n=self.samples_n)
+                input_texts=texts,
+                max_new_tokens=max_new_tokens,
+                temperature=model.parameters.temperature,
+                top_p=model.parameters.topp,
+                presence_penalty=model.parameters.presence_penalty,
+                repetition_penalty=model.parameters.repetition_penalty,
+                top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
+                n=self.samples_n)
         else:
             samples = [[] for _ in range(len(texts))]
             out = model.generate_texts(
-                    input_texts=texts,
-                    max_new_tokens=max_new_tokens,
-                    min_length=2,
-                    do_sample=True,
-                    num_beams=1,
-                    temperature=model.parameters.temperature,
-                    top_p=model.parameters.topp,
-                    repetition_penalty=model.parameters.repetition_penalty,
-                    top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
-                    num_return_sequences=self.samples_n)
+                input_texts=texts,
+                max_new_tokens=max_new_tokens,
+                min_length=2,
+                do_sample=True,
+                num_beams=1,
+                temperature=model.parameters.temperature,
+                top_p=model.parameters.topp,
+                repetition_penalty=model.parameters.repetition_penalty,
+                top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
+                num_return_sequences=self.samples_n)
             for i in range(len(texts)):
                 for j in range(self.samples_n):
-                    samples[i].append(out[i*self.samples_n + j])
-        
+                    samples[i].append(out[i * self.samples_n + j])
+
         return {
             'blackbox_sample_texts': samples,
         }
 
 
-def gen_samples(n_samples, model, batch, **kwargs):
+def _gen_samples(n_samples, model, batch, **kwargs):
     batch_size = len(batch['input_ids'])
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     with torch.no_grad():
@@ -67,15 +86,41 @@ def gen_samples(n_samples, model, batch, **kwargs):
 
 
 class SamplingGenerationCalculator(StatCalculator):
+    """
+    For Whitebox model (lm_polygraph.WhiteboxModel), at input texts batch calculates:
+    * sampled texts
+    * tokens of the sampled texts
+    * probabilities of the sampled tokens generation
+    """
+
     def __init__(self, samples_n: int = 10):
+        """
+        Parameters:
+            samples_n (int): number of samples to generate per input text. Default: 10
+        """
         self.samples_n = samples_n
         super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
+                 max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
+        """
+        Calculates the statistics of sampling texts.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with the following items:
+                - 'sample_texts' (List[List[str]]): `samples_n` texts for each input text in the batch,
+                - 'sample_tokens' (List[List[List[float]]]): tokenized 'sample_texts',
+                - 'sample_log_probs' (List[List[List[float]]]): probabilities at each token of the sampling generation.
+        """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
-        sequences, logits = gen_samples(
+        sequences, logits = _gen_samples(
             self.samples_n, model, batch,
             output_scores=True,
             return_dict_in_generate=True,
