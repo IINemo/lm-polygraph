@@ -13,7 +13,7 @@ from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue, \
-                                         can_get_calibration_conf, calibration_confidence
+    can_get_calibration_conf, calibration_confidence
 
 from .parsers import parse_model, parse_seq_ue_method, parse_tok_ue_method, Estimator, parse_ensemble
 
@@ -39,11 +39,12 @@ class Responder:
         self.tok_ue_methods: Dict[str, Estimator] = {}
         self.seq_ue_methods: Dict[str, Estimator] = {}
         self.density_based_names: List[str] = ["Mahalanobis Distance", "Mahalanobis Distance - encoder",
-                                          "RDE", "RDE - encoder"]
+                                               "RDE", "RDE - encoder"]
         self.cache_path: str = cache_path
         self.device = device
 
-    def _get_confidence(self, processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> Tuple[
+    def _get_confidence(self, processor: ResultProcessor, methods: List[Estimator], level: str, model_path: str) -> \
+    Tuple[
         List, str]:
         if len(methods) == 0:
             return [], 'none'
@@ -58,7 +59,8 @@ class Responder:
                     if not can_get_calibration_conf(method, model_path, self.cache_path):
                         normalization = 'none'
                     else:
-                        normalized_confidences[-1].append(calibration_confidence(method, model_path, x, self.cache_path))
+                        normalized_confidences[-1].append(
+                            calibration_confidence(method, model_path, x, self.cache_path))
                 else:
                     if not can_normalize_ue(method, model_path, self.cache_path):
                         normalization = 'none'
@@ -151,7 +153,7 @@ class Responder:
             if model_path.startswith('openai-'):
                 self.model = BlackboxModel(data['openai_key'], model_path[len('openai-'):])
             else:
-                #load_in_8bit = ('cuda' in self.device) and any(s in model_path for s in ['7b', '12b', '13b'])
+                # load_in_8bit = ('cuda' in self.device) and any(s in model_path for s in ['7b', '12b', '13b'])
                 load_in_8bit = False
                 self.model = WhiteboxModel.from_pretrained(
                     model_path, device=self.device, load_in_8bit=load_in_8bit)
@@ -212,7 +214,8 @@ class Responder:
         if 'greedy_tokens' in processor.stats.keys():
             tokens = []
             for t in processor.stats['greedy_tokens'][0][:-1]:
-                if t not in [self.model.tokenizer.bos_token_id, self.model.tokenizer.eos_token_id, self.model.tokenizer.pad_token_id]:
+                if t not in [self.model.tokenizer.bos_token_id, self.model.tokenizer.eos_token_id,
+                             self.model.tokenizer.pad_token_id]:
                     tokens.append(self.model.tokenizer.decode([t]))
         else:
             tokens = [greedy_text]
@@ -238,10 +241,14 @@ class Responder:
             if tokens[i] == '\n' and tokens[i - 1] == '\n':
                 tokens[i - 1] = ''  # prevent multiple newlines (for vicuna)
 
+        print(processor.stats.keys())
+        other_generations = processor.stats.get('sample_texts', processor.stats.get('blackbox_sample_texts', [[]]))[0]
         return {
             'generation': tokens,
             'token_confidence': tok_conf,
             'sequence_confidence': seq_conf,
             'token_normalization': tok_norm,
             'sequence_normalization': seq_norm,
+            'input': text,
+            'other_generations': other_generations,
         }

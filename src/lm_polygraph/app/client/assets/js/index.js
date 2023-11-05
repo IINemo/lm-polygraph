@@ -203,6 +203,43 @@ function setRetryResponse(prompt, uniqueId) {
     uniqueIdToRetry = uniqueId;
 }
 
+var openaiPrice = 0, lastNotifiedPrice = 0, outTokens = 0;
+let NOTIFY_THRESH = 1;
+
+function countTokens(str) {
+    // https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them
+    return 3 * str.split(' ').filter(function(n) { return n != '' }).length / 4;
+}
+
+function updateOpenaiPrice(data) {
+    var in_tokens = countTokens(String(data.input));
+    var out_tokens = countTokens(String(data.generation));
+    var in_price = 0, out_price = 0;
+
+    var model = modelSelect.__vue__.modelSelected, seq_ue = seqUeSelect.__vue__.sequeSelected;;
+    // https://openai.com/pricing
+    if (model == "GPT-4") {
+        in_price = 0.03;
+        out_price = 0.06;
+    }
+    if (model == "GPT-3.5-turbo") {
+        in_price = 0.0015;
+        out_price = 0.002;
+    }
+    for (let i = 0; i < data.other_generations.length; i++) {
+        let other_generation = data.other_generations[i];
+        in_tokens += countTokens(String(data.input));
+        out_tokens += countTokens(String(other_generation));
+    }
+
+    outTokens += out_tokens;
+    openaiPrice += in_price * in_tokens / 1000 + out_price * out_price / 1000;
+    if (openaiPrice - lastNotifiedPrice >= NOTIFY_THRESH) {
+        alert('Warning: large OpenAI tokens usage. Spent approximately ' + Math.round(outTokens) + ' tokens (' + openaiPrice.toPrecision(3) + '$)');
+        lastNotifiedPrice = openaiPrice;
+    }
+}
+
 function formatResponse(data){
     let generation = data.generation;
     let tok_confidence = data.token_confidence;
@@ -400,6 +437,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
         // Clear the loader interval
         clearInterval(loadInterval);
+
+        updateOpenaiPrice(responseRaw);
     }
 }
 
