@@ -58,7 +58,7 @@ class GreedyProbsCalculator(StatCalculator):
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
                           'greedy_log_probs', 'greedy_tokens',
-                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
+                          'greedy_texts', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
                           'embeddings'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
@@ -93,7 +93,7 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_length=2,
-                output_attentions=True,
+                output_attentions=False,
                 output_hidden_states=True,
                 temperature=model.parameters.temperature,
                 top_k=model.parameters.topk,
@@ -108,11 +108,7 @@ class GreedyProbsCalculator(StatCalculator):
             )
             logits = torch.stack(out.scores, dim=1)
             logits = logits.log_softmax(-1)
-
-            if model.model_type == "Seq2SeqLM":
-                attentions = out.decoder_attentions
-            elif model.model_type == "CausalLM":
-                attentions = out.attentions
+            
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
 
@@ -133,16 +129,6 @@ class GreedyProbsCalculator(StatCalculator):
             cut_sequences.append(seq[:length].tolist())
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
-
-        attn_mask = []
-        for i in range(len(texts)):
-            c = len(cut_sequences[i])
-            attn_mask.append(np.zeros(shape=(c, c)))
-            for j in range(1, c):
-                attn_mask[i][j, :j] = torch.vstack(
-                    [attentions[j][l][i][h][0][-j:]
-                     for l in range(len(attentions[j]))
-                     for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
 
         ll = []
         for i in range(len(texts)):
@@ -165,11 +151,10 @@ class GreedyProbsCalculator(StatCalculator):
 
         result_dict = {
             'input_texts': texts,
-            'input_tokens': inp_tokens,
+            'input_tokens': batch['input_ids'].to('cpu').tolist(),
             'greedy_log_probs': cut_logits,
             'greedy_tokens': cut_sequences,
             'greedy_texts': cut_texts,
-            'attention': attn_mask,
             'greedy_log_likelihoods': ll,
         }
         result_dict.update(embeddings_dict)
