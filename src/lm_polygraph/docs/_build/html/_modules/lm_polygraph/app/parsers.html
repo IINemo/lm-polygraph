@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lm_polygraph.app.parsers &mdash; LM-Polygraph 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LM-Polygraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../web_demo.html">Demo web application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lm_polygraph</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LM-Polygraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lm_polygraph.app.parsers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lm_polygraph.app.parsers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">lm_polygraph.estimators</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.ensemble_generator</span> <span class="kn">import</span> <span class="n">EnsembleGenerationMixin</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.model</span> <span class="kn">import</span> <span class="n">WhiteboxModel</span>
+
+
+<div class="viewcode-block" id="parse_seq_ue_method"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.parsers.parse_seq_ue_method">[docs]</a><span class="k">def</span> <span class="nf">parse_seq_ue_method</span><span class="p">(</span><span class="n">method_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Estimator</span><span class="p">:</span>
+    <span class="n">dataset_name</span> <span class="o">=</span> <span class="s2">&quot;triviaqa&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">model_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">density_based_ue_params_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/home/jovyan/projects/lm-polygraph/workdir/</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">match</span> <span class="n">method_name</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s2">&quot;Maximum Sequence Probability&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MaximumSequenceProbability</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Perplexity&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Perplexity</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Mean Token Entropy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MeanTokenEntropy</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Mean Pointwise Mutual Information&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MeanPointwiseMutualInformation</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Mean Conditional Pointwise Mutual Information&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MeanConditionalPointwiseMutualInformation</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.0656</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">3.599</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;P(True)&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PTrue</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;P(True) Sampling&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PTrueSampling</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Monte Carlo Sequence Entropy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MonteCarloSequenceEntropy</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Monte Carlo Normalized Sequence Entropy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MonteCarloNormalizedSequenceEntropy</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Lexical Similarity&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LexicalSimilarity</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Eigenvalue Laplacian&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EigValLaplacian</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Eccentricity&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Eccentricity</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Degree Matrix&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DegMat</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Number of Semantic Sets&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NumSemSets</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Semantic Entropy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SemanticEntropy</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Mahalanobis Distance&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MahalanobisDistanceSeq</span><span class="p">(</span><span class="s2">&quot;decoder&quot;</span><span class="p">,</span> <span class="n">parameters_path</span><span class="o">=</span><span class="n">density_based_ue_params_path</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;Mahalanobis Distance - Encoder&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MahalanobisDistanceSeq</span><span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">parameters_path</span><span class="o">=</span><span class="n">density_based_ue_params_path</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;RDE&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RDESeq</span><span class="p">(</span><span class="s2">&quot;decoder&quot;</span><span class="p">,</span> <span class="n">parameters_path</span><span class="o">=</span><span class="n">density_based_ue_params_path</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;RDE - Encoder&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RDESeq</span><span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">parameters_path</span><span class="o">=</span><span class="n">density_based_ue_params_path</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;HUQ - Decoder&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PPLMDSeq</span><span class="p">(</span><span class="s2">&quot;decoder&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;MD&quot;</span><span class="p">,</span> <span class="n">parameters_path</span><span class="o">=</span><span class="n">density_based_ue_params_path</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;HUQ - Encoder&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PPLMDSeq</span><span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;MD&quot;</span><span class="p">,</span> <span class="n">parameters_path</span><span class="o">=</span><span class="n">density_based_ue_params_path</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-Total-Uncertainty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTtu</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-Data-Uncertainty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTdu</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-Mutual-Information&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTmi</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-RMI&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTrmi</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-EPKL&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTepkl</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-Entropy-Top5&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTent5</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-Entropy-Top10&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTent10</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-T-Entropy-Top15&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPTent15</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-Total-Uncertainty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETtu</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-Data-Uncertainty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETdu</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-Mutual-Information&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETmi</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-RMI&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETrmi</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-EPKL&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETepkl</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-Entropy-Top5&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETent5</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-Entropy-Top10&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETent10</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-T-Entropy-Top15&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PETent15</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-S-Total-Uncertainty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPStu</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;EP-S-RMI&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EPSrmi</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-S-Total-Uncertainty&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PEStu</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;PE-S-RMI&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PESrmi</span><span class="p">()</span>
+        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown method: </span><span class="si">{</span><span class="n">method_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_tok_ue_method"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.parsers.parse_tok_ue_method">[docs]</a><span class="k">def</span> <span class="nf">parse_tok_ue_method</span><span class="p">(</span><span class="n">method_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Estimator</span><span class="p">:</span>
+    <span class="k">match</span> <span class="n">method_name</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s2">&quot;Maximum Token Probability&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MaximumTokenProbability</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Token Entropy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TokenEntropy</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Pointwise Mutual Information&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PointwiseMutualInformation</span><span class="p">()</span>
+        <span class="k">case</span> <span class="s2">&quot;Conditional Pointwise Mutual Information&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConditionalPointwiseMutualInformation</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.0656</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">3.599</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;Semantic Token Entropy&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SemanticEntropyToken</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">)</span>
+        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown method: </span><span class="si">{</span><span class="n">method_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_model"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.parsers.parse_model">[docs]</a><span class="k">def</span> <span class="nf">parse_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">match</span> <span class="n">model</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s2">&quot;GPT-4&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;openai-gpt-4&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;GPT-3.5-turbo&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;openai-gpt-3.5-turbo&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Dolly 3b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;databricks/dolly-v2-3b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Dolly 7b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;databricks/dolly-v2-7b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Dolly 12b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;databricks/dolly-v2-12b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;BLOOMz 560M&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;bigscience/bloomz-560m&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;BLOOMz 3b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;bigscience/bloomz-3b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;BLOOMz 7b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;bigscience/bloomz-7b1&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Falcon 7b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;tiiuae/falcon-7b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Llama 2 7b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;meta-llama/Llama-2-7b-chat-hf&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Llama 2 13b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;meta-llama/Llama-2-13b-chat-hf&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Vicuna 7b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;lmsys/vicuna-7b-v1.5&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Vicuna 13b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;lmsys/vicuna-13b-v1.5&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Open Llama 3b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;openlm-research/open_llama_3b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Open Llama 7b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;openlm-research/open_llama_7b&#39;</span>
+        <span class="k">case</span> <span class="s2">&quot;Open Llama 13b&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;openlm-research/open_llama_13b&#39;</span>
+        <span class="k">case</span> <span class="s1">&#39;BART Large CNN&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;facebook/bart-large-cnn&#39;</span>
+        <span class="k">case</span> <span class="s1">&#39;T5 XL NQ&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;google/t5-xl-ssm-nq&#39;</span>
+        <span class="k">case</span> <span class="s1">&#39;Flan T5 XL&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;google/flan-t5-xl&#39;</span>
+        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown model: </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_ensemble"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.parsers.parse_ensemble">[docs]</a><span class="k">def</span> <span class="nf">parse_ensemble</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">WhiteboxModel</span><span class="p">,</span> <span class="n">WhiteboxModel</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">model_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">model_dir</span> <span class="k">for</span> <span class="n">model_dir</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_paths</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+
+    <span class="c1"># TODO: implement devices for models</span>
+    <span class="n">devices</span> <span class="o">=</span> <span class="p">[</span><span class="n">device</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model_paths</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">WhiteboxModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ensemble_model</span> <span class="o">=</span> <span class="n">WhiteboxModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">ensemble_model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s1">&#39;EnsembleModel&#39;</span><span class="p">,</span>
+                                          <span class="p">(</span><span class="n">ensemble_model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
+                                           <span class="n">EnsembleGenerationMixin</span><span class="p">),</span>
+                                          <span class="p">{})</span>
+
+    <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">WhiteboxModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">model</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">model_paths</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+    <span class="n">ensemble_model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add_ensemble_models</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="n">devices</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">ensemble_model</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MBZUAI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

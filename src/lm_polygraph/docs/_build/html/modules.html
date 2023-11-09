@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lm_polygraph &mdash; LM-Polygraph 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="lm_polygraph package" href="lm_polygraph.html" />
+    <link rel="prev" title="Demo web application" href="web_demo.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LM-Polygraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="web_demo.html">Demo web application</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">lm_polygraph</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lm_polygraph.html">lm_polygraph package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LM-Polygraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">lm_polygraph</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lm-polygraph">
+<h1>lm_polygraph<a class="headerlink" href="#lm-polygraph" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lm_polygraph.html">lm_polygraph package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lm_polygraph.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.app.html">lm_polygraph.app package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#module-lm_polygraph.app.parsers">lm_polygraph.app.parsers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#module-lm_polygraph.app.service">lm_polygraph.app.service module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#module-lm_polygraph.app.service_helpers">lm_polygraph.app.service_helpers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#lm-polygraph-app-service-modal-module">lm_polygraph.app.service_modal module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#module-lm_polygraph.app.test_service">lm_polygraph.app.test_service module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html#module-lm_polygraph.app">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.estimators.html">lm_polygraph.estimators package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.common">lm_polygraph.estimators.common module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.conditional_pointwise_mutual_information">lm_polygraph.estimators.conditional_pointwise_mutual_information module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.deg_mat">lm_polygraph.estimators.deg_mat module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.eccentricity">lm_polygraph.estimators.eccentricity module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.eig_val_laplacian">lm_polygraph.estimators.eig_val_laplacian module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.ensemble_sequence_measures">lm_polygraph.estimators.ensemble_sequence_measures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.ensemble_token_measures">lm_polygraph.estimators.ensemble_token_measures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.estimator">lm_polygraph.estimators.estimator module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.lexical_similarity">lm_polygraph.estimators.lexical_similarity module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.mahalanobis_distance">lm_polygraph.estimators.mahalanobis_distance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.max_probability">lm_polygraph.estimators.max_probability module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy">lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.monte_carlo_sequence_entropy">lm_polygraph.estimators.monte_carlo_sequence_entropy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.num_sem_sets">lm_polygraph.estimators.num_sem_sets module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.p_true">lm_polygraph.estimators.p_true module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.p_true_sampling">lm_polygraph.estimators.p_true_sampling module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.perplexity">lm_polygraph.estimators.perplexity module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.pointwise_mutual_information">lm_polygraph.estimators.pointwise_mutual_information module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.ppl_md">lm_polygraph.estimators.ppl_md module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.rde">lm_polygraph.estimators.rde module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.relative_mahalanobis_distance">lm_polygraph.estimators.relative_mahalanobis_distance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.semantic_entropy">lm_polygraph.estimators.semantic_entropy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.semantic_entropy_token">lm_polygraph.estimators.semantic_entropy_token module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators.token_entropy">lm_polygraph.estimators.token_entropy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html#module-lm_polygraph.estimators">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.generation_metrics.html">lm_polygraph.generation_metrics package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#module-lm_polygraph.generation_metrics.accuracy">lm_polygraph.generation_metrics.accuracy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#module-lm_polygraph.generation_metrics.bart_score">lm_polygraph.generation_metrics.bart_score module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#module-lm_polygraph.generation_metrics.generation_metric">lm_polygraph.generation_metrics.generation_metric module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#module-lm_polygraph.generation_metrics.model_score">lm_polygraph.generation_metrics.model_score module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#module-lm_polygraph.generation_metrics.rouge">lm_polygraph.generation_metrics.rouge module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html#module-lm_polygraph.generation_metrics">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.stat_calculators.html">lm_polygraph.stat_calculators package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.bart_score">lm_polygraph.stat_calculators.bart_score module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.embeddings">lm_polygraph.stat_calculators.embeddings module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.ensemble_token_data">lm_polygraph.stat_calculators.ensemble_token_data module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.entropy">lm_polygraph.stat_calculators.entropy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.greedy_lm_probs">lm_polygraph.stat_calculators.greedy_lm_probs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.greedy_probs">lm_polygraph.stat_calculators.greedy_probs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.model_score">lm_polygraph.stat_calculators.model_score module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.prompt">lm_polygraph.stat_calculators.prompt module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.sample">lm_polygraph.stat_calculators.sample module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#lm-polygraph-stat-calculators-semantic-matrix-module">lm_polygraph.stat_calculators.semantic_matrix module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators.stat_calculator">lm_polygraph.stat_calculators.stat_calculator module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html#module-lm_polygraph.stat_calculators">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.ue_metrics.html">lm_polygraph.ue_metrics package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html#module-lm_polygraph.ue_metrics.pred_rej_area">lm_polygraph.ue_metrics.pred_rej_area module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html#module-lm_polygraph.ue_metrics.rev_pairs_prop">lm_polygraph.ue_metrics.rev_pairs_prop module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html#module-lm_polygraph.ue_metrics.risk_cov_curve">lm_polygraph.ue_metrics.risk_cov_curve module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html#module-lm_polygraph.ue_metrics.ue_metric">lm_polygraph.ue_metrics.ue_metric module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html#module-lm_polygraph.ue_metrics">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.utils.html">lm_polygraph.utils package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.dataset">lm_polygraph.utils.dataset module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.ensemble_generator">lm_polygraph.utils.ensemble_generator module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.generation_parameters">lm_polygraph.utils.generation_parameters module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.manager">lm_polygraph.utils.manager module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.model">lm_polygraph.utils.model module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.normalize">lm_polygraph.utils.normalize module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.processor">lm_polygraph.utils.processor module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils.token_restoration">lm_polygraph.utils.token_restoration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html#module-lm_polygraph.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lm_polygraph.html#module-lm_polygraph">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="web_demo.html" class="btn btn-neutral float-left" title="Demo web application" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lm_polygraph.html" class="btn btn-neutral float-right" title="lm_polygraph package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MBZUAI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

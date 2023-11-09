@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lm_polygraph.app.service_helpers &mdash; LM-Polygraph 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LM-Polygraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../web_demo.html">Demo web application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lm_polygraph</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LM-Polygraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lm_polygraph.app.service_helpers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lm_polygraph.app.service_helpers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">string</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">abort</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.model</span> <span class="kn">import</span> <span class="n">WhiteboxModel</span><span class="p">,</span> <span class="n">BlackboxModel</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.generation_parameters</span> <span class="kn">import</span> <span class="n">GenerationParameters</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.manager</span> <span class="kn">import</span> <span class="n">UEManager</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.processor</span> <span class="kn">import</span> <span class="n">Processor</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.dataset</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">lm_polygraph.utils.normalize</span> <span class="kn">import</span> <span class="n">normalize_ue</span><span class="p">,</span> <span class="n">can_normalize_ue</span><span class="p">,</span> \
+                                         <span class="n">can_get_calibration_conf</span><span class="p">,</span> <span class="n">calibration_confidence</span>
+
+<span class="kn">from</span> <span class="nn">.parsers</span> <span class="kn">import</span> <span class="n">parse_model</span><span class="p">,</span> <span class="n">parse_seq_ue_method</span><span class="p">,</span> <span class="n">parse_tok_ue_method</span><span class="p">,</span> <span class="n">Estimator</span><span class="p">,</span> <span class="n">parse_ensemble</span>
+
+
+<div class="viewcode-block" id="ResultProcessor"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.service_helpers.ResultProcessor">[docs]</a><span class="k">class</span> <span class="nc">ResultProcessor</span><span class="p">(</span><span class="n">Processor</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ue_estimations</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="ResultProcessor.on_batch"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.service_helpers.ResultProcessor.on_batch">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">batch_stats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+            <span class="n">batch_gen_metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
+            <span class="n">batch_estimations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">batch_stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ue_estimations</span> <span class="o">=</span> <span class="n">batch_estimations</span></div></div>
+
+
+<div class="viewcode-block" id="Responder"><a class="viewcode-back" href="../../../lm_polygraph.app.html#lm_polygraph.app.service_helpers.Responder">[docs]</a><span class="k">class</span> <span class="nc">Responder</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WhiteboxModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tok_ue_methods</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Estimator</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_ue_methods</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Estimator</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">density_based_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Mahalanobis Distance&quot;</span><span class="p">,</span> <span class="s2">&quot;Mahalanobis Distance - encoder&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;RDE&quot;</span><span class="p">,</span> <span class="s2">&quot;RDE - encoder&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">cache_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+
+    <span class="k">def</span> <span class="nf">_get_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor</span><span class="p">:</span> <span class="n">ResultProcessor</span><span class="p">,</span> <span class="n">methods</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Estimator</span><span class="p">],</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">List</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[],</span> <span class="s1">&#39;none&#39;</span>
+        <span class="n">condifences</span><span class="p">,</span> <span class="n">normalized_confidences</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">normalization</span> <span class="o">=</span> <span class="s1">&#39;bounds&#39;</span>
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="n">condifences</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="n">normalized_confidences</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">processor</span><span class="o">.</span><span class="n">ue_estimations</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)]:</span>
+                <span class="n">condifences</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Perplexity&#39;</span><span class="p">,</span> <span class="s1">&#39;MeanTokenEntropy&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_get_calibration_conf</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">):</span>
+                        <span class="n">normalization</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">normalized_confidences</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calibration_confidence</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_normalize_ue</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">):</span>
+                        <span class="n">normalization</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">normalized_confidences</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">normalize_ue</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">))</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">{}</span><span class="s1"> Confidence: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">),</span> <span class="n">condifences</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">normalization</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
+            <span class="n">condifences</span> <span class="o">=</span> <span class="n">normalized_confidences</span>
+
+        <span class="n">condifences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">condifences</span><span class="p">)</span>
+        <span class="n">condifences</span> <span class="o">=</span> <span class="n">condifences</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">methods</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">condifences</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">conf_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">condifences</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">condifences</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">conf_list</span><span class="p">,</span> <span class="n">normalization</span>
+
+    <span class="k">def</span> <span class="nf">_add_spaces_to_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">tokens</span><span class="p">):</span>
+        <span class="n">curr_len</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tokens_with_spaces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_decode</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;greedy_tokens&#39;</span><span class="p">],</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">+</span> <span class="n">curr_len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="n">sequence</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">+</span> <span class="n">curr_len</span><span class="p">])</span> <span class="o">==</span> <span class="s2">&quot; &quot;</span><span class="p">:</span>
+                <span class="n">tokens_with_spaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="n">curr_len</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tokens_with_spaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="n">curr_len</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tokens_with_spaces</span>
+
+    <span class="k">def</span> <span class="nf">_split_spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)):</span>
+        <span class="n">new_tokens</span><span class="p">,</span> <span class="n">new_conf</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">conf</span><span class="p">)):</span>
+            <span class="k">while</span> <span class="nb">any</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">split</span><span class="p">):</span>
+                <span class="n">new_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">new_conf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">stack_tokens</span><span class="p">,</span> <span class="n">stack_conf</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">while</span> <span class="nb">any</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">split</span><span class="p">):</span>
+                <span class="n">stack_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">stack_conf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">new_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">new_conf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="n">new_tokens</span> <span class="o">+=</span> <span class="n">stack_tokens</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">new_conf</span> <span class="o">+=</span> <span class="n">stack_conf</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">new_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">strip</span><span class="p">:</span>
+            <span class="n">new_tokens</span> <span class="o">=</span> <span class="n">new_tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">new_conf</span> <span class="o">=</span> <span class="n">new_conf</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">new_tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">strip</span><span class="p">:</span>
+            <span class="n">new_tokens</span> <span class="o">=</span> <span class="n">new_tokens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">new_conf</span> <span class="o">=</span> <span class="n">new_conf</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_tokens</span><span class="p">,</span> <span class="n">new_conf</span>
+
+    <span class="k">def</span> <span class="nf">_merge_into_words</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">confidences</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">confidences</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tokens</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="n">words</span><span class="p">,</span> <span class="n">word_conf</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">word_start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">confidences</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">split</span><span class="p">:</span>
+                <span class="n">word_conf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+                <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="n">word_start</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="ow">or</span> <span class="n">tokens</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">split</span><span class="p">:</span>
+                <span class="n">word_conf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">confidences</span><span class="p">[</span><span class="n">word_start</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+                <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="n">word_start</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+                <span class="n">word_start</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">words</span><span class="p">,</span> <span class="n">word_conf</span>
+
+    <span class="k">def</span> <span class="nf">_generate_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Request data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">topk</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;topk&#39;</span><span class="p">])</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">GenerationParameters</span><span class="p">(</span>
+            <span class="n">temperature</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">]),</span>
+            <span class="n">topk</span><span class="o">=</span><span class="n">topk</span><span class="p">,</span>
+            <span class="n">topp</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;topp&#39;</span><span class="p">]),</span>
+            <span class="n">do_sample</span><span class="o">=</span><span class="p">(</span><span class="n">topk</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">num_beams</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;num_beams&#39;</span><span class="p">]),</span>
+            <span class="n">presence_penalty</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;presence_penalty&#39;</span><span class="p">]),</span>
+            <span class="n">repetition_penalty</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;repetition_penalty&#39;</span><span class="p">]),</span>
+            <span class="n">allow_newlines</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Dolly&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="n">ensemble_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Ensemble&#39;</span><span class="p">:</span>
+            <span class="n">model_path</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ensembles&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">ensemble_model</span> <span class="o">=</span> <span class="n">parse_ensemble</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model_path</span> <span class="o">!=</span> <span class="n">parse_model</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]):</span>
+            <span class="n">model_path</span> <span class="o">=</span> <span class="n">parse_model</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">model_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;openai-&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">BlackboxModel</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;openai_key&#39;</span><span class="p">],</span> <span class="n">model_path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;openai-&#39;</span><span class="p">):])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1">#load_in_8bit = (&#39;cuda&#39; in self.device) and any(s in model_path for s in [&#39;7b&#39;, &#39;12b&#39;, &#39;13b&#39;])</span>
+                <span class="n">load_in_8bit</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">WhiteboxModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+                    <span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">load_in_8bit</span><span class="o">=</span><span class="n">load_in_8bit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_path</span> <span class="o">=</span> <span class="n">parse_model</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+
+        <span class="c1"># TODO this is temporary fix for single instead of multi-choice, should be changed with katya proper version</span>
+        <span class="c1"># As back expects list and front sends the string at the moment</span>
+        <span class="n">tok_ue_method_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tok_ue&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tok_ue&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">seq_ue_method_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seq_ue&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seq_ue&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="c1"># tok_ue_method_names = data[&#39;tok_ue&#39;] if &#39;tok_ue&#39; in data.keys() and data[&#39;tok_ue&#39;] is not None else []</span>
+        <span class="c1"># seq_ue_method_names = data[&#39;seq_ue&#39;] if &#39;seq_ue&#39; in data.keys() and data[&#39;seq_ue&#39;] is not None else []</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;prompt&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;dolly&#39;</span> <span class="ow">in</span> <span class="n">model_path</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Below is an instruction that describes a task. Write a response that appropriately completes &#39;</span> \
+                   <span class="sa">f</span><span class="s1">&#39;the request.</span><span class="se">\n</span><span class="s1">### Instruction:</span><span class="se">\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="se">\n</span><span class="s1">### Response:</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">model_path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;vicuna&#39;</span><span class="p">,</span> <span class="s1">&#39;llama&#39;</span><span class="p">]):</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+
+        <span class="k">for</span> <span class="n">ue_method_name</span> <span class="ow">in</span> <span class="n">tok_ue_method_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ue_method_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tok_ue_methods</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ue_method_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">density_based_names</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tok_ue_methods</span><span class="p">[</span><span class="n">ue_method_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_tok_ue_method</span><span class="p">(</span><span class="n">ue_method_name</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ue_method_name</span> <span class="ow">in</span> <span class="n">seq_ue_method_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ue_method_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_ue_methods</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ue_method_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">density_based_names</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seq_ue_methods</span><span class="p">[</span><span class="n">ue_method_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_seq_ue_method</span><span class="p">(</span><span class="n">ue_method_name</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_path</span><span class="p">)</span>
+
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">([</span><span class="n">text</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">processor</span> <span class="o">=</span> <span class="n">ResultProcessor</span><span class="p">()</span>
+
+        <span class="n">tok_methods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tok_ue_methods</span><span class="p">[</span><span class="n">ue_method_name</span><span class="p">]</span> <span class="k">for</span> <span class="n">ue_method_name</span> <span class="ow">in</span> <span class="n">tok_ue_method_names</span><span class="p">]</span>
+        <span class="n">seq_methods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">seq_ue_methods</span><span class="p">[</span><span class="n">ue_method_name</span><span class="p">]</span> <span class="k">for</span> <span class="n">ue_method_name</span> <span class="ow">in</span> <span class="n">seq_ue_method_names</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">man</span> <span class="o">=</span> <span class="n">UEManager</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">tok_methods</span> <span class="o">+</span> <span class="n">seq_methods</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[],</span>
+                            <span class="p">[</span><span class="n">processor</span><span class="p">],</span>
+                            <span class="n">ensemble_model</span><span class="o">=</span><span class="n">ensemble_model</span><span class="p">,</span>
+                            <span class="n">ignore_exceptions</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">man</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">traceback</span>
+            <span class="n">trace</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Stack trace:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">trace</span><span class="p">)</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processor</span><span class="o">.</span><span class="n">ue_estimations</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tok_methods</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq_methods</span><span class="p">):</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Internal: expected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tok_methods</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">seq_methods</span><span class="p">)</span><span class="si">}</span><span class="s1"> estimations, &#39;</span>
+                       <span class="sa">f</span><span class="s1">&#39;got: </span><span class="si">{</span><span class="n">processor</span><span class="o">.</span><span class="n">ue_estimations</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">greedy_text</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;greedy_texts&#39;</span><span class="p">,</span> <span class="n">processor</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;blackbox_greedy_texts&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; Generation: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">greedy_text</span><span class="p">))</span>
+
+        <span class="n">tok_conf</span><span class="p">,</span> <span class="n">tok_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_confidence</span><span class="p">(</span><span class="n">processor</span><span class="p">,</span> <span class="n">tok_methods</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+        <span class="n">seq_conf</span><span class="p">,</span> <span class="n">seq_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_confidence</span><span class="p">(</span><span class="n">processor</span><span class="p">,</span> <span class="n">seq_methods</span><span class="p">,</span> <span class="s1">&#39;sequence&#39;</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;greedy_tokens&#39;</span> <span class="ow">in</span> <span class="n">processor</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">processor</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;greedy_tokens&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">bos_token_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">eos_token_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">pad_token_id</span><span class="p">]:</span>
+                    <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">([</span><span class="n">t</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">greedy_text</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="s1">&#39;### End&#39;</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>  <span class="c1"># for dolly</span>
+                <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">tok_conf</span> <span class="o">=</span> <span class="n">tok_conf</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span> <span class="o">==</span> <span class="n">WhiteboxModel</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tok_methods</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">tok_conf</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;Seq2SeqLM&quot;</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model_path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;llama&#39;</span><span class="p">,</span> <span class="s1">&#39;vicuna&#39;</span><span class="p">]):</span>
+                <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_spaces_to_tokens</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">,</span> <span class="n">processor</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="n">tokens</span><span class="p">)</span>
+            <span class="n">tokens</span><span class="p">,</span> <span class="n">tok_conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_spaces</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">tok_conf</span><span class="p">)</span>
+            <span class="n">tokens</span><span class="p">,</span> <span class="n">tok_conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_into_words</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">tok_conf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tok_methods</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">tok_conf</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">and</span> <span class="n">tokens</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">tokens</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>  <span class="c1"># prevent multiple newlines (for vicuna)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;generation&#39;</span><span class="p">:</span> <span class="n">tokens</span><span class="p">,</span>
+            <span class="s1">&#39;token_confidence&#39;</span><span class="p">:</span> <span class="n">tok_conf</span><span class="p">,</span>
+            <span class="s1">&#39;sequence_confidence&#39;</span><span class="p">:</span> <span class="n">seq_conf</span><span class="p">,</span>
+            <span class="s1">&#39;token_normalization&#39;</span><span class="p">:</span> <span class="n">tok_norm</span><span class="p">,</span>
+            <span class="s1">&#39;sequence_normalization&#39;</span><span class="p">:</span> <span class="n">seq_norm</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MBZUAI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

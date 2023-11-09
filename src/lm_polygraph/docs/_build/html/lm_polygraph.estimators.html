@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lm_polygraph.estimators package &mdash; LM-Polygraph 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="lm_polygraph.generation_metrics package" href="lm_polygraph.generation_metrics.html" />
+    <link rel="prev" title="lm_polygraph.app package" href="lm_polygraph.app.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LM-Polygraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="web_demo.html">Demo web application</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lm_polygraph</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="lm_polygraph.html">lm_polygraph package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="lm_polygraph.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html">lm_polygraph.app package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">lm_polygraph.estimators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html">lm_polygraph.generation_metrics package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html">lm_polygraph.stat_calculators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html">lm_polygraph.ue_metrics package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.utils.html">lm_polygraph.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.html#module-lm_polygraph">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LM-Polygraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">lm_polygraph</a></li>
+          <li class="breadcrumb-item"><a href="lm_polygraph.html">lm_polygraph package</a></li>
+      <li class="breadcrumb-item active">lm_polygraph.estimators package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/lm_polygraph.estimators.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lm-polygraph-estimators-package">
+<h1>lm_polygraph.estimators package<a class="headerlink" href="#lm-polygraph-estimators-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-lm_polygraph.estimators.common">
+<span id="lm-polygraph-estimators-common-module"></span><h2>lm_polygraph.estimators.common module<a class="headerlink" href="#module-lm_polygraph.estimators.common" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.common.CommonDeberta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.common.</span></span><span class="sig-name descname"><span class="pre">CommonDeberta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deberta_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'microsoft/deberta-large-mnli'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/common.html#CommonDeberta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.common.CommonDeberta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.common.CommonDeberta.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/common.html#CommonDeberta.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.common.CommonDeberta.setup" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.common.compute_sim_score">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.common.</span></span><span class="sig-name descname"><span class="pre">compute_sim_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affinity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_score</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/common.html#compute_sim_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.common.compute_sim_score" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.conditional_pointwise_mutual_information">
+<span id="lm-polygraph-estimators-conditional-pointwise-mutual-information-module"></span><h2>lm_polygraph.estimators.conditional_pointwise_mutual_information module<a class="headerlink" href="#module-lm_polygraph.estimators.conditional_pointwise_mutual_information" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.conditional_pointwise_mutual_information.ConditionalPointwiseMutualInformation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.conditional_pointwise_mutual_information.</span></span><span class="sig-name descname"><span class="pre">ConditionalPointwiseMutualInformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/conditional_pointwise_mutual_information.html#ConditionalPointwiseMutualInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.conditional_pointwise_mutual_information.ConditionalPointwiseMutualInformation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.conditional_pointwise_mutual_information.MeanConditionalPointwiseMutualInformation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.conditional_pointwise_mutual_information.</span></span><span class="sig-name descname"><span class="pre">MeanConditionalPointwiseMutualInformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/conditional_pointwise_mutual_information.html#MeanConditionalPointwiseMutualInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.conditional_pointwise_mutual_information.MeanConditionalPointwiseMutualInformation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.deg_mat">
+<span id="lm-polygraph-estimators-deg-mat-module"></span><h2>lm_polygraph.estimators.deg_mat module<a class="headerlink" href="#module-lm_polygraph.estimators.deg_mat" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.deg_mat.DegMat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.deg_mat.</span></span><span class="sig-name descname"><span class="pre">DegMat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NLI_score'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Jaccard_score'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'NLI_score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affinity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'entail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'contra'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'entail'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/deg_mat.html#DegMat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.deg_mat.DegMat" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.deg_mat.DegMat.U_DegMat">
+<span class="sig-name descname"><span class="pre">U_DegMat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/deg_mat.html#DegMat.U_DegMat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.deg_mat.DegMat.U_DegMat" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.eccentricity">
+<span id="lm-polygraph-estimators-eccentricity-module"></span><h2>lm_polygraph.estimators.eccentricity module<a class="headerlink" href="#module-lm_polygraph.estimators.eccentricity" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.eccentricity.Eccentricity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.eccentricity.</span></span><span class="sig-name descname"><span class="pre">Eccentricity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NLI_score'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Jaccard_score'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'NLI_score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affinity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'entail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'contra'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'entail'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/eccentricity.html#Eccentricity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.eccentricity.Eccentricity" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.eccentricity.Eccentricity.U_Eccentricity">
+<span class="sig-name descname"><span class="pre">U_Eccentricity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/eccentricity.html#Eccentricity.U_Eccentricity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.eccentricity.Eccentricity.U_Eccentricity" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.eig_val_laplacian">
+<span id="lm-polygraph-estimators-eig-val-laplacian-module"></span><h2>lm_polygraph.estimators.eig_val_laplacian module<a class="headerlink" href="#module-lm_polygraph.estimators.eig_val_laplacian" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.eig_val_laplacian.EigValLaplacian">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.eig_val_laplacian.</span></span><span class="sig-name descname"><span class="pre">EigValLaplacian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NLI_score'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Jaccard_score'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'NLI_score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affinity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'entail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'contra'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'entail'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/eig_val_laplacian.html#EigValLaplacian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.eig_val_laplacian.EigValLaplacian" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.eig_val_laplacian.EigValLaplacian.U_EigVal_Laplacian">
+<span class="sig-name descname"><span class="pre">U_EigVal_Laplacian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/eig_val_laplacian.html#EigValLaplacian.U_EigVal_Laplacian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.eig_val_laplacian.EigValLaplacian.U_EigVal_Laplacian" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.ensemble_sequence_measures">
+<span id="lm-polygraph-estimators-ensemble-sequence-measures-module"></span><h2>lm_polygraph.estimators.ensemble_sequence_measures module<a class="headerlink" href="#module-lm_polygraph.estimators.ensemble_sequence_measures" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.EPSrmi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">EPSrmi</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#EPSrmi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.EPSrmi" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.EPSrmiabs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">EPSrmiabs</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#EPSrmiabs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.EPSrmiabs" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.EPStu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">EPStu</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#EPStu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.EPStu" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.PESrmi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">PESrmi</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#PESrmi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.PESrmi" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.PESrmiabs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">PESrmiabs</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#PESrmiabs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.PESrmiabs" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.PEStu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">PEStu</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#PEStu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.PEStu" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_sequence_measures.get_seq_level_ue">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_sequence_measures.</span></span><span class="sig-name descname"><span class="pre">get_seq_level_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_level_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_sequence_measures.html#get_seq_level_ue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_sequence_measures.get_seq_level_ue" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.ensemble_token_measures">
+<span id="lm-polygraph-estimators-ensemble-token-measures-module"></span><h2>lm_polygraph.estimators.ensemble_token_measures module<a class="headerlink" href="#module-lm_polygraph.estimators.ensemble_token_measures" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPEnsembleEstimator</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPEnsembleEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTdu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTdu</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTdu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTdu" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTent10">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTent10</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTent10"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTent10" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTent15">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTent15</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTent15"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTent15" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTent5">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTent5</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTent5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTent5" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTepkl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTepkl</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTepkl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTepkl" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTmi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTmi</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTmi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTmi" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTrmi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTrmi</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTrmi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTrmi" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EPTtu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EPTtu</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EPTtu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EPTtu" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EPEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.EnsembleEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">EnsembleEstimator</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#EnsembleEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.EnsembleEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PEEnsembleEstimator</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PEEnsembleEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.EnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.EnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETdu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETdu</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETdu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETdu" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETent10">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETent10</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETent10"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETent10" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETent15">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETent15</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETent15"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETent15" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETent5">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETent5</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETent5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETent5" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETepkl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETepkl</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETepkl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETepkl" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETmi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETmi</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETmi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETmi" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETrmi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETrmi</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETrmi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETrmi" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.PETtu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">PETtu</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#PETtu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.PETtu" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator" title="lm_polygraph.estimators.ensemble_token_measures.PEEnsembleEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PEEnsembleEstimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ensemble_token_measures.aggregate">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ensemble_token_measures.</span></span><span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">posterior_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ue_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_level_data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/ensemble_token_measures.html#aggregate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ensemble_token_measures.aggregate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.estimator">
+<span id="lm-polygraph-estimators-estimator-module"></span><h2>lm_polygraph.estimators.estimator module<a class="headerlink" href="#module-lm_polygraph.estimators.estimator" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.estimator.Estimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.estimator.</span></span><span class="sig-name descname"><span class="pre">Estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats_dependencies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/estimator.html#Estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.estimator.Estimator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.lexical_similarity">
+<span id="lm-polygraph-estimators-lexical-similarity-module"></span><h2>lm_polygraph.estimators.lexical_similarity module<a class="headerlink" href="#module-lm_polygraph.estimators.lexical_similarity" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.lexical_similarity.LexicalSimilarity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.lexical_similarity.</span></span><span class="sig-name descname"><span class="pre">LexicalSimilarity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'rougeL'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/lexical_similarity.html#LexicalSimilarity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.lexical_similarity.LexicalSimilarity" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.mahalanobis_distance">
+<span id="lm-polygraph-estimators-mahalanobis-distance-module"></span><h2>lm_polygraph.estimators.mahalanobis_distance module<a class="headerlink" href="#module-lm_polygraph.estimators.mahalanobis_distance" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.mahalanobis_distance.MahalanobisDistanceSeq">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.mahalanobis_distance.</span></span><span class="sig-name descname"><span class="pre">MahalanobisDistanceSeq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'decoder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/mahalanobis_distance.html#MahalanobisDistanceSeq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.mahalanobis_distance.MahalanobisDistanceSeq" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.mahalanobis_distance.compute_inv_covariance">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.mahalanobis_distance.</span></span><span class="sig-name descname"><span class="pre">compute_inv_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centroids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/mahalanobis_distance.html#compute_inv_covariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.mahalanobis_distance.compute_inv_covariance" title="Permalink to this definition"></a></dt>
+<dd><p>This function computes inverse covariance matrix that is required by Mahalanobis distance:
+MD = sqrt((h(x) - mu)^{T} Sigma^{-1} (h(x) - mu))</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.mahalanobis_distance.mahalanobis_distance_with_known_centroids_sigma_inv">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.mahalanobis_distance.</span></span><span class="sig-name descname"><span class="pre">mahalanobis_distance_with_known_centroids_sigma_inv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centroids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_features</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/mahalanobis_distance.html#mahalanobis_distance_with_known_centroids_sigma_inv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.mahalanobis_distance.mahalanobis_distance_with_known_centroids_sigma_inv" title="Permalink to this definition"></a></dt>
+<dd><ul class="simple">
+<li><p>This function takes in centroids, centroids_mask, sigma_inv, and eval_features.</p></li>
+<li><p>tensor of Mahalanobis distances is returned.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.max_probability">
+<span id="lm-polygraph-estimators-max-probability-module"></span><h2>lm_polygraph.estimators.max_probability module<a class="headerlink" href="#module-lm_polygraph.estimators.max_probability" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.max_probability.MaximumSequenceProbability">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.max_probability.</span></span><span class="sig-name descname"><span class="pre">MaximumSequenceProbability</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/max_probability.html#MaximumSequenceProbability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.max_probability.MaximumSequenceProbability" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.max_probability.MaximumTokenProbability">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.max_probability.</span></span><span class="sig-name descname"><span class="pre">MaximumTokenProbability</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/max_probability.html#MaximumTokenProbability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.max_probability.MaximumTokenProbability" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy">
+<span id="lm-polygraph-estimators-monte-carlo-normalized-sequence-entropy-module"></span><h2>lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy module<a class="headerlink" href="#module-lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy.MonteCarloNormalizedSequenceEntropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy.</span></span><span class="sig-name descname"><span class="pre">MonteCarloNormalizedSequenceEntropy</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/monte_carlo_normalized_sequence_entropy.html#MonteCarloNormalizedSequenceEntropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy.MonteCarloNormalizedSequenceEntropy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.monte_carlo_sequence_entropy">
+<span id="lm-polygraph-estimators-monte-carlo-sequence-entropy-module"></span><h2>lm_polygraph.estimators.monte_carlo_sequence_entropy module<a class="headerlink" href="#module-lm_polygraph.estimators.monte_carlo_sequence_entropy" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.monte_carlo_sequence_entropy.MonteCarloSequenceEntropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.monte_carlo_sequence_entropy.</span></span><span class="sig-name descname"><span class="pre">MonteCarloSequenceEntropy</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/monte_carlo_sequence_entropy.html#MonteCarloSequenceEntropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.monte_carlo_sequence_entropy.MonteCarloSequenceEntropy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.num_sem_sets">
+<span id="lm-polygraph-estimators-num-sem-sets-module"></span><h2>lm_polygraph.estimators.num_sem_sets module<a class="headerlink" href="#module-lm_polygraph.estimators.num_sem_sets" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.num_sem_sets.NumSemSets">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.num_sem_sets.</span></span><span class="sig-name descname"><span class="pre">NumSemSets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/num_sem_sets.html#NumSemSets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.num_sem_sets.NumSemSets" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.num_sem_sets.NumSemSets.U_NumSemSets">
+<span class="sig-name descname"><span class="pre">U_NumSemSets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/num_sem_sets.html#NumSemSets.U_NumSemSets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.num_sem_sets.NumSemSets.U_NumSemSets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.num_sem_sets.NumSemSets.get_pairs_semsets">
+<span class="sig-name descname"><span class="pre">get_pairs_semsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lst</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/num_sem_sets.html#NumSemSets.get_pairs_semsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.num_sem_sets.NumSemSets.get_pairs_semsets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.p_true">
+<span id="lm-polygraph-estimators-p-true-module"></span><h2>lm_polygraph.estimators.p_true module<a class="headerlink" href="#module-lm_polygraph.estimators.p_true" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.p_true.PTrue">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.p_true.</span></span><span class="sig-name descname"><span class="pre">PTrue</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/p_true.html#PTrue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.p_true.PTrue" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.p_true_sampling">
+<span id="lm-polygraph-estimators-p-true-sampling-module"></span><h2>lm_polygraph.estimators.p_true_sampling module<a class="headerlink" href="#module-lm_polygraph.estimators.p_true_sampling" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.p_true_sampling.PTrueSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.p_true_sampling.</span></span><span class="sig-name descname"><span class="pre">PTrueSampling</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/p_true_sampling.html#PTrueSampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.p_true_sampling.PTrueSampling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.perplexity">
+<span id="lm-polygraph-estimators-perplexity-module"></span><h2>lm_polygraph.estimators.perplexity module<a class="headerlink" href="#module-lm_polygraph.estimators.perplexity" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.perplexity.Perplexity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.perplexity.</span></span><span class="sig-name descname"><span class="pre">Perplexity</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/perplexity.html#Perplexity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.perplexity.Perplexity" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.pointwise_mutual_information">
+<span id="lm-polygraph-estimators-pointwise-mutual-information-module"></span><h2>lm_polygraph.estimators.pointwise_mutual_information module<a class="headerlink" href="#module-lm_polygraph.estimators.pointwise_mutual_information" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.pointwise_mutual_information.MeanPointwiseMutualInformation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.pointwise_mutual_information.</span></span><span class="sig-name descname"><span class="pre">MeanPointwiseMutualInformation</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/pointwise_mutual_information.html#MeanPointwiseMutualInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.pointwise_mutual_information.MeanPointwiseMutualInformation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.pointwise_mutual_information.PointwiseMutualInformation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.pointwise_mutual_information.</span></span><span class="sig-name descname"><span class="pre">PointwiseMutualInformation</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/pointwise_mutual_information.html#PointwiseMutualInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.pointwise_mutual_information.PointwiseMutualInformation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.ppl_md">
+<span id="lm-polygraph-estimators-ppl-md-module"></span><h2>lm_polygraph.estimators.ppl_md module<a class="headerlink" href="#module-lm_polygraph.estimators.ppl_md" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ppl_md.PPLMDSeq">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ppl_md.</span></span><span class="sig-name descname"><span class="pre">PPLMDSeq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'decoder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'MD'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/ppl_md.html#PPLMDSeq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ppl_md.PPLMDSeq" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ppl_md.load_array">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ppl_md.</span></span><span class="sig-name descname"><span class="pre">load_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/ppl_md.html#load_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ppl_md.load_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ppl_md.rank">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ppl_md.</span></span><span class="sig-name descname"><span class="pre">rank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/ppl_md.html#rank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ppl_md.rank" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.ppl_md.save_array">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.ppl_md.</span></span><span class="sig-name descname"><span class="pre">save_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/ppl_md.html#save_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.ppl_md.save_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.rde">
+<span id="lm-polygraph-estimators-rde-module"></span><h2>lm_polygraph.estimators.rde module<a class="headerlink" href="#module-lm_polygraph.estimators.rde" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.MCD_covariance">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.rde.</span></span><span class="sig-name descname"><span class="pre">MCD_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#MCD_covariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.MCD_covariance" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.RDESeq">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.rde.</span></span><span class="sig-name descname"><span class="pre">RDESeq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'decoder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#RDESeq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.RDESeq" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<p>The RDE method improves over MD by reducing the dimensionality of h(x) via PCA decomposition. 
+It also computes the covariance matrix in a robust way using the Minimum Covariance Determinant
+estimate (Rousseeuw, 1984).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.RDESeq.load_mcd">
+<span class="sig-name descname"><span class="pre">load_mcd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#RDESeq.load_mcd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.RDESeq.load_mcd" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.RDESeq.load_pca">
+<span class="sig-name descname"><span class="pre">load_pca</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#RDESeq.load_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.RDESeq.load_pca" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.RDESeq.save_mcd">
+<span class="sig-name descname"><span class="pre">save_mcd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#RDESeq.save_mcd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.RDESeq.save_mcd" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.RDESeq.save_pca">
+<span class="sig-name descname"><span class="pre">save_pca</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#RDESeq.save_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.RDESeq.save_pca" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.load_array">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.rde.</span></span><span class="sig-name descname"><span class="pre">load_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#load_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.load_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.rde.save_array">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.rde.</span></span><span class="sig-name descname"><span class="pre">save_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/rde.html#save_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.rde.save_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.relative_mahalanobis_distance">
+<span id="lm-polygraph-estimators-relative-mahalanobis-distance-module"></span><h2>lm_polygraph.estimators.relative_mahalanobis_distance module<a class="headerlink" href="#module-lm_polygraph.estimators.relative_mahalanobis_distance" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.relative_mahalanobis_distance.RelativeMahalanobisDistanceSeq">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.relative_mahalanobis_distance.</span></span><span class="sig-name descname"><span class="pre">RelativeMahalanobisDistanceSeq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'decoder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/relative_mahalanobis_distance.html#RelativeMahalanobisDistanceSeq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.relative_mahalanobis_distance.RelativeMahalanobisDistanceSeq" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<p>Ren et al. (2023) showed that it might be useful to adjust the Mahalanobis distance score by subtracting
+from it the other Mahalanobis distance MD_0(x) computed for some large general purpose dataset covering many domain. 
+RMD(x) = MD(x) - MD_0(x)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.relative_mahalanobis_distance.load_array">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.relative_mahalanobis_distance.</span></span><span class="sig-name descname"><span class="pre">load_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/relative_mahalanobis_distance.html#load_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.relative_mahalanobis_distance.load_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.relative_mahalanobis_distance.save_array">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.relative_mahalanobis_distance.</span></span><span class="sig-name descname"><span class="pre">save_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/relative_mahalanobis_distance.html#save_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.relative_mahalanobis_distance.save_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.semantic_entropy">
+<span id="lm-polygraph-estimators-semantic-entropy-module"></span><h2>lm_polygraph.estimators.semantic_entropy module<a class="headerlink" href="#module-lm_polygraph.estimators.semantic_entropy" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.semantic_entropy.SemanticEntropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.semantic_entropy.</span></span><span class="sig-name descname"><span class="pre">SemanticEntropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/semantic_entropy.html#SemanticEntropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.semantic_entropy.SemanticEntropy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.semantic_entropy.SemanticEntropy.batched_call">
+<span class="sig-name descname"><span class="pre">batched_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hyps_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loglikelihoods_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span></span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/semantic_entropy.html#SemanticEntropy.batched_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.semantic_entropy.SemanticEntropy.batched_call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.semantic_entropy.SemanticEntropy.get_classes">
+<span class="sig-name descname"><span class="pre">get_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hyps_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/semantic_entropy.html#SemanticEntropy.get_classes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.semantic_entropy.SemanticEntropy.get_classes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.semantic_entropy.SemanticEntropy.is_entailment">
+<span class="sig-name descname"><span class="pre">is_entailment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/semantic_entropy.html#SemanticEntropy.is_entailment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.semantic_entropy.SemanticEntropy.is_entailment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.semantic_entropy_token">
+<span id="lm-polygraph-estimators-semantic-entropy-token-module"></span><h2>lm_polygraph.estimators.semantic_entropy_token module<a class="headerlink" href="#module-lm_polygraph.estimators.semantic_entropy_token" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.semantic_entropy_token.SemanticEntropyToken">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.semantic_entropy_token.</span></span><span class="sig-name descname"><span class="pre">SemanticEntropyToken</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semantic_bert_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sentence-transformers/bert-base-nli-mean-tokens'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/estimators/semantic_entropy_token.html#SemanticEntropyToken"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.semantic_entropy_token.SemanticEntropyToken" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.semantic_entropy_token.split_classes">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.semantic_entropy_token.</span></span><span class="sig-name descname"><span class="pre">split_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semantic_bert_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sentence-transformers/bert-base-nli-mean-tokens'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.85</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/semantic_entropy_token.html#split_classes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.semantic_entropy_token.split_classes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators.token_entropy">
+<span id="lm-polygraph-estimators-token-entropy-module"></span><h2>lm_polygraph.estimators.token_entropy module<a class="headerlink" href="#module-lm_polygraph.estimators.token_entropy" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.token_entropy.MeanTokenEntropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.token_entropy.</span></span><span class="sig-name descname"><span class="pre">MeanTokenEntropy</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/token_entropy.html#MeanTokenEntropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.token_entropy.MeanTokenEntropy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.estimators.token_entropy.TokenEntropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.estimators.token_entropy.</span></span><span class="sig-name descname"><span class="pre">TokenEntropy</span></span><a class="reference internal" href="_modules/lm_polygraph/estimators/token_entropy.html#TokenEntropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.estimators.token_entropy.TokenEntropy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.estimators">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lm_polygraph.estimators" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lm_polygraph.app.html" class="btn btn-neutral float-left" title="lm_polygraph.app package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lm_polygraph.generation_metrics.html" class="btn btn-neutral float-right" title="lm_polygraph.generation_metrics package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MBZUAI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basic usage &mdash; LM-Polygraph 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Demo web application" href="web_demo.html" />
+    <link rel="prev" title="Welcome to LM-Polygraph’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LM-Polygraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Basic usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="web_demo.html">Demo web application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">lm_polygraph</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LM-Polygraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Basic usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="basic-usage">
+<h1>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this heading"></a></h1>
+<section id="installation">
+<span id="id1"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>To use LM-Polygraph, first clone the repo and conduct installation using pip, it is recommended to use virtual environment.
+Code example is presented below:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/IINemo/lm-polygraph.git
+<span class="gp">$ </span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>env
+<span class="gp">$ </span><span class="nb">source</span><span class="w"> </span>env/bin/activate
+<span class="gp gp-VirtualEnv">(env)</span> <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>lm-polygraph
+<span class="gp gp-VirtualEnv">(env)</span> <span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="quick-start">
+<span id="id2"></span><h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, <cite>bigscience/bloomz-3b</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">lm_polygraph.utils.model</span> <span class="kn">import</span> <span class="n">WhiteboxModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">WhiteboxModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+    <span class="s2">&quot;bigscience/bloomz-3b&quot;</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Specify UE method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">lm_polygraph.estimators</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">ue_method</span> <span class="o">=</span> <span class="n">MeanPointwiseMutualInformation</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p>Get predictions and their uncertainty scores:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">lm_polygraph.utils.manager</span> <span class="kn">import</span> <span class="n">estimate_uncertainty</span>
+
+<span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;Who is George Bush?&quot;</span>
+<span class="n">estimate_uncertainty</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ue_method</span><span class="p">,</span> <span class="n">input_text</span><span class="o">=</span><span class="n">input_text</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Other examples:</p>
+<ul class="simple">
+<li><p>examples of library usage: <a class="reference external" href="https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb">https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb</a></p></li>
+<li><p>examples of library usage for the QA task with <cite>bigscience/bloomz-3b</cite> on the <cite>TriviaQA</cite> dataset: <a class="reference external" href="https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb">https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb</a></p></li>
+<li><p>examples of library usage for the NMT task with <cite>facebook/wmt19-en-de</cite> on the <cite>WMT14 En-De</cite> dataset: <a class="reference external" href="https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb">https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb</a></p></li>
+<li><p>examples of library usage for the ATS task with <cite>facebook/bart-large-cnn</cite> model on the <cite>XSUM</cite> dataset: <a class="reference external" href="https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb">https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb</a></p></li>
+<li><p>example of running interface from notebook (careful: only <cite>bloomz-560m</cite>, <cite>gpt-3.5-turbo</cite> and <cite>gpt-4</cite> fits default memory limit, other models can be run only with Colab-pro subscription): <a class="reference external" href="https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing">https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing</a></p></li>
+</ul>
+</section>
+<section id="benchmarks">
+<span id="id3"></span><h2>Benchmarks<a class="headerlink" href="#benchmarks" title="Permalink to this heading"></a></h2>
+<p>To evaluate the performance of uncertainty estimation methods run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">polygraph_eval</span> <span class="o">--</span><span class="n">dataset</span> <span class="n">triviaqa</span><span class="o">.</span><span class="n">csv</span> <span class="o">--</span><span class="n">model</span> <span class="n">databricks</span><span class="o">/</span><span class="n">dolly</span><span class="o">-</span><span class="n">v2</span><span class="o">-</span><span class="mi">3</span><span class="n">b</span> <span class="o">--</span><span class="n">save_path</span> <span class="n">test</span><span class="o">.</span><span class="n">man</span> <span class="o">--</span><span class="n">cache_path</span> <span class="o">.</span> <span class="o">--</span><span class="n">seed</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<ul class="simple">
+<li><p><cite>dataset</cite>: path to .csv dataset</p></li>
+<li><p><cite>model</cite>: path to huggingface model</p></li>
+<li><p><cite>batch_size</cite>: batch size for generation (default: 2)</p></li>
+<li><p><cite>seed</cite>: seed for generation (default: 1; can specify several seeds for multiple tests)</p></li>
+<li><p><cite>device</cite>: <cite>cpu</cite> or <cite>cuda:N</cite> (default: <cite>cuda:0</cite> if avaliable, <cite>cpu</cite> otherwise)</p></li>
+<li><p><cite>save_path</cite>: file path to save test results (the directory better be existing)</p></li>
+<li><p><cite>cache_path</cite>: directory path to cache intermediate calculations (the directory better be existing)</p></li>
+</ul>
+<p>Use <cite>visualization_tables.ipynb</cite> to generate the summarizing tables for an experiment.</p>
+<p>The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found <a class="reference external" href="https://drive.google.com/drive/folders/1bQlvPRZHdZvdpAyBQ_lQiXLq9t5whTfi?usp=sharing">here</a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to LM-Polygraph’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="web_demo.html" class="btn btn-neutral float-right" title="Demo web application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MBZUAI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

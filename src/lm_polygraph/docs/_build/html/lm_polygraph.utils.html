@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lm_polygraph.utils package &mdash; LM-Polygraph 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="lm_polygraph.ue_metrics package" href="lm_polygraph.ue_metrics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LM-Polygraph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="web_demo.html">Demo web application</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lm_polygraph</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="lm_polygraph.html">lm_polygraph package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="lm_polygraph.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.app.html">lm_polygraph.app package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.estimators.html">lm_polygraph.estimators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.generation_metrics.html">lm_polygraph.generation_metrics package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.stat_calculators.html">lm_polygraph.stat_calculators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lm_polygraph.ue_metrics.html">lm_polygraph.ue_metrics package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">lm_polygraph.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lm_polygraph.html#module-lm_polygraph">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LM-Polygraph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">lm_polygraph</a></li>
+          <li class="breadcrumb-item"><a href="lm_polygraph.html">lm_polygraph package</a></li>
+      <li class="breadcrumb-item active">lm_polygraph.utils package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/lm_polygraph.utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lm-polygraph-utils-package">
+<h1>lm_polygraph.utils package<a class="headerlink" href="#lm-polygraph-utils-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-lm_polygraph.utils.dataset">
+<span id="lm-polygraph-utils-dataset-module"></span><h2>lm_polygraph.utils.dataset module<a class="headerlink" href="#module-lm_polygraph.utils.dataset" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.dataset.</span></span><span class="sig-name descname"><span class="pre">Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset.from_csv">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset.from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset.from_csv" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset.from_datasets">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset.from_datasets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset.from_datasets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset.load" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset.select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset.select" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset.subsample">
+<span class="sig-name descname"><span class="pre">subsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset.subsample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset.subsample" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.dataset.Dataset.train_test_split">
+<span class="sig-name descname"><span class="pre">train_test_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'train'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/dataset.html#Dataset.train_test_split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.dataset.Dataset.train_test_split" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.ensemble_generator">
+<span id="lm-polygraph-utils-ensemble-generator-module"></span><h2>lm_polygraph.utils.ensemble_generator module<a class="headerlink" href="#module-lm_polygraph.utils.ensemble_generator" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.ensemble_generator.</span></span><span class="sig-name descname"><span class="pre">BeamSearchEncoderDecoderOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LongTensor</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequences_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FloatTensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models_beam_next_token_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pe_uncertainties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_uncertainties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LongTensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#BeamSearchEncoderDecoderOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOutput</span></code></p>
+<p>Base class for outputs of encoder-decoder generation models using beam search. Hidden states and attention weights
+of the decoder (respectively the encoder) can be accessed via the encoder_attentions and the encoder_hidden_states
+attributes (respectively the decoder_attentions and the decoder_hidden_states attributes)</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>sequences (<cite>torch.LongTensor</cite> of shape <cite>(batch_size*num_return_sequences, sequence_length)</cite>):</dt><dd><p>The generated sequences. The second dimension (sequence_length) is either equal to <cite>max_length</cite> or shorter
+if all batches finished early due to the <cite>eos_token_id</cite>.</p>
+</dd>
+<dt>sequences_scores (<cite>torch.FloatTensor</cite> of shape <cite>(batch_size*num_return_sequences)</cite>, <em>optional</em>, returned when <cite>output_scores=True</cite> is passed or when <cite>config.output_scores=True</cite>):</dt><dd><p>Final beam scores of the generated <cite>sequences</cite>.</p>
+</dd>
+<dt>scores (<cite>tuple(torch.FloatTensor)</cite> <em>optional</em>, returned when <cite>output_scores=True</cite> is passed or when <cite>config.output_scores=True</cite>):</dt><dd><p>Beam transition scores for each vocabulary token at each generation step. Beam transition scores consisting
+of log probabilities of tokens conditioned on log softmax of previously generated tokens in this beam.
+<cite>(max_length-1,)</cite>-shaped tuple of <cite>torch.FloatTensor</cite> with each tensor of shape <cite>(batch_size*num_beams,
+config.vocab_size)</cite>).</p>
+</dd>
+<dt>beam_indices (<cite>tuple(tuple(torch.LongTensor))</cite>, <em>optional</em>, returned when <cite>output_scores=True</cite> is passed or when <cite>config.output_scores=True</cite>):</dt><dd><p>Beam indices of generated token id at each generation step. <cite>torch.LongTensor</cite> of shape
+<cite>(batch_size*num_return_sequences, max_length-1)</cite>.</p>
+</dd>
+</dl>
+<p>attentions (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):
+encoder_attentions (<cite>tuple(torch.FloatTensor)</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):</p>
+<blockquote>
+<div><p>Tuple of <cite>torch.FloatTensor</cite> (one for each layer of the decoder) of shape <cite>(batch_size, num_heads,
+sequence_length, sequence_length)</cite>.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>encoder_hidden_states (<cite>tuple(torch.FloatTensor)</cite>, <em>optional</em>, returned when <cite>output_hidden_states=True</cite> is passed or when <cite>config.output_hidden_states=True</cite>):</dt><dd><p>Tuple of <cite>torch.FloatTensor</cite> (one for the output of the embeddings + one for the output of each layer) of
+shape <cite>(batch_size*num_beams*num_return_sequences, sequence_length, hidden_size)</cite>.</p>
+</dd>
+<dt>decoder_attentions (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):</dt><dd><p>Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+<cite>torch.FloatTensor</cite> of shape <cite>(batch_size*num_beams*num_return_sequences, num_heads, generated_length,
+sequence_length)</cite>.</p>
+</dd>
+<dt>cross_attentions (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):</dt><dd><p>Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+<cite>torch.FloatTensor</cite> of shape <cite>(batch_size, num_heads, generated_length, sequence_length)</cite>.</p>
+</dd>
+<dt>decoder_hidden_states (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_hidden_states=True</cite> is passed or when <cite>config.output_hidden_states=True</cite>):</dt><dd><p>Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+<cite>torch.FloatTensor</cite> of shape <cite>(batch_size*num_beams*num_return_sequences, generated_length, hidden_size)</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.beam_indices">
+<span class="sig-name descname"><span class="pre">beam_indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LongTensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.beam_indices" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.cross_attentions">
+<span class="sig-name descname"><span class="pre">cross_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.cross_attentions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.decoder_attentions">
+<span class="sig-name descname"><span class="pre">decoder_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.decoder_attentions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.decoder_hidden_states">
+<span class="sig-name descname"><span class="pre">decoder_hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.decoder_hidden_states" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.encoder_attentions">
+<span class="sig-name descname"><span class="pre">encoder_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.encoder_attentions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.encoder_hidden_states">
+<span class="sig-name descname"><span class="pre">encoder_hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.encoder_hidden_states" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.ep_uncertainties">
+<span class="sig-name descname"><span class="pre">ep_uncertainties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.ep_uncertainties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.models_beam_next_token_logits">
+<span class="sig-name descname"><span class="pre">models_beam_next_token_logits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.models_beam_next_token_logits" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.models_scores">
+<span class="sig-name descname"><span class="pre">models_scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.models_scores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.pe_uncertainties">
+<span class="sig-name descname"><span class="pre">pe_uncertainties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.pe_uncertainties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.scores">
+<span class="sig-name descname"><span class="pre">scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.scores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.sequences">
+<span class="sig-name descname"><span class="pre">sequences</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LongTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.sequences" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.sequences_scores">
+<span class="sig-name descname"><span class="pre">sequences_scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FloatTensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.BeamSearchEncoderDecoderOutput.sequences_scores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.ensemble_generator.</span></span><span class="sig-name descname"><span class="pre">EnsembleGenerationMixin</span></span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#EnsembleGenerationMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">GenerationMixin</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.add_ensemble_models">
+<span class="sig-name descname"><span class="pre">add_ensemble_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">devices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#EnsembleGenerationMixin.add_ensemble_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.add_ensemble_models" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.base_seed">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">base_seed</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.base_seed" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.beam_search">
+<span class="sig-name descname"><span class="pre">beam_search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LongTensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_scorer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BeamScorer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits_processor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LogitsProcessorList</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopping_criteria</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">StoppingCriteriaList</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_token_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eos_token_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dict_in_generate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synced_gpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">model_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BeamSearchEncoderDecoderOutput</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BeamSearchDecoderOnlyOutput</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">LongTensor</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#EnsembleGenerationMixin.beam_search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.beam_search" title="Permalink to this definition"></a></dt>
+<dd><p>Averages the function across the ensemble models
+Generates sequences of token ids for models with a language modeling head using <strong>beam search decoding</strong> and
+can be used for text-decoder, text-to-text, speech-to-text, and vision-to-text models.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>input_ids (<cite>torch.LongTensor</cite> of shape <cite>(batch_size, sequence_length)</cite>):</dt><dd><p>The sequence used as a prompt for the generation.</p>
+</dd>
+<dt>beam_scorer (<cite>BeamScorer</cite>):</dt><dd><p>An derived instance of [<cite>BeamScorer</cite>] that defines how beam hypotheses are constructed, stored and
+sorted during generation. For more information, the documentation of [<cite>BeamScorer</cite>] should be read.</p>
+</dd>
+<dt>logits_processor (<cite>LogitsProcessorList</cite>, <em>optional</em>):</dt><dd><p>An instance of [<cite>LogitsProcessorList</cite>]. List of instances of class derived from [<cite>LogitsProcessor</cite>]
+used to modify the prediction scores of the language modeling head applied at each generation step.</p>
+</dd>
+<dt>stopping_criteria (<cite>StoppingCriteriaList</cite>, <em>optional</em>):</dt><dd><p>An instance of [<cite>StoppingCriteriaList</cite>]. List of instances of class derived from [<cite>StoppingCriteria</cite>]
+used to tell if the generation loop should stop.</p>
+</dd>
+<dt>max_length (<cite>int</cite>, <em>optional</em>, defaults to 20):</dt><dd><p><strong>DEPRECATED</strong>. Use <cite>logits_processor</cite> or <cite>stopping_criteria</cite> directly to cap the number of generated
+tokens. The maximum length of the sequence to be generated.</p>
+</dd>
+<dt>pad_token_id (<cite>int</cite>, <em>optional</em>):</dt><dd><p>The id of the <em>padding</em> token.</p>
+</dd>
+<dt>eos_token_id (<cite>int</cite>, <em>optional</em>):</dt><dd><p>The id of the <em>end-of-sequence</em> token.</p>
+</dd>
+<dt>output_attentions (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return the attentions tensors of all attention layers. See <cite>attentions</cite> under
+returned tensors for more details.</p>
+</dd>
+<dt>output_hidden_states (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return the hidden states of all layers. See <cite>hidden_states</cite> under returned tensors
+for more details.</p>
+</dd>
+<dt>output_scores (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return the prediction scores. See <cite>scores</cite> under returned tensors for more details.</p>
+</dd>
+<dt>return_dict_in_generate (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return a [<cite>~utils.ModelOutput</cite>] instead of a plain tuple.</p>
+</dd>
+<dt>synced_gpus (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether to continue running the while loop until max_length (needed for ZeRO stage 3)</p>
+</dd>
+<dt>model_kwargs:</dt><dd><p>Additional model specific kwargs will be forwarded to the <cite>forward</cite> function of the model. If model is
+an encoder-decoder model the kwargs should include <cite>encoder_outputs</cite>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>[<cite>generation_utilsBeamSearchDecoderOnlyOutput</cite>], [<cite>~generation_utils.BeamSearchEncoderDecoderOutput</cite>] or
+<cite>torch.LongTensor</cite>: A <cite>torch.LongTensor</cite> containing the generated tokens (default behaviour) or a
+[<cite>~generation_utils.BeamSearchDecoderOnlyOutput</cite>] if <cite>model.config.is_encoder_decoder=False</cite> and
+<cite>return_dict_in_generate=True</cite> or a [<cite>~generation_utils.BeamSearchEncoderDecoderOutput</cite>] if
+<cite>model.config.is_encoder_decoder=True</cite>.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
+&gt;&gt;&gt; from transformers import (
+…     AutoTokenizer,
+…     AutoModelForSeq2SeqLM,
+…     LogitsProcessorList,
+…     MinLengthLogitsProcessor,
+…     BeamSearchScorer,
+… )
+&gt;&gt;&gt; import torch</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;t5-base&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForSeq2SeqLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;t5-base&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">encoder_input_str</span> <span class="o">=</span> <span class="s2">&quot;translate English to German: How old are you?&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">encoder_input_ids</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">encoder_input_str</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">input_ids</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># lets run beam search using 3 beams</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">num_beams</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># define decoder start token ids</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">num_beams</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_ids</span> <span class="o">=</span> <span class="n">input_ids</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoder_start_token_id</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># add encoder_outputs to model keyword arguments</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;encoder_outputs&quot;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">get_encoder</span><span class="p">()(</span>
+<span class="gp">... </span>        <span class="n">encoder_input_ids</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">num_beams</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate beam scorer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beam_scorer</span> <span class="o">=</span> <span class="n">BeamSearchScorer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">num_beams</span><span class="o">=</span><span class="n">num_beams</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">device</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate logits processors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logits_processor</span> <span class="o">=</span> <span class="n">LogitsProcessorList</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span>
+<span class="gp">... </span>        <span class="n">MinLengthLogitsProcessor</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">eos_token_id</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eos_token_id</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">beam_search</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">beam_scorer</span><span class="p">,</span> <span class="n">logits_processor</span><span class="o">=</span><span class="n">logits_processor</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_decode</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[&#39;Wie alt bist du?&#39;]</span>
+<span class="go">```</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.calculate_entropy_based_measures">
+<span class="sig-name descname"><span class="pre">calculate_entropy_based_measures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#EnsembleGenerationMixin.calculate_entropy_based_measures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.calculate_entropy_based_measures" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.ensembling_mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ensembling_mode</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.ensembling_mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.mc">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mc</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.mc" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.mc_models_num">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mc_models_num</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.mc_models_num" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.mc_seeds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mc_seeds</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.mc_seeds" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.models">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">models</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.models" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.models_beam_logits_iter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">models_beam_logits_iter</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.models_beam_logits_iter" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LongTensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits_processor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LogitsProcessorList</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopping_criteria</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">StoppingCriteriaList</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits_warper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LogitsProcessorList</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_token_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eos_token_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dict_in_generate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synced_gpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">streamer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseStreamer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">model_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SampleEncoderDecoderOutput</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SampleDecoderOnlyOutput</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">LongTensor</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#EnsembleGenerationMixin.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Generates sequences of token ids for models with a language modeling head using <strong>multinomial sampling</strong> and
+can be used for text-decoder, text-to-text, speech-to-text, and vision-to-text models.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>input_ids (<cite>torch.LongTensor</cite> of shape <cite>(batch_size, sequence_length)</cite>):</dt><dd><p>The sequence used as a prompt for the generation.</p>
+</dd>
+<dt>logits_processor (<cite>LogitsProcessorList</cite>, <em>optional</em>):</dt><dd><p>An instance of [<cite>LogitsProcessorList</cite>]. List of instances of class derived from [<cite>LogitsProcessor</cite>]
+used to modify the prediction scores of the language modeling head applied at each generation step.</p>
+</dd>
+<dt>stopping_criteria (<cite>StoppingCriteriaList</cite>, <em>optional</em>):</dt><dd><p>An instance of [<cite>StoppingCriteriaList</cite>]. List of instances of class derived from [<cite>StoppingCriteria</cite>]
+used to tell if the generation loop should stop.</p>
+</dd>
+<dt>logits_warper (<cite>LogitsProcessorList</cite>, <em>optional</em>):</dt><dd><p>An instance of [<cite>LogitsProcessorList</cite>]. List of instances of class derived from [<cite>LogitsWarper</cite>] used
+to warp the prediction score distribution of the language modeling head applied before multinomial
+sampling at each generation step.</p>
+</dd>
+<dt>max_length (<cite>int</cite>, <em>optional</em>, defaults to 20):</dt><dd><p><strong>DEPRECATED</strong>. Use <cite>logits_processor</cite> or <cite>stopping_criteria</cite> directly to cap the number of generated
+tokens. The maximum length of the sequence to be generated.</p>
+</dd>
+<dt>pad_token_id (<cite>int</cite>, <em>optional</em>):</dt><dd><p>The id of the <em>padding</em> token.</p>
+</dd>
+<dt>eos_token_id (<cite>int</cite>, <em>optional</em>):</dt><dd><p>The id of the <em>end-of-sequence</em> token.</p>
+</dd>
+<dt>output_attentions (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return the attentions tensors of all attention layers. See <cite>attentions</cite> under
+returned tensors for more details.</p>
+</dd>
+<dt>output_hidden_states (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return the hidden states of all layers. See <cite>hidden_states</cite> under returned tensors
+for more details.</p>
+</dd>
+<dt>output_scores (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return the prediction scores. See <cite>scores</cite> under returned tensors for more details.</p>
+</dd>
+<dt>return_dict_in_generate (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether or not to return a [<cite>~utils.ModelOutput</cite>] instead of a plain tuple.</p>
+</dd>
+<dt>synced_gpus (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>):</dt><dd><p>Whether to continue running the while loop until max_length (needed for ZeRO stage 3)</p>
+</dd>
+<dt>model_kwargs:</dt><dd><p>Additional model specific kwargs will be forwarded to the <cite>forward</cite> function of the model. If model is
+an encoder-decoder model the kwargs should include <cite>encoder_outputs</cite>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>Return:</dt><dd><p>[<cite>~generation_utils.SampleDecoderOnlyOutput</cite>], [<cite>~generation_utils.SampleEncoderDecoderOutput</cite>] or
+<cite>torch.LongTensor</cite>: A <cite>torch.LongTensor</cite> containing the generated tokens (default behaviour) or a
+[<cite>~generation_utils.SampleDecoderOnlyOutput</cite>] if <cite>model.config.is_encoder_decoder=False</cite> and
+<cite>return_dict_in_generate=True</cite> or a [<cite>~generation_utils.SampleEncoderDecoderOutput</cite>] if
+<cite>model.config.is_encoder_decoder=True</cite>.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<p><a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a>python
+&gt;&gt;&gt; from transformers import (
+…     AutoTokenizer,
+…     AutoModelForCausalLM,
+…     LogitsProcessorList,
+…     MinLengthLogitsProcessor,
+…     TopKLogitsWarper,
+…     TemperatureLogitsWarper,
+…     StoppingCriteriaList,
+…     MaxLengthCriteria,
+… )
+&gt;&gt;&gt; import torch</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># set pad_token_id to eos_token_id because GPT2 does not have a EOS token</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pad_token_id</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eos_token_id</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_prompt</span> <span class="o">=</span> <span class="s2">&quot;Today is a beautiful day, and&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_ids</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">input_prompt</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">input_ids</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate logits processors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logits_processor</span> <span class="o">=</span> <span class="n">LogitsProcessorList</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span>
+<span class="gp">... </span>        <span class="n">MinLengthLogitsProcessor</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">eos_token_id</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eos_token_id</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate logits processors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logits_warper</span> <span class="o">=</span> <span class="n">LogitsProcessorList</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span>
+<span class="gp">... </span>        <span class="n">TopKLogitsWarper</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">TemperatureLogitsWarper</span><span class="p">(</span><span class="mf">0.7</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stopping_criteria</span> <span class="o">=</span> <span class="n">StoppingCriteriaList</span><span class="p">([</span><span class="n">MaxLengthCriteria</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">)])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">input_ids</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">logits_processor</span><span class="o">=</span><span class="n">logits_processor</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">logits_warper</span><span class="o">=</span><span class="n">logits_warper</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">stopping_criteria</span><span class="o">=</span><span class="n">stopping_criteria</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_decode</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[&#39;Today is a beautiful day, and a wonderful day.\n\nI was lucky enough to meet the&#39;]</span>
+<span class="go">```</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.tokenizer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.EnsembleGenerationMixin.tokenizer" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.ensemble_generator.</span></span><span class="sig-name descname"><span class="pre">SampleEncoderDecoderOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LongTensor</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models_beam_next_token_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pe_uncertainties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_uncertainties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/ensemble_generator.html#SampleEncoderDecoderOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOutput</span></code></p>
+<p>Base class for outputs of encoder-decoder generation models using beam search. Hidden states and attention weights
+of the decoder (respectively the encoder) can be accessed via the encoder_attentions and the encoder_hidden_states
+attributes (respectively the decoder_attentions and the decoder_hidden_states attributes)</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>sequences (<cite>torch.LongTensor</cite> of shape <cite>(batch_size*num_return_sequences, sequence_length)</cite>):</dt><dd><p>The generated sequences. The second dimension (sequence_length) is either equal to <cite>max_length</cite> or shorter
+if all batches finished early due to the <cite>eos_token_id</cite>.</p>
+</dd>
+<dt>sequences_scores (<cite>torch.FloatTensor</cite> of shape <cite>(batch_size*num_return_sequences)</cite>, <em>optional</em>, returned when <cite>output_scores=True</cite> is passed or when <cite>config.output_scores=True</cite>):</dt><dd><p>Final beam scores of the generated <cite>sequences</cite>.</p>
+</dd>
+<dt>scores (<cite>tuple(torch.FloatTensor)</cite> <em>optional</em>, returned when <cite>output_scores=True</cite> is passed or when <cite>config.output_scores=True</cite>):</dt><dd><p>Beam transition scores for each vocabulary token at each generation step. Beam transition scores consisting
+of log probabilities of tokens conditioned on log softmax of previously generated tokens in this beam.
+<cite>(max_length-1,)</cite>-shaped tuple of <cite>torch.FloatTensor</cite> with each tensor of shape <cite>(batch_size*num_beams,
+config.vocab_size)</cite>).</p>
+</dd>
+<dt>beam_indices (<cite>tuple(tuple(torch.LongTensor))</cite>, <em>optional</em>, returned when <cite>output_scores=True</cite> is passed or when <cite>config.output_scores=True</cite>):</dt><dd><p>Beam indices of generated token id at each generation step. <cite>torch.LongTensor</cite> of shape
+<cite>(batch_size*num_return_sequences, max_length-1)</cite>.</p>
+</dd>
+</dl>
+<p>attentions (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):
+encoder_attentions (<cite>tuple(torch.FloatTensor)</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):</p>
+<blockquote>
+<div><p>Tuple of <cite>torch.FloatTensor</cite> (one for each layer of the decoder) of shape <cite>(batch_size, num_heads,
+sequence_length, sequence_length)</cite>.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>encoder_hidden_states (<cite>tuple(torch.FloatTensor)</cite>, <em>optional</em>, returned when <cite>output_hidden_states=True</cite> is passed or when <cite>config.output_hidden_states=True</cite>):</dt><dd><p>Tuple of <cite>torch.FloatTensor</cite> (one for the output of the embeddings + one for the output of each layer) of
+shape <cite>(batch_size*num_beams*num_return_sequences, sequence_length, hidden_size)</cite>.</p>
+</dd>
+<dt>decoder_attentions (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):</dt><dd><p>Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+<cite>torch.FloatTensor</cite> of shape <cite>(batch_size*num_beams*num_return_sequences, num_heads, generated_length,
+sequence_length)</cite>.</p>
+</dd>
+<dt>cross_attentions (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_attentions=True</cite> is passed or <cite>config.output_attentions=True</cite>):</dt><dd><p>Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+<cite>torch.FloatTensor</cite> of shape <cite>(batch_size, num_heads, generated_length, sequence_length)</cite>.</p>
+</dd>
+<dt>decoder_hidden_states (<cite>tuple(tuple(torch.FloatTensor))</cite>, <em>optional</em>, returned when <cite>output_hidden_states=True</cite> is passed or when <cite>config.output_hidden_states=True</cite>):</dt><dd><p>Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+<cite>torch.FloatTensor</cite> of shape <cite>(batch_size*num_beams*num_return_sequences, generated_length, hidden_size)</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.cross_attentions">
+<span class="sig-name descname"><span class="pre">cross_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.cross_attentions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.decoder_attentions">
+<span class="sig-name descname"><span class="pre">decoder_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.decoder_attentions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.decoder_hidden_states">
+<span class="sig-name descname"><span class="pre">decoder_hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.decoder_hidden_states" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.encoder_attentions">
+<span class="sig-name descname"><span class="pre">encoder_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.encoder_attentions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.encoder_hidden_states">
+<span class="sig-name descname"><span class="pre">encoder_hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.encoder_hidden_states" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.ep_uncertainties">
+<span class="sig-name descname"><span class="pre">ep_uncertainties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.ep_uncertainties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.models_beam_next_token_logits">
+<span class="sig-name descname"><span class="pre">models_beam_next_token_logits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.models_beam_next_token_logits" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.models_scores">
+<span class="sig-name descname"><span class="pre">models_scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.models_scores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.pe_uncertainties">
+<span class="sig-name descname"><span class="pre">pe_uncertainties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.pe_uncertainties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.scores">
+<span class="sig-name descname"><span class="pre">scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.scores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.sequences">
+<span class="sig-name descname"><span class="pre">sequences</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LongTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.ensemble_generator.SampleEncoderDecoderOutput.sequences" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.generation_parameters">
+<span id="lm-polygraph-utils-generation-parameters-module"></span><h2>lm_polygraph.utils.generation_parameters module<a class="headerlink" href="#module-lm_polygraph.utils.generation_parameters" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.generation_parameters.</span></span><span class="sig-name descname"><span class="pre">GenerationParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_sample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_beams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">presence_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetition_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_newlines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/generation_parameters.html#GenerationParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.allow_newlines">
+<span class="sig-name descname"><span class="pre">allow_newlines</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.allow_newlines" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.do_sample">
+<span class="sig-name descname"><span class="pre">do_sample</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.do_sample" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.num_beams">
+<span class="sig-name descname"><span class="pre">num_beams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.num_beams" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.presence_penalty">
+<span class="sig-name descname"><span class="pre">presence_penalty</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.presence_penalty" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.repetition_penalty">
+<span class="sig-name descname"><span class="pre">repetition_penalty</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.repetition_penalty" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.temperature">
+<span class="sig-name descname"><span class="pre">temperature</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.temperature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.topk">
+<span class="sig-name descname"><span class="pre">topk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.topk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.generation_parameters.GenerationParameters.topp">
+<span class="sig-name descname"><span class="pre">topp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#lm_polygraph.utils.generation_parameters.GenerationParameters.topp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.manager">
+<span id="lm-polygraph-utils-manager-module"></span><h2>lm_polygraph.utils.manager module<a class="headerlink" href="#module-lm_polygraph.utils.manager" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UEManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.manager.</span></span><span class="sig-name descname"><span class="pre">UEManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.dataset.Dataset" title="lm_polygraph.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.model.Model" title="lm_polygraph.utils.model.Model"><span class="pre">Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimators</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="lm_polygraph.generation_metrics.html#lm_polygraph.generation_metrics.generation_metric.GenerationMetric" title="lm_polygraph.generation_metrics.generation_metric.GenerationMetric"><span class="pre">GenerationMetric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ue_metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="lm_polygraph.ue_metrics.html#lm_polygraph.ue_metrics.ue_metric.UEMetric" title="lm_polygraph.ue_metrics.ue_metric.UEMetric"><span class="pre">UEMetric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lm_polygraph.utils.processor.Processor" title="lm_polygraph.utils.processor.Processor"><span class="pre">Processor</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.dataset.Dataset" title="lm_polygraph.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_train_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.dataset.Dataset" title="lm_polygraph.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.model.WhiteboxModel" title="lm_polygraph.utils.model.WhiteboxModel"><span class="pre">WhiteboxModel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_new_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_train_dataset_max_new_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/manager.html#UEManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.manager.UEManager" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UEManager.extract_train_embeddings">
+<span class="sig-name descname"><span class="pre">extract_train_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/manager.html#UEManager.extract_train_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.manager.UEManager.extract_train_embeddings" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UEManager.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lm_polygraph.utils.manager.UEManager" title="lm_polygraph.utils.manager.UEManager"><span class="pre">UEManager</span></a></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/manager.html#UEManager.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.manager.UEManager.load" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UEManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/manager.html#UEManager.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.manager.UEManager.save" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UncertaintyOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.manager.</span></span><span class="sig-name descname"><span class="pre">UncertaintyOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generation_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/manager.html#UncertaintyOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.manager.UncertaintyOutput" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UncertaintyOutput.generation_text">
+<span class="sig-name descname"><span class="pre">generation_text</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#lm_polygraph.utils.manager.UncertaintyOutput.generation_text" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UncertaintyOutput.generation_tokens">
+<span class="sig-name descname"><span class="pre">generation_tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lm_polygraph.utils.manager.UncertaintyOutput.generation_tokens" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.UncertaintyOutput.uncertainty">
+<span class="sig-name descname"><span class="pre">uncertainty</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#lm_polygraph.utils.manager.UncertaintyOutput.uncertainty" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.manager.estimate_uncertainty">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.manager.</span></span><span class="sig-name descname"><span class="pre">estimate_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.model.WhiteboxModel" title="lm_polygraph.utils.model.WhiteboxModel"><span class="pre">WhiteboxModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/manager.html#estimate_uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.manager.estimate_uncertainty" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.model">
+<span id="lm-polygraph-utils-model-module"></span><h2>lm_polygraph.utils.model module<a class="headerlink" href="#module-lm_polygraph.utils.model" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.model.</span></span><span class="sig-name descname"><span class="pre">BlackboxModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">openai_api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_api_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.generation_parameters.GenerationParameters" title="lm_polygraph.utils.generation_parameters.GenerationParameters"><span class="pre">GenerationParameters</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">GenerationParameters(temperature=1.0,</span> <span class="pre">topk=1,</span> <span class="pre">topp=1.0,</span> <span class="pre">do_sample=False,</span> <span class="pre">num_beams=1,</span> <span class="pre">presence_penalty=0,</span> <span class="pre">repetition_penalty=1,</span> <span class="pre">allow_newlines=True)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.utils.model.Model" title="lm_polygraph.utils.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel.from_huggingface">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_huggingface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hf_api_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel.from_huggingface"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel.from_huggingface" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel.from_openai">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_openai</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">openai_api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel.from_openai"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel.from_openai" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel.generate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel.generate_texts">
+<span class="sig-name descname"><span class="pre">generate_texts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_texts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel.generate_texts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel.generate_texts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel.query" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.BlackboxModel.tokenizer">
+<span class="sig-name descname"><span class="pre">tokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#BlackboxModel.tokenizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.BlackboxModel.tokenizer" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.Model">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.Model" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.Model.generate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#Model.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.Model.generate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.Model.generate_texts">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_texts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_texts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#Model.generate_texts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.Model.generate_texts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.model.</span></span><span class="sig-name descname"><span class="pre">WhiteboxModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AutoModelForCausalLM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AutoTokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lm_polygraph.utils.generation_parameters.GenerationParameters" title="lm_polygraph.utils.generation_parameters.GenerationParameters"><span class="pre">GenerationParameters</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">GenerationParameters(temperature=1.0,</span> <span class="pre">topk=1,</span> <span class="pre">topp=1.0,</span> <span class="pre">do_sample=False,</span> <span class="pre">num_beams=1,</span> <span class="pre">presence_penalty=0,</span> <span class="pre">repetition_penalty=1,</span> <span class="pre">allow_newlines=True)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.utils.model.Model" title="lm_polygraph.utils.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel.device">
+<span class="sig-name descname"><span class="pre">device</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel.device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel.device" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel.from_pretrained">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel.from_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel.from_pretrained" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel.generate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel.generate_texts">
+<span class="sig-name descname"><span class="pre">generate_texts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_texts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel.generate_texts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel.generate_texts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel.load" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.model.WhiteboxModel.tokenize">
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/model.html#WhiteboxModel.tokenize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.model.WhiteboxModel.tokenize" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.normalize">
+<span id="lm-polygraph-utils-normalize-module"></span><h2>lm_polygraph.utils.normalize module<a class="headerlink" href="#module-lm_polygraph.utils.normalize" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.normalize.calibration_confidence">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.normalize.</span></span><span class="sig-name descname"><span class="pre">calibration_confidence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">est</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/lm_polygraph/utils/normalization'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/normalize.html#calibration_confidence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.normalize.calibration_confidence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.normalize.can_get_calibration_conf">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.normalize.</span></span><span class="sig-name descname"><span class="pre">can_get_calibration_conf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">est</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/lm_polygraph/utils/normalization'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/normalize.html#can_get_calibration_conf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.normalize.can_get_calibration_conf" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.normalize.can_normalize_ue">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.normalize.</span></span><span class="sig-name descname"><span class="pre">can_normalize_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">est</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/lm_polygraph/utils/normalization'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/normalize.html#can_normalize_ue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.normalize.can_normalize_ue" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.normalize.normalization_bounds_present">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.normalize.</span></span><span class="sig-name descname"><span class="pre">normalization_bounds_present</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">est</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/lm_polygraph/utils/normalization'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/normalize.html#normalization_bounds_present"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.normalize.normalization_bounds_present" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.normalize.normalize_ue">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.normalize.</span></span><span class="sig-name descname"><span class="pre">normalize_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">est</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lm_polygraph.estimators.html#lm_polygraph.estimators.estimator.Estimator" title="lm_polygraph.estimators.estimator.Estimator"><span class="pre">Estimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/lm_polygraph/utils/normalization'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/lm_polygraph/utils/normalize.html#normalize_ue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.normalize.normalize_ue" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.processor">
+<span id="lm-polygraph-utils-processor-module"></span><h2>lm_polygraph.utils.processor module<a class="headerlink" href="#module-lm_polygraph.utils.processor" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.processor.Logger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.processor.</span></span><span class="sig-name descname"><span class="pre">Logger</span></span><a class="reference internal" href="_modules/lm_polygraph/utils/processor.html#Logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.processor.Logger" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lm_polygraph.utils.processor.Processor" title="lm_polygraph.utils.processor.Processor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.processor.Logger.on_batch">
+<span class="sig-name descname"><span class="pre">on_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_gen_metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_estimations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/processor.html#Logger.on_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.processor.Logger.on_batch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.processor.Logger.on_eval">
+<span class="sig-name descname"><span class="pre">on_eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/processor.html#Logger.on_eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.processor.Logger.on_eval" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lm_polygraph.utils.processor.Processor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.processor.</span></span><span class="sig-name descname"><span class="pre">Processor</span></span><a class="reference internal" href="_modules/lm_polygraph/utils/processor.html#Processor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.processor.Processor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.processor.Processor.on_batch">
+<span class="sig-name descname"><span class="pre">on_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_gen_metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_estimations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/processor.html#Processor.on_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.processor.Processor.on_batch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lm_polygraph.utils.processor.Processor.on_eval">
+<span class="sig-name descname"><span class="pre">on_eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/processor.html#Processor.on_eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.processor.Processor.on_eval" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils.token_restoration">
+<span id="lm-polygraph-utils-token-restoration-module"></span><h2>lm_polygraph.utils.token_restoration module<a class="headerlink" href="#module-lm_polygraph.utils.token_restoration" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.token_restoration.collect_sample_token_level_uncertainties">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.token_restoration.</span></span><span class="sig-name descname"><span class="pre">collect_sample_token_level_uncertainties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_return_sequences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_token_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble_uncertainties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/token_restoration.html#collect_sample_token_level_uncertainties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.token_restoration.collect_sample_token_level_uncertainties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.token_restoration.collect_token_level_uncertainties">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.token_restoration.</span></span><span class="sig-name descname"><span class="pre">collect_token_level_uncertainties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_token_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble_uncertainties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/token_restoration.html#collect_token_level_uncertainties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.token_restoration.collect_token_level_uncertainties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.token_restoration.get_collect_fn">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.token_restoration.</span></span><span class="sig-name descname"><span class="pre">get_collect_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/token_restoration.html#get_collect_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.token_restoration.get_collect_fn" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lm_polygraph.utils.token_restoration.update_token_level_scores">
+<span class="sig-prename descclassname"><span class="pre">lm_polygraph.utils.token_restoration.</span></span><span class="sig-name descname"><span class="pre">update_token_level_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lm_polygraph/utils/token_restoration.html#update_token_level_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lm_polygraph.utils.token_restoration.update_token_level_scores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-lm_polygraph.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lm_polygraph.utils" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lm_polygraph.ue_metrics.html" class="btn btn-neutral float-left" title="lm_polygraph.ue_metrics package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MBZUAI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
