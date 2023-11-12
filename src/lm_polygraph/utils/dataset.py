@@ -7,6 +7,7 @@ from datasets import load_dataset, DatasetDict, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List
 
+from lm_polygraph.utils.dataset_preprocessor import preprocess_dataset
 
 class Dataset:
     """
@@ -145,51 +146,7 @@ class Dataset:
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
-        if "translation" in dataset.column_names:
-            x, y = [], []
-            source_lang = (
-                "German"
-                if x_column == "de"
-                else "French"
-                if x_column == "fr"
-                else "English"
-            )
-            target_lang = (
-                "German"
-                if y_column == "de"
-                else "French"
-                if y_column == "fr"
-                else "English"
-            )
-            for inst in dataset["translation"]:
-                x.append(prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column]))
-                y.append(inst[y_column])
-        elif ("coqa" in dataset_path.lower()) and len(prompt):
-            x, y = [], []
-            for inst in dataset:
-                for question, answer in zip(
-                        inst[x_column], inst[y_column]["input_text"]
-                ):
-                    x.append(prompt.format(story=inst["story"], question=question))
-                    y.append(answer)
-        elif ("babi_qa" in dataset_path.lower()) and len(prompt):
-            x, y = [], []
-            for inst in dataset:
-                inst = inst["story"]
-                context = ""
-                for text, answer in zip(inst[x_column], inst[y_column]):
-                    if answer == "":
-                        context += text + " "
-                    else:
-                        x.append(prompt.format(context=context.strip(), question=text))
-                        y.append(answer)
-        elif len(prompt):
-            x = [prompt.format(text=text) for text in dataset[x_column]]
-            y = dataset[y_column]
-        else:
-            x = dataset[x_column]
-            y = dataset[y_column]
-
+        x, y = preprocess_dataset(dataset, dataset_path, x_column, y_column, prompt)
         return Dataset(x, y, batch_size)
 
     @staticmethod
