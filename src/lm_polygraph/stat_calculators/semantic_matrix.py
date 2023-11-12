@@ -22,7 +22,7 @@ class SemanticMatrixCalculator(StatCalculator):
                           'semantic_matrix_contra',
                           'semantic_matrix_classes'],
                          ['blackbox_sample_texts'])
-        DEBERTA.setup()
+        self.is_deberta_setup = False
 
     def __call__(self, dependencies: Dict[str, np.array],
                  texts: List[str],
@@ -47,6 +47,10 @@ class SemanticMatrixCalculator(StatCalculator):
                 - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
+        if not self.is_deberta_setup:
+            DEBERTA.setup()
+            self.is_deberta_setup = True
+
         deberta_batch_size = dependencies['deberta_batch_size']
         batch_texts = dependencies['blackbox_sample_texts']
 
