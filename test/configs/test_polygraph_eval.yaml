@@ -3,6 +3,16 @@ estimator_kwargs:
   metric: rouge2
 estimator_module: null
 
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+  - name: BartScoreSeqMetric
+    args: ["rh"]
+  - name: ModelScoreSeqMetric
+  - name: AccuracyMetric
+  - name: ModelScoreTokenwiseMetric
+  - name: BertScoreMetric
+
 dataset: SpeedOfMagic/trivia_qa_tiny
 train_split: train
 eval_split: test

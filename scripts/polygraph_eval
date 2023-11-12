@@ -24,6 +24,7 @@ from lm_polygraph.generation_metrics.model_score import (
     ModelScoreTokenwiseMetric,
 )
 from lm_polygraph.generation_metrics.rouge import RougeMetric
+from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
@@ -158,19 +159,12 @@ def main(args):
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
 
+        generation_metrics = get_generation_metrics(args.generation_metrics)
         man = UEManager(
             dataset,
             model,
             estimators,
-            [
-                RougeMetric("rouge1"),
-                RougeMetric("rouge2"),
-                RougeMetric("rougeL"),
-                BartScoreSeqMetric("rh"),
-                ModelScoreSeqMetric(),
-                AccuracyMetric(),
-                ModelScoreTokenwiseMetric(),
-            ],
+            generation_metrics,
             [
                 ReversedPairsProportion(),
                 PredictionRejectionArea(),
@@ -281,6 +275,26 @@ def get_ue_methods(args, model):
             estimators.append(getattr(module, estimator_class)(**estimator_kwargs))
 
     return estimators
+
+
+def get_generation_metrics(generation_metrics):
+    if generation_metrics is None:
+        return [
+            RougeMetric("rouge1"),
+            RougeMetric("rouge2"),
+            RougeMetric("rougeL"),
+            BartScoreSeqMetric("rh"),
+            ModelScoreSeqMetric(),
+            AccuracyMetric(),
+            ModelScoreTokenwiseMetric(),
+        ]
+    else:
+        result = []
+        for metric in generation_metrics:
+            metric_name = metric["name"]
+            metric_class = globals()[metric_name]
+            result.append(metric_class(*metric.get("args", [])))
+        return result
 
 
 if __name__ == "__main__":

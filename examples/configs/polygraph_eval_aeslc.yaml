@@ -11,6 +11,8 @@ estimator: null
 estimator_module: null
 estimator_kwargs: {}
 
+generation_metrics: null
+
 task: ats
 
 dataset: aeslc
