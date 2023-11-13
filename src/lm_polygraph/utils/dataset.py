@@ -136,10 +136,13 @@ class Dataset:
         """
         load_from_disk = kwargs.pop("load_from_disk", False)
         if load_from_disk:
+            dataset_name = dataset_path
             dataset = hf_dataset.load_from_disk(dataset_path)
         elif isinstance(dataset_path, str):
+            dataset_name = dataset_path
             dataset = load_dataset(dataset_path, split=split, **kwargs)
         else:
+            dataset_name = dataset_path[0]
             dataset = load_dataset(*dataset_path, split=split, **kwargs)
 
         if size is not None and size < len(dataset):
@@ -164,7 +167,7 @@ class Dataset:
             for inst in dataset["translation"]:
                 x.append(prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column]))
                 y.append(inst[y_column])
-        elif ("coqa" in dataset_path.lower()) and len(prompt):
+        elif ("coqa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
                 for question, answer in zip(
@@ -172,7 +175,7 @@ class Dataset:
                 ):
                     x.append(prompt.format(story=inst["story"], question=question))
                     y.append(answer)
-        elif ("babi_qa" in dataset_path.lower()) and len(prompt):
+        elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
                 inst = inst["story"]
