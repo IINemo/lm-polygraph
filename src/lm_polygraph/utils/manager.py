@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import sys
+import gc
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple, Optional, Union
@@ -362,6 +363,9 @@ class UEManager:
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
+            torch.cuda.empty_cache()
+            gc.collect()
+
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
@@ -426,8 +430,13 @@ class UEManager:
                     else:
                         train_stats[stat] = [batch_stats[stat]]
 
+                torch.cuda.empty_cache()
+                gc.collect()
+
             key_prefix = "background_train_" if background else "train_"
             for stat in train_stats.keys():
+                if any(s is None for s in train_stats[stat]):
+                    continue
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[key_prefix + stat] = [item for sublist in train_stats[stat] for item in sublist]
                 else:
