@@ -17,8 +17,7 @@ class SemanticMatrixCalculator(StatCalculator):
                           'semantic_matrix_contra',
                           'semantic_matrix_classes'],
                          ['blackbox_sample_texts'])
-        self.is_deberta_setup = False
-        #DEBERTA.setup()
+        DEBERTA.setup()
 
     def __call__(self, dependencies: Dict[str, np.array],
                        texts: List[str],
@@ -27,10 +26,6 @@ class SemanticMatrixCalculator(StatCalculator):
         deberta_batch_size = dependencies['deberta_batch_size']
         batch_texts = dependencies['blackbox_sample_texts']
         
-        if not self.is_deberta_setup:
-            DEBERTA.setup()
-            self.is_deberta_setup = True
-
         batch_pairs = []
         batch_invs = []
         batch_counts = []
