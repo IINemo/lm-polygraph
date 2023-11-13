@@ -6,7 +6,6 @@ from typing import Dict, List
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 
-
 class PromptCalculator(StatCalculator):
     """
     Calculates the probability for a specific token to be generated from the specific prompt.
@@ -61,6 +60,7 @@ class PromptCalculator(StatCalculator):
 
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
+
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -70,6 +70,7 @@ class PromptCalculator(StatCalculator):
                 max_new_tokens=1,
                 num_beams=1,
             )
+
         logits = torch.stack(out.scores, dim=1).log_softmax(-1)
         log_probs = logits[:, -1, expected_token].cpu().numpy()
 
