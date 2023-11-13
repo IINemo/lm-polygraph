@@ -61,7 +61,7 @@ def main(args):
 
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
-        cache_kwargs = {'cache_dir': args.cache_dir}
+        cache_kwargs = {'cache_dir': args.cache_path}
 
     device = args.device
     if device is None:

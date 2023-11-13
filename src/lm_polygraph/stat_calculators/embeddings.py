@@ -117,17 +117,18 @@ class EmbeddingsCalculator(StatCalculator):
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
-        out = model.generate(
-            **batch,
-            output_scores=True,
-            return_dict_in_generate=True,
-            max_new_tokens=max_new_tokens,
-            min_length=2,
-            output_attentions=False,
-            output_hidden_states=True,
-            num_beams=1,
-        )
-        embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
+        with torch.no_grad():
+            out = model.generate(
+                **batch,
+                output_scores=True,
+                return_dict_in_generate=True,
+                max_new_tokens=max_new_tokens,
+                min_length=2,
+                output_attentions=False,
+                output_hidden_states=True,
+                num_beams=1,
+            )
+            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
             
         if model.model_type == "CausalLM":
             return {

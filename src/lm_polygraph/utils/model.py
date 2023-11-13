@@ -334,8 +334,6 @@ class WhiteboxModel(Model):
             model = AutoModelForCausalLM.from_pretrained(
                 model_path, max_length=256, trust_remote_code=True, **kwargs
             ).to(device)
-            if kwargs.get('use_flash_attention_2', False):
-                model = model.half()
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
