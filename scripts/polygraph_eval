@@ -55,7 +55,7 @@ def main(args):
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
-        
+
     model_kwargs = {}
     model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
 
@@ -144,24 +144,24 @@ def main(args):
                     **cache_kwargs
                 )
 
-                background_train_dataset = Dataset.load(
-                    args.background_train_dataset,
-                    args.background_train_dataset_text_column, 
-                    args.background_train_dataset_label_column,
-                    batch_size=args.batch_size,
-                    data_files=args.background_train_dataset_data_files,
-                    split="train",
-                    size=100_000,
-                    load_from_disk=args.background_load_from_disk,
-                    **data_kwargs
-                )
+            background_train_dataset = Dataset.load(
+                args.background_train_dataset,
+                args.background_train_dataset_text_column, 
+                args.background_train_dataset_label_column,
+                batch_size=args.batch_size,
+                data_files=args.background_train_dataset_data_files,
+                split="train",
+                size=100_000,
+                load_from_disk=args.background_load_from_disk,
+                **data_kwargs
+            )
 
-                if args.subsample_train_dataset != -1:
-                    train_dataset.subsample(args.subsample_train_dataset, seed=seed)
-                if args.subsample_background_train_dataset != -1:
-                    background_train_dataset.subsample(
-                        args.subsample_background_train_dataset, seed=seed
-                    )
+            if args.subsample_train_dataset != -1:
+                train_dataset.subsample(args.subsample_train_dataset, seed=seed)
+            if args.subsample_background_train_dataset != -1:
+                background_train_dataset.subsample(
+                    args.subsample_background_train_dataset, seed=seed
+                )
         else:
             train_dataset = None
             background_train_dataset = None
