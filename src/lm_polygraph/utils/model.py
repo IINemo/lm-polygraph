@@ -12,6 +12,8 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausa
     LogitsProcessorList
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
+from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
 
 
 class Model(ABC):
@@ -326,11 +328,12 @@ class WhiteboxModel(Model):
             model_path (str): model path in HuggingFace.
             device (str): device to load the model on.
         """
-        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True, **kwargs)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs).to(device)
+                model_path, max_length=256, trust_remote_code=True, **kwargs
+            ).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
@@ -346,8 +349,10 @@ class WhiteboxModel(Model):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True,
-            model_max_length=256 if model_type == "CausalLM" else 1024)
+            model_path, padding_side="left", add_bos_token=True, 
+            model_max_length=1024,
+            **kwargs
+        )
 
         model.eval()
         if tokenizer.pad_token is None:
@@ -364,10 +369,23 @@ class WhiteboxModel(Model):
         Returns:
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
-        if ("falcon" in self.model.config._name_or_path.lower()) or (
-                "llama" in self.model.config._name_or_path.lower()):
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
+        model_type = self.model.config._name_or_path.lower()
+        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
+            prompted_texts = []
+            for text in texts:
+                if "llama" in model_type:
+                    template = LlamaPromptTemplate()
+                    template.add_user_message(text)
+                    prompted_texts.append(template.build_prompt())
+                elif "vicuna" in model_type:
+                    prompted_text = get_vicuna_prompt(text)
+                    prompted_texts.append(prompted_text)
+                else:
+                    prompted_texts.append(text)
+            tokenized = self.tokenizer(prompted_texts, truncation=True,
+                                       padding=True, return_tensors='pt',
                                        return_token_type_ids=False)
         else:
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+
         return tokenized
