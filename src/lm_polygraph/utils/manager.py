@@ -407,7 +407,15 @@ class UEManager:
         return self.metrics
 
 
-    def calculate(self, batch_stats, calculators, inp_texts):
+    def calculate(self, batch_stats: dict, calculators: list, inp_texts: list) -> dict:
+        """
+        Runs stat calculators and handles errors if any occur. Returns updated batch stats
+
+        Parameters:
+            batch_stats (dict): contains current batch statistics to be updated
+            calculators (list): list of stat calculators to run
+            inp_texts (list): list of inputs to the model in the batch
+        """
         for stat_calculator in calculators:
             try:
                 new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
@@ -427,8 +435,15 @@ class UEManager:
         return batch_stats
 
 
-    def estimate(self, batch_stats, estimators):
-        batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+    def estimate(self, batch_stats: dict, estimators: list) -> Dict[Tuple[str, str], List[float]]:
+        """
+        Runs stat calculators and handles errors if any occur. Returns updated batch stats
+
+        Parameters:
+            batch_stats (dict): contains current batch statistics to be updated
+            estimators (list): list of estimators to run
+        """
+        batch_estimations = defaultdict(list)
         bad_estimators = []
                 
         for estimator in self.ensemble_estimators:
@@ -526,7 +541,7 @@ class UEManager:
 
         Parameters:
             load_path (str): Path to file with saved benchmark results to load.
-
+        """
         res_dict = torch.load(load_path)
         man = UEManager(None, None, [], [], [], [])
         man.metrics = res_dict.get('metrics', None)
