@@ -319,46 +319,13 @@ class UEManager:
 
             batch_stats['deberta_batch_size'] = self.deberta_batch_size
 
-            try:
-                for stat_calculator in self.stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
-                    for stat, stat_value in new_stats.items():
-                        if stat in batch_stats.keys():
-                            continue
-                        batch_stats[stat] = stat_value
-                        if f'blackbox_{stat}' in STAT_CALCULATORS.keys():
-                            batch_stats[f'blackbox_{stat}'] = stat_value
-            except Exception as e:
-                if self.ignore_exceptions:
-                    log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
-                    sys.stderr.write(log_msg)
-                    print(log_msg)
-                    continue
-                else:
-                    raise e
+            batch_stats = self.calculate(batch_stats,
+                                         self.stat_calculators,
+                                         inp_texts)
+            
+            batch_estimations, bad_estimators = self.estimate(batch_stats,
+                                                              self.estimators)
 
-            for stat in train_stats.keys():
-                batch_stats[stat] = train_stats[stat]
-            for stat in background_train_stats.keys():
-                batch_stats[stat] = background_train_stats[stat]
-
-            batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-            bad_estimators = []
-
-            for estimator in self.estimators:
-                try:
-                    e = estimator(batch_stats).tolist()
-                    self.estimations[estimator.level, str(estimator)] += e
-                    batch_estimations[estimator.level, str(estimator)] += e
-                except Exception as e:
-                    if self.ignore_exceptions:
-                        bad_estimators.append(estimator)
-                        log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
-                        sys.stderr.write(log_msg)
-                        print(log_msg)
-                        continue
-                    else:
-                        raise e
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
                 self.estimations.pop(key, None)
@@ -375,8 +342,9 @@ class UEManager:
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
-        
+
         if self.ensemble_model is not None:
+            # Now do the same for ensemble calculators
             device = self.model.model.device
             self.model.model.to('cpu')
             self.ensemble_model.model.to(device)
@@ -396,40 +364,14 @@ class UEManager:
 
                 batch_stats['ensemble_generation_params'] = {}
                 batch_stats['ensemble_model'] = self.ensemble_model
-
-                try:
-                    for stat_calculator in self.ensemble_stat_calculators:
-                        new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
-                        for stat, stat_value in new_stats.items():
-                            if stat in batch_stats.keys():
-                                continue
-                            batch_stats[stat] = stat_value
-                except Exception as e:
-                    if self.ignore_exceptions:
-                        log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
-                        sys.stderr.write(log_msg)
-                        print(log_msg)
-                        continue
-                    else:
-                        raise e
-
-                batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-                bad_estimators = []
                 
-                for estimator in self.ensemble_estimators:
-                    try:
-                        e = estimator(batch_stats).tolist()
-                        self.estimations[estimator.level, str(estimator)] += e
-                        batch_estimations[estimator.level, str(estimator)] += e
-                    except Exception as e:
-                        if self.ignore_exceptions:
-                            bad_estimators.append(estimator)
-                            log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
-                            sys.stderr.write(log_msg)
-                            print(log_msg)
-                            continue
-                        else:
-                            raise e
+                batch_stats = self.calculate(batch_stats,
+                                             self.ensemble_stat_calculators,
+                                             inp_texts)
+                
+                batch_estimations, bad_estimators = self.estimate(batch_stats,
+                                                                  self.ensemble_estimators)
+
                 for bad_estimator in bad_estimators:
                     key = (bad_estimator.level, str(bad_estimator))
                     self.estimations.pop(key, None)
@@ -463,6 +405,49 @@ class UEManager:
             processor.on_eval(self.metrics)
 
         return self.metrics
+
+
+    def calculate(self, batch_stats, calculators, inp_texts):
+        for stat_calculator in calculators:
+            try:
+                new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
+                for stat, stat_value in new_stats.items():
+                    if stat in batch_stats.keys():
+                        continue
+                    batch_stats[stat] = stat_value
+            except Exception as e:
+                if self.ignore_exceptions:
+                    log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
+                    sys.stderr.write(log_msg)
+                    print(log_msg)
+                    continue
+                else:
+                    raise e
+
+        return batch_stats
+
+
+    def estimate(self, batch_stats, estimators):
+        batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+        bad_estimators = []
+                
+        for estimator in self.ensemble_estimators:
+            try:
+                e = estimator(batch_stats).tolist()
+                self.estimations[estimator.level, str(estimator)] += e
+                batch_estimations[estimator.level, str(estimator)] += e
+            except Exception as e:
+                if self.ignore_exceptions:
+                    bad_estimators.append(estimator)
+                    log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
+                    sys.stderr.write(log_msg)
+                    print(log_msg)
+                    continue
+                else:
+                    raise e
+
+        return batch_estimations, bad_estimators
+
 
     def _extract_train_embeddings(self, background: bool = False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_stats = {}
@@ -541,7 +526,7 @@ class UEManager:
 
         Parameters:
             load_path (str): Path to file with saved benchmark results to load.
-        """
+
         res_dict = torch.load(load_path)
         man = UEManager(None, None, [], [], [], [])
         man.metrics = res_dict.get('metrics', None)
