@@ -446,7 +446,7 @@ class UEManager:
         batch_estimations = defaultdict(list)
         bad_estimators = []
                 
-        for estimator in self.ensemble_estimators:
+        for estimator in estimators:
             try:
                 e = estimator(batch_stats).tolist()
                 self.estimations[estimator.level, str(estimator)] += e
