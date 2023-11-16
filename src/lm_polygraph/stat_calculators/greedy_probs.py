@@ -9,12 +9,27 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 
 
 class BlackboxGreedyTextsCalculator(StatCalculator):
+    """
+    Calculates generation texts for Blackbox model (lm_polygraph.BlackboxModel).
+    """
+
     def __init__(self):
         super().__init__(['blackbox_greedy_texts'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel,
                  max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
+        """
+        Calculates generation texts for Blackbox model on the input batch.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'blackbox_greedy_texts' key.
+        """
         with torch.no_grad():
             sequences = model.generate_texts(
                 input_texts=texts,
@@ -31,15 +46,43 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
 
 
 class GreedyProbsCalculator(StatCalculator):
+    """
+    For Whitebox model (lm_polygraph.WhiteboxModel), at input texts batch calculates:
+    * generation texts
+    * tokens of the generation texts
+    * probabilities distribution of the generated tokens
+    * attention masks across the model (if applicable)
+    * embeddings from the model
+    """
+
     def __init__(self):
         super().__init__(['input_texts', 'input_tokens',
                           'greedy_log_probs', 'greedy_tokens',
-                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
+                          'greedy_texts', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
                           'embeddings'], [])
 
     def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
                  max_new_tokens: int = 100) -> Dict[
         str, np.ndarray]:
+        """
+        Calculates the statistics of probabilities at each token position in the generation.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with the following items:
+                - 'input_texts' (List[str]): input texts batch,
+                - 'input_tokens' (List[List[int]]): tokenized input texts,
+                - 'greedy_log_probs' (List[List[np.array]]): logarithms of autoregressive
+                        probability distributions at each token,
+                - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
+                - 'greedy_tokens' (List[List[int]]): tokenized model generations,
+                - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
+                - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
+        """
         inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
@@ -50,7 +93,7 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_length=2,
-                output_attentions=True,
+                output_attentions=False,
                 output_hidden_states=True,
                 temperature=model.parameters.temperature,
                 top_k=model.parameters.topk,
@@ -65,11 +108,7 @@ class GreedyProbsCalculator(StatCalculator):
             )
             logits = torch.stack(out.scores, dim=1)
             logits = logits.log_softmax(-1)
-
-            if model.model_type == "Seq2SeqLM":
-                attentions = out.decoder_attentions
-            elif model.model_type == "CausalLM":
-                attentions = out.attentions
+            
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
 
@@ -90,16 +129,6 @@ class GreedyProbsCalculator(StatCalculator):
             cut_sequences.append(seq[:length].tolist())
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
-
-        attn_mask = []
-        for i in range(len(texts)):
-            c = len(cut_sequences[i])
-            attn_mask.append(np.zeros(shape=(c, c)))
-            for j in range(1, c):
-                attn_mask[i][j, :j] = torch.vstack(
-                    [attentions[j][l][i][h][0][-j:]
-                     for l in range(len(attentions[j]))
-                     for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
 
         ll = []
         for i in range(len(texts)):
@@ -122,11 +151,10 @@ class GreedyProbsCalculator(StatCalculator):
 
         result_dict = {
             'input_texts': texts,
-            'input_tokens': inp_tokens,
+            'input_tokens': batch['input_ids'].to('cpu').tolist(),
             'greedy_log_probs': cut_logits,
             'greedy_tokens': cut_sequences,
             'greedy_texts': cut_texts,
-            'attention': attn_mask,
             'greedy_log_likelihoods': ll,
         }
         result_dict.update(embeddings_dict)

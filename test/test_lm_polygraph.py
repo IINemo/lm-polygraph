@@ -14,4 +14,3 @@ def test_just_works_hydra():
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
-    os.remove("ue_manager_seed1")

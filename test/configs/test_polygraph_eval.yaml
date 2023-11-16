@@ -1,7 +1,11 @@
-estimator: LexicalSimilarity
-estimator_kwargs:
-  metric: rouge2
-estimator_module: null
+hydra:
+  run:
+    dir: ${cache_path}/test/
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
 
 dataset: SpeedOfMagic/trivia_qa_tiny
 train_split: train
@@ -36,6 +40,4 @@ subsample_eval_dataset: 10
 batch_size: 2
 seed: null
 device: null
-save_path: "."
-cache_path: ""
 max_new_tokens: 256
