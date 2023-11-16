@@ -49,7 +49,7 @@ class SemanticMatrixCalculator(StatCalculator):
         """
         deberta_batch_size = dependencies['deberta_batch_size']
         batch_texts = dependencies['blackbox_sample_texts']
-
+        
         batch_pairs = []
         batch_invs = []
         batch_counts = []
