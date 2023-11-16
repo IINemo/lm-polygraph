@@ -39,7 +39,7 @@ class Estimator(ABC):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which includes values from
-                statistics calculators for each self.stat_dependencies.
+                statistics calculators for each `stat_dependencies`.
         Returns:
             np.ndarray: list of float uncertainties calculated for the input statistics.
                 Should be 1-dimensional (in case of token-level, estimations from different

@@ -12,52 +12,132 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausa
     LogitsProcessorList
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
+from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
 
 
 class Model(ABC):
+    """
+    Abstract model class. Used as base class for both White-box models and Black-box models.
+    """
+
     def __init__(self, model_path: str, model_type: str):
+        """
+        Parameters:
+            model_path (str): unique model path where it can be found.
+            model_type (str): description of additional model properties. Can be 'Blackbox' or model specifications
+                in the case of white-box.
+        """
         self.model_path = model_path
         self.model_type = model_type
 
     @abstractmethod
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
+        """
+        Abstract method. Generates a list of model answers using input texts batch.
+
+        Parameters:
+            input_texts (List[str]): input texts batch.
+        Return:
+            List[str]: corresponding model generations. Have the same length as `input_texts`.
+        """
         raise Exception("Not implemented")
 
     @abstractmethod
     def generate(self, **args):
+        """
+        Abstract method. Generates the model output with scores from batch formed by HF Tokenizer.
+        Not implemented for black-box models.
+        """
         raise Exception("Not implemented")
 
     @abstractmethod
     def __call__(self, **args):
+        """
+        Abstract method. Calls the model on the input batch. Returns the resulted scores.
+        Not implemented for black-box models.
+        """
         raise Exception("Not implemented")
 
 
 class BlackboxModel(Model):
+    """
+    Black-box model class. Have no access to model scores and logits.
+    Currently implemented blackbox models: OpenAI models, Huggingface models.
+
+    Examples:
+
+    ```python
+    >>> from lm_polygraph import BlackboxModel
+    >>> model = BlackboxModel.from_openai(
+    ...     'YOUR_OPENAI_TOKEN',
+    ...     'gpt-3.5-turbo'
+    ... )
+    ```
+
+    ```python
+    >>> from lm_polygraph import BlackboxModel
+    >>> model = BlackboxModel.from_huggingface(
+    ...     hf_api_token='YOUR_API_TOKEN',
+    ...     hf_model_id='google/t5-large-ssm-nqo'
+    ... )
+    ```
+    """
+
     def __init__(self, openai_api_key: str = None, model_path: str = None,
-                 hf_api_token: str = None, hf_model_id: str = None,
+                 hf_api_token: str = None,
                  parameters: GenerationParameters = GenerationParameters()):
+        """
+        Parameters:
+            openai_api_key (Optional[str]): OpenAI API key if the blackbox model comes from OpenAI. Default: None.
+            model_path (Optional[str]): Unique model path. Openai model name, if `openai_api_key` is specified,
+                huggingface path, if `hf_api_token` is specified. Default: None.
+            hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
+            parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+        """
         super().__init__(model_path, 'Blackbox')
         self.parameters = parameters
         self.openai_api_key = openai_api_key
         openai.api_key = openai_api_key
         self.hf_api_token = hf_api_token
-        self.hf_model_id = hf_model_id
 
-    def query(self, payload):
-        API_URL = f"https://api-inference.huggingface.co/models/{self.hf_model_id}"
+    def _query(self, payload):
+        API_URL = f"https://api-inference.huggingface.co/models/{self.model_path}"
         headers = {"Authorization": f"Bearer {self.hf_api_token}"}
         response = requests.post(API_URL, headers=headers, json=payload)
         return response.json()
 
     @staticmethod
     def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
-        return BlackboxModel(hf_api_token=hf_api_token, hf_model_id=hf_model_id, model_path=hf_model_id)
+        """
+        Initializes a blackbox model from huggingface.
+
+        Parameters:
+            hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
+            hf_model_id (Optional[str]): model path in huggingface.
+        """
+        return BlackboxModel(hf_api_token=hf_api_token, model_path=hf_model_id)
 
     @staticmethod
     def from_openai(openai_api_key: str, model_path: str, **kwargs):
+        """
+        Initializes a blackbox model from OpenAI API.
+
+        Parameters:
+            openai_api_key (Optional[str]): OpenAI API key. Default: None.
+            model_path (Optional[str]): model name in OpenAI.
+        """
         return BlackboxModel(openai_api_key=openai_api_key, model_path=model_path)
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
+        """
+        Generates a list of model answers using input texts batch.
+
+        Parameters:
+            input_texts (List[str]): input texts batch.
+        Return:
+            List[str]: corresponding model generations. Have the same length as `input_texts`.
+        """
         if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
             raise Exception("Cannot access logits for blackbox model")
 
@@ -81,13 +161,13 @@ class BlackboxModel(Model):
                     texts.append(response.choices[0].message.content)
                 else:
                     texts.append([resp.message.content for resp in response.choices])
-        elif (self.hf_api_token is not None) & (self.hf_model_id is not None):
+        elif (self.hf_api_token is not None) & (self.model_path is not None):
             for prompt in input_texts:
 
                 start = time.time()
                 while True:
                     current_time = time.time()
-                    output = self.query({"inputs": prompt})
+                    output = self._query({"inputs": prompt})
 
                     if isinstance(output, dict):
                         if (list(output.keys())[0] == 'error') & ('estimated_time' in output.keys()):
@@ -109,12 +189,21 @@ class BlackboxModel(Model):
         return texts
 
     def generate(self, **args):
+        """
+        Not implemented for blackbox models.
+        """
         raise Exception("Cannot access logits of blackbox model")
 
     def __call__(self, **args):
+        """
+        Not implemented for blackbox models.
+        """
         raise Exception("Cannot access logits of blackbox model")
 
     def tokenizer(self, *args, **kwargs):
+        """
+        Not implemented for blackbox models.
+        """
         raise Exception("Cannot access logits of blackbox model")
 
 
@@ -126,8 +215,30 @@ def _valdate_args(args):
 
 
 class WhiteboxModel(Model):
+    """
+    White-box model class. Have access to model scores and logits. Currently implemented only for Huggingface models.
+
+    Examples:
+
+    ```python
+    >>> from lm_polygraph import WhiteboxModel
+    >>> model = WhiteboxModel.from_pretrained(
+    ...     "bigscience/bloomz-3b",
+    ...     device="cuda:0",
+    ... )
+    ```
+    """
+
     def __init__(self, model: AutoModelForCausalLM, tokenizer: AutoTokenizer, model_path: str, model_type: str,
                  parameters: GenerationParameters = GenerationParameters()):
+        """
+        Parameters:
+            model (AutoModelForCausalLM): HuggingFace model.
+            tokenizer (AutoTokenizer): HuggingFace tokenizer.
+            model_path (Optional[str]): Unique model path in HuggingFace.
+            model_type (str): Additional model specifications.
+            parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+        """
         super().__init__(model_path, model_type)
         self.model = model
         self.tokenizer = tokenizer
@@ -143,6 +254,14 @@ class WhiteboxModel(Model):
             return scores
 
     def generate(self, **args):
+        """
+        Generates the model output with scores from batch formed by HF Tokenizer.
+
+        Parameters:
+            **args: Any arguments that can be passed to model.generate function from HuggingFace.
+        Returns:
+            ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
+        """
         args = _valdate_args(args)
 
         # add ScoresProcessor to collect original scores
@@ -163,6 +282,14 @@ class WhiteboxModel(Model):
         return generation
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
+        """
+        Generates a list of model answers using input texts batch.
+
+        Parameters:
+            input_texts (List[str]): input texts batch.
+        Return:
+            List[str]: corresponding model generations. Have the same length as `input_texts`.
+        """
         args = _valdate_args(args)
         args['return_dict_in_generate'] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
@@ -178,18 +305,35 @@ class WhiteboxModel(Model):
         return texts
 
     def __call__(self, **args):
+        """
+        Calls the model on the input batch. Returns the resulted scores.
+        """
         return self.model(**args)
 
     def device(self):
+        """
+        Returns the device the model is currently loaded on.
+
+        Returns:
+            str: device string.
+        """
         return self.model.device
 
     @staticmethod
     def from_pretrained(model_path: str, device: str = 'cpu', **kwargs):
-        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        """
+        Initializes the model from HuggingFace. Automatically determines model type.
+
+        Parameters:
+            model_path (str): model path in HuggingFace.
+            device (str): device to load the model on.
+        """
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True, **kwargs)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs).to(device)
+                model_path, max_length=256, trust_remote_code=True, **kwargs
+            ).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
@@ -205,8 +349,10 @@ class WhiteboxModel(Model):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True,
-            model_max_length=256 if model_type == "CausalLM" else 1024)
+            model_path, padding_side="left", add_bos_token=True, 
+            model_max_length=1024,
+            **kwargs
+        )
 
         model.eval()
         if tokenizer.pad_token is None:
@@ -214,18 +360,32 @@ class WhiteboxModel(Model):
 
         return WhiteboxModel(model, tokenizer, model_path, model_type)
 
-    @staticmethod
-    def load(model_path: str, tokenizer_path: str, device: str = 'cpu'):
-        model = torch.load(model_path).to(device)
-        tokenizer = torch.load(tokenizer_path, padding_side="left")
-        model.eval()
-        return WhiteboxModel(model, tokenizer, model_path)
-
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        if ("falcon" in self.model.config._name_or_path.lower()) or (
-                "llama" in self.model.config._name_or_path.lower()):
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
+        """
+        Tokenizes input texts batch into a dictionary using the model tokenizer.
+
+        Parameters:
+            texts (List[str]): list of input texts batch.
+        Returns:
+            dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
+        """
+        model_type = self.model.config._name_or_path.lower()
+        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
+            prompted_texts = []
+            for text in texts:
+                if "llama" in model_type:
+                    template = LlamaPromptTemplate()
+                    template.add_user_message(text)
+                    prompted_texts.append(template.build_prompt())
+                elif "vicuna" in model_type:
+                    prompted_text = get_vicuna_prompt(text)
+                    prompted_texts.append(prompted_text)
+                else:
+                    prompted_texts.append(text)
+            tokenized = self.tokenizer(prompted_texts, truncation=True,
+                                       padding=True, return_tensors='pt',
                                        return_token_type_ids=False)
         else:
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+
         return tokenized

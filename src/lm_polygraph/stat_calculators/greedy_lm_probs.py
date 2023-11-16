@@ -8,10 +8,33 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 
 class GreedyLMProbsCalculator(StatCalculator):
-    def __init__(self):
-        super().__init__(['greedy_lm_log_probs', 'greedy_lm_log_likelihoods', 'train_greedy_lm_log_likelihoods'], ['greedy_tokens'])
+    """
+    Calculates probabilities of the model generations without input texts.
+    Used to calculate P(y_t|y_<t) subtrahend in PointwiseMutualInformation.
+    """
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel, max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
+    def __init__(self):
+        super().__init__(['greedy_lm_log_probs', 'greedy_lm_log_likelihoods'],
+                         ['greedy_tokens'])
+
+    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
+                 max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
+        """
+        Calculates the entropy of probabilities at each token position in the generation.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): input statistics, consisting of:
+                - 'greedy_tokens' (List[List[int]]): tokenized model generations for each input text.
+            texts (List[str]): Input texts batch used for model generation.
+            model (Model): Model used for generation.
+            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+        Returns:
+            Dict[str, np.ndarray]: dictionary with the following items:
+                - 'greedy_lm_log_probs' (List[List[np.array]]): logarithms of autoregressive probability distributions
+                    when generating the generated text without input text.
+                - 'greedy_lm_log_likelihoods' (List[List[float]]): log-probabilities of generating text without input.
+                    P(y_t | y_<t) for all t.
+        """
         tokens = dependencies['greedy_tokens']
         try:
             batch = model.tokenize([model.tokenizer.decode(t) for t in tokens])
