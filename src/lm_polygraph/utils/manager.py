@@ -75,7 +75,7 @@ def _check_ue_metrics(ue_metrics, ood_detection):
             print(log_msg)
         else:
             correct_ue_metrics.append(ue_metric)
-    return ue_metric
+    return correct_ue_metrics
 
 
 def _recombine_data(ue, gen_metric, inputs):
