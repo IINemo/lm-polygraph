@@ -14,6 +14,8 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausa
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
 from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
+from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
+from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
 
 class Model(ABC):
@@ -360,6 +362,7 @@ class WhiteboxModel(Model):
 
         return WhiteboxModel(model, tokenizer, model_path, model_type)
 
+
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
         """
         Tokenizes input texts batch into a dictionary using the model tokenizer.
@@ -389,3 +392,39 @@ class WhiteboxModel(Model):
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
 
         return tokenized
+
+
+def create_ensemble(
+        model_paths: List[str] = [],
+        mc: bool = False,
+        seed: int = 1,
+        mc_seeds: List[int] = [1],
+        ensembling_mode: str = 'pe',
+        device: str = 'cpu',
+        dropout_rate: float = 0.1,
+        **kwargs
+    ) -> WhiteboxModel:
+    model = WhiteboxModel.from_pretrained(model_paths[0], **kwargs)
+    ens = model.model
+
+    ens.__class__ = type('EnsembleModel',
+                         (model.model.__class__,
+                          EnsembleGenerationMixin),
+                         {})
+    
+    if mc:
+        ens.mc = True 
+        ens.mc_seeds = mc_seeds
+        ens.base_seed = seed
+        ens.ensembling_mode = ensembling_mode
+        ens.mc_models_num = len(mc_seeds)
+        ens.mc_seeds = mc_seeds
+
+        replace_dropout(ens.config._name_or_path, ens, p=dropout_rate, share_across_tokens=True)
+
+        ens.to(device)
+        ens.train()
+    else:
+        raise ValueError('Only Monte-Carlo ensembling is available. Please set the corresponding argument value to True')
+
+    return model

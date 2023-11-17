@@ -15,7 +15,7 @@ log = logging.getLogger()
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics.accuracy import AccuracyMetric
 from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
@@ -66,19 +66,37 @@ def main(args):
     device = args.device
     if device is None:
         device = "cuda:0" if torch.cuda.device_count() > 0 else "cpu"
-
+        
     for seed in args.seed:
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
 
         log.info(f"Loading model {args.model}...")
         transformers.set_seed(seed)
+
         model = WhiteboxModel.from_pretrained(
             args.model,
             device=device,
             **cache_kwargs,
             **model_kwargs
         )
+
+        if args.ensemble:
+            # Only MC-ensembles for now
+            log.info(f"Creating ensemble...")
+            ensemble_model = create_ensemble(model_paths=[args.model],
+                                             mc=True,
+                                             device='cpu',
+                                             seed=args.seed[0],
+                                             ensembling_mode=args.ensembling_mode,
+                                             mc_seeds=args.mc_seeds,
+                                             dropout_rate=float(args.dropout_rate),
+                                             **cache_kwargs,
+                                             **model_kwargs
+                                             )
+        else:
+            ensemble_model = None
+
         log.info("Done with loading model.")
 
         log.info(f"Loading dataset {args.dataset}...")
@@ -146,14 +164,14 @@ def main(args):
 
             background_train_dataset = Dataset.load(
                 args.background_train_dataset,
-                args.background_train_dataset_text_column, 
+                args.background_train_dataset_text_column,
                 args.background_train_dataset_label_column,
                 batch_size=args.batch_size,
                 data_files=args.background_train_dataset_data_files,
                 split="train",
                 size=100_000,
                 load_from_disk=args.background_load_from_disk,
-                **data_kwargs
+                **cache_kwargs
             )
 
             if args.subsample_train_dataset != -1:
@@ -196,6 +214,7 @@ def main(args):
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
+            ensemble_model=ensemble_model
         )
 
         man()
@@ -270,6 +289,43 @@ def get_ue_methods(args, model):
             Eccentricity(similarity_score="Jaccard_score"),
             SemanticEntropy(),
         ]
+
+    if args.use_ens_ue:
+        if not (model.model_type == "Seq2SeqLM"):
+            raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+        
+        token_measures = [
+            PETtu(),
+            PETdu(),
+            PETmi(),
+            PETrmi(),
+            PETepkl(),
+            PETent5(),
+            PETent10(),
+            PETent15(),
+            EPTtu(),
+            EPTdu(),
+            EPTmi(),
+            EPTrmi(),
+            EPTepkl(),
+            EPTent5(),
+            EPTent10(),
+            EPTent15(),
+        ]
+        if args.ensembling_mode == 'pe':
+            sequence_measures = [
+                PEStu(),
+                PESrmi(),
+            ]
+        elif args.ensembling_mode == 'ep':
+            sequence_measures = [
+                EPStu(),
+                EPSrmi(),
+            ]
+        else:
+            raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
+        estimators += (token_measures + sequence_measures)
+
     if args.use_tok_ue:
         estimators += [
             MaximumTokenProbability(),
