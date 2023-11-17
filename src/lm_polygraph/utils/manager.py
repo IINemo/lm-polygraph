@@ -150,7 +150,7 @@ def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str) ->
         else:
             ue = [normalize_ue(estimator, model.model_path, i) for i in ue]
     texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
-    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path, estimator.level)
+    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
 
 
 class UEManager:
