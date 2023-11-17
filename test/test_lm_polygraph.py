@@ -1,14 +1,15 @@
 import os
 import subprocess
-
+import pathlib
 
 def exec_bash(s):
     return subprocess.run(s, shell=True)
 
 
 def test_just_works_hydra():
+    pwd = pathlib.Path(__file__).parent.resolve()
     command = (
-        "HYDRA_CONFIG=../test/configs/test_polygraph_eval.yaml scripts/polygraph_eval"
+        f"HYDRA_CONFIG={pwd}/configs/test_polygraph_eval.yaml polygraph_eval"
     )
     exec_result = exec_bash(command)
     assert (
