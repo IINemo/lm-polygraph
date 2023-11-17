@@ -66,6 +66,18 @@ def _delete_nans(ue, metric):
     return new_ue, new_metric, selected_ids
 
 
+def _check_ue_metrics(ue_metrics, ood_detection):
+    correct_ue_metrics = []
+    for ue_metric in ue_metrics:
+        if getattr(ue_metric, 'is_ood_metric', False) and not ood_detection:
+            log_msg = f'Caught exception with UE metrics: {ue_metric} is OOD detection metric, while ood_detection is False. UE metric {ue_metric} will be removed.'
+            sys.stderr.write(log_msg)
+            print(log_msg)
+        else:
+            correct_ue_metrics.append(ue_metric)
+    return ue_metric
+
+
 def _recombine_data(ue, gen_metric, inputs):
     ue = np.array(ue)
     gen_metric = np.array(gen_metric)
@@ -232,6 +244,7 @@ class UEManager:
         _check_unique_names(generation_metrics)
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
+        self.ue_metrics = _check_ue_metrics(self.ue_metrics, ood_detection)
 
         if isinstance(model, BlackboxModel):
             greedy = ['blackbox_greedy_texts']
@@ -290,6 +303,7 @@ class UEManager:
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
         for inp_texts, target_texts, ood_labels in iterable_data:
+            #when the task is not OOD detection then ood_labels are an array of zeros by default
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ('input_texts', inp_texts),
@@ -379,7 +393,7 @@ class UEManager:
                         raise Exception(f'Got different number of metrics for {e_name} and {gen_name}: '
                                         f'{len(estimator_values)} and {len(generation_metric)}')
                         
-                    if hasattr(ue_metric, 'is_ood_metric') and ue_metric.is_ood_metric and self.ood_detection:
+                    if getattr(ue_metric, 'is_ood_metric', False) and self.ood_detection:
                         generation_metric = self.stats['ood_labels']
                         gen_name = "OOD"
                     
