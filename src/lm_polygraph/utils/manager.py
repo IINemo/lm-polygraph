@@ -15,6 +15,7 @@ from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
 from lm_polygraph.ue_metrics.ue_metric import UEMetric, get_random_scores, normalize_metric
 from lm_polygraph.estimators.estimator import Estimator
+from lm_polygraph.estimators.common import DEBERTA
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
 from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
@@ -257,7 +258,7 @@ class UEManager:
         self.estimators = single_estimators
 
         train_stats = [s for e in self.estimators for s in e.stats_dependencies if s.startswith("train")]
-        train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []     
+        train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []
         train_stats, _ = _order_calculators(train_stats)
         self.train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in train_stats]
         background_train_stats = [s for e in self.estimators for s in e.stats_dependencies if s.startswith("background_train")]
@@ -298,6 +299,10 @@ class UEManager:
                 - generation metrics name,
                 - `ue_metrics` name which was used to calculate quality.
         """
+
+        # load DEBERTA to correct device
+        DEBERTA.to(self.model.device())
+
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
@@ -322,7 +327,7 @@ class UEManager:
             batch_stats = self.calculate(batch_stats,
                                          self.stat_calculators,
                                          inp_texts)
-            
+
             batch_estimations, bad_estimators = self.estimate(batch_stats,
                                                               self.estimators)
 
@@ -348,7 +353,7 @@ class UEManager:
             device = self.model.model.device
             self.model.model.to('cpu')
             self.ensemble_model.model.to(device)
-            
+
             iterable_data = tqdm(self.data) if self.verbose else self.data
             for inp_texts, target_texts in iterable_data:
                 batch_stats: Dict[str, np.ndarray] = {}
@@ -364,11 +369,11 @@ class UEManager:
 
                 batch_stats['ensemble_generation_params'] = {}
                 batch_stats['ensemble_model'] = self.ensemble_model
-                
+
                 batch_stats = self.calculate(batch_stats,
                                              self.ensemble_stat_calculators,
                                              inp_texts)
-                
+
                 batch_estimations, bad_estimators = self.estimate(batch_stats,
                                                                   self.ensemble_estimators)
 
@@ -376,7 +381,7 @@ class UEManager:
                     key = (bad_estimator.level, str(bad_estimator))
                     self.estimations.pop(key, None)
                     self.ensemble_estimators.remove(bad_estimator)
-                
+
 
             torch.cuda.empty_cache()
             gc.collect()
@@ -398,7 +403,7 @@ class UEManager:
                         inputs_no_nans = np.array(self.stats['input_texts'])[selected_ids]
                         rec_ue, rec_metric = _recombine_data(ue, metric,
                                                              inputs_no_nans)
-                        
+
                         rec_metric = np.array(rec_metric)
                         oracle_score = ue_metric(-rec_metric, rec_metric)
                         random_score = get_random_scores(ue_metric, rec_metric)
@@ -450,7 +455,7 @@ class UEManager:
         """
         batch_estimations = defaultdict(list)
         bad_estimators = []
-                
+
         for estimator in estimators:
             try:
                 e = estimator(batch_stats).tolist()
