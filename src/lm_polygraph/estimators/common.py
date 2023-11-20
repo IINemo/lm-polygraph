@@ -27,6 +27,11 @@ class CommonDeberta:
         if device is None:
             self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
+    def to(self, device):
+        self.device = device
+        if self.deberta is not None:
+            self.deberta.to(self.device)
+
     def setup(self):
         """
         Loads and prepares the DeBERTa model from the specified path.
@@ -40,7 +45,7 @@ class CommonDeberta:
         self.deberta.eval()
 
 
-DEBERTA = CommonDeberta()
+DEBERTA = CommonDeberta(device='cpu')
 
 
 def _get_pairs(lst):

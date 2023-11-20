@@ -23,7 +23,7 @@ mc_seeds: []
 dropout_rate:
 
 ignore_exceptions: false
-use_seq_ue: false
+use_seq_ue: true
 use_tok_ue: false
 use_density_based_ue: false
 use_ens_ue: false
