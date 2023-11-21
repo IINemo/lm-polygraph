@@ -9,7 +9,8 @@ from .estimator import Estimator
 def get_seq_level_ue(sequence_level_data: Dict[str, torch.Tensor]) -> Dict[str, np.ndarray]:
     softmax_t = 1
     model_log_probas = sequence_level_data['log_probas'] # num_obs x num_models x num_beams
-    ens_log_probas = torch.tensor(model_log_probas).logsumexp(1) - torch.tensor(model_log_probas.shape[1]).log()  # num_obs x num_beams
+    num_models = model_log_probas.shape[1]
+    ens_log_probas = torch.tensor(model_log_probas).logsumexp(1) - torch.tensor(num_models).log()  # num_obs x num_beams
     ens_log_probas = ens_log_probas.numpy()
     ens_probas = np.exp(ens_log_probas)
 
@@ -18,13 +19,14 @@ def get_seq_level_ue(sequence_level_data: Dict[str, torch.Tensor]) -> Dict[str, 
 
     tu = (ens_probas * weights).sum(-1)  # num_obs
     
+    ens_log_probas = np.repeat(ens_log_probas[:, None, :], num_models, axis=1)
+    rmi_weights = np.repeat(weights[:, None, :], num_models, axis=1)
+    rmi_base = (ens_log_probas - model_log_probas) * rmi_weights
     rmi = (
-        ((ens_log_probas - model_log_probas) * weights[None, :, :]).sum(-1).mean(1)
+        rmi_base.sum(-1).mean(1)
     )  # num_obs
     rmi_abs = (
-        (np.abs(ens_log_probas - model_log_probas) * weights[None, :, :])
-        .sum(-1)
-        .mean(1)
+        np.abs(rmi_base).sum(-1).mean(1)
     )  # num_obs
 
     uncertainty_estimates = {
