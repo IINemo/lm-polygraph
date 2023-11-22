@@ -23,22 +23,20 @@ from lm_polygraph.utils.ensemble_utils.ensemble_sample import EnsembleSampleMixi
 from lm_polygraph.utils.ensemble_utils.ensemble_greedy import EnsembleGreedyMixin
 
 
-class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
-                              EnsembleSampleMixin,
-                              EnsembleGreedyMixin,
-                              GenerationMixin):
-
+class EnsembleGenerationMixin(
+    EnsembleBeamSearchMixin, EnsembleSampleMixin, EnsembleGreedyMixin, GenerationMixin
+):
     def add_ensemble_models(self, models, devices):
         self._models_list = list(models)
 
     @property
     def tokenizer(self):
-        if hasattr(self, '_tokenizer'):
+        if hasattr(self, "_tokenizer"):
             return self._tokenizer
         return None
 
     @tokenizer.setter
-    def tokenizer(self, value = None):
+    def tokenizer(self, value=None):
         self._tokenizer = value
 
     @property
@@ -49,30 +47,30 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
     def ensembling_mode(self):
         if self._ensembling_mode is not None:
             return self._ensembling_mode
-        return 'pe'
+        return "pe"
 
     @ensembling_mode.setter
-    def ensembling_mode(self, value = 'pe'):
+    def ensembling_mode(self, value="pe"):
         self._ensembling_mode = value
 
     @property
     def mc(self):
-        if hasattr(self, '_mc') and self._mc is not None:
+        if hasattr(self, "_mc") and self._mc is not None:
             return self._mc
         return False
 
     @mc.setter
-    def mc(self, value = False):
+    def mc(self, value=False):
         self._mc = value
 
     @property
     def mc_models_num(self):
-        if hasattr(self, '_mc_models_num'):
+        if hasattr(self, "_mc_models_num"):
             return self._mc_models_num
         return 1
 
     @mc_models_num.setter
-    def mc_models_num(self, num = 1):
+    def mc_models_num(self, num=1):
         self._mc_models_num = num
 
     @property
@@ -80,7 +78,7 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
         return self._base_seed
 
     @base_seed.setter
-    def base_seed(self, seed = 42):
+    def base_seed(self, seed=42):
         self._base_seed = seed
 
     @property
@@ -88,12 +86,12 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
         return self._mc_seeds
 
     @mc_seeds.setter
-    def mc_seeds(self, seeds = []):
+    def mc_seeds(self, seeds=[]):
         self._mc_seeds = seeds
 
     @property
     def models_beam_logits_iter(self):
-        if hasattr(self, '_models_beam_logits_iter'):
+        if hasattr(self, "_models_beam_logits_iter"):
             return self._models_beam_logits_iter
 
     @models_beam_logits_iter.setter
@@ -112,11 +110,11 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
         if getattr(self, "models", None) is None:
             self._models_list = []
 
-        if self.mc:        
+        if self.mc:
             # 1. get encoders
             encoder = self.get_encoder()
             # Compatibility with Accelerate big model inference: we need the encoder to outputs stuff on the same device
-        # as the inputs.
+            # as the inputs.
             if hasattr(encoder, "_hf_hook"):
                 encoder._hf_hook.io_same_device = True
 
@@ -129,15 +127,21 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
             }
 
             encoder_signature = set(inspect.signature(encoder.forward).parameters)
-            encoder_accepts_wildcard = "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+            encoder_accepts_wildcard = (
+                "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+            )
             if not encoder_accepts_wildcard:
                 encoder_kwargs = {
-                    argument: value for argument, value in encoder_kwargs.items() if argument in encoder_signature
+                    argument: value
+                    for argument, value in encoder_kwargs.items()
+                    if argument in encoder_signature
                 }
 
             # 3. make sure that encoder returns `ModelOutput`
             model_input_name = (
-                model_input_name if model_input_name is not None else self.main_input_name
+                model_input_name
+                if model_input_name is not None
+                else self.main_input_name
             )
             encoder_kwargs["return_dict"] = True
             encoder_kwargs[model_input_name] = inputs_tensor
@@ -164,21 +168,31 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
                     if not any(argument.startswith(p) for p in irrelevant_prefix)
                 }
                 encoder_signature = set(inspect.signature(encoder.forward).parameters)
-                encoder_accepts_wildcard = "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+                encoder_accepts_wildcard = (
+                    "kwargs" in encoder_signature or "model_kwargs" in encoder_signature
+                )
                 if not encoder_accepts_wildcard:
                     encoder_kwargs = {
-                        argument: value for argument, value in encoder_kwargs.items() if argument in encoder_signature
+                        argument: value
+                        for argument, value in encoder_kwargs.items()
+                        if argument in encoder_signature
                     }
 
                 # 3. make sure that encoder returns `ModelOutput`
                 model_input_name = (
-                    model_input_name if model_input_name is not None else self.main_input_name
+                    model_input_name
+                    if model_input_name is not None
+                    else self.main_input_name
                 )
                 encoder_kwargs["return_dict"] = True
                 encoder_kwargs[model_input_name] = inputs_tensor
 
                 encoder_kwargs[model_input_name].to(model.device)
-                encoder_kwargs = {k: v.to(model.device) for k, v in encoder_kwargs.items() if hasattr(v, 'to')}
+                encoder_kwargs = {
+                    k: v.to(model.device)
+                    for k, v in encoder_kwargs.items()
+                    if hasattr(v, "to")
+                }
                 model_kwargs["encoder_outputs"].append(encoder(**encoder_kwargs))
 
         return model_kwargs
@@ -194,8 +208,12 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
 
         def _expand_dict_for_generation(dict_to_expand):
             for key in dict_to_expand:
-                if dict_to_expand[key] is not None and isinstance(dict_to_expand[key], torch.Tensor):
-                    dict_to_expand[key] = dict_to_expand[key].repeat_interleave(expand_size, dim=0)
+                if dict_to_expand[key] is not None and isinstance(
+                    dict_to_expand[key], torch.Tensor
+                ):
+                    dict_to_expand[key] = dict_to_expand[key].repeat_interleave(
+                        expand_size, dim=0
+                    )
             return dict_to_expand
 
         if input_ids is not None:
@@ -205,12 +223,12 @@ class EnsembleGenerationMixin(EnsembleBeamSearchMixin,
 
         if is_encoder_decoder:
             if model_kwargs.get("encoder_outputs") is None:
-                raise ValueError("If `is_encoder_decoder` is True, make sure that `encoder_outputs` is defined.")
+                raise ValueError(
+                    "If `is_encoder_decoder` is True, make sure that `encoder_outputs` is defined."
+                )
             encoder_outputs_expanded = []
             for output in model_kwargs["encoder_outputs"]:
-                encoder_outputs_expanded.append(
-                    _expand_dict_for_generation(output)
-                )
+                encoder_outputs_expanded.append(_expand_dict_for_generation(output))
             model_kwargs["encoder_outputs"] = encoder_outputs_expanded
-            
+
         return input_ids, model_kwargs

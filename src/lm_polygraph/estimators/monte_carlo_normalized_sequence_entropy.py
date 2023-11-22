@@ -16,10 +16,10 @@ class MonteCarloNormalizedSequenceEntropy(Estimator):
         The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator
         'samples_n' parameter.
         """
-        super().__init__(['sample_log_probs', 'sample_tokens'], 'sequence')
+        super().__init__(["sample_log_probs", "sample_tokens"], "sequence")
 
     def __str__(self):
-        return 'MonteCarloNormalizedSequenceEntropy'
+        return "MonteCarloNormalizedSequenceEntropy"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -33,7 +33,11 @@ class MonteCarloNormalizedSequenceEntropy(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        logprobs = stats['sample_log_probs']
-        tokens = stats['sample_tokens']
+        logprobs = stats["sample_log_probs"]
+        tokens = stats["sample_tokens"]
         return np.array(
-            [-np.mean([lp_i / len(t_i) for lp_i, t_i in zip(lp, t) if len(t_i)]) for lp, t in zip(logprobs, tokens)])
+            [
+                -np.mean([lp_i / len(t_i) for lp_i, t_i in zip(lp, t) if len(t_i)])
+                for lp, t in zip(logprobs, tokens)
+            ]
+        )

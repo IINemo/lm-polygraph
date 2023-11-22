@@ -26,7 +26,7 @@ class UEMetric(ABC):
         Class parameters which affect generation metric estimates should also be included in the unique name
         to diversify between UEMetric's.
         """
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @abstractmethod
     def __call__(self, estimator: List[float], target: List[float]) -> float:
@@ -44,8 +44,8 @@ class UEMetric(ABC):
                 Higher values can indicate either better or lower qualities,
                 which depends on a particular implementation.
         """
-        raise Exception('Not implemented')
-        
+        raise Exception("Not implemented")
+
 
 def get_random_scores(function, metrics, num_iter=1000, seed=42):
     np.random.seed(seed)
@@ -57,6 +57,7 @@ def get_random_scores(function, metrics, num_iter=1000, seed=42):
         rand_val = function(rand_scores, metrics)
         value.append(rand_val)
     return np.mean(value)
+
 
 def normalize_metric(target_score, oracle_score, random_score):
     if not (oracle_score == random_score):

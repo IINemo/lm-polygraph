@@ -22,10 +22,10 @@ class AccuracyMetric(GenerationMetric):
         return 0
 
     def __call__(
-            self,
-            stats: Dict[str, np.ndarray],
-            target_texts: List[str],
-            target_tokens: List[List[int]],
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates accuracy between stats['greedy_texts'] and target_texts.

@@ -21,7 +21,7 @@ class GenerationMetric(ABC):
                 * 'sequence': method should output GenerationMetric for each input sequence in __call__.
                 * 'token': method should output GenerationMetric for each token in input sequence in __call__.
         """
-        assert (level in ['sequence', 'token'])
+        assert level in ["sequence", "token"]
         self.level = level
         self.stats_dependencies = stats_dependencies
 
@@ -32,11 +32,15 @@ class GenerationMetric(ABC):
         Class parameters which affect generation metric estimates should also be included in the unique name
         to diversify between generation metrics.
         """
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @abstractmethod
-    def __call__(self, stats: Dict[str, np.ndarray], target_texts: List[str],
-                 target_tokens: List[List[int]]) -> np.ndarray:
+    def __call__(
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
+    ) -> np.ndarray:
         """
         Abstract method. Measures ground-truth uncertainty by comparing model-generated
         statistics from `stats` with dataset ground-truth texts from `target-texts`.
@@ -53,4 +57,4 @@ class GenerationMetric(ABC):
                 samples should be concatenated). Higher values should indicate more confident samples
                 (more similar to ground truth texts).
         """
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")

@@ -18,11 +18,15 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             samples_n (int): number of samples to generate per input text. Default: 10
         """
         self.samples_n = samples_n
-        super().__init__(['blackbox_sample_texts'], [])
+        super().__init__(["blackbox_sample_texts"], [])
 
-    def __call__(self, dependencies: Dict[str, np.array],
-                 texts: List[str],
-                 model: BlackboxModel, max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: BlackboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates sampled texts for Blackbox model on the input batch.
 
@@ -44,7 +48,8 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                 presence_penalty=model.parameters.presence_penalty,
                 repetition_penalty=model.parameters.repetition_penalty,
                 top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
-                n=self.samples_n)
+                n=self.samples_n,
+            )
         else:
             samples = [[] for _ in range(len(texts))]
             out = model.generate_texts(
@@ -57,25 +62,23 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                 top_p=model.parameters.topp,
                 repetition_penalty=model.parameters.repetition_penalty,
                 top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
-                num_return_sequences=self.samples_n)
+                num_return_sequences=self.samples_n,
+            )
             for i in range(len(texts)):
                 for j in range(self.samples_n):
                     samples[i].append(out[i * self.samples_n + j])
 
         return {
-            'blackbox_sample_texts': samples,
+            "blackbox_sample_texts": samples,
         }
 
 
 def _gen_samples(n_samples, model, batch, **kwargs):
-    batch_size = len(batch['input_ids'])
+    batch_size = len(batch["input_ids"])
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
     with torch.no_grad():
         for k in range(n_samples):
-            out = model.generate(
-                **batch,
-                **kwargs
-            )
+            out = model.generate(**batch, **kwargs)
             cur_logits = torch.stack(out.scores, dim=1).log_softmax(-1)
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
@@ -99,11 +102,15 @@ class SamplingGenerationCalculator(StatCalculator):
             samples_n (int): number of samples to generate per input text. Default: 10
         """
         self.samples_n = samples_n
-        super().__init__(['sample_log_probs', 'sample_tokens', 'sample_texts'], [])
+        super().__init__(["sample_log_probs", "sample_tokens", "sample_texts"], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
-                 max_new_tokens: int = 100) -> Dict[
-        str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of sampling texts.
 
@@ -121,14 +128,17 @@ class SamplingGenerationCalculator(StatCalculator):
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         sequences, logits = _gen_samples(
-            self.samples_n, model, batch,
+            self.samples_n,
+            model,
+            batch,
             output_scores=True,
             return_dict_in_generate=True,
             max_new_tokens=max_new_tokens,
             min_length=2,
             do_sample=True,
             num_beams=1,
-            num_return_sequences=1)
+            num_return_sequences=1,
+        )
 
         log_probs = [[] for _ in range(len(texts))]
         tokens = [[] for _ in range(len(texts))]
@@ -137,7 +147,11 @@ class SamplingGenerationCalculator(StatCalculator):
             sequences = [seq[1:] for seq in sequences]
         for i in range(len(logits)):
             log_prob, toks = 0, []
-            inp_size = len(batch['input_ids'][int(i / self.samples_n)]) if model.model_type == "CausalLM" else 0
+            inp_size = (
+                len(batch["input_ids"][int(i / self.samples_n)])
+                if model.model_type == "CausalLM"
+                else 0
+            )
             for j in range(len(sequences[i]) - inp_size):
                 cur_token = sequences[i][j + inp_size].item()
                 log_prob += logits[i][j][cur_token].item()
@@ -148,7 +162,7 @@ class SamplingGenerationCalculator(StatCalculator):
             tokens[int(i / self.samples_n)].append(toks)
             texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
         return {
-            'sample_log_probs': log_probs,
-            'sample_tokens': tokens,
-            'sample_texts': texts,
+            "sample_log_probs": log_probs,
+            "sample_tokens": tokens,
+            "sample_texts": texts,
         }

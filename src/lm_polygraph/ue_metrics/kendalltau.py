@@ -11,7 +11,7 @@ class KendallTauCorrelation(UEMetric):
     """
 
     def __str__(self):
-        return 'kendalltau'
+        return "kendalltau"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         """
@@ -29,5 +29,5 @@ class KendallTauCorrelation(UEMetric):
         target = normalize(target)
         # ue: greater is more uncertain
         ue = np.array(estimator)
-        
+
         return stats.kendalltau(ue, -target).correlation
