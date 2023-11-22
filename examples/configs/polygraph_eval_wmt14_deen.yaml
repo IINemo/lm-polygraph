@@ -10,8 +10,8 @@ device: cpu
 task: nmt
 
 dataset: [wmt14, de-en]
-text_column: en
-label_column: de
+text_column: de
+label_column: en
 prompt: "Translate from {source_lang} into {target_lang}. Output only translation:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
@@ -34,16 +34,10 @@ subsample_eval_dataset: -1
 
 model: databricks/dolly-v2-3b
 use_auth_token:
-ensemble: false
-mc: false
-mc_seeds: []
-dropout_rate:
 
 use_density_based_ue: true
 use_seq_ue: true
 use_tok_ue: false
-use_ens_ue: false
-ens_type: 
 
 # Examples of providing additional UE methods:
 # additional_estimators: {

@@ -12,6 +12,24 @@ def aggregate(posterior_mode, ue_name, token_level_data) -> np.ndarray:
 
     return (weights * ue).sum(-1)
 
+def all_token_estimators():
+    return [PETtu(),
+            PETdu(),
+            PETmi(),
+            PETrmi(),
+            PETepkl(),
+            PETent5(),
+            PETent10(),
+            PETent15(),
+            EPTtu(),
+            EPTdu(),
+            EPTmi(),
+            EPTrmi(),
+            EPTepkl(),
+            EPTent5(),
+            EPTent10(),
+            EPTent15()]
+
 class EnsembleEstimator(Estimator):
     def __init__(self):
         super().__init__(['ensemble_token_scores'], 'sequence')

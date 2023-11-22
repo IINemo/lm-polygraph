@@ -9,9 +9,13 @@ import pdb
 from typing import List, Dict
 from abc import abstractmethod, ABC
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, \
-    LogitsProcessorList
+    LogitsProcessorList, BartForConditionalGeneration
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
+from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
+from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
+from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
 
 class Model(ABC):
@@ -326,11 +330,12 @@ class WhiteboxModel(Model):
             model_path (str): model path in HuggingFace.
             device (str): device to load the model on.
         """
-        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True, **kwargs)
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs).to(device)
+                model_path, max_length=256, trust_remote_code=True, **kwargs
+            ).to(device)
         elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
                   for architecture in config.architectures]):
             model_type = "Seq2SeqLM"
@@ -338,22 +343,25 @@ class WhiteboxModel(Model):
             if 'falcon' in model_path:
                 model.transformer.alibi = True
         elif any(["BartModel" in architecture for architecture in config.architectures]):
-            model_type = "CausalLM"
-            model = BartForCausalLM.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
+            model_type = "Seq2SeqLM"
+            model = BartForConditionalGeneration.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
         else:
             raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
         if not kwargs.get('load_in_8bit', False) and not kwargs.get('load_in_4bit', False):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True,
-            model_max_length=256 if model_type == "CausalLM" else 1024)
+            model_path, padding_side="left", add_bos_token=True, 
+            model_max_length=1024,
+            **kwargs
+        )
 
         model.eval()
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
         return WhiteboxModel(model, tokenizer, model_path, model_type)
+
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
         """
@@ -364,10 +372,59 @@ class WhiteboxModel(Model):
         Returns:
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
-        if ("falcon" in self.model.config._name_or_path.lower()) or (
-                "llama" in self.model.config._name_or_path.lower()):
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
+        model_type = self.model.config._name_or_path.lower()
+        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
+            prompted_texts = []
+            for text in texts:
+                if "llama" in model_type:
+                    template = LlamaPromptTemplate()
+                    template.add_user_message(text)
+                    prompted_texts.append(template.build_prompt())
+                elif "vicuna" in model_type:
+                    prompted_text = get_vicuna_prompt(text)
+                    prompted_texts.append(prompted_text)
+                else:
+                    prompted_texts.append(text)
+            tokenized = self.tokenizer(prompted_texts, truncation=True,
+                                       padding=True, return_tensors='pt',
                                        return_token_type_ids=False)
         else:
             tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+
         return tokenized
+
+
+def create_ensemble(
+        model_paths: List[str] = [],
+        mc: bool = False,
+        seed: int = 1,
+        mc_seeds: List[int] = [1],
+        ensembling_mode: str = 'pe',
+        device: str = 'cpu',
+        dropout_rate: float = 0.1,
+        **kwargs
+    ) -> WhiteboxModel:
+    model = WhiteboxModel.from_pretrained(model_paths[0], **kwargs)
+    ens = model.model
+
+    ens.__class__ = type('EnsembleModel',
+                         (model.model.__class__,
+                          EnsembleGenerationMixin),
+                         {})
+    
+    if mc:
+        ens.mc = True 
+        ens.mc_seeds = mc_seeds
+        ens.base_seed = seed
+        ens.ensembling_mode = ensembling_mode
+        ens.mc_models_num = len(mc_seeds)
+        ens.mc_seeds = mc_seeds
+
+        replace_dropout(ens.config._name_or_path, ens, p=dropout_rate, share_across_tokens=True)
+
+        ens.to(device)
+        ens.train()
+    else:
+        raise ValueError('Only Monte-Carlo ensembling is available. Please set the corresponding argument value to True')
+
+    return model

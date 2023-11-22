@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import sys
+import gc
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple, Optional, Union
@@ -12,8 +13,9 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.utils.normalize import normalize_ue, can_normalize_ue
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
-from lm_polygraph.ue_metrics.ue_metric import UEMetric
+from lm_polygraph.ue_metrics.ue_metric import UEMetric, get_random_scores, normalize_metric
 from lm_polygraph.estimators.estimator import Estimator
+from lm_polygraph.estimators.common import DEBERTA
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator, STAT_CALCULATORS, STAT_DEPENDENCIES
 from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
@@ -149,7 +151,7 @@ def estimate_uncertainty(model: Model, estimator: Estimator, input_text: str) ->
         else:
             ue = [normalize_ue(estimator, model.model_path, i) for i in ue]
     texts = man.stats.get('greedy_texts', man.stats.get('blackbox_greedy_texts', None))
-    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path, estimator.level)
+    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
 
 
 class UEManager:
@@ -235,23 +237,38 @@ class UEManager:
             greedy = ['blackbox_greedy_texts']
         else:
             greedy = ['greedy_tokens', 'greedy_texts']
-        stats = [s for e in estimators for s in e.stats_dependencies] + \
+
+        stats = [s for e in self.estimators for s in e.stats_dependencies] + \
                 [s for m in generation_metrics for s in m.stats_dependencies] + greedy
         stats, have_stats = _order_calculators(stats)
-        stats = [s for s in stats if not (str(s).startswith('blackbox_') and s[len('blackbox_'):] in have_stats)]
+        stats = [s for s in stats if not (str(s).startswith('ensemble_')) or ((str(s).startswith('blackbox_') and s[len('blackbox_'):] in have_stats))]
         self.stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in stats]
         if verbose:
             print('Stat calculators:', self.stat_calculators)
 
-        train_stats = [s for e in estimators for s in e.stats_dependencies if s.startswith("train")]
+        self.ensemble_estimators = []
+        single_estimators = []
+        for e in estimators:
+            for s in e.stats_dependencies:
+                if s.startswith('ensemble'):
+                    self.ensemble_estimators.append(e)
+                    break
+            if e not in self.ensemble_estimators:
+                single_estimators.append(e)
+        self.estimators = single_estimators
+
+        train_stats = [s for e in self.estimators for s in e.stats_dependencies if s.startswith("train")]
         train_stats += ['greedy_tokens', 'greedy_texts'] if "train_greedy_log_likelihoods" in train_stats else []
         train_stats, _ = _order_calculators(train_stats)
         self.train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in train_stats]
-        background_train_stats = [s for e in estimators for s in e.stats_dependencies if
-                                  s.startswith("background_train")]
+        background_train_stats = [s for e in self.estimators for s in e.stats_dependencies if s.startswith("background_train")]
         background_train_stats, _ = _order_calculators(background_train_stats)
         self.background_train_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in
                                                                         background_train_stats]
+
+        ensemble_stats = [s for e in self.ensemble_estimators for s in e.stats_dependencies if s.startswith("ensemble")]
+        ensemble_stats, _ = _order_calculators(ensemble_stats)
+        self.ensemble_stat_calculators: List[StatCalculator] = [STAT_CALCULATORS[c] for c in ensemble_stats]
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
@@ -282,6 +299,10 @@ class UEManager:
                 - generation metrics name,
                 - `ue_metrics` name which was used to calculate quality.
         """
+
+        # load DEBERTA to correct device
+        DEBERTA.to(self.model.device())
+
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
@@ -301,50 +322,15 @@ class UEManager:
                 self.stats['target_tokens'] += target_tokens
                 batch_stats['target_tokens'] = target_tokens
 
-            batch_stats['generation_params'] = {}
-            batch_stats['ensemble_model'] = self.ensemble_model
             batch_stats['deberta_batch_size'] = self.deberta_batch_size
 
-            try:
-                for stat_calculator in self.stat_calculators:
-                    new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
-                    for stat, stat_value in new_stats.items():
-                        if stat in batch_stats.keys():
-                            continue
-                        batch_stats[stat] = stat_value
-                        if f'blackbox_{stat}' in STAT_CALCULATORS.keys():
-                            batch_stats[f'blackbox_{stat}'] = stat_value
-            except Exception as e:
-                if self.ignore_exceptions:
-                    log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
-                    sys.stderr.write(log_msg)
-                    print(log_msg)
-                    continue
-                else:
-                    raise e
+            batch_stats = self.calculate(batch_stats,
+                                         self.stat_calculators,
+                                         inp_texts)
 
-            for stat in train_stats.keys():
-                batch_stats[stat] = train_stats[stat]
-            for stat in background_train_stats.keys():
-                batch_stats[stat] = background_train_stats[stat]
+            batch_estimations, bad_estimators = self.estimate(batch_stats,
+                                                              self.estimators)
 
-            batch_estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-            bad_estimators = []
-
-            for estimator in self.estimators:
-                try:
-                    e = estimator(batch_stats).tolist()
-                    self.estimations[estimator.level, str(estimator)] += e
-                    batch_estimations[estimator.level, str(estimator)] += e
-                except Exception as e:
-                    if self.ignore_exceptions:
-                        bad_estimators.append(estimator)
-                        log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
-                        sys.stderr.write(log_msg)
-                        print(log_msg)
-                        continue
-                    else:
-                        raise e
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
                 self.estimations.pop(key, None)
@@ -361,6 +347,44 @@ class UEManager:
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
+
+        if self.ensemble_model is not None:
+            # Now do the same for ensemble calculators
+            device = self.model.model.device
+            self.model.model.to('cpu')
+            self.ensemble_model.model.to(device)
+
+            iterable_data = tqdm(self.data) if self.verbose else self.data
+            for inp_texts, target_texts in iterable_data:
+                batch_stats: Dict[str, np.ndarray] = {}
+                for key, val in [
+                    ('input_texts', inp_texts),
+                    ('target_texts', target_texts),
+                ]:
+                    batch_stats[key] = val
+
+                target_tokens = [self.model.tokenizer([text])['input_ids'][0] + [self.model.tokenizer.eos_token_id]
+                                 for text in target_texts]
+                batch_stats['target_tokens'] = target_tokens
+
+                batch_stats['ensemble_generation_params'] = {}
+                batch_stats['ensemble_model'] = self.ensemble_model
+
+                batch_stats = self.calculate(batch_stats,
+                                             self.ensemble_stat_calculators,
+                                             inp_texts)
+
+                batch_estimations, bad_estimators = self.estimate(batch_stats,
+                                                                  self.ensemble_estimators)
+
+                for bad_estimator in bad_estimators:
+                    key = (bad_estimator.level, str(bad_estimator))
+                    self.estimations.pop(key, None)
+                    self.ensemble_estimators.remove(bad_estimator)
+
+
+            torch.cuda.empty_cache()
+            gc.collect()
 
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
@@ -380,12 +404,75 @@ class UEManager:
                         rec_ue, rec_metric = _recombine_data(ue, metric,
                                                              inputs_no_nans)
 
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric(rec_ue, rec_metric)
+                        rec_metric = np.array(rec_metric)
+                        oracle_score = ue_metric(-rec_metric, rec_metric)
+                        random_score = get_random_scores(ue_metric, rec_metric)
+                        ue_metric_val = ue_metric(rec_ue, rec_metric)
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = ue_metric_val
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)+"_normalized"] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
         for processor in self.processors:
             processor.on_eval(self.metrics)
 
         return self.metrics
+
+
+    def calculate(self, batch_stats: dict, calculators: list, inp_texts: list) -> dict:
+        """
+        Runs stat calculators and handles errors if any occur. Returns updated batch stats
+
+        Parameters:
+            batch_stats (dict): contains current batch statistics to be updated
+            calculators (list): list of stat calculators to run
+            inp_texts (list): list of inputs to the model in the batch
+        """
+        for stat_calculator in calculators:
+            try:
+                new_stats = stat_calculator(batch_stats, inp_texts, self.model, self.max_new_tokens)
+                for stat, stat_value in new_stats.items():
+                    if stat in batch_stats.keys():
+                        continue
+                    batch_stats[stat] = stat_value
+            except Exception as e:
+                if self.ignore_exceptions:
+                    log_msg = f'Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}'
+                    sys.stderr.write(log_msg)
+                    print(log_msg)
+                    continue
+                else:
+                    raise e
+
+        return batch_stats
+
+
+    def estimate(self, batch_stats: dict, estimators: list) -> Dict[Tuple[str, str], List[float]]:
+        """
+        Runs stat calculators and handles errors if any occur. Returns updated batch stats
+
+        Parameters:
+            batch_stats (dict): contains current batch statistics to be updated
+            estimators (list): list of estimators to run
+        """
+        batch_estimations = defaultdict(list)
+        bad_estimators = []
+
+        for estimator in estimators:
+            try:
+                e = estimator(batch_stats).tolist()
+                self.estimations[estimator.level, str(estimator)] += e
+                batch_estimations[estimator.level, str(estimator)] += e
+            except Exception as e:
+                if self.ignore_exceptions:
+                    bad_estimators.append(estimator)
+                    log_msg = f'Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed.'
+                    sys.stderr.write(log_msg)
+                    print(log_msg)
+                    continue
+                else:
+                    raise e
+
+        return batch_estimations, bad_estimators
+
 
     def _extract_train_embeddings(self, background: bool = False) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         train_stats = {}
@@ -426,8 +513,13 @@ class UEManager:
                     else:
                         train_stats[stat] = [batch_stats[stat]]
 
+                torch.cuda.empty_cache()
+                gc.collect()
+
             key_prefix = "background_train_" if background else "train_"
             for stat in train_stats.keys():
+                if any(s is None for s in train_stats[stat]):
+                    continue
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[key_prefix + stat] = [item for sublist in train_stats[stat] for item in sublist]
                 else:

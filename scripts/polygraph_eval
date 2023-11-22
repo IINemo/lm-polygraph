@@ -15,7 +15,7 @@ log = logging.getLogger()
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics.accuracy import AccuracyMetric
 from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
@@ -25,6 +25,9 @@ from lm_polygraph.generation_metrics.model_score import (
 )
 from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.estimators import *
+from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
+from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
+from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
     PredictionRejectionArea,
@@ -56,20 +59,47 @@ def main(args):
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
+    model_kwargs = {}
+    model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
+
+    cache_kwargs = {}
+    if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
+        cache_kwargs = {'cache_dir': args.cache_path}
+
     device = args.device
     if device is None:
         device = "cuda:0" if torch.cuda.device_count() > 0 else "cpu"
-
+        
     for seed in args.seed:
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
 
         log.info(f"Loading model {args.model}...")
         transformers.set_seed(seed)
+
         model = WhiteboxModel.from_pretrained(
             args.model,
             device=device,
+            **cache_kwargs,
+            **model_kwargs
         )
+
+        if args.ensemble:
+            # Only MC-ensembles for now
+            log.info(f"Creating ensemble...")
+            ensemble_model = create_ensemble(model_paths=[args.model],
+                                             mc=True,
+                                             device='cpu',
+                                             seed=args.seed[0],
+                                             ensembling_mode=args.ensembling_mode,
+                                             mc_seeds=args.mc_seeds,
+                                             dropout_rate=float(args.dropout_rate),
+                                             **cache_kwargs,
+                                             **model_kwargs
+                                             )
+        else:
+            ensemble_model = None
+
         log.info("Done with loading model.")
 
         log.info(f"Loading dataset {args.dataset}...")
@@ -80,7 +110,8 @@ def main(args):
             batch_size=args.batch_size,
             prompt=args.prompt,
             split=args.eval_split,
-            load_from_disk=args.load_from_disk
+            load_from_disk=args.load_from_disk,
+            **cache_kwargs
         )
 
         if type(dataset.y[0]) is list:
@@ -111,7 +142,8 @@ def main(args):
                     prompt=args.prompt,
                     split=args.train_split,
                     size=10_000,
-                    load_from_disk=args.load_from_disk
+                    load_from_disk=args.load_from_disk,
+                    **cache_kwargs
                 )
             elif args.train_test_split:
                 X_train, X_test, y_train, y_test = dataset.train_test_split(
@@ -130,6 +162,7 @@ def main(args):
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
+                    **cache_kwargs
                 )
 
             background_train_dataset = Dataset.load(
@@ -140,6 +173,8 @@ def main(args):
                 data_files=args.background_train_dataset_data_files,
                 split="train",
                 size=100_000,
+                load_from_disk=args.background_load_from_disk,
+                **cache_kwargs
             )
 
             if args.subsample_train_dataset != -1:
@@ -148,8 +183,6 @@ def main(args):
                 background_train_dataset.subsample(
                     args.subsample_background_train_dataset, seed=seed
                 )
-
-            log.info("Done with loading data.")
         else:
             train_dataset = None
             background_train_dataset = None
@@ -157,6 +190,8 @@ def main(args):
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
+
+        log.info("Done with loading data.")
 
         man = UEManager(
             dataset,
@@ -167,9 +202,7 @@ def main(args):
                 RougeMetric("rouge2"),
                 RougeMetric("rougeL"),
                 BartScoreSeqMetric("rh"),
-                ModelScoreSeqMetric(),
                 AccuracyMetric(),
-                ModelScoreTokenwiseMetric(),
             ],
             [
                 ReversedPairsProportion(),
@@ -184,6 +217,7 @@ def main(args):
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
+            ensemble_model=ensemble_model
         )
 
         man()
@@ -258,6 +292,20 @@ def get_ue_methods(args, model):
             Eccentricity(similarity_score="Jaccard_score"),
             SemanticEntropy(),
         ]
+
+    if args.use_ens_ue:
+        if not (model.model_type == "Seq2SeqLM"):
+            raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+
+        token_measures = all_token_estimators()
+        if args.ensembling_mode == 'pe':
+            sequence_measures = all_pe_estimators()
+        elif args.ensembling_mode == 'ep':
+            sequence_measures = all_ep_estimators()
+        else:
+            raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
+        estimators += (token_measures + sequence_measures)
+
     if args.use_tok_ue:
         estimators += [
             MaximumTokenProbability(),

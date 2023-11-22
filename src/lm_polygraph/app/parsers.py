@@ -8,8 +8,7 @@ from typing import Tuple
 import numpy as np
 
 from lm_polygraph.estimators import *
-from lm_polygraph.utils.ensemble_generator import EnsembleGenerationMixin
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 
 
 def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
@@ -174,14 +173,6 @@ def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[WhiteboxModel, White
     devices = [device] * (len(model_paths) - 1)
 
     model = WhiteboxModel.from_pretrained(model_paths[0])
-    ensemble_model = WhiteboxModel.from_pretrained(model_paths[0])
-
-    ensemble_model.model.__class__ = type('EnsembleModel',
-                                          (ensemble_model.model.__class__,
-                                           EnsembleGenerationMixin),
-                                          {})
-
-    models = [WhiteboxModel.from_pretrained(path).model for path in model_paths[1:]]
-    ensemble_model.model.add_ensemble_models(models, devices)
+    ensemble_model = create_ensemble(model_paths=model_paths)
 
     return model, ensemble_model

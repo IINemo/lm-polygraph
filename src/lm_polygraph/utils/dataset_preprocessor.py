@@ -39,12 +39,12 @@ def preprocess_with_prompt(dataset, x_column, y_column, prompt):
     return [prompt.format(text=text) for text in dataset[x_column]], dataset[y_column]
 
 
-def preprocess_dataset(dataset, dataset_path, x_column, y_column, prompt):
+def preprocess_dataset(dataset, dataset_name, x_column, y_column, prompt):
     if "translation" in dataset.column_names:
         return preprocess_translation(dataset, x_column, y_column)
-    elif ("coqa" in dataset_path.lower()) and len(prompt):
+    elif ("coqa" in dataset_name.lower()) and len(prompt):
         return preprocess_coqa(dataset, x_column, y_column, prompt)
-    elif ("babi_qa" in dataset_path.lower()) and len(prompt):
+    elif ("babi_qa" in dataset_name.lower()) and len(prompt):
         return preprocess_babiqa(dataset, x_column, y_column, prompt)
     elif len(prompt):
         return preprocess_with_prompt(dataset, x_column, y_column, prompt)

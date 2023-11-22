@@ -137,16 +137,19 @@ class Dataset:
         """
         load_from_disk = kwargs.pop("load_from_disk", False)
         if load_from_disk:
+            dataset_name = dataset_path
             dataset = hf_dataset.load_from_disk(dataset_path)
         elif isinstance(dataset_path, str):
+            dataset_name = dataset_path
             dataset = load_dataset(dataset_path, split=split, **kwargs)
         else:
+            dataset_name = dataset_path[0]
             dataset = load_dataset(*dataset_path, split=split, **kwargs)
 
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
-        x, y = preprocess_dataset(dataset, dataset_path, x_column, y_column, prompt)
+        x, y = preprocess_dataset(dataset, dataset_name, x_column, y_column, prompt)
         return Dataset(x, y, batch_size)
 
     @staticmethod
