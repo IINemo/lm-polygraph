@@ -39,7 +39,7 @@ jobs:
       with:
         #ignore: "F401"
         #exclude: "src/ignoreme.py"
-        max-line-length: "100"
+        max-line-length: "88"
         plugins: "flake8-black"
     - name: Test with pytest
       run: |

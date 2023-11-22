@@ -20,10 +20,10 @@ class EigValLaplacian(Estimator):
     """
 
     def __init__(
-            self,
-            similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
-            affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
-            verbose: bool = False
+        self,
+        similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
+        affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
+        verbose: bool = False,
     ):
         """
         See parameters descriptions in https://arxiv.org/abs/2305.19187.
@@ -38,37 +38,43 @@ class EigValLaplacian(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        if similarity_score == 'NLI_score':
+        if similarity_score == "NLI_score":
             DEBERTA.setup()
-            if affinity == 'entail':
-                super().__init__(['semantic_matrix_entail',
-                                  'blackbox_sample_texts'], 'sequence')
+            if affinity == "entail":
+                super().__init__(
+                    ["semantic_matrix_entail", "blackbox_sample_texts"], "sequence"
+                )
             else:
-                super().__init__(['semantic_matrix_contra',
-                                  'blackbox_sample_texts'], 'sequence')
+                super().__init__(
+                    ["semantic_matrix_contra", "blackbox_sample_texts"], "sequence"
+                )
         else:
-            super().__init__(['blackbox_sample_texts'], 'sequence')
+            super().__init__(["blackbox_sample_texts"], "sequence")
 
         self.similarity_score = similarity_score
         self.affinity = affinity
         self.verbose = verbose
 
     def __str__(self):
-        if self.similarity_score == 'NLI_score':
-            return f'EigValLaplacian_{self.similarity_score}_{self.affinity}'
-        return f'EigValLaplacian_{self.similarity_score}'
+        if self.similarity_score == "NLI_score":
+            return f"EigValLaplacian_{self.similarity_score}_{self.affinity}"
+        return f"EigValLaplacian_{self.similarity_score}"
 
     def U_EigVal_Laplacian(self, i, stats):
-        answers = stats['blackbox_sample_texts'][i]
+        answers = stats["blackbox_sample_texts"][i]
 
-        if self.similarity_score == 'NLI_score':
-            if self.affinity == 'entail':
-                W = stats['semantic_matrix_entail'][i, :, :]
+        if self.similarity_score == "NLI_score":
+            if self.affinity == "entail":
+                W = stats["semantic_matrix_entail"][i, :, :]
             else:
-                W = 1 - stats['semantic_matrix_contra'][i, :, :]
+                W = 1 - stats["semantic_matrix_contra"][i, :, :]
             W = (W + np.transpose(W)) / 2
         else:
-            W = compute_sim_score(answers=answers, affinity=self.affinity, similarity_score=self.similarity_score)
+            W = compute_sim_score(
+                answers=answers,
+                affinity=self.affinity,
+                similarity_score=self.similarity_score,
+            )
 
         D = np.diag(W.sum(axis=1))
         D_inverse_sqrt = np.linalg.inv(np.sqrt(D))
@@ -86,7 +92,7 @@ class EigValLaplacian(Estimator):
                 * matrix with semantic similarities in 'semantic_matrix_entail'/'semantic_matrix_contra'
         """
         res = []
-        for i, answers in enumerate(stats['blackbox_sample_texts']):
+        for i, answers in enumerate(stats["blackbox_sample_texts"]):
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_EigVal_Laplacian(i, stats))

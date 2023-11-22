@@ -10,13 +10,14 @@ from .estimator import Estimator
 DOUBLE_INFO = torch.finfo(torch.double)
 JITTERS = [10**exp for exp in range(-15, 0, 1)]
 
+
 def compute_inv_covariance(centroids, train_features, jitters=None):
     """
     This function computes inverse covariance matrix that is required by Mahalanobis distance:
     MD = \sqrt((h(x) - \mu)^{T} \Sigma^{-1} (h(x) - \mu))
 
     """
-    
+
     # jitter is the value to be added to the covariance matrix
 
     if jitters is None:
@@ -25,9 +26,9 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
     jitter_eps = None
 
     # A nested loop iterates over each centroid (mu_c) and the corresponding training features (x) for that centroid.
-    # and for each pair of centroid and feature, the difference (d) between the feature and centroid is computed and 
+    # and for each pair of centroid and feature, the difference (d) between the feature and centroid is computed and
     # the outer product of d with itself is added to the covariance matrix.
-    
+
     if torch.cuda.is_available():
         centroids = centroids.cuda()
         train_features = train_features.cuda()
@@ -53,6 +54,7 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
     cov_inv = torch.inverse(cov_scaled.to(torch.float64)).float()
     return cov_inv, jitter_eps
 
+
 def mahalanobis_distance_with_known_centroids_sigma_inv(
     centroids, centroids_mask, sigma_inv, eval_features
 ):
@@ -61,7 +63,7 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
     - tensor of Mahalanobis distances is returned.
     """
     # step 1: calculate the difference (diff) between each evaluation feature and each centroid by subtracting the centoids from the features.
-    
+
     diff = eval_features.unsqueeze(1) - centroids.unsqueeze(
         0
     )  # bs (b), num_labels (c / s), dim (d / a)
@@ -82,74 +84,84 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
         dists = dists.masked_fill_(centroids_mask, float("inf")).to(device)
     return dists  # np.min(dists, axis=1)
 
+
 def create_cuda_tensor_from_numpy(array):
     if not isinstance(array, torch.Tensor):
         array = torch.from_numpy(array)
     if torch.cuda.is_available():
         array = array.cuda()
     return array
-    
+
 
 class MahalanobisDistanceSeq(Estimator):
-    def __init__(self, embeddings_type: str = "decoder", parameters_path: str = None, normalize: bool = False):
-        super().__init__(['embeddings', 'train_embeddings'], 'sequence')
+    def __init__(
+        self,
+        embeddings_type: str = "decoder",
+        parameters_path: str = None,
+        normalize: bool = False,
+    ):
+        super().__init__(["embeddings", "train_embeddings"], "sequence")
         self.centroid = None
         self.sigma_inv = None
         self.parameters_path = parameters_path
         self.embeddings_type = embeddings_type
         self.normalize = normalize
-        self.min = 1e+100
-        self.max = -1e+100
-        
+        self.min = 1e100
+        self.max = -1e100
+
         if self.parameters_path is not None:
-            self.full_path = f"{self.parameters_path}/md_{self.embeddings_type}" 
+            self.full_path = f"{self.parameters_path}/md_{self.embeddings_type}"
             os.makedirs(self.full_path, exist_ok=True)
-        
+
             if os.path.exists(f"{self.full_path}/centroid.pt"):
                 self.centroid = torch.load(f"{self.full_path}/centroid.pt")
                 self.sigma_inv = torch.load(f"{self.full_path}/sigma_inv.pt")
                 self.max = torch.load(f"{self.full_path}/max.pt")
                 self.min = torch.load(f"{self.full_path}/min.pt")
-            
 
     def __str__(self):
-        return f'MahalanobisDistanceSeq_{self.embeddings_type}'
+        return f"MahalanobisDistanceSeq_{self.embeddings_type}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-
         # take the embeddings
-        embeddings = create_cuda_tensor_from_numpy(stats[f'embeddings_{self.embeddings_type}'])
-            
-        # compute centroids if not given     
+        embeddings = create_cuda_tensor_from_numpy(
+            stats[f"embeddings_{self.embeddings_type}"]
+        )
+
+        # compute centroids if not given
         if self.centroid is None:
-            train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])            
+            train_embeddings = create_cuda_tensor_from_numpy(
+                stats[f"train_embeddings_{self.embeddings_type}"]
+            )
             self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
-        
+
         # compute inverse covariance matrix if not given
         if self.sigma_inv is None:
-            train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])  
+            train_embeddings = create_cuda_tensor_from_numpy(
+                stats[f"train_embeddings_{self.embeddings_type}"]
+            )
             self.sigma_inv, _ = compute_inv_covariance(
                 self.centroid.unsqueeze(0), train_embeddings
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
-        
+
         if torch.cuda.is_available():
             if not self.centroid.is_cuda:
                 self.centroid = self.centroid.cuda()
             if not self.sigma_inv.is_cuda:
                 self.sigma_inv = self.sigma_inv.cuda()
-        
-        # compute MD given centroids and inverse covariance matrix   
+
+        # compute MD given centroids and inverse covariance matrix
         dists = mahalanobis_distance_with_known_centroids_sigma_inv(
             self.centroid,
             None,
             self.sigma_inv,
             embeddings,
         )[:, 0]
-        
+
         if self.max < dists.max():
             self.max = dists.max()
             if self.parameters_path is not None:
@@ -158,9 +170,9 @@ class MahalanobisDistanceSeq(Estimator):
             self.min = dists.min()
             if self.parameters_path is not None:
                 torch.save(self.min, f"{self.full_path}/min.pt")
-        
-        # norlmalise if required  
+
+        # norlmalise if required
         if self.normalize:
-            dists = torch.clip((self.max - dists) / (self.max - self.min), min=0, max=1) 
-                
+            dists = torch.clip((self.max - dists) / (self.max - self.min), min=0, max=1)
+
         return dists.cpu().detach().numpy()

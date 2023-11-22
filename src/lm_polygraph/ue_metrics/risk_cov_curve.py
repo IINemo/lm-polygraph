@@ -18,7 +18,7 @@ class RiskCoverageCurveAUC(UEMetric):
         self.normalize = normalize
 
     def __str__(self):
-        return 'rcc-auc'
+        return "rcc-auc"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         """

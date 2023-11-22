@@ -5,10 +5,18 @@ import os
 with open("requirements.txt") as f:
     install_requires = list(f.readlines())
 
-package_data = ["**/*.json", "**/*.js", "**/*.css",
-                "**/*.html", "**/*.ico", "**/*.png",
-                "**/assets/*", "**/assets/css/*",
-                "**/assets/js/*", "**/assets/img/*"]
+package_data = [
+    "**/*.json",
+    "**/*.js",
+    "**/*.css",
+    "**/*.html",
+    "**/*.ico",
+    "**/*.png",
+    "**/assets/*",
+    "**/assets/css/*",
+    "**/assets/js/*",
+    "**/assets/img/*",
+]
 
 setup(
     name="lm_polygraph",
@@ -21,9 +29,11 @@ setup(
     keywords="NLP deep learning transformer pytorch uncertainty estimation",
     license="MIT",
     url="https://github.com/IINemo/lm-polygraph",
-    scripts=['scripts/polygraph_eval',
-             'scripts/polygraph_server',
-             'scripts/polygraph_normalize'],
+    scripts=[
+        "scripts/polygraph_eval",
+        "scripts/polygraph_server",
+        "scripts/polygraph_normalize",
+    ],
     package_dir={"": "src"},
     packages=find_packages("src"),
     include_package_data=True,

@@ -4,7 +4,7 @@ from typing import List, Dict
 from abc import ABC, abstractmethod
 from lm_polygraph.utils.model import Model
 
-STAT_CALCULATORS: Dict[str, 'StatCalculator'] = {}
+STAT_CALCULATORS: Dict[str, "StatCalculator"] = {}
 STAT_DEPENDENCIES: Dict[str, List[str]] = {}
 
 
@@ -35,8 +35,14 @@ class StatCalculator(ABC):
         self._stat_dependencies = stat_dependencies
 
     @abstractmethod
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: Model,
-                 max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: Model,
+        max_new_tokens: int = 100,
+        **kwargs
+    ) -> Dict[str, np.ndarray]:
         """
         Abstract method. Calculates the statistic based on the other provided statistics.
 
@@ -49,7 +55,7 @@ class StatCalculator(ABC):
         Returns:
             Dict[str, np.ndarray]: dictionary with calculated statistics under all keys from `stats`.
         """
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @property
     def stats(self) -> List[str]:
