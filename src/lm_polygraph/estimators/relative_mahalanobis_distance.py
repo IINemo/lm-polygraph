@@ -35,6 +35,7 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         self.min = 1e+100
         self.max = -1e+100
         self.MD = MahalanobisDistanceSeq(embeddings_type, parameters_path, normalize=False)
+        self.is_fitted = False
         
         if self.parameters_path is not None:
             self.full_path = f"{self.parameters_path}/rmd_{self.embeddings_type}" 
@@ -44,6 +45,8 @@ class RelativeMahalanobisDistanceSeq(Estimator):
                 self.sigma_inv_0 = torch.load(f"{self.full_path}/sigma_inv_0.pt")
                 self.max = load_array(f"{self.full_path}/max_0.npy")
                 self.min = load_array(f"{self.full_path}/min_0.npy")
+                self.is_fitted = True
+                
 
     def __str__(self):
         return f'RelativeMahalanobisDistanceSeq_{self.embeddings_type}'
@@ -57,13 +60,13 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         # we have to compute average train centroid and inverse cavariance matrix
         # to obtain MD_0
 
-        if self.centroid_0 is None:
+        if not self.is_fitted:
             background_train_embeddings = create_cuda_tensor_from_numpy(stats[f'background_train_embeddings_{self.embeddings_type}'])  
             self.centroid_0 = background_train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid_0, f"{self.full_path}/centroid_0.pt")
                 
-        if self.sigma_inv_0 is None:
+        if not self.is_fitted:
             background_train_embeddings = create_cuda_tensor_from_numpy(stats[f'background_train_embeddings_{self.embeddings_type}'])  
             self.sigma_inv_0, _ = compute_inv_covariance(
                 self.centroid_0.unsqueeze(0), background_train_embeddings
