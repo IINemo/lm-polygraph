@@ -27,6 +27,7 @@ use_seq_ue: true
 use_tok_ue: false
 use_density_based_ue: false
 use_ens_ue: false
+generation_metrics: null
 ens_type:
 
 additional_estimators: {}

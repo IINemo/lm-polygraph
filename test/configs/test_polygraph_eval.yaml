@@ -7,15 +7,6 @@ save_path: '${hydra:run.dir}'
 
 task: qa
 
-generation_metrics:
-  - name: RougeMetric
-    args: ["rouge1"]
-  - name: BartScoreSeqMetric
-    args: ["rh"]
-  - name: ModelScoreSeqMetric
-  - name: AccuracyMetric
-  - name: ModelScoreTokenwiseMetric
-
 dataset: SpeedOfMagic/trivia_qa_tiny
 train_split: train
 eval_split: test
@@ -36,6 +27,14 @@ use_seq_ue: false
 use_tok_ue: false
 use_density_based_ue: false
 use_ens_ue: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+  - name: BartScoreSeqMetric
+    args: ["rh"]
+  - name: ModelScoreSeqMetric
+  - name: AccuracyMetric
+  - name: ModelScoreTokenwiseMetric
 ens_type: 
 
 additional_estimators: {
