@@ -29,8 +29,8 @@ def main(args):
 
     save_path = args.save_path if "save_path" in args else save_path
     
-    man_id = UEManager.load(args.id_results_path)
-    man_ood = UEManager.load(args.ood_results_path)
+    man_id = UEManager.load(args.id_manager_path)
+    man_ood = UEManager.load(args.ood_manager_path)
     
     ood_metrics = [ROCAUC()]
     ood_results = calculate_ood_from_mans(man_id, man_ood, ood_metrics)
