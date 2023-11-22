@@ -9,7 +9,7 @@ import pdb
 from typing import List, Dict
 from abc import abstractmethod, ABC
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, \
-    LogitsProcessorList
+    LogitsProcessorList, BartForConditionalGeneration
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
@@ -343,8 +343,8 @@ class WhiteboxModel(Model):
             if 'falcon' in model_path:
                 model.transformer.alibi = True
         elif any(["BartModel" in architecture for architecture in config.architectures]):
-            model_type = "CausalLM"
-            model = BartForCausalLM.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
+            model_type = "Seq2SeqLM"
+            model = BartForConditionalGeneration.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
         else:
             raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
         if not kwargs.get('load_in_8bit', False) and not kwargs.get('load_in_4bit', False):
