@@ -323,6 +323,10 @@ class UEManager:
                 batch_stats['target_tokens'] = target_tokens
 
             batch_stats['deberta_batch_size'] = self.deberta_batch_size
+            for stat in train_stats.keys():
+                batch_stats[stat] = train_stats[stat]
+            for stat in background_train_stats.keys():
+                batch_stats[stat] = background_train_stats[stat]
 
             batch_stats = self.calculate(batch_stats,
                                          self.stat_calculators,
