@@ -45,3 +45,20 @@ class UEMetric(ABC):
                 which depends on a particular implementation.
         """
         raise Exception('Not implemented')
+        
+
+def get_random_scores(function, metrics, num_iter=1000, seed=42):
+    np.random.seed(seed)
+    rand_scores = np.arange(len(metrics))
+
+    value, scores = [], []
+    for i in range(num_iter):
+        np.random.shuffle(rand_scores)
+        rand_val = function(rand_scores, metrics)
+        value.append(rand_val)
+    return np.mean(value)
+
+def normalize_metric(target_score, oracle_score, random_score):
+    if not (oracle_score == random_score):
+        target_score = (target_score - random_score) / (oracle_score - random_score)
+    return target_score
