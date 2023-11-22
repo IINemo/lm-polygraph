@@ -220,7 +220,7 @@ def collect_token_level_uncertainties(
             token_level_uncertainties[key] / seq_penalty_unb
     
     if aggregate_models:
-        modelwise_penalties = seq_penalty.unsqueeze(1).repeat(1, model_logits.shape[1], 1)
+        modelwise_penalties = seq_penalty.unsqueeze(1).repeat(1, models_sequence_scores.shape[1], 1)
         models_sequence_scores = models_sequence_scores.sum(dim=-1).to(device) / modelwise_penalties
 
         token_level_uncertainties['log_probas'] = models_sequence_scores

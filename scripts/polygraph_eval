@@ -25,6 +25,9 @@ from lm_polygraph.generation_metrics.model_score import (
 )
 from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.estimators import *
+from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
+from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
+from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
     PredictionRejectionArea,
@@ -293,35 +296,12 @@ def get_ue_methods(args, model):
     if args.use_ens_ue:
         if not (model.model_type == "Seq2SeqLM"):
             raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
-        
-        token_measures = [
-            PETtu(),
-            PETdu(),
-            PETmi(),
-            PETrmi(),
-            PETepkl(),
-            PETent5(),
-            PETent10(),
-            PETent15(),
-            EPTtu(),
-            EPTdu(),
-            EPTmi(),
-            EPTrmi(),
-            EPTepkl(),
-            EPTent5(),
-            EPTent10(),
-            EPTent15(),
-        ]
+
+        token_measures = all_token_estimators()
         if args.ensembling_mode == 'pe':
-            sequence_measures = [
-                PEStu(),
-                PESrmi(),
-            ]
+            sequence_measures = all_pe_estimators()
         elif args.ensembling_mode == 'ep':
-            sequence_measures = [
-                EPStu(),
-                EPSrmi(),
-            ]
+            sequence_measures = all_ep_estimators()
         else:
             raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
         estimators += (token_measures + sequence_measures)

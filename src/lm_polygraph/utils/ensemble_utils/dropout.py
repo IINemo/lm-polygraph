@@ -72,4 +72,4 @@ def replace_dropout(model_name, module, p=0.1, share_across_tokens=True):
                 setattr(c_mod, 'forward', types.MethodType(method, c_mod))
                 c_mod.p = p
             else:
-                replace_dropout(c_mod, p=p, share_across_tokens=share_across_tokens)
+                replace_dropout(model_name, c_mod, p=p, share_across_tokens=share_across_tokens)
