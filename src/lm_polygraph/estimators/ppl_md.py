@@ -80,6 +80,7 @@ class PPLMDSeq(Estimator):
             self.train_md = self.MD_val(copy_stats)
             if self.parameters_path is not None:
                 save_array(self.train_md, f"{self.full_path}/train_md.npy")
+            self.is_fitted = True
             
         ppl_rank = rank(ppl, self.train_ppl)
         md_rank = rank(md, self.train_md)

@@ -73,7 +73,7 @@ class RelativeMahalanobisDistanceSeq(Estimator):
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv_0, f"{self.full_path}/sigma_inv_0.pt")
-                
+            self.is_fitted = True
                 
         if torch.cuda.is_available():
             if not self.centroid_0.is_cuda:

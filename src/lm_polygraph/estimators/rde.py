@@ -95,6 +95,7 @@ class RDESeq(Estimator):
             self.MCD = MCD_covariance(X_pca_train)
             if self.parameters_path is not None:
                 self.save_mcd()
+            self.is_fitted = True
         
         # transform test data based on pca
         X_pca_test = self.pca.transform(embeddings)
