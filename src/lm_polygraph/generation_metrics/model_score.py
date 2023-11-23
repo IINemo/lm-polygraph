@@ -12,16 +12,16 @@ class ModelScoreTokenwiseMetric(GenerationMetric):
     """
 
     def __init__(self):
-        super().__init__(['model_rh'], 'token')
+        super().__init__(["model_rh"], "token")
 
     def __str__(self):
-        return 'ModelScoreToken-rh'
+        return "ModelScoreToken-rh"
 
     def __call__(
-            self,
-            stats: Dict[str, np.ndarray],
-            target_texts: List[str],
-            target_tokens: List[List[int]],
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates token-level ModelScore between stats['greedy_texts'] and target_texts.
@@ -34,7 +34,7 @@ class ModelScoreTokenwiseMetric(GenerationMetric):
         Returns:
             np.ndarray: concatenated float Model Scores for each token in each input sample.
         """
-        return np.array([s for sample in stats['model_rh'] for s in sample[:-1]])
+        return np.array([s for sample in stats["model_rh"] for s in sample[:-1]])
 
 
 class ModelScoreSeqMetric(GenerationMetric):
@@ -45,16 +45,16 @@ class ModelScoreSeqMetric(GenerationMetric):
     """
 
     def __init__(self):
-        super().__init__(['model_rh'], 'sequence')
+        super().__init__(["model_rh"], "sequence")
 
     def __str__(self):
-        return 'ModelScoreSeq-rh'
+        return "ModelScoreSeq-rh"
 
     def __call__(
-            self,
-            stats: Dict[str, np.ndarray],
-            target_texts: List[str],
-            target_tokens: List[List[int]],
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates sequence-level ModelScore between stats['greedy_texts'] and target_texts.
@@ -67,4 +67,6 @@ class ModelScoreSeqMetric(GenerationMetric):
         Returns:
             np.ndarray: float Model Scores for each input sample.
         """
-        return np.array([np.logaddexp.reduce(sample) / len(sample) for sample in stats['model_rh']])
+        return np.array(
+            [np.logaddexp.reduce(sample) / len(sample) for sample in stats["model_rh"]]
+        )

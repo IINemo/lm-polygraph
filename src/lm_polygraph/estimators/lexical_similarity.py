@@ -19,7 +19,7 @@ class LexicalSimilarity(Estimator):
     'samples_n' parameter.
     """
 
-    def __init__(self, metric: str = 'rougeL'):
+    def __init__(self, metric: str = "rougeL"):
         """
         Parameters:
             metric (str): similarity metric (default: 'rougeL'). Possible values:
@@ -27,17 +27,17 @@ class LexicalSimilarity(Estimator):
                 * BLEU
         """
         self.metric = metric
-        if self.metric.startswith('rouge'):
+        if self.metric.startswith("rouge"):
             self.scorer = rouge_scorer.RougeScorer([self.metric], use_stemmer=True)
-        super().__init__(['blackbox_sample_texts'], 'sequence')
+        super().__init__(["blackbox_sample_texts"], "sequence")
 
     def __str__(self):
-        return f'LexicalSimilarity_{self.metric}'
+        return f"LexicalSimilarity_{self.metric}"
 
     def _score_single(self, t1: str, t2: str):
-        if self.metric.startswith('rouge'):
+        if self.metric.startswith("rouge"):
             return self.scorer.score(t1, t2)[self.metric].fmeasure
-        elif self.metric == 'BLEU':
+        elif self.metric == "BLEU":
             min_sentence_len = min(len(t1.split()), len(t2.split()))
             if min_sentence_len == 1:
                 weights = [1.0, 0.0, 0.0, 0.0]
@@ -50,7 +50,7 @@ class LexicalSimilarity(Estimator):
                 weights = [0.25, 0.25, 0.25, 0.25]
             return sentence_bleu([t1.split()], t2.split(), weights=weights)
         else:
-            raise Exception(f'Unknown metrics for lexical similarity: {self.metric}')
+            raise Exception(f"Unknown metrics for lexical similarity: {self.metric}")
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -63,7 +63,7 @@ class LexicalSimilarity(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        batch_texts = stats['blackbox_sample_texts']
+        batch_texts = stats["blackbox_sample_texts"]
         res = []
         for texts in batch_texts:
             sims = []

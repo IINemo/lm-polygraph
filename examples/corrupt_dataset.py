@@ -13,6 +13,7 @@ log = logging.getLogger()
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
+
 def corrupt(text: str, tokenizer, gen: Generator) -> str:
     assert tokenizer is not None, "Tokenizer is not defined"
     tokens = tokenizer.encode(text)
@@ -47,14 +48,21 @@ def main(args):
 
     if args.subsample_eval_dataset != -1:
         dataset.subsample(args.subsample_eval_dataset, seed=seed)
-        
+
     random_gen = default_rng(seed=seed)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    
+
     corrupted_text = [corrupt(x, tokenizer, random_gen) for x in dataset.x]
-    
-    df = pd.DataFrame({f"{args.text_column}_corrupted": corrupted_text, args.text_column: dataset.x, args.label_column: dataset.y})
+
+    df = pd.DataFrame(
+        {
+            f"{args.text_column}_corrupted": corrupted_text,
+            args.text_column: dataset.x,
+            args.label_column: dataset.y,
+        }
+    )
     df.to_csv(save_path + f"/{args.dataset}_corrupted.csv", index=False)
-    
+
+
 if __name__ == "__main__":
     main()
