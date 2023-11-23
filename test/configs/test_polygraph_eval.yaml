@@ -32,10 +32,7 @@ generation_metrics:
     args: ["rouge1"]
   - name: BartScoreSeqMetric
     args: ["rh"]
-  - name: ModelScoreSeqMetric
   - name: AccuracyMetric
-  - name: ModelScoreTokenwiseMetric
-ens_type: 
 
 additional_estimators: {
   'lm_polygraph.estimators.perplexity': ['Perplexity'],

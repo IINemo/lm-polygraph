@@ -27,7 +27,9 @@ use_seq_ue: true
 use_tok_ue: false
 use_density_based_ue: false
 use_ens_ue: false
-generation_metrics: null
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
 ens_type:
 
 additional_estimators: {}
