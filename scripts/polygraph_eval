@@ -218,13 +218,13 @@ def main(args):
 def get_density_based_ue_methods(args, model_type):
     estimators = []
     if args.use_density_based_ue:
-        if not getattr(args, 'parameters_path', False):
+        if getattr(args, 'parameters_path', False):
+            parameters_path = args.parameters_path
+        else:
             dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
             dataset_name = dataset_name.split("/")[-1].split(".")[0]
             model_name = args.model.split("/")[-1]
             parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
-        else:
-            parameters_path = args.parameters_path
         
         if model_type == "Seq2SeqLM":
             estimators += [
