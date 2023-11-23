@@ -38,6 +38,7 @@ use_auth_token:
 use_density_based_ue: true
 use_seq_ue: true
 use_tok_ue: false
+generation_metrics: null
 
 # Examples of providing additional UE methods:
 # additional_estimators: {

@@ -27,7 +27,12 @@ use_seq_ue: false
 use_tok_ue: false
 use_density_based_ue: false
 use_ens_ue: false
-ens_type: 
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+  - name: BartScoreSeqMetric
+    args: ["rh"]
+  - name: AccuracyMetric
 
 additional_estimators: {
   'lm_polygraph.estimators.perplexity': ['Perplexity'],

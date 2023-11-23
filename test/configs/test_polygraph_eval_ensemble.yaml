@@ -26,6 +26,9 @@ dropout_rate: 0.1
 use_seq_ue: false
 use_tok_ue: false
 use_density_based_ue: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
 use_ens_ue: true
 
 subsample_eval_dataset: 4
