@@ -95,7 +95,7 @@ class Dataset:
         self.select(indices)
 
     @staticmethod
-    def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
+    def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int, prompt: str = "", **kwargs):
         """
         Creates the dataset from .CSV table.
 
@@ -108,6 +108,10 @@ class Dataset:
         csv = pd.read_csv(csv_path)
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
+        
+        if len(prompt):
+            x = [prompt.format(text=text) for text in x]
+                        
         return Dataset(x, y, batch_size)
 
     @staticmethod
