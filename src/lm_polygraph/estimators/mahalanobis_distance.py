@@ -100,6 +100,7 @@ class MahalanobisDistanceSeq(Estimator):
         self.normalize = normalize
         self.min = 1e+100
         self.max = -1e+100
+        self.is_fitted = False
         
         if self.parameters_path is not None:
             self.full_path = f"{self.parameters_path}/md_{self.embeddings_type}" 
@@ -110,6 +111,7 @@ class MahalanobisDistanceSeq(Estimator):
                 self.sigma_inv = torch.load(f"{self.full_path}/sigma_inv.pt")
                 self.max = torch.load(f"{self.full_path}/max.pt")
                 self.min = torch.load(f"{self.full_path}/min.pt")
+                self.is_fitted = True
             
 
     def __str__(self):
@@ -121,20 +123,21 @@ class MahalanobisDistanceSeq(Estimator):
         embeddings = create_cuda_tensor_from_numpy(stats[f'embeddings_{self.embeddings_type}'])
             
         # compute centroids if not given     
-        if self.centroid is None:
+        if not self.is_fitted:
             train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])            
             self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
                 torch.save(self.centroid, f"{self.full_path}/centroid.pt")
         
         # compute inverse covariance matrix if not given
-        if self.sigma_inv is None:
+        if not self.is_fitted:
             train_embeddings = create_cuda_tensor_from_numpy(stats[f'train_embeddings_{self.embeddings_type}'])  
             self.sigma_inv, _ = compute_inv_covariance(
                 self.centroid.unsqueeze(0), train_embeddings
             )
             if self.parameters_path is not None:
                 torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
+            self.is_fitted = True
         
         if torch.cuda.is_available():
             if not self.centroid.is_cuda:

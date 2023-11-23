@@ -61,6 +61,7 @@ class RDESeq(Estimator):
         self.normalize = normalize
         self.min = 1e+100
         self.max = -1e+100
+        self.is_fitted = False
         
         if self.parameters_path is not None:
             self.full_path = f"{self.parameters_path}/rde_{self.embeddings_type}" 
@@ -70,6 +71,7 @@ class RDESeq(Estimator):
                 self.MCD = self.load_mcd()
                 self.max = load_array(f"{self.full_path}/max.npy")
                 self.min = load_array(f"{self.full_path}/min.npy")
+                self.is_fitted = True
             
 
     def __str__(self):
@@ -82,17 +84,18 @@ class RDESeq(Estimator):
 
 
         # define PCA with rbf kernel and n_components equal 100
-        if self.pca is None:
+        if not self.is_fitted:
             self.pca = KernelPCA(n_components=100, kernel="rbf", random_state=42, gamma=None)
             X_pca_train = self.pca.fit_transform(stats[f'train_embeddings_{self.embeddings_type}'])            
             if self.parameters_path is not None:
                 self.save_pca()
                 
         # define mean covariance distance
-        if self.MCD is None:
+        if not self.is_fitted:
             self.MCD = MCD_covariance(X_pca_train)
             if self.parameters_path is not None:
                 self.save_mcd()
+            self.is_fitted = True
         
         # transform test data based on pca
         X_pca_test = self.pca.transform(embeddings)

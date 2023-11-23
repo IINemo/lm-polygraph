@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import hydra
+import importlib
+import os
+import argparse
+from pathlib import Path
+import json
+
+import logging
+
+log = logging.getLogger()
+
+from lm_polygraph.utils.manager import UEManager
+from lm_polygraph.utils.ood_detection import calculate_ood_from_mans
+from lm_polygraph.ue_metrics import ROCAUC
+
+hydra_config = Path(os.environ["HYDRA_CONFIG"])
+
+@hydra.main(
+    version_base=None,
+    config_path=str(hydra_config.parent),
+    config_name=str(hydra_config.name),
+)
+def main(args):
+    save_path = os.getcwd()
+    log.info(f"Main directory: {save_path}")
+    os.chdir(hydra.utils.get_original_cwd())
+
+    save_path = args.save_path if "save_path" in args else save_path
+    
+    man_id = UEManager.load(args.id_manager_path)
+    man_ood = UEManager.load(args.ood_manager_path)
+    
+    ood_metrics = [ROCAUC()]
+    ood_results = calculate_ood_from_mans(man_id, man_ood, ood_metrics)
+    
+    with open(Path(save_path) / "ood_inference.json", "w") as res_file:
+        json.dump(ood_results, res_file)
+
+if __name__ == "__main__":
+    main()

@@ -34,13 +34,6 @@ from lm_polygraph.ue_metrics import (
     RiskCoverageCurveAUC,
 )
 
-DENSITY_BASED_ESTIMATORS = [
-    "MahalanobisDistanceSeq",
-    "RelativeMahalanobisDistanceSeq",
-    "RDESeq",
-    "PPLMDSeq",
-]
-
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
 
@@ -128,9 +121,10 @@ def main(args):
 
         estimators = []
         estimators += get_ue_methods(args, model)
-        estimators += get_density_based_ue_methods(args, model.model_type)
+        density_based_ue_methods = get_density_based_ue_methods(args, model.model_type)
+        estimators += density_based_ue_methods
 
-        if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in estimators]):
+        if any([not getattr(method, "is_fitted", False) for method in density_based_ue_methods]):
             if (args.train_dataset is not None) and (
                     args.train_dataset != args.dataset
             ):
@@ -186,7 +180,6 @@ def main(args):
         else:
             train_dataset = None
             background_train_dataset = None
-            density_based_ue = []
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
@@ -228,11 +221,14 @@ def main(args):
 def get_density_based_ue_methods(args, model_type):
     estimators = []
     if args.use_density_based_ue:
-        dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
-        dataset_name = dataset_name.split("/")[-1].split(".")[0]
-        model_name = args.model.split("/")[-1]
-        parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
-
+        if getattr(args, 'parameters_path', False):
+            parameters_path = args.parameters_path
+        else:
+            dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
+            dataset_name = dataset_name.split("/")[-1].split(".")[0]
+            model_name = args.model.split("/")[-1]
+            parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
+        
         if model_type == "Seq2SeqLM":
             estimators += [
                 MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),

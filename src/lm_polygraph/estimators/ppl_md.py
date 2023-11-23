@@ -38,6 +38,7 @@ class PPLMDSeq(Estimator):
         
         self.train_ppl = None
         self.train_md = None
+        self.is_fitted = False
         
         self.PPL = Perplexity()
         if self.md_type == "MD":
@@ -56,6 +57,7 @@ class PPLMDSeq(Estimator):
             if os.path.exists(f"{self.full_path}/train_md.npy"):
                 self.train_ppl = load_array(f"{self.full_path}/train_ppl.npy")
                 self.train_md = load_array(f"{self.full_path}/train_md.npy")
+                self.is_fitted = True
 
     def __str__(self):
         return f'PPL{self.md_type}Seq_{self.embeddings_type}'
@@ -64,13 +66,13 @@ class PPLMDSeq(Estimator):
         ppl = self.PPL(stats)
         md = self.MD(stats)
         
-        if self.train_ppl is None:
+        if not self.is_fitted:
             copy_stats = copy.deepcopy(stats)
             copy_stats['greedy_log_likelihoods'] = copy_stats['train_greedy_log_likelihoods']
             self.train_ppl = self.PPL(copy_stats)
             if self.parameters_path is not None:
                 save_array(self.train_ppl, f"{self.full_path}/train_ppl.npy")
-        if self.train_md is None:
+        if not self.is_fitted:
             train_embeds, val_embeds = train_test_split(stats[f'train_embeddings_{self.embeddings_type}'], test_size=0.3, random_state=42)
             copy_stats = copy.deepcopy(stats)
             copy_stats[f'train_embeddings_{self.embeddings_type}'] = train_embeds
@@ -78,6 +80,7 @@ class PPLMDSeq(Estimator):
             self.train_md = self.MD_val(copy_stats)
             if self.parameters_path is not None:
                 save_array(self.train_md, f"{self.full_path}/train_md.npy")
+            self.is_fitted = True
             
         ppl_rank = rank(ppl, self.train_ppl)
         md_rank = rank(md, self.train_md)
