@@ -1,4 +1,3 @@
-import os
 import subprocess
 import pathlib
 
@@ -11,7 +10,8 @@ from lm_polygraph.estimators.ensemble_sequence_measures import (
     all_pe_estimators,
 )
 
-############### TEST HELPERS ####################
+
+# ================= TEST HELPERS ==================
 
 
 def exec_bash(s):
@@ -37,7 +37,7 @@ def run_config_with_overrides(config_name, **overrides):
     return exec_result
 
 
-################ TEST CASES ######################
+# ================= TEST CASES ==================
 
 
 def test_just_works():
@@ -54,7 +54,7 @@ def test_all_seq_ue():
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
 
-############ PE ENSEMBLES ##############
+# ================= PE ensembles ==================
 
 
 def test_pe_ensembles_dont_fail():
@@ -124,7 +124,7 @@ def test_pe_mi_zero_when_same():
         ), f"result has non-zero MI in {key} when models are identical"
 
 
-########### EP ENSEMBLES ##############
+# ================= EP ensembles ==================
 
 
 def test_ep_ensembles_dont_fail():

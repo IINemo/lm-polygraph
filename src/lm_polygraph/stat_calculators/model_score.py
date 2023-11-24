@@ -80,7 +80,8 @@ class ModelScoreCalculator(StatCalculator):
         max_new_tokens: int = 100,
         **kwargs,
     ) -> Dict[str, np.ndarray]:
-        preds, inp_tokens = dependencies["greedy_tokens"], dependencies["input_tokens"]
+        # inp_tokens = dependencies["input_tokens"]
+        preds = dependencies["greedy_tokens"]
         prompted_refs = model.tokenizer(
             [self.prompt.format(s) for s in dependencies["target_texts"]]
         )["input_ids"]

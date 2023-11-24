@@ -1,15 +1,11 @@
 import os
 import numpy as np
-import torch
-from tqdm import tqdm
 import copy
 
 from typing import Dict
 
 from .estimator import Estimator
 from .mahalanobis_distance import (
-    compute_inv_covariance,
-    mahalanobis_distance_with_known_centroids_sigma_inv,
     MahalanobisDistanceSeq,
 )
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq

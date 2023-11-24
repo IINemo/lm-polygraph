@@ -1,11 +1,9 @@
-import torch
 import numpy as np
 
 from typing import Dict, Literal
 
 from .estimator import Estimator
 from .common import DEBERTA, compute_sim_score
-import torch.nn as nn
 
 
 class DegMat(Estimator):

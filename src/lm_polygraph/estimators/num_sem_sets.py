@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Dict, Literal
+from typing import Dict
 
 from .estimator import Estimator
 from .common import DEBERTA
@@ -39,7 +39,7 @@ class NumSemSets(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return f"NumSemSets"
+        return "NumSemSets"
 
     def find_connected_components(self, graph):
         def dfs(node, component):
@@ -62,8 +62,6 @@ class NumSemSets(Estimator):
         return components
 
     def U_NumSemSets(self, i, stats):
-        answers = stats["blackbox_sample_texts"]
-
         # We have forward upper triangular and backward in lower triangular
         # parts of the semantic matrices
         W_entail = stats["semantic_matrix_entail"][i, :, :]

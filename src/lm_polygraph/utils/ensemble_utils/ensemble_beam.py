@@ -1,7 +1,6 @@
 import warnings
-import inspect
 from dataclasses import dataclass
-from typing import Optional, Union, Dict, Any, List, Tuple
+from typing import Optional, Union, Dict, List, Tuple
 
 import torch
 import torch.distributed as dist
@@ -9,10 +8,9 @@ from torch.distributions.categorical import Categorical
 from torch import nn
 
 from transformers import GenerationMixin
-from transformers.generation.beam_search import BeamScorer, BeamSearchScorer
+from transformers.generation.beam_search import BeamScorer
 from transformers.generation.logits_process import (
     LogitsProcessorList,
-    MinLengthLogitsProcessor,
 )
 from transformers.generation.stopping_criteria import (
     StoppingCriteriaList,

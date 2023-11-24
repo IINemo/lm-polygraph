@@ -16,7 +16,7 @@ class BertScoreMetric(GenerationMetric):
         self.scorer = BERTScorer(lang=lang)
 
     def __str__(self):
-        return f"Bert"
+        return "Bert"
 
     def __call__(
         self,

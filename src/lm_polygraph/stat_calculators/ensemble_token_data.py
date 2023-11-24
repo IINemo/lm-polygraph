@@ -7,8 +7,6 @@ from transformers import PreTrainedModel
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.token_restoration import (
-    collect_sample_token_level_uncertainties,
-    collect_token_level_uncertainties,
     get_collect_fn,
 )
 
@@ -43,7 +41,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
         if generation_params.get("num_beams") is None and (
             "do_sample" not in generation_params
-            or generation_params["do_sample"] == None
+            or generation_params["do_sample"] is None
         ):
             generation_params["num_beams"] = num_return_sequences
 

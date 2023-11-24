@@ -1,7 +1,6 @@
 import warnings
-import inspect
 from dataclasses import dataclass
-from typing import Optional, Union, Dict, Any, List, Tuple
+from typing import Optional, Union, Dict, List, Tuple
 from scipy.stats import entropy
 
 import torch
@@ -11,7 +10,6 @@ from transformers import GenerationMixin
 
 from transformers.generation.logits_process import (
     LogitsProcessorList,
-    MinLengthLogitsProcessor,
 )
 from transformers.generation.stopping_criteria import (
     StoppingCriteriaList,

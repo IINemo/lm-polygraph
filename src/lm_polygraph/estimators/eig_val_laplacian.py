@@ -3,7 +3,6 @@ import numpy as np
 from typing import Dict, Literal
 
 from scipy.linalg import eigh
-import torch.nn as nn
 
 from .common import DEBERTA, compute_sim_score
 from .estimator import Estimator

@@ -51,7 +51,7 @@ def get_random_scores(function, metrics, num_iter=1000, seed=42):
     np.random.seed(seed)
     rand_scores = np.arange(len(metrics))
 
-    value, scores = [], []
+    value = []
     for i in range(num_iter):
         np.random.shuffle(rand_scores)
         rand_val = function(rand_scores, metrics)

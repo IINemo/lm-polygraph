@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import torch
-from tqdm import tqdm
 
 from typing import Dict
 from sklearn.decomposition import KernelPCA

@@ -5,7 +5,6 @@ from typing import Dict, Literal
 from .estimator import Estimator
 from .common import DEBERTA, compute_sim_score
 from scipy.linalg import eigh
-import torch.nn as nn
 
 
 class Eccentricity(Estimator):
