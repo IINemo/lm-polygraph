@@ -11,7 +11,7 @@ class SpearmanRankCorrelation(UEMetric):
     """
 
     def __str__(self):
-        return 'spearmanr'
+        return "spearmanr"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         """
@@ -29,5 +29,5 @@ class SpearmanRankCorrelation(UEMetric):
         target = normalize(target)
         # ue: greater is more uncertain
         ue = np.array(estimator)
-        
+
         return stats.spearmanr(ue, -target).correlation

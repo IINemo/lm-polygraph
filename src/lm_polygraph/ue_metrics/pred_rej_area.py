@@ -11,7 +11,7 @@ class PredictionRejectionArea(UEMetric):
     """
 
     def __str__(self):
-        return 'prr'
+        return "prr"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         """

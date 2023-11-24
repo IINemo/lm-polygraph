@@ -1,5 +1,6 @@
 # Adapted from https://github.com/samrawal/llama2_chat_templater
 
+
 class LlamaPromptTemplate:
     def __init__(self, system_prompt=None):
         self.system_prompt = system_prompt

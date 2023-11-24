@@ -22,11 +22,12 @@ class PTrueSampling(Estimator):
         The possible answer is:
     and calculates the log-probability of `True` token with minus sign.
     """
+
     def __init__(self):
-        super().__init__(['p_true_sampling'], 'sequence')
+        super().__init__(["p_true_sampling"], "sequence")
 
     def __str__(self):
-        return 'PTrueSampling'
+        return "PTrueSampling"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -39,5 +40,5 @@ class PTrueSampling(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        pue = stats['p_true_sampling']
+        pue = stats["p_true_sampling"]
         return -np.array(pue)
