@@ -32,8 +32,8 @@ jobs:
       uses: py-actions/flake8@v2
       with:
         args:
-          - extend-ignore: 'E501,F405,F403,E203'
-          - per-file-ignores: '__init__.py:F401'
+          extend-ignore: 'E501,F405,F403,E203'
+          per-file-ignores: '__init__.py:F401'
         path: "."
         plugins: "flake8-black"
     - name: Test with pytest
