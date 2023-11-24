@@ -71,7 +71,7 @@ def get_embeddings_from_output(
                             :, 0
                         ]
                     )
-                except:
+                except TypeError:
                     if all_layers:
                         agg_decoder_hidden_states = torch.stack(
                             output.decoder_hidden_states
