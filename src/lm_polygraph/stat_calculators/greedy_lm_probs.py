@@ -15,7 +15,7 @@ class GreedyLMProbsCalculator(StatCalculator):
 
     def __init__(self):
         super().__init__(
-            ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]
+            ["greedy_lm_log_probs", "greedy_lm_log_likelihoods", "greedy_lm_logits"], ["greedy_tokens"]
         )
 
     def __call__(
@@ -25,7 +25,7 @@ class GreedyLMProbsCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
         **kwargs
-    ) -> Dict[str, np.ndarray]:
+    ) -> Dict[str, List[float]]:
         """
         Calculates the entropy of probabilities at each token position in the generation.
 
@@ -48,13 +48,16 @@ class GreedyLMProbsCalculator(StatCalculator):
             batch = {k: v.to(model.device()) for k, v in batch.items()}
             with torch.no_grad():
                 if model.model_type == "Seq2SeqLM":
-                    logprobs = model.model(
+                    logits = model.model(
                         **batch, decoder_input_ids=batch["input_ids"]
-                    ).logits.log_softmax(-1)
+                    ).logits
+                    logprobs = logits.log_softmax(-1)
                 else:
-                    logprobs = model.model(**batch).logits.log_softmax(-1)
+                    logits = model.model(**batch).logits
+                    logprobs = logits.log_softmax(-1)
             greedy_lm_log_probs = []
             greedy_lm_ll = []
+            greedy_lm_logits = []
             for i in range(len(tokens)):
                 assert len(logprobs[i]) >= len(tokens[i])
                 greedy_lm_log_probs.append(
@@ -66,9 +69,12 @@ class GreedyLMProbsCalculator(StatCalculator):
                         for j in range(len(tokens[i]))
                     ]
                 )
+                greedy_lm_logits.append(logits[i, -len(tokens[i]) : -1].cpu().numpy())
+
         except:
-            # case where tokenizer(tokenizer.decode(t)) != t; process each sequence separetly
+            # case where tokenizer(tokenizer.decode(t)) != t; process each sequence separately
             greedy_lm_log_probs = []
+            greedy_lm_logits = []
             greedy_lm_ll = []
             for toks in tokens:
                 input_ids = torch.LongTensor([toks]).to(model.device())
@@ -78,18 +84,23 @@ class GreedyLMProbsCalculator(StatCalculator):
                 }
                 with torch.no_grad():
                     if model.model_type == "Seq2SeqLM":
-                        logprobs = model.model(
+                        logits = model.model(
                             **batch, decoder_input_ids=batch["input_ids"]
-                        ).logits.log_softmax(-1)
+                        ).logits
+                        logprobs = logits.log_softmax(-1)
                     else:
-                        logprobs = model.model(**batch).logits.log_softmax(-1)
+                        logits = model.model(**batch).logits
+                        logprobs = logits.log_softmax(-1)
                 logprobs = logprobs[0]
                 assert len(logprobs) >= len(toks)
                 greedy_lm_log_probs.append(logprobs[-len(toks) : -1].cpu().numpy())
                 greedy_lm_ll.append(
                     [logprobs[-len(toks) + j, toks[j]].item() for j in range(len(toks))]
                 )
+                logits = logits[0]
+                greedy_lm_logits.append(logits[-len(toks) : -1].cpu().numpy())
         return {
             "greedy_lm_log_probs": greedy_lm_log_probs,
             "greedy_lm_log_likelihoods": greedy_lm_ll,
+            "greedy_lm_logits": greedy_lm_logits,
         }
