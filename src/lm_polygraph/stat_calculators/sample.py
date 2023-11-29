@@ -84,8 +84,7 @@ def _gen_samples(n_samples, model, batch, **kwargs):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])
     sequences = [s for sample_seqs in sequences for s in sample_seqs]
-    logits = [l for sample_l in logits for l in sample_l]
-    return sequences, logits
+    return sequences, sum(logits, [])
 
 
 class SamplingGenerationCalculator(StatCalculator):

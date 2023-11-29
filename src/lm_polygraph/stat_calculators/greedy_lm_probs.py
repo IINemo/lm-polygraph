@@ -56,7 +56,8 @@ class GreedyLMProbsCalculator(StatCalculator):
             greedy_lm_log_probs = []
             greedy_lm_ll = []
             for i in range(len(tokens)):
-                assert len(logprobs[i]) >= len(tokens[i])
+                if len(logprobs[i]) < len(tokens[i]):
+                    raise ValueError('tokenizer(tokenizer.decode(t)) != t')
                 greedy_lm_log_probs.append(
                     logprobs[i, -len(tokens[i]) : -1].cpu().numpy()
                 )
@@ -66,7 +67,7 @@ class GreedyLMProbsCalculator(StatCalculator):
                         for j in range(len(tokens[i]))
                     ]
                 )
-        except:
+        except ValueError:
             # case where tokenizer(tokenizer.decode(t)) != t; process each sequence separetly
             greedy_lm_log_probs = []
             greedy_lm_ll = []
