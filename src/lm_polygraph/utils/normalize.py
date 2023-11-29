@@ -3,7 +3,7 @@ import sys
 import os
 import pathlib
 import wget
-from urllib import URLError
+from urllib.error import URLError
 
 import numpy as np
 
