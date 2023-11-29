@@ -57,7 +57,7 @@ class GreedyLMProbsCalculator(StatCalculator):
             greedy_lm_ll = []
             for i in range(len(tokens)):
                 if len(logprobs[i]) < len(tokens[i]):
-                    raise ValueError('tokenizer(tokenizer.decode(t)) != t')
+                    raise ValueError("tokenizer(tokenizer.decode(t)) != t")
                 greedy_lm_log_probs.append(
                     logprobs[i, -len(tokens[i]) : -1].cpu().numpy()
                 )
