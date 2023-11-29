@@ -1,7 +1,4 @@
-import os
 import numpy as np
-import argparse
-import torch
 import string
 
 from typing import Optional, Dict, Tuple, List
@@ -307,7 +304,7 @@ class Responder:
                 tok_conf = tok_conf[:i]
                 break
 
-        if type(self.model) == WhiteboxModel:
+        if isinstance(self.model, WhiteboxModel):
             if len(tok_methods) == 0:
                 tok_conf = [0 for _ in tokens]
             if self.model.model_type == "Seq2SeqLM" or any(

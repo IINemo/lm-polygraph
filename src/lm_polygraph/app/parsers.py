@@ -1,11 +1,6 @@
-import json
-import sys
-
 import os
 from pathlib import Path
 from typing import Tuple
-
-import numpy as np
 
 from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
@@ -188,9 +183,6 @@ def parse_ensemble(
         model_paths = [model_dir for model_dir in path.iterdir()]
     else:
         model_paths = path.split(",")
-
-    # TODO: implement devices for models
-    devices = [device] * (len(model_paths) - 1)
 
     model = WhiteboxModel.from_pretrained(model_paths[0])
     ensemble_model = create_ensemble(model_paths=model_paths)

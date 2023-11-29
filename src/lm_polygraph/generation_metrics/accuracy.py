@@ -14,7 +14,7 @@ class AccuracyMetric(GenerationMetric):
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        return f"Accuracy"
+        return "Accuracy"
 
     def _score_single(self, t1: str, t2: str) -> int:
         if t1.strip() == t2.strip():

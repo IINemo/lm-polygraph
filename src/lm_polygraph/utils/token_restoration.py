@@ -1,6 +1,3 @@
-import os
-from typing import Dict, Union, Tuple
-
 import numpy as np
 import torch
 
@@ -194,9 +191,6 @@ def collect_token_level_uncertainties(
         num_models = len(model_output["models_scores"][0])
         models_sequence_scores = torch.zeros(batch_size, num_models, beam_size, seq_len)
 
-    if "sequences_scores" not in model_output:
-        sequence_scores = torch.zeros(batch_size, beam_size, seq_len)
-
     # For some reason, beam search can truncate generation iterations, so
     # seq len from beam_ids can be less than iterations steps number
     unc_length = len(model_output.generation_scores)
@@ -229,8 +223,6 @@ def collect_token_level_uncertainties(
                     )
                     if aggregate_models:
                         token = sequences[obs_id, seq_i, _iter]
-                        models_top1s = []
-                        models_vars = []
                         for i, model_logits in enumerate(
                             model_output["models_scores"][_iter]
                         ):

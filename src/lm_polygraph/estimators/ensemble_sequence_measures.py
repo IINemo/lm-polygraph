@@ -40,9 +40,9 @@ def get_seq_level_ue(
     rmi_abs = np.abs(rmi_base).sum(-1).mean(1)  # num_obs
 
     uncertainty_estimates = {
-        f"tu": -tu,
-        f"rmi": rmi,
-        f"rmi-abs": rmi_abs,
+        "tu": -tu,
+        "rmi": rmi,
+        "rmi-abs": rmi_abs,
     }
 
     return uncertainty_estimates

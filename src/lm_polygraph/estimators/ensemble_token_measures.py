@@ -39,7 +39,7 @@ class EnsembleEstimator(Estimator):
         super().__init__(["ensemble_token_scores"], "sequence")
 
     def __str__(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         stats["ensemble_token_scores"]

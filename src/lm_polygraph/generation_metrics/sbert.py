@@ -11,7 +11,7 @@ class SbertMetric(GenerationMetric):
         self.sbert = SentenceTransformer("all-mpnet-base-v2")
 
     def __str__(self):
-        return f"Sbert"
+        return "Sbert"
 
     def _score_single(self, t1: str, t2: str):
         return util.cos_sim(self.sbert.encode(t1), self.sbert.encode(t2)).item()

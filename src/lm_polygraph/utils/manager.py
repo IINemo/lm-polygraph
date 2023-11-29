@@ -4,7 +4,7 @@ import sys
 import gc
 
 from collections import defaultdict
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -25,7 +25,6 @@ from lm_polygraph.stat_calculators.stat_calculator import (
     STAT_CALCULATORS,
     STAT_DEPENDENCIES,
 )
-from lm_polygraph.stat_calculators import EmbeddingsCalculator
 
 
 def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:

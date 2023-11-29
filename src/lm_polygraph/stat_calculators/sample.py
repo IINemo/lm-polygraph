@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
@@ -39,7 +39,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'blackbox_sample_texts' key.
         """
 
-        if type(model) == BlackboxModel:
+        if isinstance(model, BlackboxModel):
             samples = model.generate_texts(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
@@ -84,8 +84,7 @@ def _gen_samples(n_samples, model, batch, **kwargs):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])
     sequences = [s for sample_seqs in sequences for s in sample_seqs]
-    logits = [l for sample_l in logits for l in sample_l]
-    return sequences, logits
+    return sequences, sum(logits, [])
 
 
 class SamplingGenerationCalculator(StatCalculator):

@@ -1,21 +1,8 @@
-import warnings
 import inspect
-from dataclasses import dataclass
-from typing import Optional, Union, Dict, Any, List, Tuple
-from scipy.stats import entropy
+from typing import Optional, Dict, Any, List, Tuple
 
 import torch
-import torch.distributed as dist
-from torch import nn
 from transformers import GenerationMixin
-from transformers.generation.logits_process import (
-    LogitsProcessorList,
-    MinLengthLogitsProcessor,
-)
-from transformers.generation.stopping_criteria import (
-    StoppingCriteriaList,
-    validate_stopping_criteria,
-)
 from transformers.generation.utils import ModelOutput
 
 from lm_polygraph.utils.ensemble_utils.ensemble_beam import EnsembleBeamSearchMixin

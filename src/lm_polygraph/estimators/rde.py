@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import torch
-from tqdm import tqdm
 
 from typing import Dict
 from sklearn.decomposition import KernelPCA
@@ -31,7 +30,7 @@ def MCD_covariance(X, y=None, label=None, seed=42):
             cov = MinCovDet(random_state=seed).fit(X)
         else:
             cov = MinCovDet(random_state=seed).fit(X[y == label])
-    except:
+    except ValueError:
         print(
             "****************Try fitting covariance with support_fraction=0.9 **************"
         )
@@ -42,7 +41,7 @@ def MCD_covariance(X, y=None, label=None, seed=42):
                 cov = MinCovDet(random_state=seed, support_fraction=0.9).fit(
                     X[y == label]
                 )
-        except:
+        except ValueError:
             print(
                 "****************Try fitting covariance with support_fraction=1.0 **************"
             )

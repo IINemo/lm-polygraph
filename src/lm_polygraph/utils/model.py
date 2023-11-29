@@ -1,10 +1,8 @@
-import json
 import requests
 import torch
 import sys
 import openai
 import time
-import pdb
 
 from typing import List, Dict
 from abc import abstractmethod, ABC
@@ -13,7 +11,6 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
     AutoConfig,
-    BartForCausalLM,
     LogitsProcessorList,
     BartForConditionalGeneration,
 )

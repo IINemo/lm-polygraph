@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import torch
-from tqdm import tqdm
 
 from typing import Dict
 
@@ -12,7 +11,7 @@ JITTERS = [10**exp for exp in range(-15, 0, 1)]
 
 
 def compute_inv_covariance(centroids, train_features, jitters=None):
-    """
+    r"""
     This function computes inverse covariance matrix that is required by Mahalanobis distance:
     MD = \sqrt((h(x) - \mu)^{T} \Sigma^{-1} (h(x) - \mu))
 
