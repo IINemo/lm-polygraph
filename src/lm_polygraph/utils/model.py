@@ -113,6 +113,7 @@ class BlackboxModel(Model):
         self.openai_api_key = openai_api_key
         openai.api_key = openai_api_key
         self.hf_api_token = hf_api_token
+        self._is_chat_model = 'instruct' not in model_path
 
     def _query(self, payload):
         API_URL = f"https://api-inference.huggingface.co/models/{self.model_path}"
@@ -171,13 +172,25 @@ class BlackboxModel(Model):
 
         if self.openai_api_key is not None:
             for prompt in input_texts:
-                response = openai.ChatCompletion.create(
-                    model=self.model_path,
-                    messages=[{"role": "user", "content": prompt}],
-                    **args,
-                )
-                if args["n"] == 1:
+                if self._is_chat_model:
+                    response = openai.ChatCompletion.create(
+                        model=self.model_path,
+                        messages=[{"role": "user", "content": prompt}],
+                        **args,
+                    )
+                else:
+                    response = openai.Completion.create(
+                        model=self.model_path,
+                        prompt=prompt,
+                        logprobs=100,
+                        **args,
+                    )
+                if args["n"] == 1 and self._is_chat_model:
                     texts.append(response.choices[0].message.content)
+                elif args["n"] == 1:
+                    texts.append(response.choices[0].text)
+                elif self._is_chat_model:
+                    texts.append([resp.message.content for resp in response.choices])
                 else:
                     texts.append([resp.message.content for resp in response.choices])
         elif (self.hf_api_token is not None) & (self.model_path is not None):
