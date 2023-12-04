@@ -51,3 +51,4 @@ from .ensemble_sequence_measures import (
     PESrmi,
     PESrmiabs,
 )
+from .logits import MaximumSequenceLogitsAverage
