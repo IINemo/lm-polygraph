@@ -13,7 +13,7 @@ class MaximumSequenceLogitsAverage(Estimator):
     """
 
     def __init__(self):
-        super().__init__(["greedy_log_likelihoods"], "sequence")
+        super().__init__(["greedy_lm_logits"], "sequence")
 
     def __str__(self):
         return "MaximumSequenceLogitsAverage"
