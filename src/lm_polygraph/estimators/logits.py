@@ -29,7 +29,7 @@ class MaximumSequenceLogitsSum(Estimator):
             np.ndarray: minus logits for each sample.
                 Higher values indicate more uncertain samples.
         """
-        logits = stats["greedy_lm_logits"]
+        logits = stats["greedy_logits"]
         return np.array([-np.sum(l) for l in logits])
 
 
@@ -57,7 +57,7 @@ class MaximumSequenceLogitsAverage(Estimator):
                 np.ndarray: minus logits for each sample.
                     Higher values indicate more uncertain samples.
             """
-            logits = stats["greedy_lm_logits"]
+            logits = stats["greedy_logits"]
             return np.array([-np.mean(l) for l in logits])
 
 
@@ -85,5 +85,5 @@ class MaximumSequenceLogitsMax(Estimator):
             np.ndarray: minus logits for each sample.
                 Higher values indicate more uncertain samples.
         """
-        logits = stats["greedy_lm_logits"]
+        logits = stats["greedy_logits"]
         return np.array([-np.max(l) for l in logits])
