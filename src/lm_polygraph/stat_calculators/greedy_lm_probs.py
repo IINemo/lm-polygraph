@@ -15,7 +15,7 @@ class GreedyLMProbsCalculator(StatCalculator):
 
     def __init__(self):
         super().__init__(
-            ["greedy_lm_log_probs", "greedy_lm_log_likelihoods", "greedy_lm_logits"], ["greedy_tokens"]
+            ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]
         )
 
     def __call__(

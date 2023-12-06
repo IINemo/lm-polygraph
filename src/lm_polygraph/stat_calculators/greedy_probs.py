@@ -68,6 +68,7 @@ class GreedyProbsCalculator(StatCalculator):
                 "greedy_tokens",
                 "greedy_texts",
                 "greedy_log_likelihoods",
+                "greedy_logits",
                 "train_greedy_log_likelihoods",
                 "embeddings",
             ],
