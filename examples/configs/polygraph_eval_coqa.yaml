@@ -32,7 +32,7 @@ subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
-model: databricks/dolly-v2-3b
+model: lmsys/vicuna-7b-v1.5
 use_auth_token:
 ensemble: false
 mc: false
@@ -48,10 +48,12 @@ ens_type:
 
 # Examples of providing additional UE methods:
 additional_estimators: {
-  'lm_polygraph.estimators.logits': ['MaximumSequenceLogitsAverage'],
+  'lm_polygraph.estimators.logits': ['MaximumSequenceLogitsSum', 'MaximumSequenceLogitsAverage', 'MaximumSequenceLogitsMax'],
 }
 additional_estimators_kwargs: {
+  'MaximumSequenceLogitsSum': {},
   'MaximumSequenceLogitsAverage': {},
+  'MaximumSequenceLogitsMax': {},
 }
 
 ignore_exceptions: false

@@ -38,20 +38,26 @@ use_auth_token:
 use_density_based_ue: false
 use_seq_ue: false
 use_tok_ue: false
+use_ens_ue: false
 generation_metrics: null
 
 # Examples of providing additional UE methods:
 additional_estimators: {
-  'lm_polygraph.estimators.logits': ['MaximumSequenceLogitsAverage'],
+  'lm_polygraph.estimators.logits': ['MaximumSequenceLogitsSum', 'MaximumSequenceLogitsAverage', 'MaximumSequenceLogitsMax'],
 }
 additional_estimators_kwargs: {
+  'MaximumSequenceLogitsSum': {},
   'MaximumSequenceLogitsAverage': {},
+  'MaximumSequenceLogitsMax': {},
 }
 
 ignore_exceptions: false
 
 batch_size: 1
 deberta_batch_size: 10
+
+ensemble:
+
 
 seed:
     - 1
