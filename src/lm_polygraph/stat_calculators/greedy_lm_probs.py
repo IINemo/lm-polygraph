@@ -102,5 +102,4 @@ class GreedyLMProbsCalculator(StatCalculator):
         return {
             "greedy_lm_log_probs": greedy_lm_log_probs,
             "greedy_lm_log_likelihoods": greedy_lm_ll,
-            "greedy_lm_logits": greedy_lm_logits,
         }

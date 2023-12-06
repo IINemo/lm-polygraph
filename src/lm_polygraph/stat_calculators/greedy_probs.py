@@ -131,13 +131,14 @@ class GreedyProbsCalculator(StatCalculator):
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1)
-            logits = logits.log_softmax(-1)
+            log_probas = logits.log_softmax(-1)
 
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
                 out, batch, model.model_type
             )
 
+        cut_log_probas = []
         cut_logits = []
         cut_sequences = []
         cut_texts = []
@@ -154,14 +155,18 @@ class GreedyProbsCalculator(StatCalculator):
                     break
             cut_sequences.append(seq[:length].tolist())
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
+            cut_log_probas.append(log_probas[i, :length, :].cpu().numpy())
             cut_logits.append(logits[i, :length, :].cpu().numpy())
 
         ll = []
+        max_logits = []
         for i in range(len(texts)):
-            log_probs = cut_logits[i]
+            log_probs = cut_log_probas[i]
+            i_logits = cut_logits[i]
             tokens = cut_sequences[i]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+            max_logits.append([i_logits[j, tokens[j]] for j in range(len(i_logits))])
 
         if model.model_type == "CausalLM":
             embeddings_dict = {
@@ -178,10 +183,11 @@ class GreedyProbsCalculator(StatCalculator):
         result_dict = {
             "input_texts": texts,
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
-            "greedy_log_probs": cut_logits,
+            "greedy_log_probs": cut_log_probas,
             "greedy_tokens": cut_sequences,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,
+            "greedy_logits": max_logits,
         }
         result_dict.update(embeddings_dict)
 
