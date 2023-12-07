@@ -101,7 +101,6 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
-        inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
@@ -131,8 +130,8 @@ class GreedyProbsCalculator(StatCalculator):
                 ),
                 num_return_sequences=1,
             )
-            logits = torch.stack(out.scores, dim=1)
-            log_probas = logits.log_softmax(-1)
+            logits = torch.stack(out.generation_scores, dim=1)
+            log_probas = torch.stack(out.scores, dim=1)
 
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
