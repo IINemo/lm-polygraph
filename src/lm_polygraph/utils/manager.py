@@ -309,6 +309,7 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("background_train")
         ]
+
         background_train_stats, _ = _order_calculators(background_train_stats)
         self.background_train_stat_calculators: List[StatCalculator] = [
             STAT_CALCULATORS[c] for c in background_train_stats
@@ -357,6 +358,14 @@ class UEManager:
                 - `ue_metrics` name which was used to calculate quality.
         """
 
+        
+        # load DEBERTA to correct device
+        if hasattr(self.model, "device"):
+            DEBERTA.to(self.model.device())
+        else:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            DEBERTA.to(device)
+        
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
