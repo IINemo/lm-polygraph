@@ -278,6 +278,12 @@ function formatResponse(data){
     return response
 }
 
+let openai_key = "";
+fetch('./openai_key.txt')
+    .then(x => x.text())
+    .then(text => {
+    openai_key = text;
+});
 
 
 // Function to get GPT result
@@ -336,11 +342,11 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     if (ensemblePathInput) {
         var ensembles = ensemblePathInput.value
     }
-    var openaiKeyInput = document.getElementById('openai-secret-key-input');
-    var openai_key
-    if (openaiKeyInput) {
-        var openai_key = openaiKeyInput.value
-    }
+//    var openaiKeyInput = document.getElementById('openai-secret-key-input');
+//    var openai_key
+//    if (openaiKeyInput) {
+//        var openai_key = openaiKeyInput.value
+//    }
 
     // TODO(rediska): надо пошифровать openai_key
 

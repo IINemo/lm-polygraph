@@ -357,9 +357,6 @@ class UEManager:
                 - `ue_metrics` name which was used to calculate quality.
         """
 
-        # load DEBERTA to correct device
-        DEBERTA.to(self.model.device())
-
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
