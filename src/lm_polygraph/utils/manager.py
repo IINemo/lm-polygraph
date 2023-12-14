@@ -361,7 +361,7 @@ class UEManager:
         if hasattr(self.model, "device"):
             DEBERTA.to(self.model.device())
         else:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             DEBERTA.to(device)
 
         train_stats = self._extract_train_embeddings()
