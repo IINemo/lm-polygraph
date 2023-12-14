@@ -70,7 +70,7 @@ class Responder:
             normalized_confidences.append([])
             for x in processor.ue_estimations[level, str(method)]:
                 condifences[-1].append(-x)
-                if str(method) in ["Perplexity", "MeanTokenEntropy"]:
+                if not ("openai" in model_path):
                     if not can_get_calibration_conf(
                         method, model_path, self.cache_path
                     ):
