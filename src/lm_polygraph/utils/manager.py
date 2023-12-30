@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import sys
 import gc
+import pdb
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple, Optional, Union
@@ -293,6 +294,7 @@ class UEManager:
                 ('input_texts', inp_texts),
                 ('target_texts', target_texts),
             ]:
+                
                 self.stats[key] += val
                 batch_stats[key] = val
 
