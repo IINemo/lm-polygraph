@@ -1,7 +1,9 @@
+import os
 import requests
 import torch
 import sys
 import openai
+import httpx
 import time
 
 from typing import List, Dict
@@ -110,6 +112,20 @@ class BlackboxModel(Model):
         self.openai_api_key = openai_api_key
         openai.api_key = openai_api_key
         self.hf_api_token = hf_api_token
+        
+        if self.openai_api_key is not None:
+            self.http_proxy_url = os.environ["openai_http_proxy_url"]
+            if len(self.http_proxy_url):
+                self.client = openai.OpenAI(
+                    # This is the default and can be omitted
+                    api_key=self.openai_api_key,
+                    http_client=httpx.Client(proxies=self.http_proxy_url),
+                )     
+            else:
+                self.client = openai.OpenAI(
+                    # This is the default and can be omitted
+                    api_key=self.openai_api_key,
+                )  
 
     def _query(self, payload):
         API_URL = f"https://api-inference.huggingface.co/models/{self.model_path}"
@@ -168,7 +184,7 @@ class BlackboxModel(Model):
 
         if self.openai_api_key is not None:
             for prompt in input_texts:
-                response = openai.ChatCompletion.create(
+                response = self.client.chat.completions.create(
                     model=self.model_path,
                     messages=[{"role": "user", "content": prompt}],
                     **args,

@@ -130,6 +130,8 @@ class GreedyProbsCalculator(StatCalculator):
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1)
+            #for demo since with compute bounds with log_softmax 
+            logits = logits.log_softmax(-1)
 
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
