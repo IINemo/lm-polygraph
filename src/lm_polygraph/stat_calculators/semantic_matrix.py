@@ -26,7 +26,7 @@ class SemanticMatrixCalculator(StatCalculator):
             ],
             ["blackbox_sample_texts"],
         )
-        DEBERTA.setup()
+        #DEBERTA.setup()
 
     def __call__(
         self,

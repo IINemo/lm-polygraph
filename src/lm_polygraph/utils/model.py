@@ -369,7 +369,7 @@ class WhiteboxModel(Model):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
                 model_path, max_length=256, trust_remote_code=True, **kwargs
-            ).to(device)
+            )#.to(device)
         elif any(
             [
                 ("Seq2SeqLM" in architecture)

@@ -47,7 +47,7 @@ class UEMetric(ABC):
         raise Exception("Not implemented")
 
 
-def get_random_scores(function, metrics, num_iter=1000, seed=42):
+def get_random_scores(function, metrics, num_iter=100, seed=42):
     np.random.seed(seed)
     rand_scores = np.arange(len(metrics))
 

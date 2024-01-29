@@ -7,7 +7,7 @@ from typing import Dict
 from .estimator import Estimator
 
 
-class LexicalSimilarity(Estimator):
+class LexicalSimilarityTotal(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "Lexical Similarity" as provided in the paper https://arxiv.org/abs/2302.09664.
@@ -35,10 +35,10 @@ class LexicalSimilarity(Estimator):
         if self.metric.startswith("BART"):
             from lm_polygraph.stat_calculators import BartScoreCalculator
             self.scorer = BartScoreCalculator()
-        super().__init__(["blackbox_sample_texts"], "sequence")
+        super().__init__(["blackbox_sample_texts", "greedy_texts"], "sequence")
 
     def __str__(self):
-        return f"LexicalSimilarity_{self.metric}"
+        return f"LexicalSimilarityTotal_{self.metric}"
 
     def _score_single(self, t1: str, t2: str):
         if self.metric.startswith("rouge"):
@@ -74,11 +74,13 @@ class LexicalSimilarity(Estimator):
                 Higher values indicate more uncertain samples.
         """
         batch_texts = stats["blackbox_sample_texts"]
+        batch_greedy_texts = stats["greedy_texts"]
         res = []
-        for texts in batch_texts:
+        for texts, greedy_text in zip(batch_texts, batch_greedy_texts):
             sims = []
-            for i in range(len(texts)):
-                for j in range(i + 1, len(texts)):
-                    sims.append(self._score_single(texts[i], texts[j]))
+            texts_all = texts+[greedy_text]
+            for i in range(len(texts_all)):
+                for j in range(i + 1, len(texts_all)):
+                    sims.append(self._score_single(texts_all[i], texts_all[j]))
             res.append(-np.mean(sims))
         return np.array(res)

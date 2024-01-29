@@ -7,7 +7,7 @@ from typing import Dict
 from .estimator import Estimator
 
 
-class LexicalSimilarity(Estimator):
+class LexicalSimilarityTotalProbGap(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "Lexical Similarity" as provided in the paper https://arxiv.org/abs/2302.09664.
@@ -35,10 +35,10 @@ class LexicalSimilarity(Estimator):
         if self.metric.startswith("BART"):
             from lm_polygraph.stat_calculators import BartScoreCalculator
             self.scorer = BartScoreCalculator()
-        super().__init__(["blackbox_sample_texts"], "sequence")
+        super().__init__(["sample_log_probs", "greedy_log_likelihoods"], "sequence")
 
     def __str__(self):
-        return f"LexicalSimilarity_{self.metric}"
+        return f"LexicalSimilarityTotalProbGap_{self.metric}"
 
     def _score_single(self, t1: str, t2: str):
         if self.metric.startswith("rouge"):
@@ -73,12 +73,11 @@ class LexicalSimilarity(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        batch_texts = stats["blackbox_sample_texts"]
+        batch_probs = stats["sample_log_probs"]
+        greedy_log_likelihoods = stats["greedy_log_likelihoods"]
         res = []
-        for texts in batch_texts:
-            sims = []
-            for i in range(len(texts)):
-                for j in range(i + 1, len(texts)):
-                    sims.append(self._score_single(texts[i], texts[j]))
-            res.append(-np.mean(sims))
+        for probs, greedy_probs in zip(batch_probs, greedy_log_likelihoods):
+            prob = np.sum(greedy_probs)
+            total_probs = probs + [prob]
+            res.append(np.max(total_probs) - np.min(total_probs))
         return np.array(res)
