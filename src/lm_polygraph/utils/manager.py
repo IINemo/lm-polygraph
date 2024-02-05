@@ -1,3 +1,4 @@
+import traceback
 import numpy as np
 import torch
 import sys
@@ -328,6 +329,7 @@ class UEManager:
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
+        self.total_bad_estimators: Dict[Estimator, float] = {}
         self.stats: Dict[str, List] = defaultdict(list)
 
         self.processors = processors
@@ -368,7 +370,7 @@ class UEManager:
         background_train_stats = self._extract_train_embeddings(background=True)
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
-        for inp_texts, target_texts in iterable_data:
+        for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ("input_texts", inp_texts),
@@ -400,11 +402,12 @@ class UEManager:
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
             )
-
+            
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
                 self.estimations.pop(key, None)
                 self.estimators.remove(bad_estimator)
+                self.total_bad_estimators[bad_estimator] = batch_i
 
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
@@ -427,7 +430,7 @@ class UEManager:
             self.ensemble_model.model.to(device)
 
             iterable_data = tqdm(self.data) if self.verbose else self.data
-            for inp_texts, target_texts in iterable_data:
+            for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
                     ("input_texts", inp_texts),
@@ -457,10 +460,11 @@ class UEManager:
                     key = (bad_estimator.level, str(bad_estimator))
                     self.estimations.pop(key, None)
                     self.ensemble_estimators.remove(bad_estimator)
+                    self.total_bad_estimators[bad_estimator] = batch_i
 
             torch.cuda.empty_cache()
             gc.collect()
-
+        
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
@@ -496,7 +500,7 @@ class UEManager:
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
         for processor in self.processors:
-            processor.on_eval(self.metrics)
+            processor.on_eval(self.metrics, self.total_bad_estimators)
 
         return self.metrics
 
@@ -520,9 +524,11 @@ class UEManager:
                     batch_stats[stat] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
-                    log_msg = f"Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}"
+                    lineno = e.__traceback__.tb_lineno
+                    log_msg = f"Caught exception while calculating stats: {e} in Stat Calculator {stat_calculator}, line {lineno}. Expect dependent estimator to fail.\n"
+                    sys.stderr.write("\n\n")
                     sys.stderr.write(log_msg)
-                    print(log_msg)
+                    sys.stderr.write(traceback.format_exc())
                     continue
                 else:
                     raise e
@@ -550,15 +556,17 @@ class UEManager:
             except Exception as e:
                 if self.ignore_exceptions:
                     bad_estimators.append(estimator)
-                    log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}. Estimator will be removed."
+                    lineno = e.__traceback__.tb_lineno
+                    log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
+                    sys.stderr.write("\n\n")
                     sys.stderr.write(log_msg)
-                    print(log_msg)
+                    sys.stderr.write(traceback.format_exc())
                     continue
                 else:
                     raise e
 
         return batch_estimations, bad_estimators
-
+                
     def _extract_train_embeddings(
         self, background: bool = False
     ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
