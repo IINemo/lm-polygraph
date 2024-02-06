@@ -1,6 +1,7 @@
 import numpy as np
 
 from typing import List, Dict, Tuple
+from lm_polygraph.estimators.estimator import Estimator
 
 
 class Processor:
@@ -76,9 +77,13 @@ class Logger(Processor):
             print(f"{key}: {val}")
             print()
 
-    def on_eval(self, metrics: Dict[Tuple[str, str, str, str], float]):
+    def on_eval(
+        self,
+        metrics: Dict[Tuple[str, str, str, str], float],
+        bad_estimators: Dict[Estimator, int],
+    ):
         """
-        Outputs statistics from `metrics` to stdout.
+        Outputs statistics from `metrics` and failed estimators to stdout.
         """
         print("=" * 50 + " METRICS " + "=" * 50)
         print("Metrics:")
@@ -86,3 +91,7 @@ class Logger(Processor):
         for key, val in metrics.items():
             print(f"{key}: {val}")
             print()
+        if len(bad_estimators) > 0:
+            print("=" * 45 + " FAILED ESTIMATORS " + "=" * 45)
+            for bad_estimator, batch_i in bad_estimators.items():
+                print(str(bad_estimator), " on batch ", batch_i)
