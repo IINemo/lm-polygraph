@@ -1,6 +1,7 @@
 """
 Get up a server with demo on localhost:3001
 """
+
 import os
 import argparse
 import torch

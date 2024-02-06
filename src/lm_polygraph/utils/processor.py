@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Dict, Tuple
 from lm_polygraph.estimators.estimator import Estimator
 
+
 class Processor:
     """
     Abstract class to perform actions after processing new texts batch.
@@ -76,8 +77,11 @@ class Logger(Processor):
             print(f"{key}: {val}")
             print()
 
-    def on_eval(self, metrics: Dict[Tuple[str, str, str, str], float],
-                      bad_estimators: Dict[Estimator, int]):
+    def on_eval(
+        self,
+        metrics: Dict[Tuple[str, str, str, str], float],
+        bad_estimators: Dict[Estimator, int],
+    ):
         """
         Outputs statistics from `metrics` and failed estimators to stdout.
         """

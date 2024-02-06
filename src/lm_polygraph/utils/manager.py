@@ -402,7 +402,7 @@ class UEManager:
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
             )
-            
+
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
                 self.estimations.pop(key, None)
@@ -464,7 +464,7 @@ class UEManager:
 
             torch.cuda.empty_cache()
             gc.collect()
-        
+
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
@@ -492,9 +492,9 @@ class UEManager:
                         oracle_score = ue_metric(-rec_metric, rec_metric)
                         random_score = get_random_scores(ue_metric, rec_metric)
                         ue_metric_val = ue_metric(rec_ue, rec_metric)
-                        self.metrics[
-                            e_level, e_name, gen_name, str(ue_metric)
-                        ] = ue_metric_val
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
+                            ue_metric_val
+                        )
                         self.metrics[
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
@@ -566,7 +566,7 @@ class UEManager:
                     raise e
 
         return batch_estimations, bad_estimators
-                
+
     def _extract_train_embeddings(
         self, background: bool = False
     ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:

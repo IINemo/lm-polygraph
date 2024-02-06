@@ -25,7 +25,6 @@ def load_array(filename):
 
 
 class RelativeMahalanobisDistanceSeq(Estimator):
-
     """
     Ren et al. (2023) showed that it might be useful to adjust the Mahalanobis distance score by subtracting
     from it the other Mahalanobis distance MD_0(x) computed for some large general purpose dataset covering many domain.
