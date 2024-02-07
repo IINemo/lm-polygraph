@@ -281,6 +281,9 @@ def get_ue_methods(args, model):
             Eccentricity(similarity_score="NLI_score", affinity="contra"),
             Eccentricity(similarity_score="Jaccard_score"),
             SemanticEntropy(),
+            SAR(),
+            TokenSAR(),
+            SentenceSAR(),
         ]
 
     if args.use_ens_ue:
