@@ -16,9 +16,7 @@ class TokenSAR(Estimator):
     """
 
     def __init__(self, verbose: bool = False):
-        super().__init__(
-            ["token_similarity", "greedy_log_likelihoods"], "sequence"
-        )
+        super().__init__(["token_similarity", "greedy_log_likelihoods"], "sequence")
         self.verbose = verbose
 
     def __str__(self):
@@ -40,11 +38,13 @@ class TokenSAR(Estimator):
         batch_token_similarity = stats["token_similarity"]
 
         tokenSAR = []
-        for log_likelihoods, token_similarity in zip(batch_log_likelihoods, batch_token_similarity):
+        for log_likelihoods, token_similarity in zip(
+            batch_log_likelihoods, batch_token_similarity
+        ):
             log_likelihoods = np.array(log_likelihoods)
             R_t = 1 - token_similarity
             R_t_norm = R_t / R_t.sum()
             E_t = -log_likelihoods * R_t_norm
             tokenSAR.append(E_t.sum())
-            
+
         return np.array(tokenSAR)

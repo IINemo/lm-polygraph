@@ -160,12 +160,12 @@ class SamplingGenerationCalculator(StatCalculator):
                     break
                 ll.append(logits[i][j][cur_token].item())
                 toks.append(cur_token)
-                
+
             log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
             texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
-            
+
         return {
             "sample_log_likelihoods": log_likelihoods,
             "sample_log_probs": log_probs,

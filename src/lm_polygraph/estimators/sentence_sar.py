@@ -16,9 +16,7 @@ class SentenceSAR(Estimator):
     """
 
     def __init__(self, verbose: bool = False):
-        super().__init__(
-            ["sample_sentence_similarity", "sample_log_probs"], "sequence"
-        )
+        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
         self.verbose = verbose
         self.t = 0.001
 
@@ -41,11 +39,17 @@ class SentenceSAR(Estimator):
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
 
         sentenceSAR = []
-        for sample_log_probs, sample_sentence_similarity in zip(batch_sample_log_probs, batch_sample_sentence_similarity):
+        for sample_log_probs, sample_sentence_similarity in zip(
+            batch_sample_log_probs, batch_sample_sentence_similarity
+        ):
             sample_probs = np.exp(np.array(sample_log_probs))
-            R_s = sample_probs * sample_sentence_similarity * (1 - np.eye(sample_sentence_similarity.shape[0]))
+            R_s = (
+                sample_probs
+                * sample_sentence_similarity
+                * (1 - np.eye(sample_sentence_similarity.shape[0]))
+            )
             sent_relevance = R_s.sum(-1) / self.t
-            E_s = -np.log(sent_relevance+sample_probs)
+            E_s = -np.log(sent_relevance + sample_probs)
             sentenceSAR.append(E_s.mean())
-            
+
         return np.array(sentenceSAR)

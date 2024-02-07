@@ -28,10 +28,11 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             ],
             ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"],
         )
-        
+
         self.crossencoder_setup = False
+
     def _setup(self):
-        self.crossencoder = CrossEncoder('cross-encoder/stsb-roberta-large')
+        self.crossencoder = CrossEncoder("cross-encoder/stsb-roberta-large")
 
     def __call__(
         self,
@@ -43,15 +44,15 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         if not self.crossencoder_setup:
             self.crossencoder_setup = True
             self._setup()
-            
+
         batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
         deberta_batch_size = dependencies["deberta_batch_size"]
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
-        
+
         special_tokens = list(model.tokenizer.added_tokens_decoder.keys())
-        
+
         batch_pairs = []
         batch_invs = []
         batch_counts = []
@@ -61,19 +62,35 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             unique_texts, inv = np.unique(texts, return_inverse=True)
             batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
             batch_invs.append(inv)
-            batch_counts.append(len(unique_texts))            
+            batch_counts.append(len(unique_texts))
 
         device = model.device
         tokenizer = model.tokenizer
-            
+
         batch_token_scores = []
         for input_texts, tokens in zip(batch_input_texts, batch_greedy_tokens):
             if len(tokens) > 1:
                 is_special_tokens = np.isin(tokens, special_tokens)
-                cropped_tokens = list(itertools.combinations(tokens, len(tokens) - 1))[::-1]
-                raw_text = input_texts + " " + tokenizer.decode(tokens, skip_special_tokens=True)
-                batches = [(raw_text, input_texts + " " + tokenizer.decode(list(t), skip_special_tokens=True)) for t in cropped_tokens]
-                token_scores = self.crossencoder.predict(batches, batch_size=deberta_batch_size)
+                cropped_tokens = list(itertools.combinations(tokens, len(tokens) - 1))[
+                    ::-1
+                ]
+                raw_text = (
+                    input_texts
+                    + " "
+                    + tokenizer.decode(tokens, skip_special_tokens=True)
+                )
+                batches = [
+                    (
+                        raw_text,
+                        input_texts
+                        + " "
+                        + tokenizer.decode(list(t), skip_special_tokens=True),
+                    )
+                    for t in cropped_tokens
+                ]
+                token_scores = self.crossencoder.predict(
+                    batches, batch_size=deberta_batch_size
+                )
                 token_scores[is_special_tokens] = 1
             else:
                 token_scores = np.array([0.5] * len(tokens))
@@ -91,23 +108,39 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             # using inverse index
             sim_matrices.append(sim_scores_matrix[inv, :][:, inv])
         sim_matrices = np.stack(sim_matrices)
-        
+
         batch_samples_token_scores = []
         for sample_tokens, input_texts in zip(batch_sample_tokens, batch_input_texts):
             samples_token_scores = []
             for tokens in sample_tokens:
                 if len(tokens) > 1:
                     is_special_tokens = np.isin(tokens, special_tokens)
-                    cropped_tokens = list(itertools.combinations(tokens, len(tokens) - 1))[::-1]
-                    raw_text = input_texts + " " + tokenizer.decode(tokens, skip_special_tokens=True)
-                    batches = [(raw_text, input_texts + " " + tokenizer.decode(list(t), skip_special_tokens=True)) for t in cropped_tokens]
-                    token_scores = self.crossencoder.predict(batches, batch_size=deberta_batch_size)
+                    cropped_tokens = list(
+                        itertools.combinations(tokens, len(tokens) - 1)
+                    )[::-1]
+                    raw_text = (
+                        input_texts
+                        + " "
+                        + tokenizer.decode(tokens, skip_special_tokens=True)
+                    )
+                    batches = [
+                        (
+                            raw_text,
+                            input_texts
+                            + " "
+                            + tokenizer.decode(list(t), skip_special_tokens=True),
+                        )
+                        for t in cropped_tokens
+                    ]
+                    token_scores = self.crossencoder.predict(
+                        batches, batch_size=deberta_batch_size
+                    )
                     token_scores[is_special_tokens] = 1
                 else:
                     token_scores = np.array([0.5] * len(tokens))
                 samples_token_scores.append(token_scores)
             batch_samples_token_scores.append(samples_token_scores)
-        
+
         return {
             "sample_sentence_similarity": sim_matrices,
             "sample_token_similarity": batch_samples_token_scores,
