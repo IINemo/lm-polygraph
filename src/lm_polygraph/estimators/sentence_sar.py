@@ -12,7 +12,7 @@ class SentenceSAR(Estimator):
     "Sentence SAR" as provided in the paper https://arxiv.org/abs/2307.01379.
     Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
 
-    This method calculates the sum of probability of the generated text and text relevance relative to all other generations.
+    This method calculates the sum of the probability of the generated text and text relevance relative to all other generations.
     """
 
     def __init__(self, verbose: bool = False):
