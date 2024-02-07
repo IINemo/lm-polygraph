@@ -7,12 +7,19 @@ Welcome to LM-Polygraph's documentation!
 ========================================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
 
    usage
    web_demo
    modules
+
+LM-Polygraph parts
+========================================
+
+.. automodule:: src.lm_polygraph
+   :members:
+   
 
 Indices and tables
 ==================
