@@ -1,7 +1,6 @@
 import numpy as np
 
-from collections import defaultdict
-from typing import List, Dict, Optional
+from typing import Dict
 
 from .estimator import Estimator
 from scipy.special import softmax
