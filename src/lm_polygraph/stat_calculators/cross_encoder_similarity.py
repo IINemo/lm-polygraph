@@ -4,14 +4,8 @@ import itertools
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.estimators.common import DEBERTA
-import torch.nn as nn
-import torch
 from sentence_transformers import CrossEncoder
-import itertools
-
-softmax = nn.Softmax(dim=1)
+from lm_polygraph.utils.model import WhiteboxModel
 
 
 class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
@@ -31,8 +25,10 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         self.crossencoder_setup = False
 
-    def _setup(self):
-        self.crossencoder = CrossEncoder("cross-encoder/stsb-roberta-large")
+    def _setup(self, device="cuda"):
+        self.crossencoder = CrossEncoder(
+            "cross-encoder/stsb-roberta-large", device=device
+        )
 
     def __call__(
         self,
@@ -41,9 +37,13 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
+
+        device = model.device()
+        tokenizer = model.tokenizer
+
         if not self.crossencoder_setup:
+            self._setup(device=device)
             self.crossencoder_setup = True
-            self._setup()
 
         batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
@@ -63,9 +63,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
-
-        device = model.device
-        tokenizer = model.tokenizer
 
         batch_token_scores = []
         for input_texts, tokens in zip(batch_input_texts, batch_greedy_tokens):
