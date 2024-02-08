@@ -101,7 +101,15 @@ class SamplingGenerationCalculator(StatCalculator):
             samples_n (int): number of samples to generate per input text. Default: 10
         """
         self.samples_n = samples_n
-        super().__init__(["sample_log_probs", "sample_tokens", "sample_texts", "sample_log_likelihoods"], [])
+        super().__init__(
+            [
+                "sample_log_probs",
+                "sample_tokens",
+                "sample_texts",
+                "sample_log_likelihoods",
+            ],
+            [],
+        )
 
     def __call__(
         self,

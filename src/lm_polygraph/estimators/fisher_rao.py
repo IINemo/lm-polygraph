@@ -18,9 +18,7 @@ class FisherRao(Estimator):
     """
 
     def __init__(self, verbose: bool = False, temperature: float = 2):
-        super().__init__(
-            ["greedy_logits"], "sequence"
-        )
+        super().__init__(["greedy_logits"], "sequence")
         self.verbose = verbose
         self.temperature = temperature
 
@@ -38,9 +36,15 @@ class FisherRao(Estimator):
             np.ndarray: float Fisher-Rao distance for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        
+
         logits = np.array(stats["greedy_logits"])
         probabilities = softmax(logits / self.temperature, axis=-1)
-        per_step_scores = 2 / np.pi * np.arccos(np.sqrt(probabilities).sum(-1) * np.sqrt(1 / probabilities.shape[-1]))
-        
+        per_step_scores = (
+            2
+            / np.pi
+            * np.arccos(
+                np.sqrt(probabilities).sum(-1) * np.sqrt(1 / probabilities.shape[-1])
+            )
+        )
+
         return per_step_scores.mean(-1)

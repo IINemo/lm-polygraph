@@ -103,7 +103,7 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
-        batch = {k: v.to(model.device()) for k, v in batch.items()}        
+        batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
             out = model.generate(
                 **batch,
