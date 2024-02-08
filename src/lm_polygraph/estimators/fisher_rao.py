@@ -36,14 +36,19 @@ class FisherRao(Estimator):
                 Higher values indicate more uncertain samples.
         """
 
-        logits = np.array(stats["greedy_logits"])
-        probabilities = softmax(logits / self.temperature, axis=-1)
-        per_step_scores = (
-            2
-            / np.pi
-            * np.arccos(
-                np.sqrt(probabilities).sum(-1) * np.sqrt(1 / probabilities.shape[-1])
+        batch_logits = stats["greedy_logits"]
+        scores = []
+        for logits in batch_logits:
+            logits = np.array(logits)
+            probabilities = softmax(logits / self.temperature, axis=-1)
+            per_step_scores = (
+                2
+                / np.pi
+                * np.arccos(
+                    np.sqrt(probabilities).sum(-1)
+                    * np.sqrt(1 / probabilities.shape[-1])
+                )
             )
-        )
+            scores.append(per_step_scores.mean(-1))
 
-        return per_step_scores.mean(-1)
+        return np.array(scores)

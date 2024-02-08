@@ -39,20 +39,24 @@ class RenyiNeg(Estimator):
                 Higher values indicate more uncertain samples.
         """
 
-        logits = np.array(stats["greedy_logits"])
-        probabilities = softmax(logits / self.temperature, axis=-1)
+        batch_logits = stats["greedy_logits"]
+        scores = []
+        for logits in batch_logits:
+            logits = np.array(logits)
+            probabilities = softmax(logits / self.temperature, axis=-1)
 
-        if self.alpha == 1:
-            per_step_scores = np.log(probabilities) * probabilities
-            per_step_scores = per_step_scores.sum(-1)
-            per_step_scores += np.log(
-                np.ones_like(per_step_scores) * probabilities.shape[-1]
-            )
-        else:
-            per_step_scores = np.log((probabilities**self.alpha).sum(-1))
-            per_step_scores -= (self.alpha - 1) * np.log(
-                np.ones_like(per_step_scores) * probabilities.shape[-1]
-            )
-            per_step_scores *= 1 / (self.alpha - 1)
+            if self.alpha == 1:
+                per_step_scores = np.log(probabilities) * probabilities
+                per_step_scores = per_step_scores.sum(-1)
+                per_step_scores += np.log(
+                    np.ones_like(per_step_scores) * probabilities.shape[-1]
+                )
+            else:
+                per_step_scores = np.log((probabilities**self.alpha).sum(-1))
+                per_step_scores -= (self.alpha - 1) * np.log(
+                    np.ones_like(per_step_scores) * probabilities.shape[-1]
+                )
+                per_step_scores *= 1 / (self.alpha - 1)
+            scores.append(per_step_scores.mean(-1))
 
-        return per_step_scores.mean(-1)
+        return np.array(scores)
