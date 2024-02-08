@@ -284,6 +284,8 @@ def get_ue_methods(args, model):
             SAR(),
             TokenSAR(),
             SentenceSAR(),
+            RenyiNeg(),
+            FisherRao(),
         ]
 
     if args.use_ens_ue:
