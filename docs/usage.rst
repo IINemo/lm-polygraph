@@ -63,6 +63,16 @@ Other examples:
 Benchmarks
 ----------
 
+Hydra
+^^^^^^^^^^
+We recommend using Hydra YAMLs to configure LM-Polygraph. Detailed description of various parameters can be found in `examples/configs/polygraph_eval_example.yaml`. 
+
+Evaluation is invoked like so::
+
+    HYDRA_CONFIG=/absolute/path/to/config.yaml polygraph_eval
+
+Direct configuration
+^^^^^^^^^^
 To evaluate the performance of uncertainty estimation methods run::
 
     polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
