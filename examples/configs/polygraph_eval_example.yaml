@@ -200,14 +200,22 @@ use_tok_ue: false
 #
 use_ens_ue: false
 
-# Generation quality metrics to use. Default list is used if not set.
+# Generation quality metrics to use. Default list is used if not set or set to null
 # Should be a subset of this default list.
 # Default generation metrics:
-# - RougeMetric
-# - BartScoreSeqMetric
-# - BertScoreMetric
-# - SbertMetric
-# - AccuracyMetric
+# - RougeMetric("rouge1"),
+# - RougeMetric("rouge2"),
+# - RougeMetric("rougeL"),
+# - BartScoreSeqMetric("rh"),
+# - BertScoreMetric(),
+# - SbertMetric(),
+# - AccuracyMetric(),
+#
+# Example of specifying other subset:
+# generation_metrics:
+#   - name: RougeMetric
+#     args: ["rouge1"]
+#   - name: AccuracyMetric
 generation_metrics: null
 
 # Examples of providing additional UE methods:
