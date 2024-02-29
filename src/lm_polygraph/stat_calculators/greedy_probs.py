@@ -64,7 +64,6 @@ class GreedyProbsCalculator(StatCalculator):
             [
                 "input_texts",
                 "input_tokens",
-                "greedy_logits",
                 "greedy_log_probs",
                 "greedy_tokens",
                 "greedy_texts",
@@ -94,7 +93,6 @@ class GreedyProbsCalculator(StatCalculator):
             Dict[str, np.ndarray]: dictionary with the following items:
                 - 'input_texts' (List[str]): input texts batch,
                 - 'input_tokens' (List[List[int]]): tokenized input texts,
-                - 'greedy_logits' (List[List[np.array]]): logits before softmax for each token,
                 - 'greedy_log_probs' (List[List[np.array]]): logarithms of autoregressive
                         probability distributions at each token,
                 - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
@@ -132,7 +130,6 @@ class GreedyProbsCalculator(StatCalculator):
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1)
-            log_probs = logits.log_softmax(-1)
 
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
@@ -140,7 +137,6 @@ class GreedyProbsCalculator(StatCalculator):
             )
 
         cut_logits = []
-        cut_log_probs = []
         cut_sequences = []
         cut_texts = []
         for i in range(len(texts)):
@@ -156,12 +152,11 @@ class GreedyProbsCalculator(StatCalculator):
                     break
             cut_sequences.append(seq[:length].tolist())
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
-            cut_log_probs.append(log_probs[i, :length, :].cpu().numpy())
             cut_logits.append(logits[i, :length, :].cpu().numpy())
 
         ll = []
         for i in range(len(texts)):
-            log_probs = cut_log_probs[i]
+            log_probs = cut_logits[i]
             tokens = cut_sequences[i]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
@@ -181,8 +176,7 @@ class GreedyProbsCalculator(StatCalculator):
         result_dict = {
             "input_texts": texts,
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
-            "greedy_logits": cut_logits,
-            "greedy_log_probs": cut_log_probs,
+            "greedy_log_probs": cut_logits,
             "greedy_tokens": cut_sequences,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,

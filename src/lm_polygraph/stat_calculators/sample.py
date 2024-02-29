@@ -79,7 +79,7 @@ def _gen_samples(n_samples, model, batch, **kwargs):
     with torch.no_grad():
         for k in range(n_samples):
             out = model.generate(**batch, **kwargs)
-            cur_logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+            cur_logits = torch.stack(out.scores, dim=1)
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])

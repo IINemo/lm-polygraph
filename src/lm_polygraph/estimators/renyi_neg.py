@@ -19,7 +19,7 @@ class RenyiNeg(Estimator):
     def __init__(
         self, verbose: bool = False, alpha: float = 0.5, temperature: float = 2
     ):
-        super().__init__(["greedy_logits"], "sequence")
+        super().__init__(["greedy_log_probs"], "sequence")
         self.verbose = verbose
         self.alpha = alpha
         self.temperature = temperature
@@ -33,13 +33,13 @@ class RenyiNeg(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * logits before softmax for each token in 'greedy_logits',
+                * logarithms of autoregressive probability distributions at each token in 'greedy_log_probs',
         Returns:
             np.ndarray: float Rényi divergence for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
 
-        batch_logits = stats["greedy_logits"]
+        batch_logits = stats["greedy_log_probs"]
         scores = []
         for logits in batch_logits:
             logits = np.array(logits)

@@ -83,7 +83,7 @@ class PromptCalculator(StatCalculator):
                 num_beams=1,
             )
 
-        logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+        logits = torch.stack(out.scores, dim=1)
         log_probs = logits[:, -1, expected_token].cpu().numpy()
 
         return {self.method: log_probs}
