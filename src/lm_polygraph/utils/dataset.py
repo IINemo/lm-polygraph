@@ -156,7 +156,7 @@ class Dataset:
         else:
             dataset_name = dataset_path[0]
             dataset = load_dataset(*dataset_path, split=split, **kwargs)
-        
+
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
