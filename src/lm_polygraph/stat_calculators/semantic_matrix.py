@@ -18,16 +18,23 @@ class SemanticMatrixCalculator(StatCalculator):
     """
 
     def __init__(self):
-        super().__init__(['semantic_matrix_entail',
-                          'semantic_matrix_contra',
-                          'semantic_matrix_classes'],
-                         ['blackbox_sample_texts'])
+        super().__init__(
+            [
+                "semantic_matrix_entail",
+                "semantic_matrix_contra",
+                "semantic_matrix_classes",
+            ],
+            ["blackbox_sample_texts"],
+        )
         self.is_deberta_setup = False
 
-    def __call__(self, dependencies: Dict[str, np.array],
-                 texts: List[str],
-                 model: WhiteboxModel,
-                 max_new_tokens: int = 100) -> Dict[str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates the NLI semantic matrix for generation samples using DeBERTa model.
 
@@ -51,8 +58,8 @@ class SemanticMatrixCalculator(StatCalculator):
             DEBERTA.setup()
             self.is_deberta_setup = True
 
-        deberta_batch_size = dependencies['deberta_batch_size']
-        batch_texts = dependencies['blackbox_sample_texts']
+        deberta_batch_size = dependencies["deberta_batch_size"]
+        batch_texts = dependencies["blackbox_sample_texts"]
 
         batch_pairs = []
         batch_invs = []
@@ -66,8 +73,8 @@ class SemanticMatrixCalculator(StatCalculator):
             batch_counts.append(len(unique_texts))
 
         device = DEBERTA.device
-        ent_id = DEBERTA.deberta.config.label2id['ENTAILMENT']
-        contra_id = DEBERTA.deberta.config.label2id['CONTRADICTION']
+        ent_id = DEBERTA.deberta.config.label2id["ENTAILMENT"]
+        contra_id = DEBERTA.deberta.config.label2id["CONTRADICTION"]
 
         softmax = nn.Softmax(dim=1)
         tokenizer = DEBERTA.deberta_tokenizer
@@ -81,9 +88,9 @@ class SemanticMatrixCalculator(StatCalculator):
             probs = []
             for first_texts, second_texts in dl:
                 batch = list(zip(first_texts, second_texts))
-                encoded = tokenizer.batch_encode_plus(batch,
-                                                      padding=True,
-                                                      return_tensors='pt').to(device)
+                encoded = tokenizer.batch_encode_plus(
+                    batch, padding=True, return_tensors="pt"
+                ).to(device)
                 logits = DEBERTA.deberta(**encoded).logits.detach().to(device)
                 probs.append(softmax(logits).cpu().detach())
             probs = torch.cat(probs, dim=0)
@@ -110,6 +117,8 @@ class SemanticMatrixCalculator(StatCalculator):
         C = np.stack(C)
         P = np.stack(P)
 
-        return {'semantic_matrix_entail': E,
-                'semantic_matrix_contra': C,
-                'semantic_matrix_classes': P}
+        return {
+            "semantic_matrix_entail": E,
+            "semantic_matrix_contra": C,
+            "semantic_matrix_classes": P,
+        }

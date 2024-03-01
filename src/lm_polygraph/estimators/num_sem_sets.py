@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Dict, Literal
+from typing import Dict
 
 from .estimator import Estimator
 from .common import DEBERTA
@@ -18,23 +18,28 @@ class NumSemSets(Estimator):
     """
 
     def __init__(
-            self,
-            batch_size: int = 10,
-            verbose: bool = False,
+        self,
+        batch_size: int = 10,
+        verbose: bool = False,
     ):
         """
         Parameters:
             batch_size (int): batch size for Deberta model.
         """
-        super().__init__(['semantic_matrix_entail',
-                          'semantic_matrix_contra',
-                          'blackbox_sample_texts'], 'sequence')
+        super().__init__(
+            [
+                "semantic_matrix_entail",
+                "semantic_matrix_contra",
+                "blackbox_sample_texts",
+            ],
+            "sequence",
+        )
         self.batch_size = batch_size
         DEBERTA.setup()
         self.verbose = verbose
 
     def __str__(self):
-        return f'NumSemSets'
+        return "NumSemSets"
 
     def find_connected_components(self, graph):
         def dfs(node, component):
@@ -57,12 +62,10 @@ class NumSemSets(Estimator):
         return components
 
     def U_NumSemSets(self, i, stats):
-        answers = stats['blackbox_sample_texts']
-
         # We have forward upper triangular and backward in lower triangular
         # parts of the semantic matrices
-        W_entail = stats['semantic_matrix_entail'][i, :, :]
-        W_contra = stats['semantic_matrix_contra'][i, :, :]
+        W_entail = stats["semantic_matrix_entail"][i, :, :]
+        W_contra = stats["semantic_matrix_contra"][i, :, :]
 
         # We check that for every pairing (both forward and backward)
         # the condition satisfies
@@ -111,7 +114,7 @@ class NumSemSets(Estimator):
                 Higher values indicate more uncertain samples.
         """
         res = []
-        for i, answers in enumerate(stats['blackbox_sample_texts']):
+        for i, answers in enumerate(stats["blackbox_sample_texts"]):
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_NumSemSets(i, stats))

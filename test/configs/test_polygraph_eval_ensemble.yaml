@@ -1,0 +1,41 @@
+hydra:
+  run:
+    dir: ${cache_path}/test/
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+
+dataset: SpeedOfMagic/trivia_qa_tiny
+train_split: train
+eval_split: test
+text_column: question
+load_from_disk: false
+label_column: answer
+prompt: ""
+
+model: facebook/bart-base
+use_auth_token:
+ensemble: true
+ensembling_mode: pe
+mc: true
+mc_seeds: [42, 43]
+dropout_rate: 0.1
+
+use_seq_ue: false
+use_tok_ue: false
+use_density_based_ue: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+use_ens_ue: true
+
+subsample_eval_dataset: 4
+batch_size: 2
+device: null
+max_new_tokens: 10
+ignore_exceptions: false
+
+seed:
+    - 1

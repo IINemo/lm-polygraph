@@ -26,13 +26,19 @@ class PromptCalculator(StatCalculator):
                 otherwise an exception will be raised.
             method (str): the name of the statistics to calculate with this calculator.
         """
-        super().__init__([method], ['greedy_texts', 'sample_texts'])
+        super().__init__([method], ["greedy_texts", "sample_texts"])
         self.method = method
         self.prompt = prompt
         self.expected = expected
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
-                 max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+        **kwargs
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates the probability for `expected` to be generated from `prompt`.
 
@@ -48,19 +54,25 @@ class PromptCalculator(StatCalculator):
                 - `method` (List[float]): logarithms of probability of generating `expected` from prompt formatted
                     at each input text.
         """
-        expected_tokens = model.tokenizer([self.expected])['input_ids'][0]
-        expected_tokens = [t for t in expected_tokens
-                           if t != model.tokenizer.eos_token_id and t != model.tokenizer.bos_token_id]
+        expected_tokens = model.tokenizer([self.expected])["input_ids"][0]
+        expected_tokens = [
+            t
+            for t in expected_tokens
+            if t != model.tokenizer.eos_token_id and t != model.tokenizer.bos_token_id
+        ]
         assert len(expected_tokens) == 1
         expected_token = expected_tokens[0]
 
-        answers = dependencies['greedy_texts']
-        samples = dependencies['sample_texts']
-        inp_texts = [self.prompt.format(q=text, s=', '.join(sample), a=ans)
-                     for text, ans, sample in zip(texts, answers, samples)]
+        answers = dependencies["greedy_texts"]
+        samples = dependencies["sample_texts"]
+        inp_texts = [
+            self.prompt.format(q=text, s=", ".join(sample), a=ans)
+            for text, ans, sample in zip(texts, answers, samples)
+        ]
 
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
+
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -70,6 +82,7 @@ class PromptCalculator(StatCalculator):
                 max_new_tokens=1,
                 num_beams=1,
             )
+
         logits = torch.stack(out.scores, dim=1).log_softmax(-1)
         log_probs = logits[:, -1, expected_token].cpu().numpy()
 

@@ -14,10 +14,10 @@ class MaximumSequenceProbability(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['greedy_log_likelihoods'], 'sequence')
+        super().__init__(["greedy_log_likelihoods"], "sequence")
 
     def __str__(self):
-        return 'MaximumSequenceProbability'
+        return "MaximumSequenceProbability"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -30,8 +30,8 @@ class MaximumSequenceProbability(Estimator):
             np.ndarray: minus log probabilities for each sample.
                 Higher values indicate more uncertain samples.
         """
-        log_likelihoods = stats['greedy_log_likelihoods']
-        return np.array([-np.sum(l) for l in log_likelihoods])
+        log_likelihoods = stats["greedy_log_likelihoods"]
+        return np.array([-np.sum(log_likelihood) for log_likelihood in log_likelihoods])
 
 
 class MaximumTokenProbability(Estimator):
@@ -41,10 +41,10 @@ class MaximumTokenProbability(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['greedy_log_likelihoods'], 'token')
+        super().__init__(["greedy_log_likelihoods"], "token")
 
     def __str__(self):
-        return 'MaximumTokenProbability'
+        return "MaximumTokenProbability"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -57,5 +57,10 @@ class MaximumTokenProbability(Estimator):
             np.ndarray: concatenated minus log probabilities for each token.
                 Higher values indicate more uncertain samples.
         """
-        log_likelihoods = stats['greedy_log_likelihoods']
-        return np.concatenate([-np.exp(np.array(l[:-1])) for l in log_likelihoods])
+        log_likelihoods = stats["greedy_log_likelihoods"]
+        return np.concatenate(
+            [
+                -np.exp(np.array(log_likelihood[:-1]))
+                for log_likelihood in log_likelihoods
+            ]
+        )

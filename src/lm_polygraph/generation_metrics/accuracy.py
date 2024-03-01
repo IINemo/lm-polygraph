@@ -14,7 +14,7 @@ class AccuracyMetric(GenerationMetric):
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        return f"Accuracy"
+        return "Accuracy"
 
     def _score_single(self, t1: str, t2: str) -> int:
         if t1.strip() == t2.strip():
@@ -22,10 +22,10 @@ class AccuracyMetric(GenerationMetric):
         return 0
 
     def __call__(
-            self,
-            stats: Dict[str, np.ndarray],
-            target_texts: List[str],
-            target_tokens: List[List[int]],
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates accuracy between stats['greedy_texts'] and target_texts.

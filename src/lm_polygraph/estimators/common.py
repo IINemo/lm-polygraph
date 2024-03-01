@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import numpy as np
 
 from transformers import DebertaForSequenceClassification, DebertaTokenizer
@@ -11,7 +10,7 @@ class CommonDeberta:
     different uncertainty estimation methods in the code.
     """
 
-    def __init__(self, deberta_path='microsoft/deberta-large-mnli', device=None):
+    def __init__(self, deberta_path="microsoft/deberta-large-mnli", device=None):
         """
         Parameters
         ----------
@@ -25,7 +24,12 @@ class CommonDeberta:
         self.deberta_tokenizer = None
         self.device = device
         if device is None:
-            self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    def to(self, device):
+        self.device = device
+        if self.deberta is not None:
+            self.deberta.to(self.device)
 
     def setup(self):
         """
@@ -34,13 +38,14 @@ class CommonDeberta:
         if self.deberta is not None:
             return
         self.deberta = DebertaForSequenceClassification.from_pretrained(
-            self.deberta_path, problem_type="multi_label_classification")
+            self.deberta_path, problem_type="multi_label_classification"
+        )
         self.deberta_tokenizer = DebertaTokenizer.from_pretrained(self.deberta_path)
         self.deberta.to(self.device)
         self.deberta.eval()
 
 
-DEBERTA = CommonDeberta()
+DEBERTA = CommonDeberta(device="cpu")
 
 
 def _get_pairs(lst):

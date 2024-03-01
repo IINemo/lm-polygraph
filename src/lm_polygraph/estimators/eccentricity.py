@@ -5,7 +5,6 @@ from typing import Dict, Literal
 from .estimator import Estimator
 from .common import DEBERTA, compute_sim_score
 from scipy.linalg import eigh
-import torch.nn as nn
 
 
 class Eccentricity(Estimator):
@@ -20,11 +19,11 @@ class Eccentricity(Estimator):
     """
 
     def __init__(
-            self,
-            similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
-            affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
-            verbose: bool = False,
-            thres: float = 0.9
+        self,
+        similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
+        affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
+        verbose: bool = False,
+        thres: float = 0.9,
     ):
         """
         See parameters descriptions in https://arxiv.org/abs/2305.19187.
@@ -36,16 +35,18 @@ class Eccentricity(Estimator):
                 - 'entail': similarity(response_1, response_2) = p_entail(response_1, response_2)
                 - 'contra': similarity(response_1, response_2) = 1 - p_contra(response_1, response_2)
         """
-        if similarity_score == 'NLI_score':
+        if similarity_score == "NLI_score":
             DEBERTA.setup()
-            if affinity == 'entail':
-                super().__init__(['semantic_matrix_entail',
-                                  'blackbox_sample_texts'], 'sequence')
+            if affinity == "entail":
+                super().__init__(
+                    ["semantic_matrix_entail", "blackbox_sample_texts"], "sequence"
+                )
             else:
-                super().__init__(['semantic_matrix_contra',
-                                  'blackbox_sample_texts'], 'sequence')
+                super().__init__(
+                    ["semantic_matrix_contra", "blackbox_sample_texts"], "sequence"
+                )
         else:
-            super().__init__(['blackbox_sample_texts'], 'sequence')
+            super().__init__(["blackbox_sample_texts"], "sequence")
 
         self.similarity_score = similarity_score
         self.affinity = affinity
@@ -53,22 +54,26 @@ class Eccentricity(Estimator):
         self.thres = thres
 
     def __str__(self):
-        if self.similarity_score == 'NLI_score':
-            return f'Eccentricity_{self.similarity_score}_{self.affinity}'
-        return f'Eccentricity_{self.similarity_score}'
+        if self.similarity_score == "NLI_score":
+            return f"Eccentricity_{self.similarity_score}_{self.affinity}"
+        return f"Eccentricity_{self.similarity_score}"
 
     def U_Eccentricity(self, i, stats):
-        answers = stats['blackbox_sample_texts'][i]
-        
-        if self.similarity_score == 'NLI_score':
-            if self.affinity == 'entail':
-                W = stats['semantic_matrix_entail'][i, :, :]
+        answers = stats["blackbox_sample_texts"][i]
+
+        if self.similarity_score == "NLI_score":
+            if self.affinity == "entail":
+                W = stats["semantic_matrix_entail"][i, :, :]
             else:
-                W = 1 - stats['semantic_matrix_contra'][i, :, :]
+                W = 1 - stats["semantic_matrix_contra"][i, :, :]
             W = (W + np.transpose(W)) / 2
         else:
-            W = compute_sim_score(answers=answers, affinity=self.affinity, similarity_score=self.similarity_score)
-   
+            W = compute_sim_score(
+                answers=answers,
+                affinity=self.affinity,
+                similarity_score=self.similarity_score,
+            )
+
         D = np.diag(W.sum(axis=1))
         D_inverse_sqrt = np.linalg.inv(np.sqrt(D))
         L = np.eye(D.shape[0]) - D_inverse_sqrt @ W @ D_inverse_sqrt
@@ -79,11 +84,16 @@ class Eccentricity(Estimator):
 
         if self.thres is not None:
             keep_mask = eigenvalues < self.thres
-            eigenvalues, smallest_eigenvectors = eigenvalues[keep_mask], eigenvectors[:, keep_mask]
-        
+            eigenvalues, smallest_eigenvectors = (
+                eigenvalues[keep_mask],
+                eigenvectors[:, keep_mask],
+            )
+
         smallest_eigenvectors = smallest_eigenvectors.T
-        
-        C_Ecc_s_j = (-1) * np.asarray([np.linalg.norm(x - x.mean(0),2) for x in smallest_eigenvectors])
+
+        C_Ecc_s_j = (-1) * np.asarray(
+            [np.linalg.norm(x - x.mean(0), 2) for x in smallest_eigenvectors]
+        )
         U_Ecc = np.linalg.norm(C_Ecc_s_j, 2)
 
         return U_Ecc, C_Ecc_s_j
@@ -101,7 +111,7 @@ class Eccentricity(Estimator):
                 Higher values indicate more uncertain samples.
         """
         res = []
-        for i, answers in enumerate(stats['blackbox_sample_texts']):
+        for i, answers in enumerate(stats["blackbox_sample_texts"]):
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_Eccentricity(i, stats)[0])

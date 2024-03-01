@@ -1,0 +1,42 @@
+hydra:
+  run:
+    dir: ${cache_path}/test/
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+
+dataset: SpeedOfMagic/trivia_qa_tiny
+train_split: train
+eval_split: test
+text_column: question
+load_from_disk: false
+label_column: answer
+prompt: ""
+
+model: bigscience/bloomz-560m
+use_auth_token:
+ensemble: false
+mc: false
+mc_seeds: []
+dropout_rate:
+
+ignore_exceptions: false
+use_seq_ue: true
+use_tok_ue: false
+use_density_based_ue: false
+use_ens_ue: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+ens_type:
+
+additional_estimators: {}
+additional_estimators_kwargs: {}
+
+subsample_eval_dataset: 10
+batch_size: 2
+seed: null
+device: null
+max_new_tokens: 256

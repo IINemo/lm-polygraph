@@ -1,17 +1,25 @@
-import json
 import requests
 import torch
 import sys
 import openai
 import time
-import pdb
 
 from typing import List, Dict
 from abc import abstractmethod, ABC
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoConfig, BartForCausalLM, \
-    LogitsProcessorList
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM,
+    AutoModelForCausalLM,
+    AutoConfig,
+    LogitsProcessorList,
+    BartForConditionalGeneration,
+)
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
+from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
+from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
+from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
 
 class Model(ABC):
@@ -82,9 +90,13 @@ class BlackboxModel(Model):
     ```
     """
 
-    def __init__(self, openai_api_key: str = None, model_path: str = None,
-                 hf_api_token: str = None,
-                 parameters: GenerationParameters = GenerationParameters()):
+    def __init__(
+        self,
+        openai_api_key: str = None,
+        model_path: str = None,
+        hf_api_token: str = None,
+        parameters: GenerationParameters = GenerationParameters(),
+    ):
         """
         Parameters:
             openai_api_key (Optional[str]): OpenAI API key if the blackbox model comes from OpenAI. Default: None.
@@ -93,7 +105,7 @@ class BlackboxModel(Model):
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
         """
-        super().__init__(model_path, 'Blackbox')
+        super().__init__(model_path, "Blackbox")
         self.parameters = parameters
         self.openai_api_key = openai_api_key
         openai.api_key = openai_api_key
@@ -136,15 +148,18 @@ class BlackboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
-        if any(args.get(arg, False) for arg in ['output_scores', 'output_attentions', 'output_hidden_states']):
+        if any(
+            args.get(arg, False)
+            for arg in ["output_scores", "output_attentions", "output_hidden_states"]
+        ):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in ['do_sample', 'min_length', 'top_k', 'repetition_penalty']:
+        for delete_key in ["do_sample", "min_length", "top_k", "repetition_penalty"]:
             args.pop(delete_key, None)
         for key, replace_key in [
-            ('num_return_sequences', 'n'),
-            ('max_length', 'max_tokens'),
-            ('max_new_tokens', 'max_tokens'),
+            ("num_return_sequences", "n"),
+            ("max_length", "max_tokens"),
+            ("max_new_tokens", "max_tokens"),
         ]:
             if key in args.keys():
                 args[replace_key] = args[key]
@@ -154,35 +169,44 @@ class BlackboxModel(Model):
         if self.openai_api_key is not None:
             for prompt in input_texts:
                 response = openai.ChatCompletion.create(
-                    model=self.model_path, messages=[{"role": "user", "content": prompt}], **args)
-                if args['n'] == 1:
+                    model=self.model_path,
+                    messages=[{"role": "user", "content": prompt}],
+                    **args,
+                )
+                if args["n"] == 1:
                     texts.append(response.choices[0].message.content)
                 else:
                     texts.append([resp.message.content for resp in response.choices])
         elif (self.hf_api_token is not None) & (self.model_path is not None):
             for prompt in input_texts:
-
                 start = time.time()
                 while True:
                     current_time = time.time()
                     output = self._query({"inputs": prompt})
 
                     if isinstance(output, dict):
-                        if (list(output.keys())[0] == 'error') & ('estimated_time' in output.keys()):
-                            estimated_time = float(output['estimated_time'])
+                        if (list(output.keys())[0] == "error") & (
+                            "estimated_time" in output.keys()
+                        ):
+                            estimated_time = float(output["estimated_time"])
                             elapsed_time = current_time - start
-                            print(f"{output['error']}. Estimated time: {round(estimated_time - elapsed_time, 2)} sec.")
+                            print(
+                                f"{output['error']}. Estimated time: {round(estimated_time - elapsed_time, 2)} sec."
+                            )
                             time.sleep(5)
-                        elif (list(output.keys())[0] == 'error') & ('estimated_time' not in output.keys()):
+                        elif (list(output.keys())[0] == "error") & (
+                            "estimated_time" not in output.keys()
+                        ):
                             print(f"{output['error']}")
                             break
                     elif isinstance(output, list):
                         break
 
-                texts.append(output[0]['generated_text'])
+                texts.append(output[0]["generated_text"])
         else:
             print(
-                "Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models")
+                "Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models"
+            )
 
         return texts
 
@@ -206,9 +230,13 @@ class BlackboxModel(Model):
 
 
 def _valdate_args(args):
-    if 'presence_penalty' in args.keys() and args['presence_penalty'] != 0.0:
-        sys.stderr.write('Skipping requested argument presence_penalty={}'.format(args['presence_penalty']))
-    args.pop('presence_penalty', None)
+    if "presence_penalty" in args.keys() and args["presence_penalty"] != 0.0:
+        sys.stderr.write(
+            "Skipping requested argument presence_penalty={}".format(
+                args["presence_penalty"]
+            )
+        )
+    args.pop("presence_penalty", None)
     return args
 
 
@@ -227,8 +255,14 @@ class WhiteboxModel(Model):
     ```
     """
 
-    def __init__(self, model: AutoModelForCausalLM, tokenizer: AutoTokenizer, model_path: str, model_type: str,
-                 parameters: GenerationParameters = GenerationParameters()):
+    def __init__(
+        self,
+        model: AutoModelForCausalLM,
+        tokenizer: AutoTokenizer,
+        model_path: str,
+        model_type: str,
+        parameters: GenerationParameters = GenerationParameters(),
+    ):
         """
         Parameters:
             model (AutoModelForCausalLM): HuggingFace model.
@@ -264,11 +298,13 @@ class WhiteboxModel(Model):
 
         # add ScoresProcessor to collect original scores
         processor = self._ScoresProcessor()
-        if 'logits_processor' in args.keys():
-            logits_processor = LogitsProcessorList([processor, args['logits_processor']])
+        if "logits_processor" in args.keys():
+            logits_processor = LogitsProcessorList(
+                [processor, args["logits_processor"]]
+            )
         else:
             logits_processor = LogitsProcessorList([processor])
-        args['logits_processor'] = logits_processor
+        args["logits_processor"] = logits_processor
         generation = self.model.generate(**args)
 
         orig_scores = [s.log_softmax(-1) for s in processor.scores]
@@ -289,11 +325,11 @@ class WhiteboxModel(Model):
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
         args = _valdate_args(args)
-        args['return_dict_in_generate'] = True
+        args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
         sequences = self.model.generate(**batch, **args).sequences.cpu()
-        input_len = batch['input_ids'].shape[1]
+        input_len = batch["input_ids"].shape[1]
         texts = []
         for seq in sequences:
             if self.model_type == "CausalLM":
@@ -318,7 +354,7 @@ class WhiteboxModel(Model):
         return self.model.device
 
     @staticmethod
-    def from_pretrained(model_path: str, device: str = 'cpu', **kwargs):
+    def from_pretrained(model_path: str, device: str = "cpu", **kwargs):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
 
@@ -326,28 +362,50 @@ class WhiteboxModel(Model):
             model_path (str): model path in HuggingFace.
             device (str): device to load the model on.
         """
-        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        config = AutoConfig.from_pretrained(
+            model_path, trust_remote_code=True, **kwargs
+        )
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs).to(device)
-        elif any([("Seq2SeqLM" in architecture) or ("ConditionalGeneration" in architecture)
-                  for architecture in config.architectures]):
+                model_path, max_length=256, trust_remote_code=True, **kwargs
+            ).to(device)
+        elif any(
+            [
+                ("Seq2SeqLM" in architecture)
+                or ("ConditionalGeneration" in architecture)
+                for architecture in config.architectures
+            ]
+        ):
             model_type = "Seq2SeqLM"
-            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
-            if 'falcon' in model_path:
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                model_path, max_length=1024, **kwargs
+            ).to(device)
+            if "falcon" in model_path:
                 model.transformer.alibi = True
-        elif any(["BartModel" in architecture for architecture in config.architectures]):
-            model_type = "CausalLM"
-            model = BartForCausalLM.from_pretrained(model_path, max_length=1024, **kwargs).to(device)
+        elif any(
+            ["BartModel" in architecture for architecture in config.architectures]
+        ):
+            model_type = "Seq2SeqLM"
+            model = BartForConditionalGeneration.from_pretrained(
+                model_path, max_length=1024, **kwargs
+            ).to(device)
         else:
-            raise ValueError(f'Model {model_path} is not adapted for the sequence generation task')
-        if not kwargs.get('load_in_8bit', False) and not kwargs.get('load_in_4bit', False):
+            raise ValueError(
+                f"Model {model_path} is not adapted for the sequence generation task"
+            )
+        if not kwargs.get("load_in_8bit", False) and not kwargs.get(
+            "load_in_4bit", False
+        ):
             model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, padding_side="left", add_bos_token=True,
-            model_max_length=256 if model_type == "CausalLM" else 1024)
+            model_path,
+            padding_side="left",
+            add_bos_token=True,
+            model_max_length=1024,
+            **kwargs,
+        )
 
         model.eval()
         if tokenizer.pad_token is None:
@@ -364,10 +422,68 @@ class WhiteboxModel(Model):
         Returns:
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
-        if ("falcon" in self.model.config._name_or_path.lower()) or (
-                "llama" in self.model.config._name_or_path.lower()):
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt',
-                                       return_token_type_ids=False)
+        model_type = self.model.config._name_or_path.lower()
+        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
+            prompted_texts = []
+            for text in texts:
+                if "llama" in model_type:
+                    template = LlamaPromptTemplate()
+                    template.add_user_message(text)
+                    prompted_texts.append(template.build_prompt())
+                elif "vicuna" in model_type:
+                    prompted_text = get_vicuna_prompt(text)
+                    prompted_texts.append(prompted_text)
+                else:
+                    prompted_texts.append(text)
+            tokenized = self.tokenizer(
+                prompted_texts,
+                truncation=True,
+                padding=True,
+                return_tensors="pt",
+                return_token_type_ids=False,
+            )
         else:
-            tokenized = self.tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+            tokenized = self.tokenizer(
+                texts, truncation=True, padding=True, return_tensors="pt"
+            )
+
         return tokenized
+
+
+def create_ensemble(
+    model_paths: List[str] = [],
+    mc: bool = False,
+    seed: int = 1,
+    mc_seeds: List[int] = [1],
+    ensembling_mode: str = "pe",
+    device: str = "cpu",
+    dropout_rate: float = 0.1,
+    **kwargs,
+) -> WhiteboxModel:
+    model = WhiteboxModel.from_pretrained(model_paths[0], **kwargs)
+    ens = model.model
+
+    ens.__class__ = type(
+        "EnsembleModel", (model.model.__class__, EnsembleGenerationMixin), {}
+    )
+
+    if mc:
+        ens.mc = True
+        ens.mc_seeds = mc_seeds
+        ens.base_seed = seed
+        ens.ensembling_mode = ensembling_mode
+        ens.mc_models_num = len(mc_seeds)
+        ens.mc_seeds = mc_seeds
+
+        replace_dropout(
+            ens.config._name_or_path, ens, p=dropout_rate, share_across_tokens=True
+        )
+
+        ens.to(device)
+        ens.train()
+    else:
+        raise ValueError(
+            "Only Monte-Carlo ensembling is available. Please set the corresponding argument value to True"
+        )
+
+    return model

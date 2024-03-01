@@ -1,9 +1,9 @@
 import os
 import pandas as pd
 import numpy as np
-import os
+
 from sklearn.model_selection import train_test_split
-from datasets import load_dataset, DatasetDict, Dataset as hf_dataset
+from datasets import load_dataset, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List
 
@@ -31,7 +31,7 @@ class Dataset:
                 returns list of input texts and list of corresponding output texts.
         """
         for i in range(0, len(self.x), self.batch_size):
-            yield self.x[i:i + self.batch_size], self.y[i:i + self.batch_size]
+            yield self.x[i : i + self.batch_size], self.y[i : i + self.batch_size]
 
     def __len__(self) -> int:
         """
@@ -65,8 +65,9 @@ class Dataset:
             Tuple[List[str], List[str], List[str], List[str]]: train input and target texts list,
                 test input and target texts list.
         """
-        X_train, X_test, y_train, y_test = train_test_split(np.array(self.x), np.array(self.y), test_size=test_size,
-                                                            random_state=seed)
+        X_train, X_test, y_train, y_test = train_test_split(
+            np.array(self.x), np.array(self.y), test_size=test_size, random_state=seed
+        )
 
         if split == "train":
             self.x = X_train.tolist()
@@ -95,7 +96,14 @@ class Dataset:
         self.select(indices)
 
     @staticmethod
-    def from_csv(csv_path: str, x_column: str, y_column: str, batch_size: int, **kwargs):
+    def from_csv(
+        csv_path: str,
+        x_column: str,
+        y_column: str,
+        batch_size: int,
+        prompt: str = "",
+        **kwargs
+    ):
         """
         Creates the dataset from .CSV table.
 
@@ -108,18 +116,22 @@ class Dataset:
         csv = pd.read_csv(csv_path)
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
+
+        if len(prompt):
+            x = [prompt.format(text=text) for text in x]
+
         return Dataset(x, y, batch_size)
 
     @staticmethod
     def from_datasets(
-            dataset_path: str,
-            x_column: str,
-            y_column: str,
-            batch_size: int,
-            prompt: str = "",
-            split: str = "test",
-            size: int = None,
-            **kwargs
+        dataset_path: str,
+        x_column: str,
+        y_column: str,
+        batch_size: int,
+        prompt: str = "",
+        split: str = "test",
+        size: int = None,
+        **kwargs
     ):
         """
         Creates the dataset from Huggingface datasets.
@@ -136,10 +148,13 @@ class Dataset:
         """
         load_from_disk = kwargs.pop("load_from_disk", False)
         if load_from_disk:
+            dataset_name = dataset_path
             dataset = hf_dataset.load_from_disk(dataset_path)
         elif isinstance(dataset_path, str):
+            dataset_name = dataset_path
             dataset = load_dataset(dataset_path, split=split, **kwargs)
         else:
+            dataset_name = dataset_path[0]
             dataset = load_dataset(*dataset_path, split=split, **kwargs)
 
         if size is not None and size < len(dataset):
@@ -150,29 +165,31 @@ class Dataset:
             source_lang = (
                 "German"
                 if x_column == "de"
-                else "French"
-                if x_column == "fr"
-                else "English"
+                else "French" if x_column == "fr" else "English"
             )
             target_lang = (
                 "German"
                 if y_column == "de"
-                else "French"
-                if y_column == "fr"
-                else "English"
+                else "French" if y_column == "fr" else "English"
             )
             for inst in dataset["translation"]:
-                x.append(prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column]))
+                x.append(
+                    prompt.format(
+                        source_lang=source_lang,
+                        target_lang=target_lang,
+                        text=inst[x_column],
+                    )
+                )
                 y.append(inst[y_column])
-        elif ("coqa" in dataset_path.lower()) and len(prompt):
+        elif ("coqa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
                 for question, answer in zip(
-                        inst[x_column], inst[y_column]["input_text"]
+                    inst[x_column], inst[y_column]["input_text"]
                 ):
                     x.append(prompt.format(story=inst["story"], question=question))
                     y.append(answer)
-        elif ("babi_qa" in dataset_path.lower()) and len(prompt):
+        elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
                 inst = inst["story"]

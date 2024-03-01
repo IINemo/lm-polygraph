@@ -1,21 +1,19 @@
-import json
-import sys
-
 import os
 from pathlib import Path
 from typing import Tuple
 
-import numpy as np
-
 from lm_polygraph.estimators import *
-from lm_polygraph.utils.ensemble_generator import EnsembleGenerationMixin
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 
 
-def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
+def parse_seq_ue_method(
+    method_name: str, model_path: str, cache_path: str
+) -> Estimator:
     dataset_name = "triviaqa"
-    model_name = model_path.split('/')[-1]
-    density_based_ue_params_path = f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"
+    model_name = model_path.split("/")[-1]
+    density_based_ue_params_path = (
+        f"/home/jovyan/projects/lm-polygraph/workdir/{dataset_name}/{model_name}"
+    )
     match method_name:
         case "Maximum Sequence Probability":
             return MaximumSequenceProbability()
@@ -48,17 +46,29 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "Semantic Entropy":
             return SemanticEntropy()
         case "Mahalanobis Distance":
-            return MahalanobisDistanceSeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
+            return MahalanobisDistanceSeq(
+                "decoder", parameters_path=density_based_ue_params_path, normalize=True
+            )
         case "Mahalanobis Distance - Encoder":
-            return MahalanobisDistanceSeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)
+            return MahalanobisDistanceSeq(
+                "encoder", parameters_path=density_based_ue_params_path, normalize=True
+            )
         case "RDE":
-            return RDESeq("decoder", parameters_path=density_based_ue_params_path, normalize=True)
+            return RDESeq(
+                "decoder", parameters_path=density_based_ue_params_path, normalize=True
+            )
         case "RDE - Encoder":
-            return RDESeq("encoder", parameters_path=density_based_ue_params_path, normalize=True)
+            return RDESeq(
+                "encoder", parameters_path=density_based_ue_params_path, normalize=True
+            )
         case "HUQ - Decoder":
-            return PPLMDSeq("decoder", md_type="MD", parameters_path=density_based_ue_params_path)
+            return PPLMDSeq(
+                "decoder", md_type="MD", parameters_path=density_based_ue_params_path
+            )
         case "HUQ - Encoder":
-            return PPLMDSeq("encoder", md_type="MD", parameters_path=density_based_ue_params_path)
+            return PPLMDSeq(
+                "encoder", md_type="MD", parameters_path=density_based_ue_params_path
+            )
         case "EP-T-Total-Uncertainty":
             return EPTtu()
         case "EP-T-Data-Uncertainty":
@@ -100,10 +110,12 @@ def parse_seq_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "PE-S-RMI":
             return PESrmi()
         case _:
-            raise Exception(f'Unknown method: {method_name}')
+            raise Exception(f"Unknown method: {method_name}")
 
 
-def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> Estimator:
+def parse_tok_ue_method(
+    method_name: str, model_path: str, cache_path: str
+) -> Estimator:
     match method_name:
         case "Maximum Token Probability":
             return MaximumTokenProbability()
@@ -116,72 +128,63 @@ def parse_tok_ue_method(method_name: str, model_path: str, cache_path: str) -> E
         case "Semantic Token Entropy":
             return SemanticEntropyToken(model_path, cache_path)
         case _:
-            raise Exception(f'Unknown method: {method_name}')
+            raise Exception(f"Unknown method: {method_name}")
 
 
 def parse_model(model: str) -> str:
     match model:
         case "GPT-4":
-            return 'openai-gpt-4'
+            return "openai-gpt-4"
         case "GPT-3.5-turbo":
-            return 'openai-gpt-3.5-turbo'
+            return "openai-gpt-3.5-turbo"
         case "Dolly 3b":
-            return 'databricks/dolly-v2-3b'
+            return "databricks/dolly-v2-3b"
         case "Dolly 7b":
-            return 'databricks/dolly-v2-7b'
+            return "databricks/dolly-v2-7b"
         case "Dolly 12b":
-            return 'databricks/dolly-v2-12b'
+            return "databricks/dolly-v2-12b"
         case "BLOOMz 560M":
-            return 'bigscience/bloomz-560m'
+            return "bigscience/bloomz-560m"
         case "BLOOMz 3b":
-            return 'bigscience/bloomz-3b'
+            return "bigscience/bloomz-3b"
         case "BLOOMz 7b":
-            return 'bigscience/bloomz-7b1'
+            return "bigscience/bloomz-7b1"
         case "Falcon 7b":
-            return 'tiiuae/falcon-7b'
+            return "tiiuae/falcon-7b"
         case "Llama 2 7b":
-            return 'meta-llama/Llama-2-7b-chat-hf'
+            return "meta-llama/Llama-2-7b-chat-hf"
         case "Llama 2 13b":
-            return 'meta-llama/Llama-2-13b-chat-hf'
+            return "meta-llama/Llama-2-13b-chat-hf"
         case "Vicuna 7b":
-            return 'lmsys/vicuna-7b-v1.5'
+            return "lmsys/vicuna-7b-v1.5"
         case "Vicuna 13b":
-            return 'lmsys/vicuna-13b-v1.5'
+            return "lmsys/vicuna-13b-v1.5"
         case "Open Llama 3b":
-            return 'openlm-research/open_llama_3b'
+            return "openlm-research/open_llama_3b"
         case "Open Llama 7b":
-            return 'openlm-research/open_llama_7b'
+            return "openlm-research/open_llama_7b"
         case "Open Llama 13b":
-            return 'openlm-research/open_llama_13b'
-        case 'BART Large CNN':
-            return 'facebook/bart-large-cnn'
-        case 'T5 XL NQ':
-            return 'google/t5-xl-ssm-nq'
-        case 'Flan T5 XL':
-            return 'google/flan-t5-xl'
+            return "openlm-research/open_llama_13b"
+        case "BART Large CNN":
+            return "facebook/bart-large-cnn"
+        case "T5 XL NQ":
+            return "google/t5-xl-ssm-nq"
+        case "Flan T5 XL":
+            return "google/flan-t5-xl"
         case _:
-            raise Exception(f'Unknown model: {model}')
+            raise Exception(f"Unknown model: {model}")
 
 
-def parse_ensemble(path: str, device: str = 'cpu') -> Tuple[WhiteboxModel, WhiteboxModel]:
+def parse_ensemble(
+    path: str, device: str = "cpu"
+) -> Tuple[WhiteboxModel, WhiteboxModel]:
     if os.path.exists(path):
         path = Path(path)
         model_paths = [model_dir for model_dir in path.iterdir()]
     else:
-        model_paths = path.split(',')
-
-    # TODO: implement devices for models
-    devices = [device] * (len(model_paths) - 1)
+        model_paths = path.split(",")
 
     model = WhiteboxModel.from_pretrained(model_paths[0])
-    ensemble_model = WhiteboxModel.from_pretrained(model_paths[0])
-
-    ensemble_model.model.__class__ = type('EnsembleModel',
-                                          (ensemble_model.model.__class__,
-                                           EnsembleGenerationMixin),
-                                          {})
-
-    models = [WhiteboxModel.from_pretrained(path).model for path in model_paths[1:]]
-    ensemble_model.model.add_ensemble_models(models, devices)
+    ensemble_model = create_ensemble(model_paths=model_paths)
 
     return model, ensemble_model

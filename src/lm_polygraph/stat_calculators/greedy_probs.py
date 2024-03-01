@@ -14,11 +14,15 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
     """
 
     def __init__(self):
-        super().__init__(['blackbox_greedy_texts'], [])
+        super().__init__(["blackbox_greedy_texts"], [])
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: BlackboxModel,
-                 max_new_tokens: int = 100) -> Dict[
-        str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: BlackboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates generation texts for Blackbox model on the input batch.
 
@@ -42,7 +46,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 n=1,
             )
 
-        return {'blackbox_greedy_texts': sequences}
+        return {"blackbox_greedy_texts": sequences}
 
 
 class GreedyProbsCalculator(StatCalculator):
@@ -56,14 +60,27 @@ class GreedyProbsCalculator(StatCalculator):
     """
 
     def __init__(self):
-        super().__init__(['input_texts', 'input_tokens',
-                          'greedy_log_probs', 'greedy_tokens',
-                          'greedy_texts', 'attention', 'greedy_log_likelihoods', 'train_greedy_log_likelihoods',
-                          'embeddings'], [])
+        super().__init__(
+            [
+                "input_texts",
+                "input_tokens",
+                "greedy_log_probs",
+                "greedy_tokens",
+                "greedy_texts",
+                "greedy_log_likelihoods",
+                "train_greedy_log_likelihoods",
+                "embeddings",
+            ],
+            [],
+        )
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
-                 max_new_tokens: int = 100) -> Dict[
-        str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of probabilities at each token position in the generation.
 
@@ -83,7 +100,6 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
-        inp_tokens = model.tokenizer(texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
@@ -93,7 +109,7 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_length=2,
-                output_attentions=True,
+                output_attentions=False,
                 output_hidden_states=True,
                 temperature=model.parameters.temperature,
                 top_k=model.parameters.topk,
@@ -102,26 +118,30 @@ class GreedyProbsCalculator(StatCalculator):
                 num_beams=model.parameters.num_beams,
                 presence_penalty=model.parameters.presence_penalty,
                 repetition_penalty=model.parameters.repetition_penalty,
-                suppress_tokens=([] if model.parameters.allow_newlines else
-                                 [t for t in range(len(model.tokenizer)) if '\n' in model.tokenizer.decode([t])]),
+                suppress_tokens=(
+                    []
+                    if model.parameters.allow_newlines
+                    else [
+                        t
+                        for t in range(len(model.tokenizer))
+                        if "\n" in model.tokenizer.decode([t])
+                    ]
+                ),
                 num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1)
-            logits = logits.log_softmax(-1)
 
-            if model.model_type == "Seq2SeqLM":
-                attentions = out.decoder_attentions
-            elif model.model_type == "CausalLM":
-                attentions = out.attentions
             sequences = out.sequences
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(out, batch, model.model_type)
+            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                out, batch, model.model_type
+            )
 
         cut_logits = []
         cut_sequences = []
         cut_texts = []
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
-                seq = sequences[i, batch['input_ids'].shape[1]:].cpu()
+                seq = sequences[i, batch["input_ids"].shape[1] :].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -134,16 +154,6 @@ class GreedyProbsCalculator(StatCalculator):
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
 
-        attn_mask = []
-        for i in range(len(texts)):
-            c = len(cut_sequences[i])
-            attn_mask.append(np.zeros(shape=(c, c)))
-            for j in range(1, c):
-                attn_mask[i][j, :j] = torch.vstack(
-                    [attentions[j][l][i][h][0][-j:]
-                     for l in range(len(attentions[j]))
-                     for h in range(len(attentions[j][l][i]))]).mean(0).cpu().numpy()
-
         ll = []
         for i in range(len(texts)):
             log_probs = cut_logits[i]
@@ -153,24 +163,23 @@ class GreedyProbsCalculator(StatCalculator):
 
         if model.model_type == "CausalLM":
             embeddings_dict = {
-                'embeddings_decoder': embeddings_decoder,
+                "embeddings_decoder": embeddings_decoder,
             }
         elif model.model_type == "Seq2SeqLM":
             embeddings_dict = {
-                'embeddings_encoder': embeddings_encoder,
-                'embeddings_decoder': embeddings_decoder,
+                "embeddings_encoder": embeddings_encoder,
+                "embeddings_decoder": embeddings_decoder,
             }
         else:
             raise NotImplementedError
 
         result_dict = {
-            'input_texts': texts,
-            'input_tokens': inp_tokens,
-            'greedy_log_probs': cut_logits,
-            'greedy_tokens': cut_sequences,
-            'greedy_texts': cut_texts,
-            'attention': attn_mask,
-            'greedy_log_likelihoods': ll,
+            "input_texts": texts,
+            "input_tokens": batch["input_ids"].to("cpu").tolist(),
+            "greedy_log_probs": cut_logits,
+            "greedy_tokens": cut_sequences,
+            "greedy_texts": cut_texts,
+            "greedy_log_likelihoods": ll,
         }
         result_dict.update(embeddings_dict)
 

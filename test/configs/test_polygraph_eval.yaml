@@ -1,7 +1,11 @@
-estimator: LexicalSimilarity
-estimator_kwargs:
-  metric: rouge2
-estimator_module: null
+hydra:
+  run:
+    dir: ${cache_path}/test/
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
 
 dataset: SpeedOfMagic/trivia_qa_tiny
 train_split: train
@@ -12,10 +16,23 @@ label_column: answer
 prompt: ""
 
 model: bigscience/bloomz-560m
+use_auth_token:
+ensemble: false
+mc: false
+mc_seeds: []
+dropout_rate:
+
 ignore_exceptions: false
 use_seq_ue: false
 use_tok_ue: false
 use_density_based_ue: false
+use_ens_ue: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+  - name: BartScoreSeqMetric
+    args: ["rh"]
+  - name: AccuracyMetric
 
 additional_estimators: {
   'lm_polygraph.estimators.perplexity': ['Perplexity'],
@@ -28,6 +45,4 @@ subsample_eval_dataset: 10
 batch_size: 2
 seed: null
 device: null
-save_path: "."
-cache_path: ""
 max_new_tokens: 256
