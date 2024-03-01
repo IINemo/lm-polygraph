@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lm_polygraph"
-version = "0.0.2.dev0"
+version = "0.0.2.dev1"
 authors = [
   { name = "List of contributors: https://github.com/IINemo/lm-polygraph/graphs/contributors", email = "artemshelmanov@gmail.com" },
 ]
@@ -35,7 +35,6 @@ classifiers = [
 "Homepage" = "https://github.com/IINemo/lm-polygraph"
 "Bug Tracker" = "https://github.com/IINemo/lm-polygraph/issues"
 "Repository" = "https://github.com/IINemo/lm-polygraph"
-"Issues" = "https://github.com/IINemo/lm-polygraph/issues"
 "Documentation" = "https://lm-polygraph.readthedocs.io"
 
 [tool.setuptools]
