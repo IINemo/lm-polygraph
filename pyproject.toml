@@ -12,7 +12,7 @@ description = "Uncertainty Estimation Toolkit for Transformer Language Models"
 readme = "README.md"
 
 keywords=["NLP", "deep learning", "transformer", "pytorch", "uncertainty estimation"]
-license = {text = "MIT"}
+license = {file = "LICENSE.md"}
 
 requires-python = ">=3.10"
 dynamic = ["dependencies"]
@@ -34,6 +34,17 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/IINemo/lm-polygraph"
 "Bug Tracker" = "https://github.com/IINemo/lm-polygraph/issues"
+"Repository" = "https://github.com/IINemo/lm-polygraph"
+"Issues" = "https://github.com/IINemo/lm-polygraph/issues"
+"Documentation" = "https://lm-polygraph.readthedocs.io"
+
+[tool.setuptools]
+script-files = [
+  "scripts/polygraph_eval",
+  "scripts/polygraph_eval_ood",
+  "scripts/polygraph_server",
+  "scripts/polygraph_normalize",
+]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
