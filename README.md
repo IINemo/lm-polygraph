@@ -82,7 +82,12 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 | Monte Carlo sequence entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                    | White-box   | Information-based   | High    | Low    |         No          |
 | Pointwise mutual information (PMI) [(Takayama and Arase, 2019)](https://aclanthology.org/W19-4115/)       | White-box   | Information-based   | Medium  | Low    |         No          |
 | Conditional PMI [(van der Poel et al., 2022)](https://aclanthology.org/2022.emnlp-main.399/)                         | White-box   | Information-based   | Medium  | Medium |         No          |
+| Rényi divergence [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                         | White-box   | Information-based   | Low  | Medium |         No          |Low
+| Fisher-Rao distance [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                         | White-box   | Information-based   | Low  | Medium |         No          |
 | Semantic entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| TokenSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| SentenceSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| SAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
 | Sentence-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)    | White-box   | Ensembling          | High    | High   |         Yes         |
 | Token-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)       | White-box   | Ensembling          | High    | High   |         Yes         |
 | Mahalanobis distance (MD) [(Lee et al., 2018)](https://proceedings.neurips.cc/paper/2018/hash/abdeb6f575ac5c6676b747bca8d09cc2-Abstract.html)                        | White-box   | Density-based       | Low     | Low    |         Yes         |
