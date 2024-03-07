@@ -9,6 +9,7 @@ from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
+from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 
 register(GreedyProbsCalculator())
 register(BlackboxGreedyTextsCalculator())
@@ -37,3 +38,4 @@ register(ModelScoreCalculator())
 register(EmbeddingsCalculator())
 register(EnsembleTokenLevelDataCalculator())
 register(SemanticMatrixCalculator())
+register(CrossEncoderSimilarityMatrixCalculator())

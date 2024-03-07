@@ -307,11 +307,9 @@ class WhiteboxModel(Model):
         args["logits_processor"] = logits_processor
         generation = self.model.generate(**args)
 
-        orig_scores = [s.log_softmax(-1) for s in processor.scores]
-
         # override generation.scores with original scores from model
         generation.generation_scores = generation.scores
-        generation.scores = orig_scores
+        generation.scores = processor.scores
 
         return generation
 

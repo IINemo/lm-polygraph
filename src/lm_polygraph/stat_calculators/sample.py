@@ -79,7 +79,7 @@ def _gen_samples(n_samples, model, batch, **kwargs):
     with torch.no_grad():
         for k in range(n_samples):
             out = model.generate(**batch, **kwargs)
-            cur_logits = torch.stack(out.scores, dim=1).log_softmax(-1)
+            cur_logits = torch.stack(out.scores, dim=1)
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])
@@ -101,7 +101,15 @@ class SamplingGenerationCalculator(StatCalculator):
             samples_n (int): number of samples to generate per input text. Default: 10
         """
         self.samples_n = samples_n
-        super().__init__(["sample_log_probs", "sample_tokens", "sample_texts"], [])
+        super().__init__(
+            [
+                "sample_log_probs",
+                "sample_tokens",
+                "sample_texts",
+                "sample_log_likelihoods",
+            ],
+            [],
+        )
 
     def __call__(
         self,
@@ -122,7 +130,8 @@ class SamplingGenerationCalculator(StatCalculator):
             Dict[str, np.ndarray]: dictionary with the following items:
                 - 'sample_texts' (List[List[str]]): `samples_n` texts for each input text in the batch,
                 - 'sample_tokens' (List[List[List[float]]]): tokenized 'sample_texts',
-                - 'sample_log_probs' (List[List[List[float]]]): probabilities at each token of the sampling generation.
+                - 'sample_log_probs' (List[List[float]]): sum of the log probabilities at each token of the sampling generation.
+                - 'sample_log_likelihoods' (List[List[List[float]]]): log probabilities at each token of the sampling generation.
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
@@ -142,10 +151,11 @@ class SamplingGenerationCalculator(StatCalculator):
         log_probs = [[] for _ in range(len(texts))]
         tokens = [[] for _ in range(len(texts))]
         texts = [[] for _ in range(len(texts))]
+        log_likelihoods = [[] for _ in range(len(texts))]
         if model.model_type == "Seq2SeqLM":
             sequences = [seq[1:] for seq in sequences]
         for i in range(len(logits)):
-            log_prob, toks = 0, []
+            log_prob, ll, toks = 0, [], []
             inp_size = (
                 len(batch["input_ids"][int(i / self.samples_n)])
                 if model.model_type == "CausalLM"
@@ -156,11 +166,16 @@ class SamplingGenerationCalculator(StatCalculator):
                 log_prob += logits[i][j][cur_token].item()
                 if cur_token == model.tokenizer.eos_token_id:
                     break
+                ll.append(logits[i][j][cur_token].item())
                 toks.append(cur_token)
+
+            log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
             texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
+
         return {
+            "sample_log_likelihoods": log_likelihoods,
             "sample_log_probs": log_probs,
             "sample_tokens": tokens,
             "sample_texts": texts,
