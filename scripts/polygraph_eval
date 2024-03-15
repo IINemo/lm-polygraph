@@ -95,6 +95,20 @@ def main(args):
             ensemble_model = None
 
         log.info("Done with loading model.")
+        
+        few_shot_data = None
+        if getattr(args, 'use_few_shot_data', False):
+            log.info(f"Loading few-shot dataset {args.dataset}...")
+            few_shot_data = Dataset.load(
+                args.dataset,
+                args.text_column,
+                args.label_column,
+                batch_size=args.batch_size,
+                prompt=args.prompt,
+                split=args.few_shot_split,
+                load_from_disk=args.load_from_disk,
+                **cache_kwargs
+            )
 
         log.info(f"Loading dataset {args.dataset}...")
         dataset = Dataset.load(
@@ -105,6 +119,7 @@ def main(args):
             prompt=args.prompt,
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
+            few_shot_data=few_shot_data,
             **cache_kwargs
         )
 

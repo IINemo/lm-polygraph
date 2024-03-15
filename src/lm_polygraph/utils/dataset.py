@@ -132,6 +132,7 @@ class Dataset:
         prompt: str = "",
         split: str = "test",
         size: int = None,
+        few_shot_data = None,
         **kwargs
     ):
         """
@@ -183,7 +184,6 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
-            
             def doc_to_text(doc, i=0):
                 # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
                 # and a question qi, the task is to predict the answer ai
@@ -202,7 +202,15 @@ class Dataset:
                     inst[x_column], inst[y_column]["input_text"]
                 ):
                     x.append(prompt.format(story=doc_to_text(inst, j)))
-                    y.append(answer)                
+                    y.append(answer)
+        elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
+            few_shot_prompt = ""
+            for x, y in zip(few_shot_data.x, few_shot_data.y):
+                few_shot_prompt += few_shot_prompt_base.format(question=x, answer=y)
+            x, y = [], []
+            for inst in dataset:
+                x.append(prompt.format(few_shot_prompt=few_shot_prompt, question=inst[x_column]))
+                y.append(inst[y_column]['normalized_value'])
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
