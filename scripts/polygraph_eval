@@ -109,6 +109,7 @@ def main(args):
                 load_from_disk=args.load_from_disk,
                 **cache_kwargs
             )
+            few_shot_data.subsample(args.subsample_few_shot_dataset, seed=seed)
 
         log.info(f"Loading dataset {args.dataset}...")
         dataset = Dataset.load(

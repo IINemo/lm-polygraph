@@ -17,6 +17,7 @@ train_split: train
 eval_split: validation
 max_new_tokens: 20
 load_from_disk: false
+use_few_shot_data: true
 
 train_dataset: null
 train_test_split: false
@@ -31,6 +32,7 @@ background_load_from_disk: false
 subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
+subsample_few_shot_dataset: 5
 
 model: databricks/dolly-v2-3b
 use_auth_token:
