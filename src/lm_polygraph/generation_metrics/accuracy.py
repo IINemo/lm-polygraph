@@ -10,8 +10,9 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
 
-    def __init__(self):
+    def __init__(self, remove_punctuation=True):
         super().__init__(["greedy_texts"], "sequence")
+        self.remove_punctuation = remove_punctuation
 
     def __str__(self):
         return "Accuracy"
@@ -38,9 +39,15 @@ class AccuracyMetric(GenerationMetric):
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """
+        
+        if self.remove_punctuation:
+            greedy_texts = np.array([re.sub(r'[^\w\s]','',t.replace("A: ", "").split("Q:")[0].lower()) for t in stats['greedy_texts']])
+        else:
+            greedy_texts = np.array(stats['greedy_texts'])
+        
         return np.array(
             [
                 self._score_single(hyp, ref)
-                for hyp, ref in zip(stats["greedy_texts"], target_texts)
+                for hyp, ref in zip(greedy_texts, target_texts)
             ]
         )
