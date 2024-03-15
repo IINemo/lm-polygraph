@@ -211,6 +211,14 @@ class Dataset:
             for inst in dataset:
                 x.append(prompt.format(few_shot_prompt=few_shot_prompt, question=inst[x_column]))
                 y.append(inst[y_column]['normalized_value'])
+        elif ("gsm8k" in dataset_name.lower()) and len(prompt):
+            few_shot_prompt = ""
+            for x, y in zip(few_shot_data.x, few_shot_data.y):
+                few_shot_prompt += few_shot_prompt_base.format(question=x, answer=y)
+            x, y = [], []
+            for inst in dataset:
+                x.append(prompt.format(few_shot_prompt=few_shot_prompt, question=inst[x_column]))
+                y.append(inst[y_column])
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:

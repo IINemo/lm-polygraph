@@ -104,7 +104,7 @@ def main(args):
                 args.text_column,
                 args.label_column,
                 batch_size=args.batch_size,
-                prompt=args.prompt,
+                prompt="",
                 split=args.few_shot_split,
                 load_from_disk=args.load_from_disk,
                 **cache_kwargs
