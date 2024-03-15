@@ -29,3 +29,6 @@ openai==0.28.0
 wget
 sentence-transformers
 bert-score
+unbabel-comet==2.2.1
+spacy>=3.4.0,<4
+nltk>=3.7,<4
