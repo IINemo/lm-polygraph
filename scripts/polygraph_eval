@@ -52,6 +52,9 @@ def main(args):
 
     model_kwargs = {}
     model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
+    model_kwargs['load_in_8bit'] = getattr(args, 'load_in_8bit', False)
+    if model_kwargs['load_in_8bit']:
+        model_kwargs['pretraining_tp'] = getattr(args, 'pretraining_tp', 1)
 
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
