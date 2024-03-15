@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+from itertools import zip_longest
 
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset as hf_dataset
@@ -182,13 +183,26 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
+            
+            def doc_to_text(doc, i=0):
+                # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
+                # and a question qi, the task is to predict the answer ai
+                doc_text = doc["story"] + "\n\n"
+                for q, a in zip_longest(
+                    doc["questions"][:i+1], doc["answers"]['input_text'][:i]
+                ):  # omit target answer ai
+                    question = f"Q: {q}\n"
+                    answer = f"A: {a}\n" if a is not None else "A:"
+                    doc_text += question + answer
+                return doc_text
+            
             x, y = [], []
             for inst in dataset:
                 for question, answer in zip(
                     inst[x_column], inst[y_column]["input_text"]
                 ):
-                    x.append(prompt.format(story=inst["story"], question=question))
-                    y.append(answer)
+                    x.append(prompt.format(story=doc_to_text(inst, j)))
+                    y.append(answer)                
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
