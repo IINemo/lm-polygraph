@@ -1,3 +1,4 @@
+import re
 import numpy as np
 
 from typing import List, Dict
@@ -10,9 +11,10 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
 
-    def __init__(self, remove_punctuation=True):
+    def __init__(self, remove_punctuation=True, normalize_texts=True):
         super().__init__(["greedy_texts"], "sequence")
         self.remove_punctuation = remove_punctuation
+        self.normalize_texts = normalize_texts
 
     def __str__(self):
         return "Accuracy"
@@ -39,11 +41,23 @@ class AccuracyMetric(GenerationMetric):
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """
+        greedy_texts = stats['greedy_texts']
+        
+        if self.normalize_texts:
+            #gsm8k
+            greedy_texts = [t.split("The answer is")[-1] for t in greedy_texts]
+            target_texts = [t.split("\n####")[-1] for t in target_texts]
+            
+            #qa datasets
+            greedy_texts = [t.replace("A:", "").split("Q:")[0] for t in greedy_texts]
+            
+            #all datasets
+            target_texts = [t.lower().strip() for t in target_texts]
+            greedy_texts = [t.lower().strip() for t in greedy_texts]
         
         if self.remove_punctuation:
-            greedy_texts = np.array([re.sub(r'[^\w\s]','',t.replace("A: ", "").split("Q:")[0].lower()) for t in stats['greedy_texts']])
-        else:
-            greedy_texts = np.array(stats['greedy_texts'])
+            greedy_texts = np.array([re.sub(r'[^\w\s]','', t) for t in greedy_texts])
+            target_texts = np.array([re.sub(r'[^\w\s]','', t) for t in target_texts])
         
         return np.array(
             [
