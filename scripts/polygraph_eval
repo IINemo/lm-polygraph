@@ -22,6 +22,8 @@ from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
 from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
 from lm_polygraph.generation_metrics.sbert import SbertMetric
+from lm_polygraph.generation_metrics.alignscore import AlignScore
+from lm_polygraph.generation_metrics.comet import Comet
 from lm_polygraph.estimators import *
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
@@ -121,6 +123,7 @@ def main(args):
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             few_shot_data=few_shot_data,
+            few_shot_prompt=getattr(args, 'few_shot_prompt', ''),
             **cache_kwargs
         )
 
@@ -154,6 +157,8 @@ def main(args):
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
+                    few_shot_data=few_shot_data,
+                    few_shot_prompt=getattr(args, 'few_shot_prompt', ''),
                     **cache_kwargs
                 )
             elif args.train_test_split:
@@ -173,6 +178,8 @@ def main(args):
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
+                    few_shot_data=few_shot_data,
+                    few_shot_prompt=getattr(args, 'few_shot_prompt', ''),
                     **cache_kwargs
                 )
 
@@ -355,6 +362,8 @@ def get_generation_metrics(generation_metrics):
             BertScoreMetric(),
             SbertMetric(),
             AccuracyMetric(),
+            AlignScore(),
+            Comet(),
         ]
     else:
         result = []
