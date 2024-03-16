@@ -13,7 +13,7 @@ class Comet(GenerationMetric):
 
     def __init__(self, lang="en"):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
-        self.scorer = load('comet') 
+        self.scorer = load("comet")
 
     def __str__(self):
         return "Comet"
@@ -38,6 +38,15 @@ class Comet(GenerationMetric):
             np.ndarray: list of COMET Scores for each sample in input.
         """
         # remove translation prompt
-        source = [s.split("translation:\n")[-1].replace("\nTranslation:\n", "") for s in stats['input_texts']]
-        scores = np.array(self.scorer.compute(predictions=stats["greedy_texts"], references=target_texts, sources=stats["input_texts"])["scores"])
+        sources = [
+            s.split("translation:\n")[-1].replace("\nTranslation:\n", "")
+            for s in stats["input_texts"]
+        ]
+        scores = np.array(
+            self.scorer.compute(
+                predictions=stats["greedy_texts"],
+                references=target_texts,
+                sources=sources,
+            )["scores"]
+        )
         return scores

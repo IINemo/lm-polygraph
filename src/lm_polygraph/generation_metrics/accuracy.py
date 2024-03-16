@@ -41,24 +41,24 @@ class AccuracyMetric(GenerationMetric):
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """
-        greedy_texts = stats['greedy_texts']
-        
+        greedy_texts = stats["greedy_texts"]
+
         if self.normalize_texts:
-            #gsm8k
+            # gsm8k
             greedy_texts = [t.split("The answer is")[-1] for t in greedy_texts]
             target_texts = [t.split("\n####")[-1] for t in target_texts]
-            
-            #qa datasets
+
+            # qa datasets
             greedy_texts = [t.replace("A:", "").split("Q:")[0] for t in greedy_texts]
-            
-            #all datasets
+
+            # all datasets
             target_texts = [t.lower().strip() for t in target_texts]
             greedy_texts = [t.lower().strip() for t in greedy_texts]
-        
+
         if self.remove_punctuation:
-            greedy_texts = np.array([re.sub(r'[^\w\s]','', t) for t in greedy_texts])
-            target_texts = np.array([re.sub(r'[^\w\s]','', t) for t in target_texts])
-        
+            greedy_texts = np.array([re.sub(r"[^\w\s]", "", t) for t in greedy_texts])
+            target_texts = np.array([re.sub(r"[^\w\s]", "", t) for t in target_texts])
+
         return np.array(
             [
                 self._score_single(hyp, ref)

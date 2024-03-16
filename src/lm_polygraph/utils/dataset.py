@@ -103,7 +103,7 @@ class Dataset:
         y_column: str,
         batch_size: int,
         prompt: str = "",
-        **kwargs
+        **kwargs,
     ):
         """
         Creates the dataset from .CSV table.
@@ -133,8 +133,8 @@ class Dataset:
         split: str = "test",
         size: int = None,
         few_shot_prompt: str = "",
-        few_shot_data = None,
-        **kwargs
+        few_shot_data=None,
+        **kwargs,
     ):
         """
         Creates the dataset from Huggingface datasets.
@@ -185,33 +185,36 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
+
             def doc_to_text(doc, i=0):
                 # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
                 # and a question qi, the task is to predict the answer ai
                 doc_text = doc["story"] + "\n\n"
                 for q, a in zip_longest(
-                    doc["questions"][:i+1], doc["answers"]['input_text'][:i]
+                    doc["questions"][: i + 1], doc["answers"]["input_text"][:i]
                 ):  # omit target answer ai
                     question = f"Q: {q}\n"
                     answer = f"A: {a}\n" if a is not None else "A:"
                     doc_text += question + answer
                 return doc_text
-            
+
             x, y = [], []
             for inst in dataset:
-                for j, (question, answer) in enumerate(zip(
-                    inst[x_column], inst[y_column]["input_text"]
-                )):
+                for j, (question, answer) in enumerate(
+                    zip(inst[x_column], inst[y_column]["input_text"])
+                ):
                     x.append(prompt.format(story=doc_to_text(inst, j)))
                     y.append(answer)
         elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
             few_shot = ""
             for x, y in zip(few_shot_data.x, few_shot_data.y):
-                few_shot += few_shot_prompt.format(question=x, answer=y['value'])
+                few_shot += few_shot_prompt.format(question=x, answer=y["value"])
             x, y = [], []
             for inst in dataset:
-                x.append(prompt.format(few_shot_prompt=few_shot, question=inst[x_column]))
-                y.append(inst[y_column]['normalized_value'])
+                x.append(
+                    prompt.format(few_shot_prompt=few_shot, question=inst[x_column])
+                )
+                y.append(inst[y_column]["normalized_value"])
         elif ("mmlu" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
@@ -219,12 +222,20 @@ class Dataset:
                 n_samples = 0
                 for x_fs, y_fs in zip(few_shot_data.x, few_shot_data.y):
                     if x_fs[1] == inst["subject"]:
-                        few_shot += few_shot_prompt.format(question=x_fs[0], answer=y_fs)
+                        few_shot += few_shot_prompt.format(
+                            question=x_fs[0], answer=y_fs
+                        )
                         n_samples += 1
                     if n_samples == 5:
                         break
-                x.append(prompt.format(subject=inst["subject"].replace("_", " "), few_shot_prompt=few_shot, question=inst[x_column]))
-                y.append(inst['choices'][inst[y_column]])
+                x.append(
+                    prompt.format(
+                        subject=inst["subject"].replace("_", " "),
+                        few_shot_prompt=few_shot,
+                        question=inst[x_column],
+                    )
+                )
+                y.append(inst["choices"][inst[y_column]])
         elif ("gsm8k" in dataset_name.lower()) and len(prompt):
             few_shot = ""
             if few_shot_data is not None:
@@ -232,7 +243,9 @@ class Dataset:
                     few_shot += few_shot_prompt.format(question=x, answer=y)
             x, y = [], []
             for inst in dataset:
-                x.append(prompt.format(few_shot_prompt=few_shot, question=inst[x_column]))
+                x.append(
+                    prompt.format(few_shot_prompt=few_shot, question=inst[x_column])
+                )
                 y.append(inst[y_column])
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
@@ -251,7 +264,7 @@ class Dataset:
         else:
             if "mmlu" in dataset_name.lower():
                 x = [(inst[x_column], inst["subject"]) for inst in dataset]
-                y = [inst['choices'][inst[y_column]] for inst in dataset]
+                y = [inst["choices"][inst[y_column]] for inst in dataset]
             else:
                 x = dataset[x_column]
                 y = dataset[y_column]
