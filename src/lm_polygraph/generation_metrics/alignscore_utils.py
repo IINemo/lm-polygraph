@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from nltk.tokenize import sent_tokenize
 from logging import warning
 from typing import List
+from tqdm import tqdm
 
 class AlignScorer:
     def __init__(self, model: str, batch_size: int, device: int, ckpt_path: str, evaluation_mode='nli_sp', verbose=True) -> None:
@@ -27,14 +28,14 @@ class AlignScorer:
         return self.model.nlg_eval(contexts, claims)[1].tolist()
 
 class Inferencer():
-    def __init__(self, ckpt_path="/home/jovyan/.cache/torch/hub/checkpoints/AlignScore-large.ckpt", model='bert-base-uncased', batch_size=32, device='cuda', verbose=True) -> None:
+    def __init__(self, ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt", model='bert-base-uncased', batch_size=32, device='cuda', verbose=True) -> None:
         self.device = device
         if ckpt_path is not None:
             self.model = BERTAlignModel(model=model)
             if os.path.exists(ckpt_path):
-                state_dict = torch.hub.load_state_dict_from_url(ckpt_path, progress=False)['state_dict']
-            else:
                 state_dict = torch.load(ckpt_path)['state_dict']
+            else:
+                state_dict = torch.hub.load_state_dict_from_url(ckpt_path, progress=False)['state_dict']
             self.model.load_state_dict(state_dict, strict=False)
             self.model = self.model.to(self.device)
         else:
