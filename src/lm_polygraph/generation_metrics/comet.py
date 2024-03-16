@@ -38,6 +38,6 @@ class Comet(GenerationMetric):
             np.ndarray: list of COMET Scores for each sample in input.
         """
         # remove translation prompt
-        source = [s.split("translation:\n")[-1].replace("\nTranslation:\n", "") for s in man.stats['input_texts']]
-        results = np.array(self.scorer.compute(predictions=stats["greedy_texts"], references=target_texts, sources=stats["input_texts"])["scores"])
+        source = [s.split("translation:\n")[-1].replace("\nTranslation:\n", "") for s in stats['input_texts']]
+        scores = np.array(self.scorer.compute(predictions=stats["greedy_texts"], references=target_texts, sources=stats["input_texts"])["scores"])
         return scores
