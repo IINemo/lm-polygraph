@@ -207,8 +207,9 @@ class Dataset:
                     y.append(answer)
         elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
             few_shot = ""
-            for x, y in zip(few_shot_data.x, few_shot_data.y):
-                few_shot += few_shot_prompt.format(question=x, answer=y["value"])
+            if few_shot_data is not None:
+                for x, y in zip(few_shot_data.x, few_shot_data.y):
+                    few_shot += few_shot_prompt.format(question=x, answer=y["value"])
             x, y = [], []
             for inst in dataset:
                 x.append(
@@ -220,14 +221,15 @@ class Dataset:
             for inst in dataset:
                 few_shot = ""
                 n_samples = 0
-                for x_fs, y_fs in zip(few_shot_data.x, few_shot_data.y):
-                    if x_fs[1] == inst["subject"]:
-                        few_shot += few_shot_prompt.format(
-                            question=x_fs[0], answer=y_fs
-                        )
-                        n_samples += 1
-                    if n_samples == 5:
-                        break
+                if few_shot_data is not None:
+                    for x_fs, y_fs in zip(few_shot_data.x, few_shot_data.y):
+                        if x_fs[1] == inst["subject"]:
+                            few_shot += few_shot_prompt.format(
+                                question=x_fs[0], answer=y_fs
+                            )
+                            n_samples += 1
+                        if n_samples == 5:
+                            break
                 x.append(
                     prompt.format(
                         subject=inst["subject"].replace("_", " "),
