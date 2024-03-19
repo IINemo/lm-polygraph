@@ -47,8 +47,8 @@ class Dataset:
         Parameters:
             indices (List[int]): indices to left in the dataset.Must have the same length as input texts.
         """
-        self.x = np.array(self.x)[indices].tolist()
-        self.y = np.array(self.y)[indices].tolist()
+        self.x = [self.x[i] for i in indices]
+        self.y = [self.y[i] for i in indices]
         return self
 
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):
