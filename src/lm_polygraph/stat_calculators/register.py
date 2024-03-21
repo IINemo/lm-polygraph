@@ -21,6 +21,7 @@ def _register(calculator_class: StatCalculator):
 def register_stat_calculators(
     deberta_batch_size: int = 10,
     deberta_device: Optional[str] = None,
+    n_ccp_alternatives: int = 10,
 ):
     _register(GreedyProbsCalculator())
     _register(BlackboxGreedyTextsCalculator())
@@ -51,3 +52,5 @@ def register_stat_calculators(
     _register(SemanticMatrixCalculator())
     _register(CrossEncoderSimilarityMatrixCalculator())
     _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
+    _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
+    _register(GreedyTokensAlternativesNLICalculator())
