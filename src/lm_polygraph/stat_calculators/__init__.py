@@ -4,6 +4,7 @@ from .greedy_lm_probs import GreedyLMProbsCalculator
 from .prompt import PromptCalculator
 from .entropy import EntropyCalculator
 from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator
+from .greedy_alternatives_nli import GreedyTokensAlternativesNLICalculator
 from .bart_score import BartScoreCalculator
 from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
@@ -11,7 +12,8 @@ from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 
-register(GreedyProbsCalculator())
+register(GreedyProbsCalculator(n_alternatives=10))
+register(GreedyTokensAlternativesNLICalculator())
 register(BlackboxGreedyTextsCalculator())
 register(EntropyCalculator())
 register(GreedyLMProbsCalculator())
