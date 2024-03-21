@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 def register_stat_calculators(
     deberta_batch_size: int = 10,
     deberta_device: Optional[str] = None,
+    n_ccp_alternatives: int = 10,
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
     Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations
@@ -50,5 +51,7 @@ def register_stat_calculators(
     _register(SemanticMatrixCalculator())
     _register(CrossEncoderSimilarityMatrixCalculator())
     _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
+    _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
+    _register(GreedyTokensAlternativesNLICalculator())
 
     return stat_calculators, stat_dependencies
