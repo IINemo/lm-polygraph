@@ -144,7 +144,8 @@ class GreedyProbsCalculator(StatCalculator):
         cut_alternatives = []
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
-                seq = sequences[i, batch["input_ids"].shape[1] :].cpu()
+                idx = batch["input_ids"].shape[1]
+                seq = sequences[i, idx:].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -158,11 +159,16 @@ class GreedyProbsCalculator(StatCalculator):
             cut_logits.append(logits[i, :length, :].cpu().numpy())
             cut_alternatives.append([[] for _ in range(length)])
             for j in range(length):
-                l = logits[i, j, :].cpu().numpy()
-                best_tokens = np.argpartition(l, -self.n_alternatives)[-self.n_alternatives:]
+                lt = logits[i, j, :].cpu().numpy()
+                best_tokens = np.argpartition(lt, -self.n_alternatives)
+                ln = len(best_tokens)
+                best_tokens = best_tokens[ln - self.n_alternatives : ln]
                 for t in best_tokens:
-                    cut_alternatives[-1][j].append((t.item(), l[t].item()))
-                cut_alternatives[-1][j].sort(key=lambda x: x[0] == cut_sequences[-1][j], reverse=True)
+                    cut_alternatives[-1][j].append((t.item(), lt[t].item()))
+                cut_alternatives[-1][j].sort(
+                    key=lambda x: x[0] == cut_sequences[-1][j],
+                    reverse=True,
+                )
 
         ll = []
         for i in range(len(texts)):

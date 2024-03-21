@@ -53,4 +53,4 @@ def register_stat_calculators(
     _register(CrossEncoderSimilarityMatrixCalculator())
     _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
-    _register(GreedyTokensAlternativesNLICalculator())
+    _register(GreedyAlternativesNLICalculator())
