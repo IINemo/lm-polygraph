@@ -15,7 +15,7 @@ label_column: answer
 prompt: "The following are questions about {subject}. Answer the question. Output only the answer itself.\nExample:{few_shot_prompt}\nQ:{question}\nA:"
 few_shot_prompt: "\nQ:{question}\nA:{answer}"
 few_shot_split: validation
-train_split: dev
+train_split: auxiliary_train
 eval_split: test
 max_new_tokens: 50
 load_from_disk: false
