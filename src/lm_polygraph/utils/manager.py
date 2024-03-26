@@ -268,7 +268,7 @@ class UEManager:
             s
             for s in stats
             if not (str(s).startswith("ensemble_"))
-            or (
+            and not (
                 (str(s).startswith("blackbox_") and s[len("blackbox_") :] in have_stats)
             )
         ]
