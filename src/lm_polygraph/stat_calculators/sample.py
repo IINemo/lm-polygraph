@@ -146,6 +146,20 @@ class SamplingGenerationCalculator(StatCalculator):
             do_sample=True,
             num_beams=1,
             num_return_sequences=1,
+            temperature=model.parameters.temperature,
+            top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
+            top_p=model.parameters.topp,
+            presence_penalty=model.parameters.presence_penalty,
+            repetition_penalty=model.parameters.repetition_penalty,
+            suppress_tokens=(
+                []
+                if model.parameters.allow_newlines
+                else [
+                    t
+                    for t in range(len(model.tokenizer))
+                    if "\n" in model.tokenizer.decode([t])
+                ]
+            ),
         )
 
         log_probs = [[] for _ in range(len(texts))]
