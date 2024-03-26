@@ -264,6 +264,7 @@ class UEManager:
             + greedy
         )
         stats, have_stats = _order_calculators(stats)
+        self.stats_names = stats
         stats = [
             s
             for s in stats
@@ -522,6 +523,8 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
+                    if (f'blackbox_{stat}' in STAT_CALCULATORS.keys()) and (f'blackbox_{stat}' in self.stats_names):
+                        batch_stats[f'blackbox_{stat}'] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
                     lineno = e.__traceback__.tb_lineno
