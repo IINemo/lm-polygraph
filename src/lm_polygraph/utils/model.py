@@ -367,7 +367,7 @@ class WhiteboxModel(Model):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
                 model_path, max_length=256, trust_remote_code=True, **kwargs
-            ).to(device)
+            )
         elif any(
             [
                 ("Seq2SeqLM" in architecture)
@@ -378,7 +378,7 @@ class WhiteboxModel(Model):
             model_type = "Seq2SeqLM"
             model = AutoModelForSeq2SeqLM.from_pretrained(
                 model_path, max_length=1024, **kwargs
-            ).to(device)
+            )
             if "falcon" in model_path:
                 model.transformer.alibi = True
         elif any(
@@ -387,7 +387,7 @@ class WhiteboxModel(Model):
             model_type = "Seq2SeqLM"
             model = BartForConditionalGeneration.from_pretrained(
                 model_path, max_length=1024, **kwargs
-            ).to(device)
+            )
         else:
             raise ValueError(
                 f"Model {model_path} is not adapted for the sequence generation task"
