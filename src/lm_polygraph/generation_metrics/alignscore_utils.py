@@ -14,6 +14,7 @@ from transformers import (
     AdamW,
     get_linear_schedule_with_warmup,
 )
+import nltk
 import torch
 import torch.nn as nn
 from sklearn.metrics import f1_score
@@ -41,6 +42,7 @@ class AlignScorer:
             device=device,
             verbose=verbose,
         )
+        nltk.download("punkt")
         self.model.nlg_eval_mode = evaluation_mode
 
     def score(self, contexts: List[str], claims: List[str]) -> List[float]:
