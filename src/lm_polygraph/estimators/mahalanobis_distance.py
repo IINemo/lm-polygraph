@@ -158,10 +158,10 @@ class MahalanobisDistanceSeq(Estimator):
 
         # compute MD given centroids and inverse covariance matrix
         dists = mahalanobis_distance_with_known_centroids_sigma_inv(
-            self.centroid,
+            self.centroid.float(),
             None,
-            self.sigma_inv,
-            embeddings,
+            self.sigma_inv.float(),
+            embeddings.float(),
         )[:, 0]
 
         if self.max < dists.max():

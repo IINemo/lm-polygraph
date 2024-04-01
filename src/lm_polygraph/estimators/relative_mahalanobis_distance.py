@@ -105,10 +105,10 @@ class RelativeMahalanobisDistanceSeq(Estimator):
 
         dists_0 = (
             mahalanobis_distance_with_known_centroids_sigma_inv(
-                self.centroid_0,
+                self.centroid_0.float(),
                 None,
-                self.sigma_inv_0,
-                embeddings,
+                self.sigma_inv_0.float(),
+                embeddings.float(),
             )[:, 0]
             .cpu()
             .detach()
