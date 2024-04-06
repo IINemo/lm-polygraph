@@ -51,6 +51,16 @@ class AccuracyMetric(GenerationMetric):
             # qa datasets
             greedy_texts = [t.replace("A:", "").split("Q:")[0] for t in greedy_texts]
 
+            # mmlu
+            greedy_texts = [
+                (
+                    re.search(r"\([A-Z]\)", t).group(0)
+                    if (re.search(r"\([A-Z]\)", t) is not None)
+                    else t
+                )
+                for t in greedy_texts
+            ]
+
             # all datasets
             target_texts = [t.lower().strip() for t in target_texts]
             greedy_texts = [t.lower().strip() for t in greedy_texts]

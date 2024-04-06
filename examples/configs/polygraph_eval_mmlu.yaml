@@ -12,12 +12,12 @@ task: qa
 dataset: [cais/mmlu, all]
 text_column: question
 label_column: answer
-prompt: "The following are questions about {subject}. Answer the question. Output only the answer itself.\nExample:{few_shot_prompt}\nQ:{question}\nA:"
-few_shot_prompt: "\nQ:{question}\nA:{answer}"
+prompt: "The following are questions about {subject}. Answer the question. {few_shot_prompt}\nQ:{question}\n(A) {choices[0]} (B) {choices[1]} (C) {choices[2]} (D) {choices[3]}\nA:"
+few_shot_prompt: "\nQ:{question}\n(A) {choices[0]} (B) {choices[1]} (C) {choices[2]} (D) {choices[3]}\nA:{answer}"
 few_shot_split: validation
 train_split: auxiliary_train
 eval_split: test
-max_new_tokens: 50
+max_new_tokens: 3
 load_from_disk: false
 use_few_shot_data: true
 
@@ -34,7 +34,8 @@ background_load_from_disk: false
 subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
-subsample_few_shot_dataset: 1000
+subsample_few_shot_dataset: -1
+mmlu_max_subject_size: 100
 
 model: databricks/dolly-v2-3b
 use_auth_token:

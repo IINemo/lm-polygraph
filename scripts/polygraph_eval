@@ -118,7 +118,8 @@ def main(args):
                 load_from_disk=args.load_from_disk,
                 **cache_kwargs
             )
-            few_shot_data.subsample(args.subsample_few_shot_dataset, seed=seed)
+            if args.subsample_few_shot_dataset != -1:
+                few_shot_data.subsample(args.subsample_few_shot_dataset, seed=seed)
 
         log.info(f"Loading dataset {args.dataset}...")
         dataset = Dataset.load(
@@ -131,6 +132,7 @@ def main(args):
             load_from_disk=args.load_from_disk,
             few_shot_data=few_shot_data,
             few_shot_prompt=getattr(args, 'few_shot_prompt', ''),
+            mmlu_max_subject_size=getattr(args, 'mmlu_max_subject_size', 100),
             **cache_kwargs
         )
 

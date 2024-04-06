@@ -134,6 +134,7 @@ class Dataset:
         size: int = None,
         few_shot_prompt: str = "",
         few_shot_data=None,
+        mmlu_max_subject_size: int = 100,
         **kwargs,
     ):
         """
@@ -217,27 +218,35 @@ class Dataset:
                 )
                 y.append(inst[y_column]["normalized_value"])
         elif ("mmlu" in dataset_name.lower()) and len(prompt):
+            subjects = np.array(dataset["subject"])
             x, y = [], []
-            for inst in dataset:
-                few_shot = ""
-                n_samples = 0
-                if few_shot_data is not None:
-                    for x_fs, y_fs in zip(few_shot_data.x, few_shot_data.y):
-                        if x_fs[1] == inst["subject"]:
-                            few_shot += few_shot_prompt.format(
-                                question=x_fs[0], answer=y_fs
-                            )
-                            n_samples += 1
-                        if n_samples == 5:
-                            break
-                x.append(
-                    prompt.format(
-                        subject=inst["subject"].replace("_", " "),
-                        few_shot_prompt=few_shot,
-                        question=inst[x_column],
+            for subject in np.unique(subjects):
+                subject_data = dataset.select(
+                    np.argwhere(subjects == subject).flatten()
+                ).select(range(mmlu_max_subject_size))
+                for inst in subject_data:
+                    few_shot = ""
+                    n_samples = 0
+                    if few_shot_data is not None:
+                        for x_fs, y_fs in zip(few_shot_data.x, few_shot_data.y):
+                            if x_fs[2] == inst["subject"]:
+                                few_shot += few_shot_prompt.format(
+                                    question=x_fs[0],
+                                    choices=x_fs[1],
+                                    answer=["(A)", "(B)", "(C)", "(D)"][y_fs],
+                                )
+                                n_samples += 1
+                            if n_samples == 5:
+                                break
+                    x.append(
+                        prompt.format(
+                            subject=inst["subject"].replace("_", " "),
+                            few_shot_prompt=few_shot,
+                            choices=inst["choices"],
+                            question=inst[x_column],
+                        )
                     )
-                )
-                y.append(inst["choices"][inst[y_column]])
+                    y.append(["(A)", "(B)", "(C)", "(D)"][inst[y_column]])
         elif ("gsm8k" in dataset_name.lower()) and len(prompt):
             few_shot = ""
             if few_shot_data is not None:
@@ -265,8 +274,11 @@ class Dataset:
             y = dataset[y_column]
         else:
             if "mmlu" in dataset_name.lower():
-                x = [(inst[x_column], inst["subject"]) for inst in dataset]
-                y = [inst["choices"][inst[y_column]] for inst in dataset]
+                x = [
+                    (inst[x_column], inst["choices"], inst["subject"])
+                    for inst in dataset
+                ]
+                y = [inst[y_column] for inst in dataset]
             else:
                 x = dataset[x_column]
                 y = dataset[y_column]
