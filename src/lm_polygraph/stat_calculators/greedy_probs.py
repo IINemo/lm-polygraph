@@ -59,13 +59,14 @@ class GreedyProbsCalculator(StatCalculator):
     * embeddings from the model
     """
 
-    def __init__(self):
+    def __init__(self, n_alternatives: int = 10):
         super().__init__(
             [
                 "input_texts",
                 "input_tokens",
                 "greedy_log_probs",
                 "greedy_tokens",
+                "greedy_tokens_alternatives",
                 "greedy_texts",
                 "greedy_log_likelihoods",
                 "train_greedy_log_likelihoods",
@@ -73,6 +74,7 @@ class GreedyProbsCalculator(StatCalculator):
             ],
             [],
         )
+        self.n_alternatives = n_alternatives
 
     def __call__(
         self,
@@ -139,9 +141,11 @@ class GreedyProbsCalculator(StatCalculator):
         cut_logits = []
         cut_sequences = []
         cut_texts = []
+        cut_alternatives = []
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
-                seq = sequences[i, batch["input_ids"].shape[1] :].cpu()
+                idx = batch["input_ids"].shape[1]
+                seq = sequences[i, idx:].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -153,6 +157,18 @@ class GreedyProbsCalculator(StatCalculator):
             cut_sequences.append(seq[:length].tolist())
             cut_texts.append(model.tokenizer.decode(seq[:text_length]))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
+            cut_alternatives.append([[] for _ in range(length)])
+            for j in range(length):
+                lt = logits[i, j, :].cpu().numpy()
+                best_tokens = np.argpartition(lt, -self.n_alternatives)
+                ln = len(best_tokens)
+                best_tokens = best_tokens[ln - self.n_alternatives : ln]
+                for t in best_tokens:
+                    cut_alternatives[-1][j].append((t.item(), lt[t].item()))
+                cut_alternatives[-1][j].sort(
+                    key=lambda x: x[0] == cut_sequences[-1][j],
+                    reverse=True,
+                )
 
         ll = []
         for i in range(len(texts)):
@@ -178,6 +194,7 @@ class GreedyProbsCalculator(StatCalculator):
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
             "greedy_tokens": cut_sequences,
+            "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,
         }

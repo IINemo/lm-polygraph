@@ -1,5 +1,6 @@
 from .estimator import Estimator
 from .max_probability import MaximumSequenceProbability, MaximumTokenProbability
+from .claim_conditioned_probability import ClaimConditionedProbability
 from .token_entropy import MeanTokenEntropy, TokenEntropy
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,
