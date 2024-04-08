@@ -22,7 +22,7 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
     * embeddings from the model
     """
 
-    def __init__(self):
+    def __init__(self, n_alternatives=10):
         super().__init__(
             [
                 "input_tokens",
@@ -35,6 +35,8 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
             ],
             [],
         )
+
+        self.n_alternatives = n_alternatives
 
     def get_embeddings_from_output(self, 
         output,
@@ -115,6 +117,7 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
         cut_logits = []
         cut_sequences = []
         cut_log_probs = []
+        cut_alternatives = []
         lls = []
         for i in range(len(model_inputs)):
             seq = out.sequences[i, model_inputs.shape[1] :].cpu()
@@ -135,6 +138,20 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
             cut_log_probs.append(log_probs.numpy())
             lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
+            cut_alternatives.append([[] for _ in range(length)])
+            for j in range(length):
+                lt = logits[j, :].numpy()
+                best_tokens = np.argpartition(lt, -self.n_alternatives)
+                ln = len(best_tokens)
+                best_tokens = best_tokens[ln - self.n_alternatives : ln]
+                for t in best_tokens:
+                    cut_alternatives[-1][j].append((t.item(), lt[t].item()))
+
+                cut_alternatives[-1][j].sort(
+                    key=lambda x: x[0] == cut_sequences[-1][j],
+                    reverse=True,
+                )
+
         embeddings_decoder = self.get_embeddings_from_output(out)
 
         result_dict = {
@@ -142,7 +159,8 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
             "greedy_logits": cut_logits,
             "greedy_tokens": cut_sequences,
             "embeddings_decoder": embeddings_decoder,
-            "greedy_log_likelihoods": lls
+            "greedy_log_likelihoods": lls,
+            "greedy_tokens_alternatives": cut_alternatives
         }
 
         return result_dict

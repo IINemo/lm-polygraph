@@ -41,8 +41,13 @@ class CommonDeberta:
             self.deberta_path, problem_type="multi_label_classification"
         )
         self.deberta_tokenizer = DebertaTokenizer.from_pretrained(self.deberta_path)
+        self.tokenizer = self.deberta_tokenizer
+        self.config = self.deberta.config
         self.deberta.to(self.device)
         self.deberta.eval()
+
+    def __call__(self, *args, **kwargs):
+        return self.deberta(*args, **kwargs)
 
 
 DEBERTA = CommonDeberta(device="cpu")

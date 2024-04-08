@@ -16,6 +16,8 @@ class ClaimConditionedProbability(Estimator):
             "sequence",
         )
 
+        self.normalization = "none"
+
     def __str__(self):
         return "CCP"
 
