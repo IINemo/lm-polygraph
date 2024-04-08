@@ -50,8 +50,7 @@ def main(args):
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
-    model_kwargs = {}
-    model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
+    model_kwargs = get_model_kwargs(args)
 
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
@@ -344,6 +343,16 @@ def get_generation_metrics(generation_metrics):
             metric_class = globals()[metric_name]
             result.append(metric_class(*metric.get("args", [])))
         return result
+
+
+def get_model_kwargs(args):
+    model_kwargs = {}
+    if getattr(args, 'device_map', None):
+        model_kwargs['device_map'] = args.device_map
+    if getattr(args, 'max_length', None):
+        model_kwargs['max_length'] = args.max_length
+
+    return model_kwargs
 
 
 if __name__ == "__main__":
