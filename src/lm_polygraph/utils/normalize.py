@@ -26,7 +26,7 @@ def normalization_bounds_present(
         os.remove(filepath)
     try:
         wget.download(HOST + "/" + directory + "/" + archive_path, out=filepath)
-    except URLError:
+    except (FileNotFoundError, URLError):
         sys.stderr.write("Warning: no normalization bounds found")
         return False
     with open(filepath, "r") as f:
