@@ -262,6 +262,7 @@ def get_ue_methods(args, model):
             MeanTokenEntropy(),
             MeanPointwiseMutualInformation(),
             MeanConditionalPointwiseMutualInformation(),
+            ClaimConditionedProbability(),
             PTrue(),
             PTrueSampling(),
             MonteCarloSequenceEntropy(),
