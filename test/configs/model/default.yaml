@@ -3,5 +3,5 @@ ensemble: false
 mc: false
 mc_seeds:
 dropout_rate:
-device_map: auto
+device_map: cpu
 max_length:

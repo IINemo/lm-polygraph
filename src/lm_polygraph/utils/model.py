@@ -471,7 +471,6 @@ def create_ensemble(
         replace_dropout(
             ens.config._name_or_path, ens, p=dropout_rate, share_across_tokens=True
         )
-
         ens.train()
     else:
         raise ValueError(
