@@ -352,13 +352,12 @@ class WhiteboxModel(Model):
         return self.model.device
 
     @staticmethod
-    def from_pretrained(model_path: str, device: str = "cpu", **kwargs):
+    def from_pretrained(model_path: str, **kwargs):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
 
         Parameters:
             model_path (str): model path in HuggingFace.
-            device (str): device to load the model on.
         """
         config = AutoConfig.from_pretrained(
             model_path, trust_remote_code=True, **kwargs
@@ -451,7 +450,6 @@ def create_ensemble(
     seed: int = 1,
     mc_seeds: List[int] = [1],
     ensembling_mode: str = "pe",
-    device: str = "cpu",
     dropout_rate: float = 0.1,
     **kwargs,
 ) -> WhiteboxModel:
@@ -474,7 +472,6 @@ def create_ensemble(
             ens.config._name_or_path, ens, p=dropout_rate, share_across_tokens=True
         )
 
-        ens.to(device)
         ens.train()
     else:
         raise ValueError(

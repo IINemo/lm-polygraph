@@ -1,0 +1,4 @@
+defaults:
+  - default
+
+path: bigscience/bloomz-560m
