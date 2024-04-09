@@ -62,9 +62,7 @@ def test_pe_ensembles_dont_fail():
     overrides = {
         "model.ensembling_mode": "pe",
     }
-    exec_result = run_config_with_overrides(
-        "test_polygraph_eval_ensemble", **overrides
-    )
+    exec_result = run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"

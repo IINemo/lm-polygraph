@@ -102,7 +102,7 @@ class Dataset:
         y_column: str,
         batch_size: int,
         prompt: str = "",
-        **kwargs
+        **kwargs,
     ):
         """
         Creates the dataset from .CSV table.
@@ -131,7 +131,7 @@ class Dataset:
         prompt: str = "",
         split: str = "test",
         size: int = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates the dataset from Huggingface datasets.

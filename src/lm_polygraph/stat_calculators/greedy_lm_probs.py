@@ -24,7 +24,7 @@ class GreedyLMProbsCalculator(StatCalculator):
         texts: List[str],
         model: WhiteboxModel,
         max_new_tokens: int = 100,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the entropy of probabilities at each token position in the generation.
