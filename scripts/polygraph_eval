@@ -343,8 +343,6 @@ def get_model_kwargs(args):
     model_kwargs = {}
     if getattr(args.model, 'device_map', None):
         model_kwargs['device_map'] = args.model.device_map
-    if getattr(args.model, 'max_length', None):
-        model_kwargs['max_length'] = args.model.max_length
 
     return model_kwargs
 
