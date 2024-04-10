@@ -424,11 +424,6 @@ class UEManager:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
         if self.ensemble_model is not None:
-            # Now do the same for ensemble calculators
-            device = self.model.model.device
-            self.model.model.to("cpu")
-            self.ensemble_model.model.to(device)
-
             iterable_data = tqdm(self.data) if self.verbose else self.data
             for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
                 batch_stats: Dict[str, np.ndarray] = {}

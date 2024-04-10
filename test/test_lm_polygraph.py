@@ -30,6 +30,7 @@ def run_config_with_overrides(config_name, **overrides):
     command = f"HYDRA_CONFIG={pwd()}/configs/{config_name}.yaml polygraph_eval"
     for key, value in overrides.items():
         command += f" {key}='{value}'"
+    print(command)
     exec_result = exec_bash(command)
 
     assert exec_result.returncode == 0, f"running {command} failed!"
@@ -58,16 +59,20 @@ def test_all_seq_ue():
 
 
 def test_pe_ensembles_dont_fail():
-    exec_result = run_config_with_overrides(
-        "test_polygraph_eval_ensemble", ensembling_mode="pe"
-    )
+    overrides = {
+        "model.ensembling_mode": "pe",
+    }
+    exec_result = run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
 
 def test_pe_ensembles_has_all_ensemble_estimates():
-    run_config_with_overrides("test_polygraph_eval_ensemble", ensembling_mode="pe")
+    overrides = {
+        "model.ensembling_mode": "pe",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     expected_estimators = all_token_estimators() + all_pe_estimators()
@@ -77,7 +82,10 @@ def test_pe_ensembles_has_all_ensemble_estimates():
 
 
 def test_pe_ensembles_no_nans():
-    run_config_with_overrides("test_polygraph_eval_ensemble", ensembling_mode="pe")
+    overrides = {
+        "model.ensembling_mode": "pe",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     expected_estimators = all_token_estimators() + all_pe_estimators()
@@ -91,7 +99,10 @@ def test_pe_mi_not_zero():
     If models are not the same, their output distributions should be different,
     and thus MI measures non-zero.
     """
-    run_config_with_overrides("test_polygraph_eval_ensemble", ensembling_mode="pe")
+    overrides = {
+        "model.ensembling_mode": "pe",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     mi_estimators = ["PETmi", "EPTmi", "PESrmi"]
@@ -109,9 +120,12 @@ def test_pe_mi_zero_when_same():
     If models are same, their output distributions should be identical,
     and thus MI measures equal to zero.
     """
-    run_config_with_overrides(
-        "test_polygraph_eval_ensemble", ensembling_mode="pe", mc_seeds="[42, 42]"
-    )
+    overrides = {
+        "model.ensembling_mode": "pe",
+        "model.mc_seeds": "[42, 42]",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
+
     man = load_test_manager()
 
     mi_estimators = ["PETmi", "EPTmi", "PESrmi"]
@@ -128,16 +142,20 @@ def test_pe_mi_zero_when_same():
 
 
 def test_ep_ensembles_dont_fail():
-    exec_result = run_config_with_overrides(
-        "test_polygraph_eval_ensemble", ensembling_mode="ep"
-    )
+    overrides = {
+        "model.ensembling_mode": "ep",
+    }
+    exec_result = run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
 
 def test_ep_ensembles_has_all_ensemble_estimates():
-    run_config_with_overrides("test_polygraph_eval_ensemble", ensembling_mode="ep")
+    overrides = {
+        "model.ensembling_mode": "ep",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     expected_estimators = all_token_estimators() + all_ep_estimators()
@@ -147,7 +165,10 @@ def test_ep_ensembles_has_all_ensemble_estimates():
 
 
 def test_ep_ensembles_no_nans():
-    run_config_with_overrides("test_polygraph_eval_ensemble", ensembling_mode="ep")
+    overrides = {
+        "model.ensembling_mode": "ep",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     expected_estimators = all_token_estimators() + all_ep_estimators()
@@ -161,7 +182,10 @@ def test_ep_mi_not_zero():
     If models are not the same, their output distributions should be different,
     and thus MI measures non-zero.
     """
-    run_config_with_overrides("test_polygraph_eval_ensemble", ensembling_mode="ep")
+    overrides = {
+        "model.ensembling_mode": "ep",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     mi_estimators = ["PETmi", "EPTmi", "EPSrmi"]
@@ -179,9 +203,11 @@ def test_ep_mi_zero_when_same():
     If models are same, their output distributions should be identical,
     and thus MI measures equal to zero.
     """
-    run_config_with_overrides(
-        "test_polygraph_eval_ensemble", ensembling_mode="ep", mc_seeds="[42, 42]"
-    )
+    overrides = {
+        "model.ensembling_mode": "ep",
+        "model.mc_seeds": "[42, 42]",
+    }
+    run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
     man = load_test_manager()
 
     mi_estimators = ["PETmi", "EPTmi", "EPSrmi"]

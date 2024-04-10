@@ -50,17 +50,12 @@ def main(args):
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
-    model_kwargs = {}
-    model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
+    model_kwargs = get_model_kwargs(args)
 
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
         cache_kwargs = {'cache_dir': args.cache_path}
 
-    device = args.device
-    if device is None:
-        device = "cuda:0" if torch.cuda.device_count() > 0 else "cpu"
-        
     for seed in args.seed:
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
@@ -69,22 +64,20 @@ def main(args):
         transformers.set_seed(seed)
 
         model = WhiteboxModel.from_pretrained(
-            args.model,
-            device=device,
+            args.model.path,
             **cache_kwargs,
             **model_kwargs
         )
 
-        if args.ensemble:
+        if args.model.ensemble:
             # Only MC-ensembles for now
             log.info(f"Creating ensemble...")
-            ensemble_model = create_ensemble(model_paths=[args.model],
+            ensemble_model = create_ensemble(model_paths=[args.model.path],
                                              mc=True,
-                                             device='cpu',
                                              seed=args.seed[0],
-                                             ensembling_mode=args.ensembling_mode,
-                                             mc_seeds=args.mc_seeds,
-                                             dropout_rate=float(args.dropout_rate),
+                                             ensembling_mode=args.model.ensembling_mode,
+                                             mc_seeds=args.model.mc_seeds,
+                                             dropout_rate=float(args.model.dropout_rate),
                                              **cache_kwargs,
                                              **model_kwargs
                                              )
@@ -293,9 +286,9 @@ def get_ue_methods(args, model):
             raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
 
         token_measures = all_token_estimators()
-        if args.ensembling_mode == 'pe':
+        if args.model.ensembling_mode == 'pe':
             sequence_measures = all_pe_estimators()
-        elif args.ensembling_mode == 'ep':
+        elif args.model.ensembling_mode == 'ep':
             sequence_measures = all_ep_estimators()
         else:
             raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
@@ -344,6 +337,14 @@ def get_generation_metrics(generation_metrics):
             metric_class = globals()[metric_name]
             result.append(metric_class(*metric.get("args", [])))
         return result
+
+
+def get_model_kwargs(args):
+    model_kwargs = {}
+    if getattr(args.model, 'device_map', None):
+        model_kwargs['device_map'] = args.model.device_map
+
+    return model_kwargs
 
 
 if __name__ == "__main__":
