@@ -11,7 +11,6 @@ class AccuracyMetric(GenerationMetric):
     Calculates accuracy between model-generated texts and ground-truth.
     Two texts are considered equal if theis string representation is equal.
     """
-
     def __init__(
         self, target_ignore_regex=None, output_ignore_regex=None, normalize=False
     ):
