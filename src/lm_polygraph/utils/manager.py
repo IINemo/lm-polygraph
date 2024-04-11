@@ -488,9 +488,9 @@ class UEManager:
                         oracle_score = ue_metric(-rec_metric, rec_metric)
                         random_score = get_random_scores(ue_metric, rec_metric)
                         ue_metric_val = ue_metric(rec_ue, rec_metric)
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
-                            ue_metric_val
-                        )
+                        self.metrics[
+                            e_level, e_name, gen_name, str(ue_metric)
+                        ] = ue_metric_val
                         self.metrics[
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
@@ -518,8 +518,10 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
-                    if (f'blackbox_{stat}' in STAT_CALCULATORS.keys()) and (f'blackbox_{stat}' in self.stats_names):
-                        batch_stats[f'blackbox_{stat}'] = stat_value
+                    if (f"blackbox_{stat}" in STAT_CALCULATORS.keys()) and (
+                        f"blackbox_{stat}" in self.stats_names
+                    ):
+                        batch_stats[f"blackbox_{stat}"] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
                     lineno = e.__traceback__.tb_lineno
