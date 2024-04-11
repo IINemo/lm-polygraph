@@ -483,9 +483,21 @@ class UEManager:
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
+<<<<<<< HEAD
                         oracle_score = ue_metric(-metric, metric)
                         random_score = get_random_scores(ue_metric, metric)
                         ue_metric_val = ue_metric(ue, metric)
+=======
+                        inputs_no_nans = np.array(self.stats["input_texts"])[
+                            selected_ids
+                        ]
+                        rec_ue, rec_metric = _recombine_data(ue, metric, inputs_no_nans)
+
+                        rec_metric = np.array(rec_metric)
+                        oracle_score = ue_metric(-rec_metric, rec_metric)
+                        random_score = get_random_scores(ue_metric, rec_metric)
+                        ue_metric_val = ue_metric(rec_ue, rec_metric)
+>>>>>>> 515433b (black)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
