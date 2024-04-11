@@ -25,15 +25,13 @@ from lm_polygraph.generation_metrics.sbert import SbertMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
+from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import (
     ReversedPairsProportion,
     PredictionRejectionArea,
     RiskCoverageCurveAUC,
 )
-
-hydra_config = Path(os.environ["HYDRA_CONFIG"])
-
 
 @hydra.main(
     version_base=None,
@@ -68,6 +66,12 @@ def main(args):
             **cache_kwargs,
             **model_kwargs
         )
+        
+        generation_parameters = GenerationParameters()        
+        for attr in dir(generation_parameters):
+            if (not attr.startswith('__')) and (attr in args.keys()):
+                setattr(generation_parameters, attr, getattr(args, attr))
+        model.parameters = generation_parameters
 
         if args.model.ensemble:
             # Only MC-ensembles for now
