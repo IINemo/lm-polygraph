@@ -33,6 +33,8 @@ from lm_polygraph.ue_metrics import (
     RiskCoverageCurveAUC,
 )
 
+hydra_config = Path(os.environ["HYDRA_CONFIG"])
+
 @hydra.main(
     version_base=None,
     config_path=str(hydra_config.parent),
