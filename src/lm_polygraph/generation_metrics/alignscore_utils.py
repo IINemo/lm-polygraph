@@ -1,3 +1,4 @@
+# the code adapted from https://github.com/yuh-zha/AlignScore
 import os
 import math
 import spacy
@@ -52,7 +53,7 @@ class AlignScorer:
 class Inferencer:
     def __init__(
         self,
-        ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt",
+        ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt",  # added direct url from huggingface
         model="bert-base-uncased",
         batch_size=32,
         device="cuda",
@@ -61,7 +62,7 @@ class Inferencer:
         self.device = device
         if ckpt_path is not None:
             self.model = BERTAlignModel(model=model)
-            if os.path.exists(ckpt_path):
+            if os.path.exists(ckpt_path):  # added loading from huggingface using torch
                 state_dict = torch.load(ckpt_path)["state_dict"]
             else:
                 state_dict = torch.hub.load_state_dict_from_url(
@@ -455,7 +456,7 @@ class Inferencer:
             ValueError("Unrecognized NLG Eval mode!")
 
 
-class BERTAlignModel(nn.Module):
+class BERTAlignModel(nn.Module):  # changed pytorch_lightning to pytorch
     def __init__(
         self, model="roberta-large", using_pretrained=True, *args, **kwargs
     ) -> None:
