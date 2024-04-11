@@ -165,16 +165,12 @@ class Dataset:
             source_lang = (
                 "German"
                 if x_column == "de"
-                else "French"
-                if x_column == "fr"
-                else "English"
+                else "French" if x_column == "fr" else "English"
             )
             target_lang = (
                 "German"
                 if y_column == "de"
-                else "French"
-                if y_column == "fr"
-                else "English"
+                else "French" if y_column == "fr" else "English"
             )
             for inst in dataset["translation"]:
                 x.append(
