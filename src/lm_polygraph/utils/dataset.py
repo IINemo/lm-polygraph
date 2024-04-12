@@ -198,12 +198,29 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
+            def doc_to_text(doc, prompt, i=0):
+                # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
+                # and a question qi, the task is to predict the answer ai
+                doc_text = ""
+                for q, a in zip(
+                    doc["questions"][:i], doc["answers"]["input_text"][:i]
+                ):  
+                    doc_text += prompt.format(question=q, answer=a)
+                return doc_text
+
             x, y = [], []
             for inst in dataset:
-                for question, answer in zip(
-                    inst[x_column], inst[y_column]["input_text"]
+                formatted_description = description.format(
+                    story=inst["story"]
+                )
+                for j, (question, answer) in enumerate(
+                    zip(inst[x_column], inst[y_column]["input_text"])
                 ):
-                    x.append(prompt.format(story=inst["story"], question=question))
+                    formatted_prompt = formatted_description + doc_to_text(inst, prompt, j) + prompt.format(
+                        question=question,
+                        answer="",
+                    )
+                    x.append(formatted_prompt)
                     y.append(answer)
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []

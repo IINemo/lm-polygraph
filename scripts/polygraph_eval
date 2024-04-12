@@ -105,7 +105,7 @@ def main(args):
 
         estimators = []
         estimators += get_ue_methods(args, model)
-        #density_based_ue_methods = get_density_based_ue_methods(args, model.model_type)
+        density_based_ue_methods = get_density_based_ue_methods(args, model.model_type)
         density_based_ue_methods = []
         estimators += density_based_ue_methods
 
@@ -320,7 +320,7 @@ def get_generation_metrics(args):
             RougeMetric("rouge1"),
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
-            BertScoreMetric(),
+            BertScoreMetric('rh'),
             SbertMetric(),
             AccuracyMetric(
                 target_ignore_regex = getattr(args, "target_ignore_regex", None),
@@ -329,7 +329,7 @@ def get_generation_metrics(args):
         ]
         if not getattr(args, "multiref", False):
             # Currently, BartScoreSeqMetric does not support multiref
-            result.append(BartScoreSeqMetric())
+            result.append(BartScoreSeqMetric('rh'))
         else:
             # Wrap each metric in AggregatedMetric
             result = [AggregatedMetric(base_metric=metric) for metric in result]
