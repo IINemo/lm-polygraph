@@ -19,14 +19,15 @@ def _register(calculator_class: StatCalculator):
 
 
 def register_stat_calculators(
-        deberta_batch_size: int = 10,
-        deberta_device: Optional[str] = None,
+    deberta_batch_size: int = 10,
+    deberta_device: Optional[str] = None,
 ):
     _register(GreedyProbsCalculator())
     _register(BlackboxGreedyTextsCalculator())
     _register(EntropyCalculator())
     _register(GreedyLMProbsCalculator())
-    _register(PromptCalculator(
+    _register(
+        PromptCalculator(
             "Question: {q}\n Possible answer:{a}\n "
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
             "True",

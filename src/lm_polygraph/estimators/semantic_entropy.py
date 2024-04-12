@@ -19,7 +19,8 @@ class SemanticEntropy(Estimator):
 
     def __init__(self, verbose: bool = False):
         super().__init__(
-            ["sample_log_probs", "sample_texts", "semantic_matrix_entail", "deberta"], "sequence"
+            ["sample_log_probs", "sample_texts", "semantic_matrix_entail", "deberta"],
+            "sequence",
         )
         self.verbose = verbose
 

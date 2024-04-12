@@ -20,7 +20,13 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                 "sample_token_similarity",
                 "token_similarity",
             ],
-            ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens", "deberta"],
+            [
+                "input_texts",
+                "sample_tokens",
+                "sample_texts",
+                "greedy_tokens",
+                "deberta",
+            ],
         )
 
         self.crossencoder_setup = False

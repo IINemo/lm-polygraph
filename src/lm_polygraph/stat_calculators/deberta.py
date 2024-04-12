@@ -14,10 +14,10 @@ class Deberta(StatCalculator):
     """
 
     def __init__(
-            self,
-            deberta_path: str = "microsoft/deberta-large-mnli",
-            batch_size: int = 10,
-            device=None,
+        self,
+        deberta_path: str = "microsoft/deberta-large-mnli",
+        batch_size: int = 10,
+        device=None,
     ):
         """
         Parameters
@@ -57,6 +57,7 @@ class Deberta(StatCalculator):
 
     def __call__(
         self,
+        *args,
         **kwargs,
     ) -> Dict[str, np.ndarray]:
         self.setup()
