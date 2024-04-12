@@ -4,7 +4,7 @@ from typing import Dict, Literal
 
 from scipy.linalg import eigh
 
-from .common import DEBERTA, compute_sim_score
+from .common import compute_sim_score
 from .estimator import Estimator
 
 
@@ -38,7 +38,6 @@ class EigValLaplacian(Estimator):
                 Higher values indicate more uncertain samples.
         """
         if similarity_score == "NLI_score":
-            DEBERTA.setup()
             if affinity == "entail":
                 super().__init__(
                     ["semantic_matrix_entail", "blackbox_sample_texts"], "sequence"

@@ -1,6 +1,6 @@
 from lm_polygraph.stat_calculators import *
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 STAT_CALCULATORS: Dict[str, "StatCalculator"] = {}
 STAT_DEPENDENCIES: Dict[str, List[str]] = {}
@@ -18,13 +18,15 @@ def _register(calculator_class: StatCalculator):
         STAT_DEPENDENCIES[stat] = calculator_class.stat_dependencies
 
 
-def register_stat_calculators():
+def register_stat_calculators(
+        deberta_batch_size: int = 10,
+        deberta_device: Optional[str] = None,
+):
     _register(GreedyProbsCalculator())
     _register(BlackboxGreedyTextsCalculator())
     _register(EntropyCalculator())
     _register(GreedyLMProbsCalculator())
-    _register(
-        PromptCalculator(
+    _register(PromptCalculator(
             "Question: {q}\n Possible answer:{a}\n "
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
             "True",
@@ -47,3 +49,4 @@ def register_stat_calculators():
     _register(EnsembleTokenLevelDataCalculator())
     _register(SemanticMatrixCalculator())
     _register(CrossEncoderSimilarityMatrixCalculator())
+    _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
