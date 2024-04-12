@@ -21,8 +21,9 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.estimators.common import DEBERTA
-from lm_polygraph.stat_calculators.stat_calculator import (
-    StatCalculator,
+from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
+from lm_polygraph.stat_calculators.register import (
+    register_stat_calculators,
     STAT_CALCULATORS,
     STAT_DEPENDENCIES,
 )
@@ -240,6 +241,9 @@ class UEManager:
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
+
+        register_stat_calculators()
+
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
