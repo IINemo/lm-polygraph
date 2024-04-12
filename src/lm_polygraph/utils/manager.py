@@ -380,11 +380,21 @@ class UEManager:
                 batch_stats[key] = val
 
             if isinstance(self.model, WhiteboxModel):
-                target_tokens = [
-                    self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
-                    for text in target_texts
-                ]
+                if isinstance(target_texts[0], list):
+                    target_tokens = [
+                        [
+                            self.model.tokenizer([text])["input_ids"][0]
+                            + [self.model.tokenizer.eos_token_id]
+                            for text in target_text
+                        ]
+                        for target_text in target_texts
+                    ]
+                else:
+                    target_tokens = [
+                        self.model.tokenizer([text])["input_ids"][0]
+                        + [self.model.tokenizer.eos_token_id]
+                        for text in target_texts
+                    ]
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
 
@@ -481,12 +491,10 @@ class UEManager:
                         inputs_no_nans = np.array(self.stats["input_texts"])[
                             selected_ids
                         ]
-                        rec_ue, rec_metric = _recombine_data(ue, metric, inputs_no_nans)
 
-                        rec_metric = np.array(rec_metric)
-                        oracle_score = ue_metric(-rec_metric, rec_metric)
-                        random_score = get_random_scores(ue_metric, rec_metric)
-                        ue_metric_val = ue_metric(rec_ue, rec_metric)
+                        oracle_score = ue_metric(-metric, metric)
+                        random_score = get_random_scores(ue_metric, metric)
+                        ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )

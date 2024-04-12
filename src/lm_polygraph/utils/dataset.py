@@ -138,7 +138,7 @@ class Dataset:
         else:
             dataset_name = path[0]
             dataset = load_dataset(*path, split=split, **kwargs)
-
+    
         return dataset_name, dataset
 
     @staticmethod
@@ -250,9 +250,35 @@ class Dataset:
                         + formatted_prompt
                     )
                     y.append(answers[inst[y_column]])
-        elif len(prompt):
-            x = [prompt.format(text=text) for text in dataset[x_column]]
-            y = dataset[y_column]
+        elif ("gsm8k" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                x.append(
+                    prompt.format(question=inst[x_column])
+                )
+                y.append(inst[y_column])
+        elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            if n_shot > 0:
+                few_shot_ids = np.random.choice(
+                    len(few_shot_dataset), n_shot, replace=False
+                )
+                few_shot_data = few_shot_dataset.select(few_shot_ids)
+                formatted_few_shot_prompt = ""
+                for inst in few_shot_data:
+                    formatted_few_shot_prompt += prompt.format(
+                        question=inst["question"].strip(),
+                        answer=inst["answer"]["aliases"][0],
+                    ) + "\n"
+            for inst in dataset:
+                x.append(
+                    formatted_few_shot_prompt +
+                    prompt.format(
+                        question=inst["question"],
+                        answer="",
+                    )
+                )
+                y.append([alias for alias in inst["answer"]["aliases"]])
         else:
             x = dataset[x_column]
             y = dataset[y_column]
