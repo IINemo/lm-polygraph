@@ -15,7 +15,7 @@ task: nmt
 dataset: [wmt14, de-en]
 text_column: en
 label_column: de
-prompt: "Translate from {source_lang} into {target_lang}. Output only translation:\n{text}\nTranslation:\n"
+prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
 max_new_tokens: 107
