@@ -384,7 +384,6 @@ class UEManager:
                     target_tokens = [
                         [
                             self.model.tokenizer([text])["input_ids"][0]
-                            + [self.model.tokenizer.eos_token_id]
                             for text in target_text
                         ]
                         for target_text in target_texts
@@ -392,7 +391,6 @@ class UEManager:
                 else:
                     target_tokens = [
                         self.model.tokenizer([text])["input_ids"][0]
-                        + [self.model.tokenizer.eos_token_id]
                         for text in target_texts
                     ]
                 self.stats["target_tokens"] += target_tokens
@@ -445,7 +443,6 @@ class UEManager:
 
                 target_tokens = [
                     self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
                     for text in target_texts
                 ]
                 batch_stats["target_tokens"] = target_tokens
@@ -583,7 +580,6 @@ class UEManager:
             for inp_texts, target_texts in tqdm(data):
                 target_tokens = [
                     self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
                     for text in target_texts
                 ]
 
