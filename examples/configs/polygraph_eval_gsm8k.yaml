@@ -22,7 +22,7 @@ load_from_disk: false
 n_shot: 0
 
 target_ignore_regex: "(?s).*#### "
-output_ignore_regex: "(?s).*The answer is: "
+output_ignore_regex: "(?s).*The answer is "
 
 train_dataset: null
 train_test_split: false
