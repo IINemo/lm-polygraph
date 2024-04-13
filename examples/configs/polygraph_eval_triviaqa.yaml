@@ -21,6 +21,7 @@ max_new_tokens: 20
 load_from_disk: false
 n_shot: 5
 multiref: true
+normalize: true
 
 train_dataset: null
 train_test_split: false

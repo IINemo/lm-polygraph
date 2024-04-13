@@ -1,4 +1,5 @@
 import re
+import string
 import numpy as np
 
 from typing import List, Dict
@@ -11,14 +12,15 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
 
-    def __init__(self, target_ignore_regex=None, answer_ignore_regex=None):
+    def __init__(self, target_ignore_regex=None, output_ignore_regex=None, normalize=False):
         super().__init__(["greedy_texts"], "sequence")
         self.target_ignore_regex = (
             re.compile(target_ignore_regex) if target_ignore_regex else None
         )
-        self.answer_ignore_regex = (
-            re.compile(answer_ignore_regex) if answer_ignore_regex else None
+        self.output_ignore_regex = (
+            re.compile(output_ignore_regex) if output_ignore_regex else None
         )
+        self.normalize = normalize
 
     def __str__(self):
         return "Accuracy"
@@ -27,6 +29,17 @@ class AccuracyMetric(GenerationMetric):
         if output.strip() == target.strip():
             return 1
         return 0
+
+    def _filter_text(self, text: str, ignore_regex: re.Pattern) -> str:
+        text = ignore_regex.sub("", text) if ignore_regex else text
+
+        return text
+
+    def _normalize_text(self, text: str) -> str:
+        text = text.strip().lower()
+        text = text.translate(str.maketrans("", "", string.punctuation))
+        
+        return text
 
     def __call__(
         self,
@@ -47,14 +60,16 @@ class AccuracyMetric(GenerationMetric):
         """
         greedy_texts = stats["greedy_texts"]
 
-        if self.target_ignore_regex:
-            target_texts = [self.target_ignore_regex.sub("", t) for t in target_texts]
-        if self.answer_ignore_regex:
-            greedy_texts = [self.answer_ignore_regex.sub("", t) for t in greedy_texts]
+        result = []
 
-        return np.array(
-            [
-                self._score_single(hyp, ref)
-                for hyp, ref in zip(stats["greedy_texts"], target_texts)
-            ]
-        )
+        for hyp, ref in zip(greedy_texts, target_texts):
+            ref = self._filter_text(ref, self.target_ignore_regex)
+            hyp = self._filter_text(hyp, self.output_ignore_regex)
+
+            if self.normalize:
+                ref = self._normalize_text(ref)
+                hyp = self._normalize_text(hyp)
+
+            result.append(self._score_single(hyp, ref))
+
+        return np.array(result)
