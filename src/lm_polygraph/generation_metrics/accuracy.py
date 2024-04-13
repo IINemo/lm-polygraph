@@ -12,7 +12,9 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
 
-    def __init__(self, target_ignore_regex=None, output_ignore_regex=None, normalize=False):
+    def __init__(
+        self, target_ignore_regex=None, output_ignore_regex=None, normalize=False
+    ):
         super().__init__(["greedy_texts"], "sequence")
         self.target_ignore_regex = (
             re.compile(target_ignore_regex) if target_ignore_regex else None
@@ -38,7 +40,7 @@ class AccuracyMetric(GenerationMetric):
     def _normalize_text(self, text: str) -> str:
         text = text.strip().lower()
         text = text.translate(str.maketrans("", "", string.punctuation))
-        
+
         return text
 
     def __call__(

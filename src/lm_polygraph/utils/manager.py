@@ -479,9 +479,7 @@ class UEManager:
                         )
                     # TODO: Report how many nans!
                     # This is important to know for a user
-                    ue, metric = _delete_nans(
-                        estimator_values, generation_metric
-                    )
+                    ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
