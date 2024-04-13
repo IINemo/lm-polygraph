@@ -289,7 +289,7 @@ class Dataset:
                     formatted_few_shot_prompt += (
                         prompt.format(
                             question=inst["question"].strip(),
-                            answer=inst["answer"]["aliases"][0],
+                            answer=inst["answer"]["normalized_value"],
                         )
                         + "\n"
                     )
