@@ -11,10 +11,14 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
 
-    def __init__(self, target_ignore_regex = None, answer_ignore_regex = None):
+    def __init__(self, target_ignore_regex=None, answer_ignore_regex=None):
         super().__init__(["greedy_texts"], "sequence")
-        self.target_ignore_regex = re.compile(target_ignore_regex) if target_ignore_regex else None
-        self.answer_ignore_regex = re.compile(answer_ignore_regex) if answer_ignore_regex else None
+        self.target_ignore_regex = (
+            re.compile(target_ignore_regex) if target_ignore_regex else None
+        )
+        self.answer_ignore_regex = (
+            re.compile(answer_ignore_regex) if answer_ignore_regex else None
+        )
 
     def __str__(self):
         return "Accuracy"

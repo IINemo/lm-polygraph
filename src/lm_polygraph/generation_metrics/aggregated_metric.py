@@ -35,10 +35,14 @@ class AggregatedMetric(GenerationMetric):
             np.ndarray: list of aggregated metric values for each sample in input.
         """
         metric_values = []
-        for i, (targets, greedy_text) in enumerate(zip(target_texts, stats["greedy_texts"])):
+        for i, (targets, greedy_text) in enumerate(
+            zip(target_texts, stats["greedy_texts"])
+        ):
             # truncate stats to only process one sample at a time
-            truncated_stats = {k: [v[i]] for k, v in stats.items() if k in self.stats_dependencies}
-            
+            truncated_stats = {
+                k: [v[i]] for k, v in stats.items() if k in self.stats_dependencies
+            }
+
             sample_metric_values = []
             for j, target in enumerate(targets):
                 value = self.base_metric(truncated_stats, [target], target_tokens[i][j])

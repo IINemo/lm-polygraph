@@ -138,7 +138,7 @@ class Dataset:
         else:
             dataset_name = path[0]
             dataset = load_dataset(*path, split=split, **kwargs)
-    
+
         return dataset_name, dataset
 
     @staticmethod
@@ -171,7 +171,9 @@ class Dataset:
         """
         dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
         if n_shot > 0:
-            _, few_shot_dataset = Dataset.load_hf_dataset(dataset_path, few_shot_split, **kwargs)
+            _, few_shot_dataset = Dataset.load_hf_dataset(
+                dataset_path, few_shot_split, **kwargs
+            )
 
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
@@ -198,27 +200,28 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
+
             def doc_to_text(doc, prompt, i=0):
                 # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
                 # and a question qi, the task is to predict the answer ai
                 doc_text = ""
-                for q, a in zip(
-                    doc["questions"][:i], doc["answers"]["input_text"][:i]
-                ):  
+                for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
                     doc_text += prompt.format(question=q, answer=a)
                 return doc_text
 
             x, y = [], []
             for inst in dataset:
-                formatted_description = description.format(
-                    story=inst["story"]
-                )
+                formatted_description = description.format(story=inst["story"])
                 for j, (question, answer) in enumerate(
                     zip(inst[x_column], inst[y_column]["input_text"])
                 ):
-                    formatted_prompt = formatted_description + doc_to_text(inst, prompt, j) + prompt.format(
-                        question=question,
-                        answer="",
+                    formatted_prompt = (
+                        formatted_description
+                        + doc_to_text(inst, prompt, j)
+                        + prompt.format(
+                            question=question,
+                            answer="",
+                        )
                     )
                     x.append(formatted_prompt)
                     y.append(answer)
@@ -238,7 +241,9 @@ class Dataset:
             subjects = np.array(dataset["subject"])
             x, y = [], []
             for subject in np.unique(subjects):
-                formatted_description = description.format(subject=subject.replace("_", " "))
+                formatted_description = description.format(
+                    subject=subject.replace("_", " ")
+                )
                 if n_shot > 0:
                     few_shot_ids = np.random.choice(
                         len(few_shot_dataset), n_shot, replace=False
@@ -259,7 +264,7 @@ class Dataset:
                     formatted_prompt = prompt.format(
                         choices=inst["choices"],
                         question=inst["question"].strip(),
-                        answer=""
+                        answer="",
                     )
                     x.append(
                         formatted_description
@@ -270,9 +275,7 @@ class Dataset:
         elif ("gsm8k" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
-                x.append(
-                    prompt.format(question=inst[x_column])
-                )
+                x.append(prompt.format(question=inst[x_column]))
                 y.append(inst[y_column])
         elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
@@ -283,14 +286,17 @@ class Dataset:
                 few_shot_data = few_shot_dataset.select(few_shot_ids)
                 formatted_few_shot_prompt = ""
                 for inst in few_shot_data:
-                    formatted_few_shot_prompt += prompt.format(
-                        question=inst["question"].strip(),
-                        answer=inst["answer"]["aliases"][0],
-                    ) + "\n"
+                    formatted_few_shot_prompt += (
+                        prompt.format(
+                            question=inst["question"].strip(),
+                            answer=inst["answer"]["aliases"][0],
+                        )
+                        + "\n"
+                    )
             for inst in dataset:
                 x.append(
-                    formatted_few_shot_prompt +
-                    prompt.format(
+                    formatted_few_shot_prompt
+                    + prompt.format(
                         question=inst["question"],
                         answer="",
                     )
