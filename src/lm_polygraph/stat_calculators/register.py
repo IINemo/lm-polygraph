@@ -4,8 +4,8 @@ from typing import Dict, List, Optional, Tuple
 
 
 def register_stat_calculators(
-        deberta_batch_size: int = 10,
-        deberta_device: Optional[str] = None,
+    deberta_batch_size: int = 10,
+    deberta_device: Optional[str] = None,
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
     Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations

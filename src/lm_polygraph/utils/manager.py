@@ -315,7 +315,7 @@ class UEManager:
         train_stats, _ = _order_calculators(
             train_stats,
             stat_calculators_dict,
-            stat_dependencoes_dict,
+            stat_dependencies_dict,
         )
         self.train_stat_calculators: List[StatCalculator] = [
             stat_calculators_dict[c] for c in train_stats
@@ -329,7 +329,7 @@ class UEManager:
         background_train_stats, _ = _order_calculators(
             background_train_stats,
             stat_calculators_dict,
-            stat_dependencoes_dict,
+            stat_dependencies_dict,
         )
         self.background_train_stat_calculators: List[StatCalculator] = [
             stat_calculators_dict[c] for c in background_train_stats
@@ -344,7 +344,7 @@ class UEManager:
         ensemble_stats, _ = _order_calculators(
             ensemble_stats,
             stat_calculators_dict,
-            stat_dependencoes_dict,
+            stat_dependencies_dict,
         )
         self.ensemble_stat_calculators: List[StatCalculator] = [
             stat_calculators_dict[c] for c in ensemble_stats
