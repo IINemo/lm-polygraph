@@ -1,27 +1,26 @@
 from lm_polygraph.stat_calculators import *
 
-from typing import Dict, List, Optional
-
-STAT_CALCULATORS: Dict[str, "StatCalculator"] = {}
-STAT_DEPENDENCIES: Dict[str, List[str]] = {}
-
-
-def _register(calculator_class: StatCalculator):
-    """
-    Registers a new statistics calculator to be seen by UEManager for properly organizing the calculations order.
-    Needs to be called at lm_polygraph/stat_calculators/__init__.py for all stat calculators used in running benchmarks.
-    """
-    for stat in calculator_class.stats:
-        if stat in STAT_CALCULATORS.keys():
-            continue
-        STAT_CALCULATORS[stat] = calculator_class
-        STAT_DEPENDENCIES[stat] = calculator_class.stat_dependencies
+from typing import Dict, List, Optional, Tuple
 
 
 def register_stat_calculators(
-    deberta_batch_size: int = 10,
-    deberta_device: Optional[str] = None,
-):
+        deberta_batch_size: int = 10,
+        deberta_device: Optional[str] = None,
+) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
+    """
+    Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations
+    order.
+    """
+    stat_calculators: Dict[str, "StatCalculator"] = {}
+    stat_dependencies: Dict[str, List[str]] = {}
+
+    def _register(calculator_class: StatCalculator):
+        for stat in calculator_class.stats:
+            if stat in stat_calculators.keys():
+                continue
+            stat_calculators[stat] = calculator_class
+            stat_dependencies[stat] = calculator_class.stat_dependencies
+
     _register(GreedyProbsCalculator())
     _register(BlackboxGreedyTextsCalculator())
     _register(EntropyCalculator())
@@ -51,3 +50,5 @@ def register_stat_calculators(
     _register(SemanticMatrixCalculator())
     _register(CrossEncoderSimilarityMatrixCalculator())
     _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
+
+    return stat_calculators, stat_dependencies

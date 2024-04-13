@@ -21,14 +21,14 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.stat_calculators.register import (
-    register_stat_calculators,
-    STAT_CALCULATORS,
-    STAT_DEPENDENCIES,
-)
+from lm_polygraph.stat_calculators.register import register_stat_calculators
 
 
-def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
+def _order_calculators(
+    stats: List[str],
+    stat_calculators: Dict[str, StatCalculator],
+    stat_dependencies: Dict[str, List[str]],
+) -> Tuple[List[str], Set[str]]:
     ordered: List[str] = []
     have_stats: Set[str] = set()
     while len(stats) > 0:
@@ -37,11 +37,11 @@ def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
             stats = stats[1:]
             continue
         dependent = False
-        if stat not in STAT_DEPENDENCIES.keys():
+        if stat not in stat_dependencies.keys():
             raise Exception(
                 f"Cant find stat calculator for: {stat}. Maybe you forgot to register it by calling register()?"
             )
-        for d in STAT_DEPENDENCIES[stat]:
+        for d in stat_dependencies[stat]:
             if d not in have_stats:
                 stats = [d] + stats
                 if stats.count(d) > 40:
@@ -50,7 +50,7 @@ def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
         if not dependent:
             stats = stats[1:]
             ordered.append(stat)
-            for new_stat in STAT_CALCULATORS[stat].stats:
+            for new_stat in stat_calculators[stat].stats:
                 have_stats.add(new_stat)
     return ordered, have_stats
 
@@ -244,7 +244,7 @@ class UEManager:
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
 
-        register_stat_calculators(
+        stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
             deberta_batch_size=deberta_batch_size,
             deberta_device=deberta_device,
         )
@@ -271,7 +271,11 @@ class UEManager:
             + [s for m in generation_metrics for s in m.stats_dependencies]
             + greedy
         )
-        stats, have_stats = _order_calculators(stats)
+        stats, have_stats = _order_calculators(
+            stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
         stats = [
             s
             for s in stats
@@ -281,7 +285,7 @@ class UEManager:
             )
         ]
         self.stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in stats
+            stat_calculators_dict[c] for c in stats
         ]
         if verbose:
             print("Stat calculators:", self.stat_calculators)
@@ -308,9 +312,13 @@ class UEManager:
             if "train_greedy_log_likelihoods" in train_stats
             else []
         )
-        train_stats, _ = _order_calculators(train_stats)
+        train_stats, _ = _order_calculators(
+            train_stats,
+            stat_calculators_dict,
+            stat_dependencoes_dict,
+        )
         self.train_stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in train_stats
+            stat_calculators_dict[c] for c in train_stats
         ]
         background_train_stats = [
             s
@@ -318,9 +326,13 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("background_train")
         ]
-        background_train_stats, _ = _order_calculators(background_train_stats)
+        background_train_stats, _ = _order_calculators(
+            background_train_stats,
+            stat_calculators_dict,
+            stat_dependencoes_dict,
+        )
         self.background_train_stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in background_train_stats
+            stat_calculators_dict[c] for c in background_train_stats
         ]
 
         ensemble_stats = [
@@ -329,9 +341,13 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("ensemble")
         ]
-        ensemble_stats, _ = _order_calculators(ensemble_stats)
+        ensemble_stats, _ = _order_calculators(
+            ensemble_stats,
+            stat_calculators_dict,
+            stat_dependencoes_dict,
+        )
         self.ensemble_stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in ensemble_stats
+            stat_calculators_dict[c] for c in ensemble_stats
         ]
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
