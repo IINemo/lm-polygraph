@@ -12,8 +12,13 @@ import string
 class GreedyAlternativesNLICalculator(StatCalculator):
     def __init__(self):
         super().__init__(
-            [f'greedy_tokens_alternatives_nli'],
-            [f'greedy_tokens_alternatives', "deberta"],
+            [
+                "greedy_tokens_alternatives_nli",
+            ],
+            [
+                "greedy_tokens_alternatives",
+                "deberta",
+            ],
         )
 
     def _strip(self, w: str):
