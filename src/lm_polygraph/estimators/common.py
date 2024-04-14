@@ -50,7 +50,7 @@ class CommonDeberta:
         return self.deberta(*args, **kwargs)
 
 
-DEBERTA = CommonDeberta(device="cpu")
+#DEBERTA = CommonDeberta(device="cpu")
 
 
 def _get_pairs(lst):

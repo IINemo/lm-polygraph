@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, Literal
 
 from .estimator import Estimator
-from .common import DEBERTA, compute_sim_score
+from .common import compute_sim_score
 
 
 class DegMat(Estimator):
@@ -34,7 +34,6 @@ class DegMat(Estimator):
                 - 'contra': similarity(response_1, response_2) = 1 - p_contra(response_1, response_2)
         """
         if similarity_score == "NLI_score":
-            DEBERTA.setup()
             if affinity == "entail":
                 super().__init__(
                     ["semantic_matrix_entail", "blackbox_sample_texts"], "sequence"
