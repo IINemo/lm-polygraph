@@ -22,6 +22,9 @@ load_from_disk: false
 n_shot: 5
 multiref: true
 normalize: true
+generation_params:
+  generate_until:
+    - "\n"
 
 train_dataset: null
 train_test_split: false
