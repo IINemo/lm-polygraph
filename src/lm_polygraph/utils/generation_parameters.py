@@ -33,3 +33,4 @@ class GenerationParameters:
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
     generate_until: tuple = ()
+    allow_newlines: bool = True

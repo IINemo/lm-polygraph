@@ -107,6 +107,15 @@ class GreedyProbsCalculator(StatCalculator):
                 output_attentions=False,
                 output_hidden_states=True,
                 num_return_sequences=1,
+                suppress_tokens=(
+                    []
+                    if model.generation_parameters.allow_newlines
+                    else [
+                        t
+                        for t in range(len(model.tokenizer))
+                        if "\n" in model.tokenizer.decode([t])
+                    ]
+                ),
             )
             logits = torch.stack(out.scores, dim=1)
 
