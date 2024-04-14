@@ -4,7 +4,6 @@ from collections import defaultdict
 from typing import List, Dict, Optional
 
 from .estimator import Estimator
-from .common import DEBERTA
 
 
 class SemanticEntropy(Estimator):
@@ -20,9 +19,9 @@ class SemanticEntropy(Estimator):
 
     def __init__(self, verbose: bool = False):
         super().__init__(
-            ["sample_log_probs", "sample_texts", "semantic_matrix_entail"], "sequence"
+            ["sample_log_probs", "sample_texts", "semantic_matrix_entail", "deberta"],
+            "sequence",
         )
-        DEBERTA.setup()
         self.verbose = verbose
 
     def __str__(self):
@@ -43,7 +42,7 @@ class SemanticEntropy(Estimator):
         """
         loglikelihoods_list = stats["sample_log_probs"]
 
-        entailment_id = DEBERTA.deberta.config.label2id["ENTAILMENT"]
+        entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"]
         self._is_entailment = stats["semantic_matrix_classes"] == entailment_id
 
         # Concatenate hypos with input texts

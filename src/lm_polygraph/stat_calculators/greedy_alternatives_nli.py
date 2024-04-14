@@ -9,19 +9,17 @@ import torch.nn as nn
 import string
 
 
-class GreedyTokensAlternativesNLICalculator(StatCalculator):
-    def __init__(self, llm_tokenizer, nli_model, nli_batch_size: int = 100):
+class GreedyAlternativesNLICalculator(StatCalculator):
+    def __init__(self):
         super().__init__(
             [
                 "greedy_tokens_alternatives_nli",
             ],
             [
                 "greedy_tokens_alternatives",
+                "deberta",
             ],
         )
-        self.nli_batch_size = nli_batch_size
-        self.nli_model = nli_model
-        self.llm_tokenizer = llm_tokenizer
 
     def _strip(self, w: str):
         return w.strip(string.punctuation + " \n")
@@ -29,12 +27,14 @@ class GreedyTokensAlternativesNLICalculator(StatCalculator):
     def __call__(
         self,
         dependencies: Dict[str, np.array],
-        texts: List[str] = None,
-        model: WhiteboxModel = None,
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
         **kwargs,
     ) -> Dict[str, np.ndarray]:
         greedy_alternatives = dependencies["greedy_tokens_alternatives"]
         greedy_alternatives_nli = []
+        deberta = dependencies["deberta"]
         for sample_alternatives in greedy_alternatives:
             nli_matrixes = []
             for w_number, word_alternatives in enumerate(sample_alternatives):
@@ -48,7 +48,7 @@ class GreedyTokensAlternativesNLICalculator(StatCalculator):
                     str,
                 ):
                     word_alternatives = [
-                        (self.llm_tokenizer.decode([alt]), prob)
+                        (model.tokenizer.decode([alt]), prob)
                         for alt, prob in word_alternatives
                     ]
                 words = [self._strip(alt[0]) for alt in word_alternatives]
@@ -60,13 +60,13 @@ class GreedyTokensAlternativesNLICalculator(StatCalculator):
 
                 softmax = nn.Softmax(dim=1)
                 w_probs = defaultdict(lambda: defaultdict(lambda: None))
-                for k in range(0, len(nli_queue), self.nli_batch_size):
-                    batch = nli_queue[k : k + self.nli_batch_size]
-                    encoded = self.nli_model.tokenizer.batch_encode_plus(
+                for k in range(0, len(nli_queue), deberta.batch_size):
+                    batch = nli_queue[k : k + deberta.batch_size]
+                    encoded = deberta.deberta_tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    ).to(self.nli_model.device)
-                    logits = self.nli_model(**encoded).logits
-                    logits = logits.detach().to(self.nli_model.device)
+                    ).to(deberta.device)
+                    logits = deberta.deberta(**encoded).logits
+                    logits = logits.detach().to(deberta.device)
                     for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
                         w_probs[wi][wj] = prob
 
@@ -74,8 +74,8 @@ class GreedyTokensAlternativesNLICalculator(StatCalculator):
                     for j, wj in enumerate(words):
                         pr = w_probs[wi][wj]
                         id = pr.argmax()
-                        ent_id = self.nli_model.config.label2id["ENTAILMENT"]
-                        contra_id = self.nli_model.config.label2id["CONTRADICTION"]
+                        ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
+                        contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
                         if id == ent_id:
                             str_class = "entail"
                         elif id == contra_id:

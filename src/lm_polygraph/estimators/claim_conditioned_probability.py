@@ -16,14 +16,11 @@ class ClaimConditionedProbability(Estimator):
             "sequence",
         )
 
-        self.normalization = "none"
-
     def __str__(self):
         return "CCP"
 
     def _reduce(self, logprobs: list[float]):
-        if self.normalization == "none":
-            return np.exp(np.sum(logprobs))
+        return np.exp(np.sum(logprobs))
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         words = stats["greedy_tokens"]

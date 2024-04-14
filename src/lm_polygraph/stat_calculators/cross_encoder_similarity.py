@@ -20,7 +20,13 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                 "sample_token_similarity",
                 "token_similarity",
             ],
-            ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"],
+            [
+                "input_texts",
+                "sample_tokens",
+                "sample_texts",
+                "greedy_tokens",
+                "deberta",
+            ],
         )
 
         self.crossencoder_setup = False
@@ -47,7 +53,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
-        deberta_batch_size = dependencies["deberta_batch_size"]
+        deberta_batch_size = dependencies["deberta"].batch_size
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
 
