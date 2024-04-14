@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -8,19 +8,20 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-device: cpu
-
 task: qa
 
-dataset: coqa
-text_column: questions
-label_column: answers
-description: "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}"
-prompt: "\n\nQuestion: {question}\nAnswer:{answer}"
+dataset: [trivia_qa, rc.nocontext]
+text_column: question
+label_column: answer
+prompt: "Question: {question}\nAnswer:{answer}"
+few_shot_split: train
 train_split: train
 eval_split: validation
 max_new_tokens: 20
 load_from_disk: false
+n_shot: 5
+multiref: true
+normalize: true
 
 train_dataset: null
 train_test_split: false
@@ -55,9 +56,8 @@ ens_type:
 
 ignore_exceptions: false
 
-batch_size: 1
+batch_size: 2
 deberta_batch_size: 10
 
 seed:
     - 1
-    

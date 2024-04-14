@@ -64,7 +64,7 @@ def _check_unique_names(xs):
 
 
 def _delete_nans(ue, metric):
-    new_ue, new_metric, selected_ids = [], [], []
+    new_ue, new_metric = [], []
     for i in range(len(metric)):
         if not np.isnan(metric[i]) and not np.isnan(ue[i]):
             if not isinstance(ue[i], complex):
@@ -72,8 +72,8 @@ def _delete_nans(ue, metric):
             else:
                 new_ue.append(ue[i].real)
             new_metric.append(metric[i])
-            selected_ids.append(i)
-    return new_ue, new_metric, selected_ids
+
+    return np.array(new_ue), np.array(new_metric)
 
 
 def _recombine_data(ue, gen_metric, inputs):
@@ -380,11 +380,19 @@ class UEManager:
                 batch_stats[key] = val
 
             if isinstance(self.model, WhiteboxModel):
-                target_tokens = [
-                    self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
-                    for text in target_texts
-                ]
+                if isinstance(target_texts[0], list):
+                    target_tokens = [
+                        [
+                            self.model.tokenizer([text])["input_ids"][0]
+                            for text in target_text
+                        ]
+                        for target_text in target_texts
+                    ]
+                else:
+                    target_tokens = [
+                        self.model.tokenizer([text])["input_ids"][0]
+                        for text in target_texts
+                    ]
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
 
@@ -435,7 +443,6 @@ class UEManager:
 
                 target_tokens = [
                     self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
                     for text in target_texts
                 ]
                 batch_stats["target_tokens"] = target_tokens
@@ -472,21 +479,13 @@ class UEManager:
                         )
                     # TODO: Report how many nans!
                     # This is important to know for a user
-                    ue, metric, selected_ids = _delete_nans(
-                        estimator_values, generation_metric
-                    )
+                    ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        inputs_no_nans = np.array(self.stats["input_texts"])[
-                            selected_ids
-                        ]
-                        rec_ue, rec_metric = _recombine_data(ue, metric, inputs_no_nans)
-
-                        rec_metric = np.array(rec_metric)
-                        oracle_score = ue_metric(-rec_metric, rec_metric)
-                        random_score = get_random_scores(ue_metric, rec_metric)
-                        ue_metric_val = ue_metric(rec_ue, rec_metric)
+                        oracle_score = ue_metric(-metric, metric)
+                        random_score = get_random_scores(ue_metric, metric)
+                        ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
@@ -579,7 +578,6 @@ class UEManager:
             for inp_texts, target_texts in tqdm(data):
                 target_tokens = [
                     self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
                     for text in target_texts
                 ]
 

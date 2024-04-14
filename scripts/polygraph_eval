@@ -22,6 +22,7 @@ from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
 from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
 from lm_polygraph.generation_metrics.sbert import SbertMetric
+from lm_polygraph.generation_metrics.aggregated_metric import AggregatedMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
@@ -60,7 +61,7 @@ def main(args):
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
 
-        log.info(f"Loading model {args.model}...")
+        log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
 
         model = WhiteboxModel.from_pretrained(
@@ -93,22 +94,14 @@ def main(args):
             args.label_column,
             batch_size=args.batch_size,
             prompt=args.prompt,
+            description=getattr(args, "description", ""),
+            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
+            n_shot=getattr(args, "n_shot", 5),
+            few_shot_split=getattr(args, "few_shot_split", "train"),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             **cache_kwargs
         )
-
-        if type(dataset.y[0]) is list:
-            # We have several labels per input
-            # Duplicate inputs for each label
-            x_proc, y_proc = [], []
-
-            for x, y in zip(dataset.x, dataset.y):
-                for y_i in y:
-                    x_proc.append(x)
-                    y_proc.append(y_i)
-
-            dataset = Dataset(x_proc, y_proc, args.batch_size)
 
         estimators = []
         estimators += get_ue_methods(args, model)
@@ -177,7 +170,7 @@ def main(args):
 
         log.info("Done with loading data.")
 
-        generation_metrics = get_generation_metrics(args.generation_metrics)
+        generation_metrics = get_generation_metrics(args)
 
         man = UEManager(
             dataset,
@@ -213,7 +206,7 @@ def get_density_based_ue_methods(args, model_type):
         else:
             dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
             dataset_name = dataset_name.split("/")[-1].split(".")[0]
-            model_name = args.model.split("/")[-1]
+            model_name = args.model.path.split("/")[-1]
             parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
         
         if model_type == "Seq2SeqLM":
@@ -319,24 +312,36 @@ def get_ue_methods(args, model):
     return estimators
 
 
-def get_generation_metrics(generation_metrics):
-    if generation_metrics is None:
-        return [
+def get_generation_metrics(args):
+    generation_metrics = getattr(args, "generation_metrics", None)
+    if not generation_metrics:
+        result = [
             RougeMetric("rouge1"),
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
-            BartScoreSeqMetric("rh"),
-            BertScoreMetric(),
+            BertScoreMetric('rh'),
             SbertMetric(),
-            AccuracyMetric(),
+            AccuracyMetric(
+                target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                normalize = getattr(args, "normalize", False),
+            ),
         ]
+        if not getattr(args, "multiref", False):
+            # Currently, BartScoreSeqMetric does not support multiref
+            result.append(BartScoreSeqMetric('rh'))
+        else:
+            # Wrap each metric in AggregatedMetric
+            result = [AggregatedMetric(base_metric=metric) for metric in result]
     else:
         result = []
         for metric in generation_metrics:
             metric_name = metric["name"]
+            if getattr(args, "multiref", False) and metric_name == "BartScoreSeqMetric":
+                raise ValueError("BartScoreSeqMetric does not support multiref")
             metric_class = globals()[metric_name]
             result.append(metric_class(*metric.get("args", [])))
-        return result
+    return result
 
 
 def get_model_kwargs(args):

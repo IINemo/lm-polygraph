@@ -123,12 +123,35 @@ class Dataset:
         return Dataset(x, y, batch_size)
 
     @staticmethod
+    def load_hf_dataset(
+        path: str,
+        split: str,
+        **kwargs,
+    ):
+        load_from_disk = kwargs.pop("load_from_disk", False)
+        if load_from_disk:
+            dataset_name = path
+            dataset = hf_dataset.load_from_disk(path)
+        elif isinstance(path, str):
+            dataset_name = path
+            dataset = load_dataset(path, split=split, **kwargs)
+        else:
+            dataset_name = path[0]
+            dataset = load_dataset(*path, split=split, **kwargs)
+
+        return dataset_name, dataset
+
+    @staticmethod
     def from_datasets(
         dataset_path: str,
         x_column: str,
         y_column: str,
         batch_size: int,
         prompt: str = "",
+        description: str = "",
+        mmlu_max_subject_size: int = 100,
+        n_shot: int = 0,
+        few_shot_split: str = "train",
         split: str = "test",
         size: int = None,
         **kwargs,
@@ -146,16 +169,11 @@ class Dataset:
             size (Optional[int]): size to subsample dataset to. If None, the full dataset split will be taken.
                 Default: None.
         """
-        load_from_disk = kwargs.pop("load_from_disk", False)
-        if load_from_disk:
-            dataset_name = dataset_path
-            dataset = hf_dataset.load_from_disk(dataset_path)
-        elif isinstance(dataset_path, str):
-            dataset_name = dataset_path
-            dataset = load_dataset(dataset_path, split=split, **kwargs)
-        else:
-            dataset_name = dataset_path[0]
-            dataset = load_dataset(*dataset_path, split=split, **kwargs)
+        dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
+        if n_shot > 0:
+            _, few_shot_dataset = Dataset.load_hf_dataset(
+                dataset_path, few_shot_split, **kwargs
+            )
 
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
@@ -182,12 +200,30 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
+
+            def doc_to_text(doc, prompt, i=0):
+                # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
+                # and a question qi, the task is to predict the answer ai
+                doc_text = ""
+                for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
+                    doc_text += prompt.format(question=q, answer=a)
+                return doc_text
+
             x, y = [], []
             for inst in dataset:
-                for question, answer in zip(
-                    inst[x_column], inst[y_column]["input_text"]
+                formatted_description = description.format(story=inst["story"])
+                for j, (question, answer) in enumerate(
+                    zip(inst[x_column], inst[y_column]["input_text"])
                 ):
-                    x.append(prompt.format(story=inst["story"], question=question))
+                    formatted_prompt = (
+                        formatted_description
+                        + doc_to_text(inst, prompt, j)
+                        + prompt.format(
+                            question=question,
+                            answer="",
+                        )
+                    )
+                    x.append(formatted_prompt)
                     y.append(answer)
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
@@ -200,9 +236,72 @@ class Dataset:
                     else:
                         x.append(prompt.format(context=context.strip(), question=text))
                         y.append(answer)
-        elif len(prompt):
-            x = [prompt.format(text=text) for text in dataset[x_column]]
-            y = dataset[y_column]
+        elif ("mmlu" in dataset_name.lower()) and len(prompt):
+            answers = ["A", "B", "C", "D"]
+            subjects = np.array(dataset["subject"])
+            x, y = [], []
+            for subject in np.unique(subjects):
+                formatted_description = description.format(
+                    subject=subject.replace("_", " ")
+                )
+                if n_shot > 0:
+                    few_shot_ids = np.random.choice(
+                        len(few_shot_dataset), n_shot, replace=False
+                    )
+                    few_shot_data = few_shot_dataset.select(few_shot_ids)
+                    formatted_few_shot_prompt = ""
+                    for inst in few_shot_data:
+                        formatted_few_shot_prompt += prompt.format(
+                            choices=inst["choices"],
+                            question=inst["question"].strip(),
+                            answer=answers[inst["answer"]],
+                        )
+
+                subject_data = dataset.select(
+                    np.argwhere(subjects == subject).flatten()
+                ).select(range(mmlu_max_subject_size))
+                for inst in subject_data:
+                    formatted_prompt = prompt.format(
+                        choices=inst["choices"],
+                        question=inst["question"].strip(),
+                        answer="",
+                    )
+                    x.append(
+                        formatted_description
+                        + formatted_few_shot_prompt
+                        + formatted_prompt
+                    )
+                    y.append(answers[inst[y_column]])
+        elif ("gsm8k" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                x.append(prompt.format(question=inst[x_column]))
+                y.append(inst[y_column])
+        elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            if n_shot > 0:
+                few_shot_ids = np.random.choice(
+                    len(few_shot_dataset), n_shot, replace=False
+                )
+                few_shot_data = few_shot_dataset.select(few_shot_ids)
+                formatted_few_shot_prompt = ""
+                for inst in few_shot_data:
+                    formatted_few_shot_prompt += (
+                        prompt.format(
+                            question=inst["question"].strip(),
+                            answer=inst["answer"]["normalized_value"],
+                        )
+                        + "\n"
+                    )
+            for inst in dataset:
+                x.append(
+                    formatted_few_shot_prompt
+                    + prompt.format(
+                        question=inst["question"],
+                        answer="",
+                    )
+                )
+                y.append([alias for alias in inst["answer"]["aliases"]])
         else:
             x = dataset[x_column]
             y = dataset[y_column]
