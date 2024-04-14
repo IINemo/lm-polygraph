@@ -1,6 +1,4 @@
-from typing import Optional
 from dataclasses import dataclass
-from transformers import StoppingCriteriaList
 
 
 @dataclass
@@ -34,4 +32,4 @@ class GenerationParameters:
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    stopping_criteria: Optional[StoppingCriteriaList] = None
+    generate_until: tuple = ()

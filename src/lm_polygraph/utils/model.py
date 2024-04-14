@@ -14,6 +14,9 @@ from transformers import (
     AutoConfig,
     LogitsProcessorList,
     BartForConditionalGeneration,
+    StoppingCriteria,
+    StoppingCriteriaList,
+    PreTrainedTokenizer,
 )
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
@@ -285,6 +288,61 @@ class WhiteboxModel(Model):
             self.scores.append(scores.log_softmax(-1))
             return scores
 
+    class _MultiTokenEOSCriteria(StoppingCriteria):
+        """Criteria to stop on the specified multi-token sequence.
+        Copied from https://github.com/EleutherAI/lm-evaluation-harness/blob/main/lm_eval/models/utils.py#L208
+        """
+
+        def __init__(
+            self,
+            sequence: str,
+            tokenizer: PreTrainedTokenizer,
+            initial_decoder_input_length: int,
+            batch_size: int,
+        ) -> None:
+            self.initial_decoder_input_length = initial_decoder_input_length
+            self.done_tracker = [False] * batch_size
+            self.sequence = sequence
+            self.sequence_ids = tokenizer.encode(sequence, add_special_tokens=False)
+            # print(sequence, self.sequence_ids)
+            # we look back for 2 more tokens than it takes to encode our stop sequence
+            # because tokenizers suck, and a model might generate `['\n', '\n']` but our `sequence` is `['\n\n']`
+            # and we don't want to mistakenly not stop a generation because our
+            # (string) stop sequence was output in a different tokenization
+
+            # NOTE: there is a minor danger that this will end up looking back 2 tokens into the past, into the inputs to the model,
+            # and stopping generation immediately as a result. With only 2 extra tokens of lookback, this risk is minimized
+            # Additionally, in lookback_ids_batch we should prevent ever looking back into the inputs as described.
+            self.sequence_id_len = len(self.sequence_ids) + 2
+            self.tokenizer = tokenizer
+
+        def __call__(self, input_ids, scores, **kwargs) -> bool:
+            # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
+            lookback_ids_batch = input_ids[:, self.initial_decoder_input_length :]
+
+            lookback_ids_batch = lookback_ids_batch[:, -self.sequence_id_len :]
+
+            lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)
+
+            for i, done in enumerate(self.done_tracker):
+                if not done:
+                    self.done_tracker[i] = self.sequence in lookback_tokens_batch[i]
+            return False not in self.done_tracker
+
+    def get_stopping_criteria(self, input_ids: torch.Tensor):
+        eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
+        stop_sequences = self.generation_parameters.generate_until + [eos]
+        return StoppingCriteriaList(
+            [
+                *[
+                    self._MultiTokenEOSCriteria(
+                        sequence, self.tokenizer, input_ids.shape[1], input_ids.shape[0]
+                    )
+                    for sequence in stop_sequences
+                ],
+            ]
+        )
+
     def generate(self, **args):
         """
         Generates the model output with scores from batch formed by HF Tokenizer.
@@ -295,6 +353,10 @@ class WhiteboxModel(Model):
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
         default_params = asdict(self.generation_parameters)
+        default_params.pop("generate_until")
+
+        if len(self.generation_parameters.generate_until) > 0:
+            args["stopping_criteria"] = self.get_stopping_criteria(args["input_ids"])
 
         # add ScoresProcessor to collect original scores
         processor = self._ScoresProcessor()
@@ -308,7 +370,7 @@ class WhiteboxModel(Model):
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-       
+
         args = _validate_args(args)
 
         generation = self.model.generate(**args)
@@ -359,10 +421,8 @@ class WhiteboxModel(Model):
 
     @staticmethod
     def from_pretrained(
-            model_path: str,
-            generation_params: Optional[Dict] = {},
-            **kwargs
-        ):
+        model_path: str, generation_params: Optional[Dict] = {}, **kwargs
+    ):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
 
@@ -411,11 +471,9 @@ class WhiteboxModel(Model):
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
-        instance = WhiteboxModel(model,
-                                 tokenizer,
-                                 model_path,
-                                 model_type,
-                                 generation_params)
+        instance = WhiteboxModel(
+            model, tokenizer, model_path, model_type, generation_params
+        )
 
         return instance
 

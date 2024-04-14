@@ -20,6 +20,8 @@ prompt: ""
 
 generation_params:
   temperature: 0.7
+  generate_until:
+    - '\n'
 
 ignore_exceptions: false
 use_seq_ue: false
