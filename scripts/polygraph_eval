@@ -63,9 +63,10 @@ def main(args):
 
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
-
+        
         model = WhiteboxModel.from_pretrained(
             args.model.path,
+            generation_params=getattr(args, "generation_params", {}),
             **cache_kwargs,
             **model_kwargs
         )

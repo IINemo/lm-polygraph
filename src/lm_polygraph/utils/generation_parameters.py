@@ -1,4 +1,6 @@
+from typing import Optional
 from dataclasses import dataclass
+from transformers import StoppingCriteriaList
 
 
 @dataclass
@@ -26,10 +28,10 @@ class GenerationParameters:
     """
 
     temperature: float = 1.0
-    topk: int = 1
-    topp: float = 1.0
+    top_k: int = 1
+    top_p: float = 1.0
     do_sample: bool = False
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    allow_newlines: bool = True
+    stopping_criteria: Optional[StoppingCriteriaList] = None
