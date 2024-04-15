@@ -10,7 +10,8 @@ def preprocess_translation(dataset, x_column, y_column, prompt):
     source_lang = lang.get(x_column, "English")
     target_lang = lang.get(y_column, "English")
     for inst in dataset["translation"]:
-        x.append(prompt.format(source_lang=source_lang, target_lang=target_lang, text=inst[x_column]))
+        x.append(prompt.format(source_lang=source_lang,
+                 target_lang=target_lang, text=inst[x_column]))
         y.append(inst[y_column])
     return x, y
 
@@ -22,7 +23,7 @@ def preprocess_coqa(dataset, x_column, y_column, prompt, description):
         doc_text = ""
         for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
             doc_text += prompt.format(question=q, answer=a)
-            
+
         return doc_text
 
     x, y = [], []
@@ -41,7 +42,7 @@ def preprocess_coqa(dataset, x_column, y_column, prompt, description):
             )
             x.append(formatted_prompt)
             y.append(answer)
-    
+
     return x, y
 
 
@@ -63,7 +64,7 @@ def preprocess_with_prompt(dataset, x_column, y_column, prompt):
     return [prompt.format(text=text) for text in dataset[x_column]], dataset[y_column]
 
 
-def preprocess_gsm8k(dataset, y_column, n_shot, description, 
+def preprocess_gsm8k(dataset, y_column, n_shot, description,
                      prompt, few_shot_dataset, mmlu_max_subject_size):
     answers = ["A", "B", "C", "D"]
     subjects = np.array(dataset["subject"])
@@ -104,7 +105,7 @@ def preprocess_gsm8k(dataset, y_column, n_shot, description,
     return x, y
 
 
-def preprocess_mmlu(dataset, y_column, n_shot, description, 
+def preprocess_mmlu(dataset, y_column, n_shot, description,
                     few_shot_dataset, mmlu_max_subject_size, prompt):
     answers = ["A", "B", "C", "D"]
     subjects = np.array(dataset["subject"])
@@ -145,8 +146,8 @@ def preprocess_mmlu(dataset, y_column, n_shot, description,
     return x, y
 
 
-def preprocess_dataset(dataset, dataset_name, x_column, y_column, 
-                       prompt, description, n_shot, few_shot_dataset, 
+def preprocess_dataset(dataset, dataset_name, x_column, y_column,
+                       prompt, description, n_shot, few_shot_dataset,
                        mmlu_max_subject_size):
     if "translation" in dataset.column_names:
         return preprocess_translation(dataset, x_column, y_column)
@@ -157,10 +158,10 @@ def preprocess_dataset(dataset, dataset_name, x_column, y_column,
     elif len(prompt):
         return preprocess_with_prompt(dataset, x_column, y_column, prompt)
     elif ("gsm8k" in dataset_name.lower()) and len(prompt):
-        return preprocess_gsm8k(dataset, y_column, n_shot, description, 
+        return preprocess_gsm8k(dataset, y_column, n_shot, description,
                                 prompt, few_shot_dataset, mmlu_max_subject_size)
     elif ("mmlu" in dataset_name.lower()) and len(prompt):
-        return preprocess_mmlu(dataset, y_column, n_shot, description, 
+        return preprocess_mmlu(dataset, y_column, n_shot, description,
                                few_shot_dataset, mmlu_max_subject_size, prompt)
     else:
         return dataset[x_column], dataset[y_column]
