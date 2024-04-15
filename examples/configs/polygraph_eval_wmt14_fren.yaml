@@ -24,6 +24,8 @@ generation_params:
   generate_until:
     - "\n"
 
+source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
+
 train_dataset: null
 train_test_split: false
 test_split_size: 1
