@@ -22,6 +22,7 @@ class SemanticMatrixCalculator(StatCalculator):
                 "semantic_matrix_entail",
                 "semantic_matrix_contra",
                 "semantic_matrix_classes",
+                "entailment_id",
             ],
             ["blackbox_sample_texts"],
         )
@@ -119,5 +120,5 @@ class SemanticMatrixCalculator(StatCalculator):
             "semantic_matrix_entail": E,
             "semantic_matrix_contra": C,
             "semantic_matrix_classes": P,
-            "entailment_id": deberta.config.label2id["ENTAILMENT"],
+            "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
         }
