@@ -43,7 +43,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-
         device = model.device()
         tokenizer = model.tokenizer
 

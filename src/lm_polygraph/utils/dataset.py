@@ -7,6 +7,8 @@ from datasets import load_dataset, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List
 
+from lm_polygraph.utils.dataset_preprocessor import preprocess_dataset
+
 
 class Dataset:
     """
@@ -47,8 +49,8 @@ class Dataset:
         Parameters:
             indices (List[int]): indices to left in the dataset.Must have the same length as input texts.
         """
-        self.x = np.array(self.x)[indices].tolist()
-        self.y = np.array(self.y)[indices].tolist()
+        self.x = [self.x[i] for i in indices]
+        self.y = [self.y[i] for i in indices]
         return self
 
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):
@@ -102,7 +104,7 @@ class Dataset:
         y_column: str,
         batch_size: int,
         prompt: str = "",
-        **kwargs
+        **kwargs,
     ):
         """
         Creates the dataset from .CSV table.
@@ -123,15 +125,38 @@ class Dataset:
         return Dataset(x, y, batch_size)
 
     @staticmethod
+    def load_hf_dataset(
+        path: str,
+        split: str,
+        **kwargs,
+    ):
+        load_from_disk = kwargs.pop("load_from_disk", False)
+        if load_from_disk:
+            dataset_name = path
+            dataset = hf_dataset.load_from_disk(path)
+        elif isinstance(path, str):
+            dataset_name = path
+            dataset = load_dataset(path, split=split, **kwargs)
+        else:
+            dataset_name = path[0]
+            dataset = load_dataset(*path, split=split, **kwargs)
+
+        return dataset_name, dataset
+
+    @staticmethod
     def from_datasets(
         dataset_path: str,
         x_column: str,
         y_column: str,
         batch_size: int,
         prompt: str = "",
+        description: str = "",
+        mmlu_max_subject_size: int = 100,
+        n_shot: int = 0,
+        few_shot_split: str = "train",
         split: str = "test",
         size: int = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates the dataset from Huggingface datasets.
@@ -146,67 +171,26 @@ class Dataset:
             size (Optional[int]): size to subsample dataset to. If None, the full dataset split will be taken.
                 Default: None.
         """
-        load_from_disk = kwargs.pop("load_from_disk", False)
-        if load_from_disk:
-            dataset_name = dataset_path
-            dataset = hf_dataset.load_from_disk(dataset_path)
-        elif isinstance(dataset_path, str):
-            dataset_name = dataset_path
-            dataset = load_dataset(dataset_path, split=split, **kwargs)
-        else:
-            dataset_name = dataset_path[0]
-            dataset = load_dataset(*dataset_path, split=split, **kwargs)
+        dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
+        if n_shot > 0:
+            _, few_shot_dataset = Dataset.load_hf_dataset(
+                dataset_path, few_shot_split, **kwargs
+            )
 
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
-        if "translation" in dataset.column_names:
-            x, y = [], []
-            source_lang = (
-                "German"
-                if x_column == "de"
-                else "French" if x_column == "fr" else "English"
-            )
-            target_lang = (
-                "German"
-                if y_column == "de"
-                else "French" if y_column == "fr" else "English"
-            )
-            for inst in dataset["translation"]:
-                x.append(
-                    prompt.format(
-                        source_lang=source_lang,
-                        target_lang=target_lang,
-                        text=inst[x_column],
-                    )
-                )
-                y.append(inst[y_column])
-        elif ("coqa" in dataset_name.lower()) and len(prompt):
-            x, y = [], []
-            for inst in dataset:
-                for question, answer in zip(
-                    inst[x_column], inst[y_column]["input_text"]
-                ):
-                    x.append(prompt.format(story=inst["story"], question=question))
-                    y.append(answer)
-        elif ("babi_qa" in dataset_name.lower()) and len(prompt):
-            x, y = [], []
-            for inst in dataset:
-                inst = inst["story"]
-                context = ""
-                for text, answer in zip(inst[x_column], inst[y_column]):
-                    if answer == "":
-                        context += text + " "
-                    else:
-                        x.append(prompt.format(context=context.strip(), question=text))
-                        y.append(answer)
-        elif len(prompt):
-            x = [prompt.format(text=text) for text in dataset[x_column]]
-            y = dataset[y_column]
-        else:
-            x = dataset[x_column]
-            y = dataset[y_column]
-
+        x, y = preprocess_dataset(
+            dataset,
+            dataset_name,
+            x_column,
+            y_column,
+            prompt,
+            description,
+            n_shot,
+            few_shot_dataset,
+            mmlu_max_subject_size,
+        )
         return Dataset(x, y, batch_size)
 
     @staticmethod

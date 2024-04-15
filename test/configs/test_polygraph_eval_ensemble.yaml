@@ -2,6 +2,9 @@ hydra:
   run:
     dir: ${cache_path}/test/
 
+defaults:
+  - model: default
+
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
@@ -15,13 +18,13 @@ load_from_disk: false
 label_column: answer
 prompt: ""
 
-model: facebook/bart-base
-use_auth_token:
-ensemble: true
-ensembling_mode: pe
-mc: true
-mc_seeds: [42, 43]
-dropout_rate: 0.1
+model: 
+  path: facebook/bart-base
+  ensemble: true
+  ensembling_mode: pe
+  mc: true
+  mc_seeds: [42, 43]
+  dropout_rate: 0.1
 
 use_seq_ue: false
 use_tok_ue: false

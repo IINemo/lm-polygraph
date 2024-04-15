@@ -178,10 +178,20 @@ class EmbeddingsCalculator(StatCalculator):
                 output_scores=True,
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
-                min_length=2,
+                min_new_tokens=2,
                 output_attentions=False,
                 output_hidden_states=True,
                 num_beams=1,
+                num_return_sequences=1,
+                suppress_tokens=(
+                    []
+                    if model.generation_parameters.allow_newlines
+                    else [
+                        t
+                        for t in range(len(model.tokenizer))
+                        if "\n" in model.tokenizer.decode([t])
+                    ]
+                ),
             )
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
                 out, batch, model.model_type

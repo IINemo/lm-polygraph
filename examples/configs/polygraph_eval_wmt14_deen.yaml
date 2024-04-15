@@ -1,6 +1,9 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -12,11 +15,14 @@ task: nmt
 dataset: [wmt14, de-en]
 text_column: de
 label_column: en
-prompt: "Translate from {source_lang} into {target_lang}. Output only translation:\n{text}\nTranslation:\n"
+prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
 max_new_tokens: 107
 load_from_disk: false
+generation_params:
+  generate_until:
+    - "\n"
 
 train_dataset: null
 train_test_split: false
@@ -32,10 +38,8 @@ subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
-model: databricks/dolly-v2-3b
-use_auth_token:
-
 use_density_based_ue: true
+use_ens_ue: false
 use_seq_ue: true
 use_tok_ue: false
 

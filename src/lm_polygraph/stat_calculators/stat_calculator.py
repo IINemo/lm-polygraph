@@ -38,7 +38,7 @@ class StatCalculator(ABC):
         texts: List[str],
         model: Model,
         max_new_tokens: int = 100,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, np.ndarray]:
         """
         Abstract method. Calculates the statistic based on the other provided statistics.

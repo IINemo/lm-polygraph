@@ -198,7 +198,7 @@ class Responder:
                 )
         else:
             model_path = parse_model(data["model"])
-        self.model.parameters = parameters
+        self.model.generation_parameters = parameters
 
         # TODO this is temporary fix for single instead of multi-choice, should be changed with katya proper version
         # As back expects list and front sends the string at the moment

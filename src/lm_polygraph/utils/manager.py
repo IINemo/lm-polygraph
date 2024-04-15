@@ -64,7 +64,7 @@ def _check_unique_names(xs):
 
 
 def _delete_nans(ue, metric):
-    new_ue, new_metric, selected_ids = [], [], []
+    new_ue, new_metric = [], []
     for i in range(len(metric)):
         if not np.isnan(metric[i]) and not np.isnan(ue[i]):
             if not isinstance(ue[i], complex):
@@ -72,8 +72,8 @@ def _delete_nans(ue, metric):
             else:
                 new_ue.append(ue[i].real)
             new_metric.append(metric[i])
-            selected_ids.append(i)
-    return new_ue, new_metric, selected_ids
+
+    return np.array(new_ue), np.array(new_metric)
 
 
 def _recombine_data(ue, gen_metric, inputs):
@@ -271,19 +271,25 @@ class UEManager:
             + [s for m in generation_metrics for s in m.stats_dependencies]
             + greedy
         )
+
         stats, have_stats = _order_calculators(
             stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
+
+        self.stats_names = stats
         stats = [
             s
             for s in stats
             if not (str(s).startswith("ensemble_"))
-            or (
-                (str(s).startswith("blackbox_") and s[len("blackbox_") :] in have_stats)
+            and not (
+                (
+                    str(s).startswith("blackbox_")
+                    and s[len("blackbox_") :] in have_stats
+                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
             )
-        ]
+        ]  # below in calculate() we copy X in blackbox_X
         self.stat_calculators: List[StatCalculator] = [
             stat_calculators_dict[c] for c in stats
         ]
@@ -397,11 +403,19 @@ class UEManager:
                 batch_stats[key] = val
 
             if isinstance(self.model, WhiteboxModel):
-                target_tokens = [
-                    self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
-                    for text in target_texts
-                ]
+                if isinstance(target_texts[0], list):
+                    target_tokens = [
+                        [
+                            self.model.tokenizer([text])["input_ids"][0]
+                            for text in target_text
+                        ]
+                        for target_text in target_texts
+                    ]
+                else:
+                    target_tokens = [
+                        self.model.tokenizer([text])["input_ids"][0]
+                        for text in target_texts
+                    ]
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
 
@@ -440,11 +454,6 @@ class UEManager:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
         if self.ensemble_model is not None:
-            # Now do the same for ensemble calculators
-            device = self.model.model.device
-            self.model.model.to("cpu")
-            self.ensemble_model.model.to(device)
-
             iterable_data = tqdm(self.data) if self.verbose else self.data
             for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
                 batch_stats: Dict[str, np.ndarray] = {}
@@ -456,7 +465,6 @@ class UEManager:
 
                 target_tokens = [
                     self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
                     for text in target_texts
                 ]
                 batch_stats["target_tokens"] = target_tokens
@@ -493,21 +501,13 @@ class UEManager:
                         )
                     # TODO: Report how many nans!
                     # This is important to know for a user
-                    ue, metric, selected_ids = _delete_nans(
-                        estimator_values, generation_metric
-                    )
+                    ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        inputs_no_nans = np.array(self.stats["input_texts"])[
-                            selected_ids
-                        ]
-                        rec_ue, rec_metric = _recombine_data(ue, metric, inputs_no_nans)
-
-                        rec_metric = np.array(rec_metric)
-                        oracle_score = ue_metric(-rec_metric, rec_metric)
-                        random_score = get_random_scores(ue_metric, rec_metric)
-                        ue_metric_val = ue_metric(rec_ue, rec_metric)
+                        oracle_score = ue_metric(-metric, metric)
+                        random_score = get_random_scores(ue_metric, metric)
+                        ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
@@ -538,6 +538,10 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
+                    if (f"blackbox_{stat}" in STAT_CALCULATORS.keys()) and (
+                        f"blackbox_{stat}" in self.stats_names
+                    ):
+                        batch_stats[f"blackbox_{stat}"] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
                     lineno = e.__traceback__.tb_lineno
@@ -600,7 +604,6 @@ class UEManager:
             for inp_texts, target_texts in tqdm(data):
                 target_tokens = [
                     self.model.tokenizer([text])["input_ids"][0]
-                    + [self.model.tokenizer.eos_token_id]
                     for text in target_texts
                 ]
 

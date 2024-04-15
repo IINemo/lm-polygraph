@@ -2,21 +2,29 @@ hydra:
   run:
     dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
+defaults:
+  - model: bloomz-560m
+
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-device: cpu
+task: qa
 
-task: nmt
-
-dataset: [wmt14, fr-en]
-text_column: en
-label_column: fr
-prompt: "Translate from {source_lang} into {target_lang}. Output only translation:\n{text}\nTranslation:\n"
-train_split: train
+dataset: [cais/mmlu, all]
+text_column: question
+label_column: answer
+description: "The following are multiple choice questions (with answers) about {subject}.\n"
+prompt: "\nQ:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}"
+few_shot_split: validation
+train_split: auxiliary_train
 eval_split: test
-max_new_tokens: 107
+max_new_tokens: 3
 load_from_disk: false
+n_shot: 5
+max_subject_size: 100
+generation_params:
+  generate_until:
+    - '\n'
 
 train_dataset: null
 train_test_split: false
@@ -31,13 +39,6 @@ background_load_from_disk: false
 subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
-
-model: databricks/dolly-v2-3b
-use_auth_token:
-ensemble: false
-mc: false
-mc_seeds: []
-dropout_rate:
 
 use_density_based_ue: true
 use_seq_ue: true
@@ -63,4 +64,3 @@ deberta_batch_size: 10
 
 seed:
     - 1
-    
