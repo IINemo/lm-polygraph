@@ -1,10 +1,12 @@
 import numpy as np
+import os
 
 from typing import List, Dict
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
 
-OPENAI_FACT_CHECK_PROMPT = '''Is the claim correct according to the most recent sources of information? Answer "True", "False" or "Not known".
+OPENAI_FACT_CHECK_PROMPT = '''Is the claim correct according to the most recent sources of information? ''' + \
+                           '''Answer "True", "False" or "Not known".
 
 Examples:
 
@@ -29,9 +31,13 @@ class OpenAIFactCheck(GenerationMetric):
     lm_polygraph.stat_calculators.openai_chat.OpenAIChat.
     """
 
-    def __init__(self, openai_chat: OpenAIChat):
+    def __init__(
+        self,
+        openai_model: str = "gpt-4",
+        cache_path: str = os.path.expanduser("~") + "/.cache",
+    ):
         super().__init__(["input_texts"], "claim")
-        self.openai_chat = openai_chat
+        self.openai_chat = OpenAIChat(openai_model=openai_model, cache_path=cache_path)
 
     def __str__(self):
         return f"OpenAIFactCheck"
@@ -40,9 +46,9 @@ class OpenAIFactCheck(GenerationMetric):
         reply = openai_chat.ask(OPENAI_FACT_CHECK_PROMPT.format(claim=claim, input=input))
         reply = reply.strip()
         if reply == "True":
-            return 1
-        elif reply == "False":
             return 0
+        elif reply == "False":
+            return 1
         else:
             return np.nan
 
@@ -61,10 +67,10 @@ class OpenAIFactCheck(GenerationMetric):
             target_texts (List[str]): ground-truth texts
             target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
-            np.ndarray: list of labels, 1 if the fact is true and 0 if not.
+            np.ndarray: list of labels, 1 if the fact is false and 0 if it is true.
         """
         labels = []
-        for inp_text, sample_claims in zip(stats["claims"], stats["input_texts"]):
+        for inp_text, sample_claims in zip(stats["input_texts"], stats["claims"]):
             for claim in sample_claims:
                 labels.append(self._score_single(claim.claim_text, inp_text, self.openai_chat))
         return np.array(labels)

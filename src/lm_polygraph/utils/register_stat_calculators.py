@@ -11,7 +11,6 @@ def register_stat_calculators(
     deberta_batch_size: int = 10,  # TODO: rename to NLI model
     deberta_device: Optional[str] = None,  # TODO: rename to NLI model
     n_ccp_alternatives: int = 10,
-    openai_access_key: Optional[str] = None,
     cache_path=os.path.expanduser("~") + "/.cache",
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
@@ -22,10 +21,7 @@ def register_stat_calculators(
     stat_dependencies: Dict[str, List[str]] = {}
 
     nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
-    openai_chat = OpenAIChat(
-        openai_access_key=openai_access_key,
-        cache_path=cache_path,
-    )
+    openai_chat = OpenAIChat(cache_path=cache_path)
 
     def _register(calculator_class: StatCalculator):
         for stat in calculator_class.stats:
