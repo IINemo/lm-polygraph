@@ -330,7 +330,7 @@ def get_generation_metrics(args):
                 normalize = getattr(args, "normalize", False),
             ),
             AlignScore(),
-            Comet(),
+            Comet(source_ignore_regex = getattr(args, "source_ignore_regex", None)),
         ]
         if not getattr(args, "multiref", False):
             # Currently, BartScoreSeqMetric does not support multiref
