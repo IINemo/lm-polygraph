@@ -270,9 +270,12 @@ class UEManager:
             for s in stats
             if not (str(s).startswith("ensemble_"))
             and not (
-                (str(s).startswith("blackbox_") and s[len("blackbox_") :] in have_stats)
+                (
+                    str(s).startswith("blackbox_")
+                    and s[len("blackbox_") :] in have_stats
+                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
             )
-        ]
+        ]  # below in calculate() we copy blackbox_X in X
         self.stat_calculators: List[StatCalculator] = [
             STAT_CALCULATORS[c] for c in stats
         ]
