@@ -249,6 +249,8 @@ class UEManager:
             deberta_device=deberta_device,
         )
 
+        self.stat_calculators_dict = stat_calculators_dict
+
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
@@ -538,7 +540,7 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
-                    if (f"blackbox_{stat}" in self.stat_calculators.keys()) and (
+                    if (f"blackbox_{stat}" in self.stat_calculators_dict.keys()) and (
                         f"blackbox_{stat}" in self.stats_names
                     ):
                         batch_stats[f"blackbox_{stat}"] = stat_value
