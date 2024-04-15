@@ -108,7 +108,7 @@ class GreedyProbsCalculator(StatCalculator):
                 output_scores=True,
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
-                min_length=2,
+                min_new_tokens=2,
                 output_attentions=False,
                 output_hidden_states=True,
                 temperature=model.parameters.temperature,
