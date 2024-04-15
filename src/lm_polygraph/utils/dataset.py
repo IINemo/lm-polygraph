@@ -170,6 +170,7 @@ class Dataset:
                 Default: None.
         """
         dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
+        few_shot_dataset = None
         if n_shot > 0:
             _, few_shot_dataset = Dataset.load_hf_dataset(
                 dataset_path, few_shot_split, **kwargs

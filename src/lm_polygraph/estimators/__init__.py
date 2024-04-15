@@ -1,7 +1,11 @@
 from .estimator import Estimator
-from .max_probability import MaximumSequenceProbability, MaximumTokenProbability
+from .max_probability import (
+    MaximumSequenceProbability,
+    MaximumTokenProbability,
+    MaximumClaimProbability,
+)
 from .claim_conditioned_probability import ClaimConditionedProbability
-from .token_entropy import MeanTokenEntropy, TokenEntropy
+from .token_entropy import MeanTokenEntropy, TokenEntropy, MaxTokenEntropyClaim
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,
     PointwiseMutualInformation,
@@ -21,7 +25,7 @@ from .eig_val_laplacian import EigValLaplacian
 from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
-from .perplexity import Perplexity
+from .perplexity import Perplexity, PerplexityClaim
 from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq

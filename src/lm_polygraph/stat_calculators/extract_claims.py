@@ -30,12 +30,12 @@ Claims:
 Sentence: "{sent}"
 Claims:'''
 
-MATCHING_PROMPT = '''Given the fact, identify the corresponding words in the original sentence '''
-'''that help derive this fact. Please list all words that are related to the fact, '''
-'''in the order they appear in the original sentence, each word separated by comma.
-Fact: {claim}
-Sentence: {sentence}
-Words from sentence that helps to derive the fact, separated by comma: '''
+MATCHING_PROMPT = '''Given the fact, identify the corresponding words in the original sentence ''' + \
+    '''that help derive this fact. Please list all words that are related to the fact, ''' + \
+    '''in the order they appear in the original sentence, each word separated by comma.\n''' + \
+    '''Fact: {claim}\n''' + \
+    '''Sentence: {sent}\n''' + \
+    '''Words from sentence that helps to derive the fact, separated by comma: '''
 
 
 class ClaimsExtractor(StatCalculator):
@@ -44,7 +44,7 @@ class ClaimsExtractor(StatCalculator):
     """
 
     def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!\n"):
-        super().__init__(["claims"], ["openai_chat", "greedy_texts", "greedy_tokens"])
+        super().__init__(["claims"], ["greedy_texts", "greedy_tokens"])
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
 
@@ -53,6 +53,7 @@ class ClaimsExtractor(StatCalculator):
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: WhiteboxModel,
+        *args,
         **kwargs
     ) -> Dict[str, np.ndarray]:
         """
@@ -94,7 +95,7 @@ class ClaimsExtractor(StatCalculator):
             for s in re.split(f'[{self.sent_separators}]', text)
             if len(s) > 0
         ]
-        if not text.endswith(self.sent_separators):
+        if not any(text.endswith(x) for x in self.sent_separators):
             # remove last unfinished sentence
             sentences = sentences[:-1]
 
@@ -109,9 +110,9 @@ class ClaimsExtractor(StatCalculator):
                 sent_end_idx += 1
 
             # Find sentence location in tokens: tokens[sent_start_token_idx:sent_end_token_idx]
-            while len(tokenizer.encode(tokens[:sent_start_token_idx])) < sent_start_idx:
+            while len(tokenizer.decode(tokens[:sent_start_token_idx])) < sent_start_idx:
                 sent_start_token_idx += 1
-            while len(tokenizer.encode(tokens[:sent_end_token_idx])) < sent_end_idx:
+            while len(tokenizer.decode(tokens[:sent_end_token_idx])) < sent_end_idx:
                 sent_end_token_idx += 1
 
             for c in self._claims_from_sentence(
@@ -134,8 +135,10 @@ class ClaimsExtractor(StatCalculator):
             CLAIM_EXTRACTION_PROMPT.format(sent=sent)
         )
         claims = []
-        for claim_text in extracted_claims.split():
+        for claim_text in extracted_claims.split('\n'):
             if not claim_text.startswith("- "):
+                continue
+            if "there aren't any claims" in claim_text.lower():
                 continue
             claim_text = claim_text[2:].strip()
             match_words = self.openai_chat.ask(
@@ -145,11 +148,14 @@ class ClaimsExtractor(StatCalculator):
             if match_string is None:
                 continue
             aligned_tokens = self._align(sent, match_string, sent_tokens, tokenizer)
+            if len(aligned_tokens) == 0:
+                continue
             claims.append(Claim(
                 claim_text=claim_text,
                 sentence=sent,
                 aligned_tokens=aligned_tokens,
             ))
+        return claims
 
     def _match_string(self, sent: str, match_words: List[str]) -> Optional[str]:
         # Greedily matching words from `match_words` to `sent`.
