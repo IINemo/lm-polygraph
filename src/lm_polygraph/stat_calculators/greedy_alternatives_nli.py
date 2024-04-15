@@ -10,16 +10,17 @@ import string
 
 
 class GreedyAlternativesNLICalculator(StatCalculator):
-    def __init__(self):
+    def __init__(self, nli_model):
         super().__init__(
             [
                 "greedy_tokens_alternatives_nli",
             ],
             [
-                "greedy_tokens_alternatives",
-                "deberta",
+                "greedy_tokens_alternatives"
             ],
         )
+
+        self.nli_model = nli_model
 
     def _strip(self, w: str):
         return w.strip(string.punctuation + " \n")
@@ -34,7 +35,7 @@ class GreedyAlternativesNLICalculator(StatCalculator):
     ) -> Dict[str, np.ndarray]:
         greedy_alternatives = dependencies["greedy_tokens_alternatives"]
         greedy_alternatives_nli = []
-        deberta = dependencies["deberta"]
+        deberta = self.nli_model
         for sample_alternatives in greedy_alternatives:
             nli_matrixes = []
             for w_number, word_alternatives in enumerate(sample_alternatives):

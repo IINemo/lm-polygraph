@@ -21,7 +21,7 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.stat_calculators.register import register_stat_calculators
+from lm_polygraph.utils.register_stat_calculators import register_stat_calculators
 
 
 def _order_calculators(

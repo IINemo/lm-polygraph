@@ -13,7 +13,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
 
-    def __init__(self):
+    def __init__(self, nli_model):
         super().__init__(
             [
                 "sample_sentence_similarity",
@@ -24,12 +24,12 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                 "input_texts",
                 "sample_tokens",
                 "sample_texts",
-                "greedy_tokens",
-                "deberta",
+                "greedy_tokens"
             ],
         )
 
         self.crossencoder_setup = False
+        self.nli_model = nli_model
 
     def _setup(self, device="cuda"):
         self.crossencoder = CrossEncoder(
@@ -53,7 +53,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
-        deberta_batch_size = dependencies["deberta"].batch_size
+        deberta_batch_size = self.nli_model.batch_size # TODO: Why we use parameters of nli_model for the cross-encoder model???
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
 
