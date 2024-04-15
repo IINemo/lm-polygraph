@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -8,18 +8,20 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-device: cpu
+task: qa
 
-task: ats
-
-dataset: xsum
-text_column: document
-label_column: summary
-prompt: "Summarize the text in a one-sentence headline. Output only the summary itself.\n\nText:\n{text}\n\nSummary (one sentence):\n"
+dataset: [trivia_qa, rc.nocontext]
+text_column: question
+label_column: answer
+prompt: "Question: {question}\nAnswer:{answer}"
+few_shot_split: train
 train_split: train
-eval_split: test
-max_new_tokens: 56
+eval_split: validation
+max_new_tokens: 20
 load_from_disk: false
+n_shot: 5
+multiref: true
+normalize: true
 
 train_dataset: null
 train_test_split: false
@@ -54,7 +56,7 @@ ens_type:
 
 ignore_exceptions: false
 
-batch_size: 1
+batch_size: 2
 deberta_batch_size: 10
 
 seed:

@@ -13,7 +13,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
 
-    def __init__(self):
+    def __init__(self, crossencoder_model_path="cross-encoder/stsb-roberta-large"):
         super().__init__(
             [
                 "sample_sentence_similarity",
@@ -30,10 +30,11 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         )
 
         self.crossencoder_setup = False
+        self.crossencoder_model_path = crossencoder_model_path
 
     def _setup(self, device="cuda"):
         self.crossencoder = CrossEncoder(
-            "cross-encoder/stsb-roberta-large", device=device
+            self.crossencoder_model_path, device=device 
         )
 
     def __call__(

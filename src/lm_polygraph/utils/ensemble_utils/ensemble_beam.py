@@ -339,7 +339,6 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                     if synced_gpus and this_peer_finished:
                         cur_len = cur_len + 1
                         continue  # don't waste resources running the code we don't need
-
                 torch.manual_seed(self.base_seed)
             else:
                 for i, model in enumerate(self.models):

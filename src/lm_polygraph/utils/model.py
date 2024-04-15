@@ -352,22 +352,22 @@ class WhiteboxModel(Model):
         return self.model.device
 
     @staticmethod
-    def from_pretrained(model_path: str, device: str = "cpu", **kwargs):
+    def from_pretrained(model_path: str, **kwargs):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
 
         Parameters:
             model_path (str): model path in HuggingFace.
-            device (str): device to load the model on.
         """
         config = AutoConfig.from_pretrained(
             model_path, trust_remote_code=True, **kwargs
         )
+
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, max_length=256, trust_remote_code=True, **kwargs
-            ).to(device)
+                model_path, trust_remote_code=True, **kwargs
+            )
         elif any(
             [
                 ("Seq2SeqLM" in architecture)
@@ -376,32 +376,23 @@ class WhiteboxModel(Model):
             ]
         ):
             model_type = "Seq2SeqLM"
-            model = AutoModelForSeq2SeqLM.from_pretrained(
-                model_path, max_length=1024, **kwargs
-            ).to(device)
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, **kwargs)
             if "falcon" in model_path:
                 model.transformer.alibi = True
         elif any(
             ["BartModel" in architecture for architecture in config.architectures]
         ):
             model_type = "Seq2SeqLM"
-            model = BartForConditionalGeneration.from_pretrained(
-                model_path, max_length=1024, **kwargs
-            ).to(device)
+            model = BartForConditionalGeneration.from_pretrained(model_path, **kwargs)
         else:
             raise ValueError(
                 f"Model {model_path} is not adapted for the sequence generation task"
             )
-        if not kwargs.get("load_in_8bit", False) and not kwargs.get(
-            "load_in_4bit", False
-        ):
-            model = model.to(device)
 
         tokenizer = AutoTokenizer.from_pretrained(
             model_path,
             padding_side="left",
             add_bos_token=True,
-            model_max_length=1024,
             **kwargs,
         )
 
@@ -454,7 +445,6 @@ def create_ensemble(
     seed: int = 1,
     mc_seeds: List[int] = [1],
     ensembling_mode: str = "pe",
-    device: str = "cpu",
     dropout_rate: float = 0.1,
     **kwargs,
 ) -> WhiteboxModel:
@@ -476,8 +466,6 @@ def create_ensemble(
         replace_dropout(
             ens.config._name_or_path, ens, p=dropout_rate, share_across_tokens=True
         )
-
-        ens.to(device)
         ens.train()
     else:
         raise ValueError(

@@ -1,6 +1,9 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -12,7 +15,8 @@ task: qa
 dataset: coqa
 text_column: questions
 label_column: answers
-prompt: "Answer the question given a story. Output only the answer itself.\nStory:\n{story}\n\nQuestion:\n{question}\n\nAnswer:\n"
+description: "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}"
+prompt: "\n\nQuestion: {question}\nAnswer:{answer}"
 train_split: train
 eval_split: validation
 max_new_tokens: 20
@@ -31,13 +35,6 @@ background_load_from_disk: false
 subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
-
-model: databricks/dolly-v2-3b
-use_auth_token:
-ensemble: false
-mc: false
-mc_seeds: []
-dropout_rate:
 
 use_density_based_ue: true
 use_seq_ue: true

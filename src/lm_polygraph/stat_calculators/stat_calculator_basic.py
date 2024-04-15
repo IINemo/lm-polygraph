@@ -5,21 +5,7 @@ from abc import ABC, abstractmethod
 from lm_polygraph.utils.model import Model
 
 
-class StatCalculator(ABC):
-    """
-    Abstract class for some particular statistics calculation. Used to re-use same statistics across different
-    uncertainty estimators at `lm_polygraph.estimators`. See the list of available calculators at
-    lm_polygraph/stat_calculators/__init__.py.
-
-    While estimators specify `stats_dependencies` to re-use these StatCalculator calculations, calculators can
-    also specify dependencies on other calculators.
-
-    UEManager at lm_polygraph.utils.manager will order all the needed calculators and estimators to be called in
-    the correct order. Any cycle dependencies among calculators will be spotted by UEManager and end with an exception.
-
-    Each new StatCalculator needs to be registered at lm_polygraph/stat_calculators/__init__.py to be seen be UEManager.
-    """
-
+class StatCalculatorBasic(ABC):
     def __init__(self, stats: List[str], stat_dependencies: List[str]):
         """
         Parameters:
@@ -35,10 +21,11 @@ class StatCalculator(ABC):
     def __call__(
         self,
         dependencies: Dict[str, np.array],
-        texts: List[str],
+        model_inputs,
         model: Model,
+        model_args,
         max_new_tokens: int = 100,
-        **kwargs,
+        **kwargs
     ) -> Dict[str, np.ndarray]:
         """
         Abstract method. Calculates the statistic based on the other provided statistics.
@@ -53,7 +40,7 @@ class StatCalculator(ABC):
             Dict[str, np.ndarray]: dictionary with calculated statistics under all keys from `stats`.
         """
         raise Exception("Not implemented")
-
+    
     @property
     def stats(self) -> List[str]:
         """

@@ -1,4 +1,4 @@
-from .stat_calculator import StatCalculatorBasic
+from .stat_calculator_basic import StatCalculatorBasic
 
 from typing import Dict, List
 
