@@ -14,7 +14,7 @@ class ReversedPairsProportion(UEMetric):
     """
 
     def __str__(self):
-        return 'rpp'
+        return "rpp"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         """
@@ -34,5 +34,7 @@ class ReversedPairsProportion(UEMetric):
         cnts = []
         for i in range(len(confidence)):
             # greater confidences = lower uncertainties
-            cnts.append(np.logical_and(confidence > confidence[i], target < target[i]).mean())
+            cnts.append(
+                np.logical_and(confidence > confidence[i], target < target[i]).mean()
+            )
         return np.mean(cnts).item()

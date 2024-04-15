@@ -13,10 +13,12 @@ class MeanPointwiseMutualInformation(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods'], 'sequence')
+        super().__init__(
+            ["greedy_log_likelihoods", "greedy_lm_log_likelihoods"], "sequence"
+        )
 
     def __str__(self):
-        return 'MeanPointwiseMutualInformation'
+        return "MeanPointwiseMutualInformation"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -30,8 +32,8 @@ class MeanPointwiseMutualInformation(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        logprobs = stats['greedy_log_likelihoods']
-        lm_logprobs = stats['greedy_lm_log_likelihoods']
+        logprobs = stats["greedy_log_likelihoods"]
+        lm_logprobs = stats["greedy_lm_log_likelihoods"]
         mi_scores = []
         for lp, lm_lp in zip(logprobs, lm_logprobs):
             mi_scores.append([])
@@ -47,10 +49,12 @@ class PointwiseMutualInformation(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods'], 'token')
+        super().__init__(
+            ["greedy_log_likelihoods", "greedy_lm_log_likelihoods"], "token"
+        )
 
     def __str__(self):
-        return 'PointwiseMutualInformation'
+        return "PointwiseMutualInformation"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -64,8 +68,8 @@ class PointwiseMutualInformation(Estimator):
             np.ndarray: concatenated float uncertainty for each token in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        logprobs = stats['greedy_log_likelihoods']
-        lm_logprobs = stats['greedy_lm_log_likelihoods']
+        logprobs = stats["greedy_log_likelihoods"]
+        lm_logprobs = stats["greedy_lm_log_likelihoods"]
         mi_scores = []
         for lp, lm_lp in zip(logprobs, lm_logprobs):
             mi_scores.append([])

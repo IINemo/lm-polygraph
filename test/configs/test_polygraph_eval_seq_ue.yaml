@@ -2,6 +2,9 @@ hydra:
   run:
     dir: ${cache_path}/test/
 
+defaults:
+  - model: bloomz-560m
+
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
@@ -15,18 +18,14 @@ load_from_disk: false
 label_column: answer
 prompt: ""
 
-model: bigscience/bloomz-560m
-use_auth_token:
-ensemble: false
-mc: false
-mc_seeds: []
-dropout_rate:
-
 ignore_exceptions: false
 use_seq_ue: true
 use_tok_ue: false
 use_density_based_ue: false
 use_ens_ue: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
 ens_type:
 
 additional_estimators: {}

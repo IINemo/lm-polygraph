@@ -82,7 +82,12 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 | Monte Carlo sequence entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                    | White-box   | Information-based   | High    | Low    |         No          |
 | Pointwise mutual information (PMI) [(Takayama and Arase, 2019)](https://aclanthology.org/W19-4115/)       | White-box   | Information-based   | Medium  | Low    |         No          |
 | Conditional PMI [(van der Poel et al., 2022)](https://aclanthology.org/2022.emnlp-main.399/)                         | White-box   | Information-based   | Medium  | Medium |         No          |
+| Rényi divergence [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                         | White-box   | Information-based   | Low  | Low |         No          |Low
+| Fisher-Rao distance [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                         | White-box   | Information-based   | Low  | Low |         No          |
 | Semantic entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| TokenSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| SentenceSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
+| SAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                | White-box   | Meaning diversity   | High    | Low    |         No          |
 | Sentence-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)    | White-box   | Ensembling          | High    | High   |         Yes         |
 | Token-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)       | White-box   | Ensembling          | High    | High   |         Yes         |
 | Mahalanobis distance (MD) [(Lee et al., 2018)](https://proceedings.neurips.cc/paper/2018/hash/abdeb6f575ac5c6676b747bca8d09cc2-Abstract.html)                        | White-box   | Density-based       | Low     | Low    |         Yes         |
@@ -90,7 +95,7 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 | Relative Mahalanobis distance (RMD) [(Ren et al., 2023)](https://openreview.net/forum?id=kJUS5nD0vPB)              | White-box   | Density-based       | Low     | Low    |         Yes         |
 | Hybrid Uncertainty Quantification (HUQ) [(Vazhentsev et al., 2023a)](https://aclanthology.org/2023.acl-long.652/)  | White-box   | Density-based       | Low     | Low    |         Yes         |
 | p(True) [(Kadavath et al., 2022)](https://arxiv.org/abs/2207.05221)                                     | White-box   | Reflexive           | Medium  | Low    |         No          |
-| Number of semantic sets (NumSets) [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)               | Black-box   | Meaning Diversity   | High    | Low    |         No          |
+| Number of semantic sets (NumSets) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)               | Black-box   | Meaning Diversity   | High    | Low    |         No          |
 | Sum of eigenvalues of the graph Laplacian (EigV) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187) | Black-box   | Meaning Diversity   | High    | Low    |         No          |
 | Degree matrix (Deg) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)                              | Black-box   | Meaning Diversity   | High    | Low    |         No          |
 | Eccentricity (Ecc) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)                               | Black-box   | Meaning Diversity   | High    | Low    |         No          |
@@ -104,14 +109,14 @@ estimate_uncertainty(model, ue_method, input_text=input_text)
 To evaluate the performance of uncertainty estimation methods consider a quick example: 
 
 ```
-HYDRA_CONFIG=../configs/polygraph_eval/polygraph_eval.yaml python ./scripts/polygraph_eval \
-    dataset="./workdir/data/triviaqa.csv" \
+HYDRA_CONFIG=../examples/configs/polygraph_eval_coqa.yaml python ./scripts/polygraph_eval \
+    dataset="coqa" \
     model="databricks/dolly-v2-3b" \
     save_path="./workdir/output" \
     seed=[1,2,3,4,5]
 ```
 
-Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) to generate the summarizing tables for an experiment.
+Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) or [`result_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/result_tables.ipynb) to generate the summarizing tables for an experiment.
 
 A detailed description of the benchmark is in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
 
@@ -131,6 +136,36 @@ docker run -p 3001:3001 -it \
 The server should be available on `http://localhost:3001`
 
 A more detailed description of the demo is available in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
+
+## Cite
+```
+@inproceedings{fadeeva-etal-2023-lm,
+    title = "{LM}-Polygraph: Uncertainty Estimation for Language Models",
+    author = "Fadeeva, Ekaterina  and
+      Vashurin, Roman  and
+      Tsvigun, Akim  and
+      Vazhentsev, Artem  and
+      Petrakov, Sergey  and
+      Fedyanin, Kirill  and
+      Vasilev, Daniil  and
+      Goncharova, Elizaveta  and
+      Panchenko, Alexander  and
+      Panov, Maxim  and
+      Baldwin, Timothy  and
+      Shelmanov, Artem",
+    editor = "Feng, Yansong  and
+      Lefever, Els",
+    booktitle = "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.emnlp-demo.41",
+    doi = "10.18653/v1/2023.emnlp-demo.41",
+    pages = "446--461",
+    abstract = "Recent advancements in the capabilities of large language models (LLMs) have paved the way for a myriad of groundbreaking applications in various fields. However, a significant challenge arises as these models often {``}hallucinate{''}, i.e., fabricate facts without providing users an apparent means to discern the veracity of their statements. Uncertainty estimation (UE) methods are one path to safer, more responsible, and more effective use of LLMs. However, to date, research on UE methods for LLMs has been focused primarily on theoretical rather than engineering contributions. In this work, we tackle this issue by introducing LM-Polygraph, a framework with implementations of a battery of state-of-the-art UE methods for LLMs in text generation tasks, with unified program interfaces in Python. Additionally, it introduces an extendable benchmark for consistent evaluation of UE techniques by researchers, and a demo web application that enriches the standard chat dialog with confidence scores, empowering end-users to discern unreliable responses. LM-Polygraph is compatible with the most recent LLMs, including BLOOMz, LLaMA-2, ChatGPT, and GPT-4, and is designed to support future releases of similarly-styled LMs.",
+}
+```
 
 ## Acknowledgements
 

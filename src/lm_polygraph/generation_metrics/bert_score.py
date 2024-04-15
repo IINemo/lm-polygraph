@@ -10,15 +10,20 @@ class BertScoreMetric(GenerationMetric):
     Calculates BERTScore metric (https://arxiv.org/abs/1904.09675)
     between model-generated texts and ground truth texts.
     """
-    def __init__(self, lang='en'):
-        super().__init__(['greedy_texts'], 'sequence')
+
+    def __init__(self, lang="en"):
+        super().__init__(["greedy_texts"], "sequence")
         self.scorer = BERTScorer(lang=lang)
 
     def __str__(self):
-        return f'Bert'
+        return "Bert"
 
-    def __call__(self, stats: Dict[str, np.ndarray], target_texts: List[str],
-                 target_tokens: List[List[int]]) -> np.ndarray:
+    def __call__(
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
+    ) -> np.ndarray:
         """
         Calculates BERTScore(https://arxiv.org/abs/1904.09675) between
         stats['greedy_texts'] and target_texts.
@@ -31,28 +36,25 @@ class BertScoreMetric(GenerationMetric):
         Returns:
             np.ndarray: list of BERT Scores for each sample in input.
         """
-        scores = self.scorer.score(stats['greedy_texts'], target_texts)[0].numpy()
+        scores = self.scorer.score(stats["greedy_texts"], target_texts)[0].numpy()
         return scores
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Kind of tests, while there is no test suite
     """
     metric = BertScoreMetric()
     stats = {
-        'greedy_texts': [
+        "greedy_texts": [
             "Apple",
             "Orange",
             "Car",
             "Beer fun in Germany",
-            "January is before February"
+            "January is before February",
         ]
     }
-    target_texts = [
-        "Apple", "Apple", "Apple",
-        "Octoberfest", "Octoberfest"
-    ]
+    target_texts = ["Apple", "Apple", "Apple", "Octoberfest", "Octoberfest"]
 
     scores = metric(stats, target_texts, None)
     print(scores)

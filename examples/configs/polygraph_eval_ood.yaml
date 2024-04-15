@@ -1,0 +1,18 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model}/${id_dataset}_${ood_dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+device: "cpu"
+
+task: ood
+
+id_dataset: aeslc
+ood_dataset: aeslc_corrupted
+
+model: databricks/dolly-v2-3b
+
+id_manager_path:
+ood_manager_path: 

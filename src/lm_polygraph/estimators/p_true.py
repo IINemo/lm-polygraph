@@ -22,10 +22,10 @@ class PTrue(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['p_true'], 'sequence')
+        super().__init__(["p_true"], "sequence")
 
     def __str__(self):
-        return 'PTrue'
+        return "PTrue"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -38,5 +38,5 @@ class PTrue(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        ptrue = stats['p_true']
+        ptrue = stats["p_true"]
         return -np.array(ptrue)

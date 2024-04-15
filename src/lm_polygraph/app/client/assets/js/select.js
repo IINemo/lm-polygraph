@@ -80,11 +80,19 @@ const allModels = [
 const curatedMethods = {
     'T5': ['Lexical Similarity'],
     'openai': ['Lexical Similarity'],
-    'seq2seq': ['Lexical Similarity', 'Mean Token Entropy', 'Perplexity']
+    'seq2seq': [
+        'Maximum Sequence Probability', 'Perplexity', 'Mean Token Entropy',
+        'Mean Pointwise Mutual Information', 'Mean Conditional Pointwise Mutual Information',
+        'P(True)', 'P(True) Sampling',
+        'Monte Carlo Sequence Entropy', 'Monte Carlo Normalized Sequence Entropy',
+        'Lexical Similarity',
+        "Eigenvalue Laplacian", "Degree Matrix", "Number of Semantic Sets",
+        'Semantic Entropy'
+    ]
 }
 
 const curatedModels = [
-    'GPT-4', 'GPT-3.5-turbo', 'Llama 2 7b'
+    'GPT-4', 'GPT-3.5-turbo', 'Llama 2 7b', 'Vicuna 7b'
 ]
 
 var defaultPrompt = '';

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lm_polygraph"
+version = "0.0.2.dev1"
+authors = [
+  { name = "List of contributors: https://github.com/IINemo/lm-polygraph/graphs/contributors", email = "artemshelmanov@gmail.com" },
+]
+description = "Uncertainty Estimation Toolkit for Transformer Language Models"
+readme = "README.md"
+
+keywords=["NLP", "deep learning", "transformer", "pytorch", "uncertainty estimation"]
+license = {file = "LICENSE.md"}
+
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/IINemo/lm-polygraph"
+"Bug Tracker" = "https://github.com/IINemo/lm-polygraph/issues"
+"Repository" = "https://github.com/IINemo/lm-polygraph"
+"Documentation" = "https://lm-polygraph.readthedocs.io"
+
+[tool.setuptools]
+script-files = [
+  "scripts/polygraph_eval",
+  "scripts/polygraph_eval_ood",
+  "scripts/polygraph_server",
+  "scripts/polygraph_normalize",
+]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

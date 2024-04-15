@@ -13,10 +13,10 @@ class MeanTokenEntropy(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['entropy'], 'sequence')
+        super().__init__(["entropy"], "sequence")
 
     def __str__(self):
-        return 'MeanTokenEntropy'
+        return "MeanTokenEntropy"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -29,7 +29,7 @@ class MeanTokenEntropy(Estimator):
             np.ndarray: minus log probabilities for each sample.
                 Higher values indicate more uncertain samples.
         """
-        entropy = stats['entropy']
+        entropy = stats["entropy"]
         return np.array([np.mean(e) for e in entropy])
 
 
@@ -41,10 +41,10 @@ class TokenEntropy(Estimator):
     """
 
     def __init__(self):
-        super().__init__(['entropy'], 'token')
+        super().__init__(["entropy"], "token")
 
     def __str__(self):
-        return 'TokenEntropy'
+        return "TokenEntropy"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -57,5 +57,5 @@ class TokenEntropy(Estimator):
             np.ndarray: concatenated entropies for each token.
                 Higher values indicate more uncertain samples.
         """
-        entropy = stats['entropy']
+        entropy = stats["entropy"]
         return np.concatenate([np.array(e[:-1]) for e in entropy])

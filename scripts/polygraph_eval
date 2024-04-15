@@ -19,11 +19,10 @@ from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics.accuracy import AccuracyMetric
 from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
-from lm_polygraph.generation_metrics.model_score import (
-    ModelScoreSeqMetric,
-    ModelScoreTokenwiseMetric,
-)
 from lm_polygraph.generation_metrics.rouge import RougeMetric
+from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
+from lm_polygraph.generation_metrics.sbert import SbertMetric
+from lm_polygraph.generation_metrics.aggregated_metric import AggregatedMetric
 from lm_polygraph.estimators import *
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
@@ -33,13 +32,6 @@ from lm_polygraph.ue_metrics import (
     PredictionRejectionArea,
     RiskCoverageCurveAUC,
 )
-
-DENSITY_BASED_ESTIMATORS = [
-    "MahalanobisDistanceSeq",
-    "RelativeMahalanobisDistanceSeq",
-    "RDESeq",
-    "PPLMDSeq",
-]
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -59,41 +51,34 @@ def main(args):
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
-    model_kwargs = {}
-    model_kwargs['use_auth_token'] = getattr(args, 'use_auth_token', None)
+    model_kwargs = get_model_kwargs(args)
 
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
         cache_kwargs = {'cache_dir': args.cache_path}
 
-    device = args.device
-    if device is None:
-        device = "cuda:0" if torch.cuda.device_count() > 0 else "cpu"
-        
     for seed in args.seed:
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
 
-        log.info(f"Loading model {args.model}...")
+        log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
 
         model = WhiteboxModel.from_pretrained(
-            args.model,
-            device=device,
+            args.model.path,
             **cache_kwargs,
             **model_kwargs
         )
 
-        if args.ensemble:
+        if args.model.ensemble:
             # Only MC-ensembles for now
             log.info(f"Creating ensemble...")
-            ensemble_model = create_ensemble(model_paths=[args.model],
+            ensemble_model = create_ensemble(model_paths=[args.model.path],
                                              mc=True,
-                                             device='cpu',
                                              seed=args.seed[0],
-                                             ensembling_mode=args.ensembling_mode,
-                                             mc_seeds=args.mc_seeds,
-                                             dropout_rate=float(args.dropout_rate),
+                                             ensembling_mode=args.model.ensembling_mode,
+                                             mc_seeds=args.model.mc_seeds,
+                                             dropout_rate=float(args.model.dropout_rate),
                                              **cache_kwargs,
                                              **model_kwargs
                                              )
@@ -109,28 +94,21 @@ def main(args):
             args.label_column,
             batch_size=args.batch_size,
             prompt=args.prompt,
+            description=getattr(args, "description", ""),
+            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
+            n_shot=getattr(args, "n_shot", 5),
+            few_shot_split=getattr(args, "few_shot_split", "train"),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             **cache_kwargs
         )
 
-        if type(dataset.y[0]) is list:
-            # We have several labels per input
-            # Duplicate inputs for each label
-            x_proc, y_proc = [], []
-
-            for x, y in zip(dataset.x, dataset.y):
-                for y_i in y:
-                    x_proc.append(x)
-                    y_proc.append(y_i)
-
-            dataset = Dataset(x_proc, y_proc, args.batch_size)
-
         estimators = []
         estimators += get_ue_methods(args, model)
-        estimators += get_density_based_ue_methods(args, model.model_type)
+        density_based_ue_methods = get_density_based_ue_methods(args, model.model_type)
+        estimators += density_based_ue_methods
 
-        if any([str(estimator).split('_')[0] in DENSITY_BASED_ESTIMATORS for estimator in estimators]):
+        if any([not getattr(method, "is_fitted", False) for method in density_based_ue_methods]):
             if (args.train_dataset is not None) and (
                     args.train_dataset != args.dataset
             ):
@@ -186,24 +164,19 @@ def main(args):
         else:
             train_dataset = None
             background_train_dataset = None
-            density_based_ue = []
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
 
         log.info("Done with loading data.")
 
+        generation_metrics = get_generation_metrics(args)
+
         man = UEManager(
             dataset,
             model,
             estimators,
-            [
-                RougeMetric("rouge1"),
-                RougeMetric("rouge2"),
-                RougeMetric("rougeL"),
-                BartScoreSeqMetric("rh"),
-                AccuracyMetric(),
-            ],
+            generation_metrics,
             [
                 ReversedPairsProportion(),
                 PredictionRejectionArea(),
@@ -228,11 +201,14 @@ def main(args):
 def get_density_based_ue_methods(args, model_type):
     estimators = []
     if args.use_density_based_ue:
-        dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
-        dataset_name = dataset_name.split("/")[-1].split(".")[0]
-        model_name = args.model.split("/")[-1]
-        parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
-
+        if getattr(args, 'parameters_path', False):
+            parameters_path = args.parameters_path
+        else:
+            dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
+            dataset_name = dataset_name.split("/")[-1].split(".")[0]
+            model_name = args.model.path.split("/")[-1]
+            parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
+        
         if model_type == "Seq2SeqLM":
             estimators += [
                 MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
@@ -291,6 +267,11 @@ def get_ue_methods(args, model):
             Eccentricity(similarity_score="NLI_score", affinity="contra"),
             Eccentricity(similarity_score="Jaccard_score"),
             SemanticEntropy(),
+            SAR(),
+            TokenSAR(),
+            SentenceSAR(),
+            RenyiNeg(),
+            FisherRao(),
         ]
 
     if args.use_ens_ue:
@@ -298,9 +279,9 @@ def get_ue_methods(args, model):
             raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
 
         token_measures = all_token_estimators()
-        if args.ensembling_mode == 'pe':
+        if args.model.ensembling_mode == 'pe':
             sequence_measures = all_pe_estimators()
-        elif args.ensembling_mode == 'ep':
+        elif args.model.ensembling_mode == 'ep':
             sequence_measures = all_ep_estimators()
         else:
             raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
@@ -329,6 +310,46 @@ def get_ue_methods(args, model):
             estimators.append(getattr(module, estimator_class)(**estimator_kwargs))
 
     return estimators
+
+
+def get_generation_metrics(args):
+    generation_metrics = getattr(args, "generation_metrics", None)
+    if not generation_metrics:
+        result = [
+            RougeMetric("rouge1"),
+            RougeMetric("rouge2"),
+            RougeMetric("rougeL"),
+            BertScoreMetric('rh'),
+            SbertMetric(),
+            AccuracyMetric(
+                target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                normalize = getattr(args, "normalize", False),
+            ),
+        ]
+        if not getattr(args, "multiref", False):
+            # Currently, BartScoreSeqMetric does not support multiref
+            result.append(BartScoreSeqMetric('rh'))
+        else:
+            # Wrap each metric in AggregatedMetric
+            result = [AggregatedMetric(base_metric=metric) for metric in result]
+    else:
+        result = []
+        for metric in generation_metrics:
+            metric_name = metric["name"]
+            if getattr(args, "multiref", False) and metric_name == "BartScoreSeqMetric":
+                raise ValueError("BartScoreSeqMetric does not support multiref")
+            metric_class = globals()[metric_name]
+            result.append(metric_class(*metric.get("args", [])))
+    return result
+
+
+def get_model_kwargs(args):
+    model_kwargs = {}
+    if getattr(args.model, 'device_map', None):
+        model_kwargs['device_map'] = args.model.device_map
+
+    return model_kwargs
 
 
 if __name__ == "__main__":

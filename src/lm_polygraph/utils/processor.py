@@ -1,6 +1,7 @@
 import numpy as np
 
 from typing import List, Dict, Tuple
+from lm_polygraph.estimators.estimator import Estimator
 
 
 class Processor:
@@ -9,10 +10,10 @@ class Processor:
     """
 
     def on_batch(
-            self,
-            batch_stats: Dict[str, np.ndarray],
-            batch_gen_metrics: Dict[Tuple[str, str], List[float]],
-            batch_estimations: Dict[Tuple[str, str], List[float]],
+        self,
+        batch_stats: Dict[str, np.ndarray],
+        batch_gen_metrics: Dict[Tuple[str, str], List[float]],
+        batch_estimations: Dict[Tuple[str, str], List[float]],
     ):
         """
         Processes new batch.
@@ -46,43 +47,51 @@ class Logger(Processor):
     """
 
     def on_batch(
-            self,
-            batch_stats: Dict[str, np.ndarray],
-            batch_gen_metrics: Dict[Tuple[str, str], List[float]],
-            batch_estimations: Dict[Tuple[str, str], List[float]],
+        self,
+        batch_stats: Dict[str, np.ndarray],
+        batch_gen_metrics: Dict[Tuple[str, str], List[float]],
+        batch_estimations: Dict[Tuple[str, str], List[float]],
     ):
         """
         Outputs statistics from `batch_stats`, `batch_gen_metrics` and `batch_estimations` to stdout.
         """
-        print('=' * 50 + ' NEW BATCH ' + '=' * 50)
-        print('Statistics:')
+        print("=" * 50 + " NEW BATCH " + "=" * 50)
+        print("Statistics:")
         print()
         for key, val in batch_stats.items():
             str_repr = str(val)
             # to skip large outputs
-            if len(str_repr) < 10000 and str_repr.count('\n') < 10:
-                print(f'{key}: {val}')
+            if len(str_repr) < 10000 and str_repr.count("\n") < 10:
+                print(f"{key}: {val}")
                 print()
-        print('-' * 100)
-        print('Estimations:')
+        print("-" * 100)
+        print("Estimations:")
         print()
         for key, val in batch_estimations.items():
-            print(f'{key}: {val}')
+            print(f"{key}: {val}")
             print()
-        print('-' * 100)
-        print('Generation metrics:')
+        print("-" * 100)
+        print("Generation metrics:")
         print()
         for key, val in batch_gen_metrics.items():
-            print(f'{key}: {val}')
+            print(f"{key}: {val}")
             print()
 
-    def on_eval(self, metrics: Dict[Tuple[str, str, str, str], float]):
+    def on_eval(
+        self,
+        metrics: Dict[Tuple[str, str, str, str], float],
+        bad_estimators: Dict[Estimator, int],
+    ):
         """
-        Outputs statistics from `metrics` to stdout.
+        Outputs statistics from `metrics` and failed estimators to stdout.
         """
-        print('=' * 50 + ' METRICS ' + '=' * 50)
-        print('Metrics:')
+        print("=" * 50 + " METRICS " + "=" * 50)
+        print("Metrics:")
         print()
         for key, val in metrics.items():
-            print(f'{key}: {val}')
+            print(f"{key}: {val}")
             print()
+        if len(bad_estimators) > 0:
+            print("=" * 45 + " FAILED ESTIMATORS " + "=" * 45)
+            for bad_estimator, batch_i in bad_estimators.items():
+                print(str(bad_estimator), " on batch ", batch_i)

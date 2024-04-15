@@ -21,12 +21,15 @@ class MeanConditionalPointwiseMutualInformation(Estimator):
             lambd (float): scale factor for pointwise mutual information
                 (default: 3.599 - best according to https://arxiv.org/abs/2210.13210)
         """
-        super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods', 'entropy'], 'sequence')
+        super().__init__(
+            ["greedy_log_likelihoods", "greedy_lm_log_likelihoods", "entropy"],
+            "sequence",
+        )
         self.tau = tau
         self.lambd = lambd
 
     def __str__(self):
-        return 'MeanConditionalPointwiseMutualInformation'
+        return "MeanConditionalPointwiseMutualInformation"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -41,9 +44,9 @@ class MeanConditionalPointwiseMutualInformation(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        logprobs = stats['greedy_log_likelihoods']
-        lm_logprobs = stats['greedy_lm_log_likelihoods']
-        entropies = stats['entropy']
+        logprobs = stats["greedy_log_likelihoods"]
+        lm_logprobs = stats["greedy_lm_log_likelihoods"]
+        entropies = stats["entropy"]
         mi_scores = []
         for lp, lm_lp, ent in zip(logprobs, lm_logprobs, entropies):
             mi_scores.append([])
@@ -70,12 +73,14 @@ class ConditionalPointwiseMutualInformation(Estimator):
             lambd (float): scale factor for pointwise mutual information
                 (default: 3.599 - best according to https://arxiv.org/abs/2210.13210)
         """
-        super().__init__(['greedy_log_likelihoods', 'greedy_lm_log_likelihoods', 'entropy'], 'token')
+        super().__init__(
+            ["greedy_log_likelihoods", "greedy_lm_log_likelihoods", "entropy"], "token"
+        )
         self.tau = tau
         self.lambd = lambd
 
     def __str__(self):
-        return 'ConditionalPointwiseMutualInformation'
+        return "ConditionalPointwiseMutualInformation"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -90,9 +95,9 @@ class ConditionalPointwiseMutualInformation(Estimator):
             np.ndarray: concatenated float uncertainty for each token in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        logprobs = stats['greedy_log_likelihoods']
-        lm_logprobs = stats['greedy_lm_log_likelihoods']
-        entropies = stats['entropy']
+        logprobs = stats["greedy_log_likelihoods"]
+        lm_logprobs = stats["greedy_lm_log_likelihoods"]
+        entropies = stats["entropy"]
         mi_scores = []
         for lp, lm_lp, ent in zip(logprobs, lm_logprobs, entropies):
             mi_scores.append([])

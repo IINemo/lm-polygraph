@@ -1,3 +1,5 @@
+import re
+import string
 import numpy as np
 
 from typing import List, Dict
@@ -10,22 +12,42 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
 
-    def __init__(self):
+    def __init__(
+        self, target_ignore_regex=None, output_ignore_regex=None, normalize=False
+    ):
         super().__init__(["greedy_texts"], "sequence")
+        self.target_ignore_regex = (
+            re.compile(target_ignore_regex) if target_ignore_regex else None
+        )
+        self.output_ignore_regex = (
+            re.compile(output_ignore_regex) if output_ignore_regex else None
+        )
+        self.normalize = normalize
 
     def __str__(self):
-        return f"Accuracy"
+        return "Accuracy"
 
-    def _score_single(self, t1: str, t2: str) -> int:
-        if t1.strip() == t2.strip():
+    def _score_single(self, output: str, target: str) -> int:
+        if output.strip() == target.strip():
             return 1
         return 0
 
+    def _filter_text(self, text: str, ignore_regex: re.Pattern) -> str:
+        text = ignore_regex.sub("", text) if ignore_regex else text
+
+        return text
+
+    def _normalize_text(self, text: str) -> str:
+        text = text.strip().lower()
+        text = text.translate(str.maketrans("", "", string.punctuation))
+
+        return text
+
     def __call__(
-            self,
-            stats: Dict[str, np.ndarray],
-            target_texts: List[str],
-            target_tokens: List[List[int]],
+        self,
+        stats: Dict[str, np.ndarray],
+        target_texts: List[str],
+        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates accuracy between stats['greedy_texts'] and target_texts.
@@ -38,9 +60,18 @@ class AccuracyMetric(GenerationMetric):
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """
-        return np.array(
-            [
-                self._score_single(hyp, ref)
-                for hyp, ref in zip(stats["greedy_texts"], target_texts)
-            ]
-        )
+        greedy_texts = stats["greedy_texts"]
+
+        result = []
+
+        for hyp, ref in zip(greedy_texts, target_texts):
+            ref = self._filter_text(ref, self.target_ignore_regex)
+            hyp = self._filter_text(hyp, self.output_ignore_regex)
+
+            if self.normalize:
+                ref = self._normalize_text(ref)
+                hyp = self._normalize_text(hyp)
+
+            result.append(self._score_single(hyp, ref))
+
+        return np.array(result)

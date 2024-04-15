@@ -14,11 +14,18 @@ class GreedyLMProbsCalculator(StatCalculator):
     """
 
     def __init__(self):
-        super().__init__(['greedy_lm_log_probs', 'greedy_lm_log_likelihoods'],
-                         ['greedy_tokens'])
+        super().__init__(
+            ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]
+        )
 
-    def __call__(self, dependencies: Dict[str, np.array], texts: List[str], model: WhiteboxModel,
-                 max_new_tokens: int = 100, **kwargs) -> Dict[str, np.ndarray]:
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+        **kwargs,
+    ) -> Dict[str, np.ndarray]:
         """
         Calculates the entropy of probabilities at each token position in the generation.
 
@@ -35,23 +42,32 @@ class GreedyLMProbsCalculator(StatCalculator):
                 - 'greedy_lm_log_likelihoods' (List[List[float]]): log-probabilities of generating text without input.
                     P(y_t | y_<t) for all t.
         """
-        tokens = dependencies['greedy_tokens']
+        tokens = dependencies["greedy_tokens"]
         try:
             batch = model.tokenize([model.tokenizer.decode(t) for t in tokens])
             batch = {k: v.to(model.device()) for k, v in batch.items()}
             with torch.no_grad():
                 if model.model_type == "Seq2SeqLM":
-                    logprobs = model.model(**batch, decoder_input_ids=batch["input_ids"]).logits.log_softmax(-1)
+                    logprobs = model.model(
+                        **batch, decoder_input_ids=batch["input_ids"]
+                    ).logits.log_softmax(-1)
                 else:
                     logprobs = model.model(**batch).logits.log_softmax(-1)
             greedy_lm_log_probs = []
             greedy_lm_ll = []
             for i in range(len(tokens)):
-                assert len(logprobs[i]) >= len(tokens[i])
-                greedy_lm_log_probs.append(logprobs[i, -len(tokens[i]):-1].cpu().numpy())
-                greedy_lm_ll.append([logprobs[i, -len(tokens[i]) + j, tokens[i][j]].item()
-                                     for j in range(len(tokens[i]))])
-        except:
+                if len(logprobs[i]) < len(tokens[i]):
+                    raise ValueError("tokenizer(tokenizer.decode(t)) != t")
+                greedy_lm_log_probs.append(
+                    logprobs[i, -len(tokens[i]) : -1].cpu().numpy()
+                )
+                greedy_lm_ll.append(
+                    [
+                        logprobs[i, -len(tokens[i]) + j, tokens[i][j]].item()
+                        for j in range(len(tokens[i]))
+                    ]
+                )
+        except ValueError:
             # case where tokenizer(tokenizer.decode(t)) != t; process each sequence separetly
             greedy_lm_log_probs = []
             greedy_lm_ll = []
@@ -59,19 +75,22 @@ class GreedyLMProbsCalculator(StatCalculator):
                 input_ids = torch.LongTensor([toks]).to(model.device())
                 batch = {
                     "input_ids": input_ids,
-                    "attention_mask": torch.ones_like(input_ids).to(model.device())
+                    "attention_mask": torch.ones_like(input_ids).to(model.device()),
                 }
                 with torch.no_grad():
                     if model.model_type == "Seq2SeqLM":
-                        logprobs = model.model(**batch, decoder_input_ids=batch["input_ids"]).logits.log_softmax(-1)
+                        logprobs = model.model(
+                            **batch, decoder_input_ids=batch["input_ids"]
+                        ).logits.log_softmax(-1)
                     else:
                         logprobs = model.model(**batch).logits.log_softmax(-1)
                 logprobs = logprobs[0]
                 assert len(logprobs) >= len(toks)
-                greedy_lm_log_probs.append(logprobs[-len(toks):-1].cpu().numpy())
-                greedy_lm_ll.append([logprobs[-len(toks) + j, toks[j]].item()
-                                     for j in range(len(toks))])
+                greedy_lm_log_probs.append(logprobs[-len(toks) : -1].cpu().numpy())
+                greedy_lm_ll.append(
+                    [logprobs[-len(toks) + j, toks[j]].item() for j in range(len(toks))]
+                )
         return {
-            'greedy_lm_log_probs': greedy_lm_log_probs,
-            'greedy_lm_log_likelihoods': greedy_lm_ll,
+            "greedy_lm_log_probs": greedy_lm_log_probs,
+            "greedy_lm_log_likelihoods": greedy_lm_ll,
         }

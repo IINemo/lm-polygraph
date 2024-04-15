@@ -1,6 +1,9 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -12,7 +15,7 @@ task: nmt
 dataset: [wmt14, fr-en]
 text_column: en
 label_column: fr
-prompt: "Translate from {source_lang} into {target_lang}. Output only translation:\n{text}\nTranslation:\n"
+prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
 max_new_tokens: 107
@@ -32,17 +35,11 @@ subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
-model: databricks/dolly-v2-3b
-use_auth_token:
-ensemble: false
-mc: false
-mc_seeds: []
-dropout_rate:
-
 use_density_based_ue: true
 use_seq_ue: true
 use_tok_ue: false
 use_ens_ue: false
+generation_metrics: null
 ens_type: 
 
 # Examples of providing additional UE methods:

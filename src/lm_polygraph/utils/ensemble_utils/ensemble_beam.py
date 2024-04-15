@@ -1,7 +1,6 @@
 import warnings
-import inspect
 from dataclasses import dataclass
-from typing import Optional, Union, Dict, Any, List, Tuple
+from typing import Optional, Union, Dict, List, Tuple
 
 import torch
 import torch.distributed as dist
@@ -9,10 +8,9 @@ from torch.distributions.categorical import Categorical
 from torch import nn
 
 from transformers import GenerationMixin
-from transformers.generation.beam_search import BeamScorer, BeamSearchScorer
+from transformers.generation.beam_search import BeamScorer
 from transformers.generation.logits_process import (
     LogitsProcessorList,
-    MinLengthLogitsProcessor,
 )
 from transformers.generation.stopping_criteria import (
     StoppingCriteriaList,
@@ -169,15 +167,21 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                 UserWarning,
             )
         pad_token_id = (
-            pad_token_id if pad_token_id is not None else self.generation_config.pad_token_id
+            pad_token_id
+            if pad_token_id is not None
+            else self.generation_config.pad_token_id
         )
         eos_token_id = (
-            eos_token_id if eos_token_id is not None else self.generation_config.eos_token_id
+            eos_token_id
+            if eos_token_id is not None
+            else self.generation_config.eos_token_id
         )
         if isinstance(eos_token_id, int):
             eos_token_id = [eos_token_id]
         output_scores = (
-            output_scores if output_scores is not None else self.generation_config.output_scores
+            output_scores
+            if output_scores is not None
+            else self.generation_config.output_scores
         )
         output_attentions = (
             output_attentions
@@ -246,32 +250,32 @@ class EnsembleBeamSearchMixin(GenerationMixin):
         this_peer_finished = False  # used by synced_gpus only
         encoder_outputs = model_kwargs.pop("encoder_outputs")
         calculate_entropies = getattr(self, "calculate_entropies", True)
-        
+
         self.models_beam_tokens_iter = None
         models_beam_next_token_logits = []
-        
+
         pe_uncertainties = {}
         ep_uncertainties = {}
         if calculate_entropies:
-            pe_uncertainties['total_uncertainty'] = []
-            pe_uncertainties['data_uncertainty'] = []
-            pe_uncertainties['mutual_information'] = []
-            pe_uncertainties['epkl_total_uncertainty'] = []
-            pe_uncertainties['epkl'] = []
-            pe_uncertainties['rmi'] = []
+            pe_uncertainties["total_uncertainty"] = []
+            pe_uncertainties["data_uncertainty"] = []
+            pe_uncertainties["mutual_information"] = []
+            pe_uncertainties["epkl_total_uncertainty"] = []
+            pe_uncertainties["epkl"] = []
+            pe_uncertainties["rmi"] = []
 
-            ep_uncertainties['total_uncertainty'] = []
-            ep_uncertainties['data_uncertainty'] = []
-            ep_uncertainties['mutual_information'] = []
-            ep_uncertainties['epkl_total_uncertainty'] = []
-            ep_uncertainties['epkl'] = []
-            ep_uncertainties['rmi']= []
+            ep_uncertainties["total_uncertainty"] = []
+            ep_uncertainties["data_uncertainty"] = []
+            ep_uncertainties["mutual_information"] = []
+            ep_uncertainties["epkl_total_uncertainty"] = []
+            ep_uncertainties["epkl"] = []
+            ep_uncertainties["rmi"] = []
 
         if self.mc:
             num_models = self.mc_models_num
         else:
             num_models = len(self.models)
-        
+
         self.models_beam_logits_iter = None
 
         while True:
@@ -293,7 +297,9 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                     torch.manual_seed(self.mc_seeds[i])
                     model_inputs.append(
                         self.prepare_inputs_for_generation(
-                            input_ids, encoder_outputs=encoder_outputs[i], **model_kwargs
+                            input_ids,
+                            encoder_outputs=encoder_outputs[i],
+                            **model_kwargs,
                         )
                     )
                 torch.manual_seed(self.base_seed)
@@ -301,10 +307,16 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                 for i in range(num_models):
                     dev = self.models[i].device
                     input_ids.to(dev)
-                    model_kwargs = {k: v.to(dev) for k, v in model_kwargs.items() if hasattr(v, 'to')}
+                    model_kwargs = {
+                        k: v.to(dev)
+                        for k, v in model_kwargs.items()
+                        if hasattr(v, "to")
+                    }
                     model_inputs.append(
                         self.prepare_inputs_for_generation(
-                            input_ids.to(dev), encoder_outputs=encoder_outputs[i], **model_kwargs
+                            input_ids.to(dev),
+                            encoder_outputs=encoder_outputs[i],
+                            **model_kwargs,
                         )
                     )
 
@@ -315,31 +327,34 @@ class EnsembleBeamSearchMixin(GenerationMixin):
             if self.mc:
                 for i in range(self.mc_models_num):
                     torch.manual_seed(self.mc_seeds[i])
-                    models_outputs.append(self(
-                        **model_inputs[i],
-                        return_dict=True,
-                        output_attentions=output_attentions,
-                        output_hidden_states=output_hidden_states,
-                    ))
+                    models_outputs.append(
+                        self(
+                            **model_inputs[i],
+                            return_dict=True,
+                            output_attentions=output_attentions,
+                            output_hidden_states=output_hidden_states,
+                        )
+                    )
 
                     if synced_gpus and this_peer_finished:
                         cur_len = cur_len + 1
                         continue  # don't waste resources running the code we don't need
-
                 torch.manual_seed(self.base_seed)
             else:
                 for i, model in enumerate(self.models):
-                    models_outputs.append(model(
-                        **model_inputs[i],
-                        return_dict=True,
-                        output_attentions=output_attentions,
-                        output_hidden_states=output_hidden_states,
-                    ))
+                    models_outputs.append(
+                        model(
+                            **model_inputs[i],
+                            return_dict=True,
+                            output_attentions=output_attentions,
+                            output_hidden_states=output_hidden_states,
+                        )
+                    )
 
                     if synced_gpus and this_peer_finished:
                         cur_len = cur_len + 1
                         continue  # don't waste resources running the code we don't need
-            
+
             for outputs in models_outputs:
                 model_next_token_logits = outputs.logits[:, -1, :].to(self.device)
                 model_next_token_scores = nn.functional.log_softmax(
@@ -353,16 +368,22 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                 if calculate_entropies:
                     model_entropy = Categorical(models_next_token_probas[-1]).entropy()
                     models_entropies.append(model_entropy)
-            
 
-            pe_next_token_scores = torch.stack(models_next_token_logits).logsumexp(dim=0) - torch.tensor(num_models).log()
+            pe_next_token_scores = (
+                torch.stack(models_next_token_logits).logsumexp(dim=0)
+                - torch.tensor(num_models).log()
+            )
 
             if self.models_beam_logits_iter is None:
-                self.models_beam_logits_iter = torch.zeros((num_models, batch_size * num_beams, 1)).to(input_ids.device)
+                self.models_beam_logits_iter = torch.zeros(
+                    (num_models, batch_size * num_beams, 1)
+                ).to(input_ids.device)
                 models_beam_logits = self.models_beam_logits_iter
 
             denom = models_beam_logits.logsumexp(dim=0)
-            num = (torch.stack(models_next_token_logits) + models_beam_logits).logsumexp(dim=0)
+            num = (
+                torch.stack(models_next_token_logits) + models_beam_logits
+            ).logsumexp(dim=0)
             ep_next_token_scores = num - denom
 
             pe_next_token_probas = pe_next_token_scores.exp()
@@ -373,21 +394,25 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                 pe_token_data_unc = torch.stack(models_entropies).mean(0)
                 pe_token_mi = pe_token_total_unc - pe_token_data_unc
                 pe_token_av_logs = torch.stack(models_next_token_logits).mean(0)
-                pe_token_epkl_total_unc = -(pe_token_av_logs * pe_next_token_probas).sum(-1)
+                pe_token_epkl_total_unc = -(
+                    pe_token_av_logs * pe_next_token_probas
+                ).sum(-1)
                 pe_token_epkl = pe_token_epkl_total_unc - pe_token_data_unc
                 pe_token_rmi = pe_token_epkl_total_unc - pe_token_total_unc
-            
+
                 ep_token_total_unc = Categorical(ep_next_token_probas).entropy()
                 ep_token_data_unc = torch.stack(models_entropies).mean(0)
                 ep_token_mi = ep_token_total_unc - ep_token_data_unc
                 ep_token_av_logs = torch.stack(models_next_token_logits).mean(0)
-                ep_token_epkl_total_unc = -(ep_token_av_logs * ep_next_token_probas).sum(-1)
+                ep_token_epkl_total_unc = -(
+                    ep_token_av_logs * ep_next_token_probas
+                ).sum(-1)
                 ep_token_epkl = ep_token_epkl_total_unc - ep_token_data_unc
                 ep_token_rmi = ep_token_epkl_total_unc - ep_token_total_unc
 
-            if self.ensembling_mode == 'pe':
+            if self.ensembling_mode == "pe":
                 next_token_scores = pe_next_token_scores
-            elif self.ensembling_mode == 'ep':
+            elif self.ensembling_mode == "ep":
                 next_token_scores = ep_next_token_scores
             else:
                 raise NotImplementedError
@@ -423,19 +448,23 @@ class EnsembleBeamSearchMixin(GenerationMixin):
                     )
 
                 if calculate_entropies:
-                    pe_uncertainties['total_uncertainty'].append(pe_token_total_unc)
-                    pe_uncertainties['data_uncertainty'].append(pe_token_data_unc)
-                    pe_uncertainties['mutual_information'].append(pe_token_mi)
-                    pe_uncertainties['epkl_total_uncertainty'].append(pe_token_epkl_total_unc)
-                    pe_uncertainties['epkl'].append(pe_token_epkl)
-                    pe_uncertainties['rmi'].append(pe_token_rmi)
+                    pe_uncertainties["total_uncertainty"].append(pe_token_total_unc)
+                    pe_uncertainties["data_uncertainty"].append(pe_token_data_unc)
+                    pe_uncertainties["mutual_information"].append(pe_token_mi)
+                    pe_uncertainties["epkl_total_uncertainty"].append(
+                        pe_token_epkl_total_unc
+                    )
+                    pe_uncertainties["epkl"].append(pe_token_epkl)
+                    pe_uncertainties["rmi"].append(pe_token_rmi)
 
-                    ep_uncertainties['total_uncertainty'].append(ep_token_total_unc)
-                    ep_uncertainties['data_uncertainty'].append(ep_token_data_unc)
-                    ep_uncertainties['mutual_information'].append(ep_token_mi)
-                    ep_uncertainties['epkl_total_uncertainty'].append(ep_token_epkl_total_unc)
-                    ep_uncertainties['epkl'].append(ep_token_epkl)
-                    ep_uncertainties['rmi'].append(ep_token_rmi)
+                    ep_uncertainties["total_uncertainty"].append(ep_token_total_unc)
+                    ep_uncertainties["data_uncertainty"].append(ep_token_data_unc)
+                    ep_uncertainties["mutual_information"].append(ep_token_mi)
+                    ep_uncertainties["epkl_total_uncertainty"].append(
+                        ep_token_epkl_total_unc
+                    )
+                    ep_uncertainties["epkl"].append(ep_token_epkl)
+                    ep_uncertainties["rmi"].append(ep_token_rmi)
 
             # reshape for beam search
             vocab_size = next_token_scores.shape[-1]
@@ -464,20 +493,31 @@ class EnsembleBeamSearchMixin(GenerationMixin):
             beam_scores = beam_outputs["next_beam_scores"]
             beam_next_tokens = beam_outputs["next_beam_tokens"]
             beam_idx = beam_outputs["next_beam_indices"]
-            
+
             input_ids = torch.cat(
                 [input_ids[beam_idx, :], beam_next_tokens.unsqueeze(-1)], dim=-1
             )
 
-            token_models_beam_logits = torch.stack(models_next_token_logits)[:, beam_idx, :]
-            token_models_beam_logits = torch.gather(token_models_beam_logits, -1,
-                                                    beam_next_tokens.repeat((num_models), 1).unsqueeze(-1))
+            token_models_beam_logits = torch.stack(models_next_token_logits)[
+                :, beam_idx, :
+            ]
+            token_models_beam_logits = torch.gather(
+                token_models_beam_logits,
+                -1,
+                beam_next_tokens.repeat((num_models), 1).unsqueeze(-1),
+            )
 
-            self.models_beam_logits_iter = torch.cat((self.models_beam_logits_iter[:, beam_idx, :], token_models_beam_logits), -1)
+            self.models_beam_logits_iter = torch.cat(
+                (
+                    self.models_beam_logits_iter[:, beam_idx, :],
+                    token_models_beam_logits,
+                ),
+                -1,
+            )
 
             # Finished hypos may have -inf as a value of selected logit
             # Manually set them to 1 (as normal beam scorer does)
-            finished_beams = (beam_next_tokens == self.config.pad_token_id)
+            finished_beams = beam_next_tokens == self.config.pad_token_id
             self.models_beam_logits_iter[:, finished_beams, -1] = 0.0
 
             models_beam_logits = self.models_beam_logits_iter.sum(-1, keepdims=True)
@@ -485,8 +525,8 @@ class EnsembleBeamSearchMixin(GenerationMixin):
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
-            
-            #if "past" not in model_kwargs.keys():
+
+            # if "past" not in model_kwargs.keys():
             #    model_kwargs["past"] = None
             if model_kwargs["past_key_values"] is not None:
                 model_kwargs["past_key_values"] = self._reorder_cache(
@@ -520,7 +560,7 @@ class EnsembleBeamSearchMixin(GenerationMixin):
             max_length=stopping_criteria.max_length,
             beam_indices=beam_indices,
         )
-        
+
         if return_dict_in_generate:
             if not output_scores:
                 sequence_outputs["sequence_scores"] = None
