@@ -38,7 +38,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         Returns:
             Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'blackbox_sample_texts' key.
         """
-        
+
         if isinstance(model, BlackboxModel):
             samples = model.generate_texts(
                 input_texts=texts,
