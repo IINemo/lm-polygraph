@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Tuple
 
 
 def register_stat_calculators(
-    deberta_batch_size: int = 10, # TODO: rename to NLI model
-    deberta_device: Optional[str] = None, # TODO: rename to NLI model
+    deberta_batch_size: int = 10,  # TODO: rename to NLI model
+    deberta_device: Optional[str] = None,  # TODO: rename to NLI model
     n_ccp_alternatives: int = 10,
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
@@ -53,7 +53,7 @@ def register_stat_calculators(
     _register(EnsembleTokenLevelDataCalculator())
     _register(SemanticMatrixCalculator(nli_model=nli_model))
     _register(CrossEncoderSimilarityMatrixCalculator(nli_model=nli_model))
-    #_register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
+    # _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
 

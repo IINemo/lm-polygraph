@@ -1,6 +1,6 @@
 from .stat_calculator import StatCalculatorBasic
 
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 
@@ -9,7 +9,7 @@ import torch
 
 class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
     """
-    Performs inference of the model and ensures that output contains 
+    Performs inference of the model and ensures that output contains
     1. logprobas
     2. tokens
     3. embeddings
@@ -36,7 +36,8 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
             [],
         )
 
-    def get_embeddings_from_output(self, 
+    def get_embeddings_from_output(
+        self,
         output,
         all_layers: bool = False,
     ):
@@ -95,19 +96,22 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
-        
-        args_generate.update({
-            'return_dict_in_generate' : True,
-            'output_scores' : True,
-            'output_hidden_states' : True
-            })
-        model_inputs = model_inputs if isinstance(model_inputs, torch.Tensor) else model_inputs['input_ids']
 
-        out = model.generate(
-            model_inputs,
-            **args_generate
+        args_generate.update(
+            {
+                "return_dict_in_generate": True,
+                "output_scores": True,
+                "output_hidden_states": True,
+            }
         )
-        
+        model_inputs = (
+            model_inputs
+            if isinstance(model_inputs, torch.Tensor)
+            else model_inputs["input_ids"]
+        )
+
+        out = model.generate(model_inputs, **args_generate)
+
         all_logits = torch.stack(out.scores, dim=1)
 
         generation_config = args_generate["generation_config"]
@@ -142,7 +146,7 @@ class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
             "greedy_logits": cut_logits,
             "greedy_tokens": cut_sequences,
             "embeddings_decoder": embeddings_decoder,
-            "greedy_log_likelihoods": lls
+            "greedy_log_likelihoods": lls,
         }
 
         return result_dict

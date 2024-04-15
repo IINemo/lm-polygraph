@@ -538,7 +538,7 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
-                    if (f"blackbox_{stat}" in STAT_CALCULATORS.keys()) and (
+                    if (f"blackbox_{stat}" in self.stat_calculators.keys()) and (
                         f"blackbox_{stat}" in self.stats_names
                     ):
                         batch_stats[f"blackbox_{stat}"] = stat_value

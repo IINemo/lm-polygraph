@@ -15,9 +15,7 @@ class GreedyAlternativesNLICalculator(StatCalculator):
             [
                 "greedy_tokens_alternatives_nli",
             ],
-            [
-                "greedy_tokens_alternatives"
-            ],
+            ["greedy_tokens_alternatives"],
         )
 
         self.nli_model = nli_model
