@@ -7,7 +7,7 @@ from typing import Dict
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 
 
-class Deberta(StatCalculator):
+class Deberta:
     """
     Allows for the implementation of a singleton DeBERTa model which can be shared across
     different uncertainty estimation methods in the code.
@@ -27,7 +27,7 @@ class Deberta(StatCalculator):
         device : str
             device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
         """
-        super().__init__(["deberta"], [])
+        #super().__init__(["deberta"], [])
         self.deberta_path = deberta_path
         self.batch_size = batch_size
         self.deberta = None
@@ -55,10 +55,10 @@ class Deberta(StatCalculator):
         self.deberta.to(self.device)
         self.deberta.eval()
 
-    def __call__(
-        self,
-        *args,
-        **kwargs,
-    ) -> Dict[str, np.ndarray]:
-        self.setup()
-        return {"deberta": self}
+    # def __call__(
+    #     self,
+    #     *args,
+    #     **kwargs,
+    # ) -> Dict[str, np.ndarray]:
+    #     self.setup()
+    #     return {"deberta": self}
