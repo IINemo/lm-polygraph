@@ -240,7 +240,12 @@ def _validate_args(args):
                 args["presence_penalty"]
             )
         )
-    args.pop("presence_penalty", None)
+    
+    # remove arguments that are not supported by the HF model.generate function
+    keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
+    for key in keys_to_remove:
+        args.pop(key, None)
+
     return args
 
 
@@ -353,7 +358,6 @@ class WhiteboxModel(Model):
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
         default_params = asdict(self.generation_parameters)
-        default_params.pop("generate_until")
 
         if len(self.generation_parameters.generate_until) > 0:
             args["stopping_criteria"] = self.get_stopping_criteria(args["input_ids"])
@@ -367,10 +371,10 @@ class WhiteboxModel(Model):
         else:
             logits_processor = LogitsProcessorList([processor])
         args["logits_processor"] = logits_processor
+
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-
         args = _validate_args(args)
 
         generation = self.model.generate(**args)
