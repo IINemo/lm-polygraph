@@ -37,31 +37,30 @@ class Deberta:
     def deberta(self):
         if self._deberta is None:
             self.setup()
-        
+
         return self._deberta
 
     @property
     def deberta_tokenizer(self):
         if self._deberta_tokenizer is None:
             self.setup()
-        
+
         return self._deberta_tokenizer
 
     def to(self, device):
         self.device = device
-        if self.deberta is not None:
-            self.deberta.to(self.device)
+        if self._deberta is not None:
+            self._deberta.to(self.device)
 
     def setup(self):
         """
         Loads and prepares the DeBERTa model from the specified path.
         """
-        if self.deberta is not None:
+        if self._deberta is not None:
             return
-        self.deberta = DebertaForSequenceClassification.from_pretrained(
+        self._deberta = DebertaForSequenceClassification.from_pretrained(
             self.deberta_path, problem_type="multi_label_classification"
         )
-        self.deberta_tokenizer = DebertaTokenizer.from_pretrained(self.deberta_path)
-        self.deberta.to(self.device)
-        self.deberta.eval()
-
+        self._deberta_tokenizer = DebertaTokenizer.from_pretrained(self.deberta_path)
+        self._deberta.to(self.device)
+        self._deberta.eval()
