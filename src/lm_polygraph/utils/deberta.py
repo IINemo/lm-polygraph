@@ -1,10 +1,12 @@
 import torch
-import numpy as np
+
+# import numpy as np
 
 from transformers import DebertaForSequenceClassification, DebertaTokenizer
-from typing import Dict
 
-from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
+# from typing import Dict
+
+# from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 
 
 class Deberta:
@@ -27,7 +29,7 @@ class Deberta:
         device : str
             device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
         """
-        #super().__init__(["deberta"], [])
+        # super().__init__(["deberta"], [])
         self.deberta_path = deberta_path
         self.batch_size = batch_size
         self.deberta = None

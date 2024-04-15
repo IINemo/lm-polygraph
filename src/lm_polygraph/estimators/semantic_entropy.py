@@ -42,8 +42,8 @@ class SemanticEntropy(Estimator):
         """
         loglikelihoods_list = stats["sample_log_probs"]
 
-        #entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"] # TODO: Why this is here??
-        self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"] 
+        # entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"] # TODO: Why this is here??
+        self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
 
         # Concatenate hypos with input texts
         hyps_list = [[] for _ in stats["input_texts"]]
