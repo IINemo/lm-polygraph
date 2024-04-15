@@ -53,7 +53,6 @@ def register_stat_calculators(
     _register(EnsembleTokenLevelDataCalculator())
     _register(SemanticMatrixCalculator(nli_model=nli_model))
     _register(CrossEncoderSimilarityMatrixCalculator(nli_model=nli_model))
-    # _register(Deberta(batch_size=deberta_batch_size, device=deberta_device))
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
 
