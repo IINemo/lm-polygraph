@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 from .stat_calculator import StatCalculator
-from .openai_chat import OpenAIChat
+from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.utils.model import WhiteboxModel
 
 
