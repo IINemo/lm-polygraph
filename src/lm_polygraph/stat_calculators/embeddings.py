@@ -182,14 +182,10 @@ class EmbeddingsCalculator(StatCalculator):
                 output_attentions=False,
                 output_hidden_states=True,
                 num_beams=1,
-                temperature=model.parameters.temperature,
-                top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
-                top_p=model.parameters.topp,
-                presence_penalty=model.parameters.presence_penalty,
-                repetition_penalty=model.parameters.repetition_penalty,
+                num_return_sequences=1,
                 suppress_tokens=(
                     []
-                    if model.parameters.allow_newlines
+                    if model.generation_parameters.allow_newlines
                     else [
                         t
                         for t in range(len(model.tokenizer))

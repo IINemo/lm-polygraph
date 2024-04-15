@@ -26,7 +26,7 @@ class GenerationParameters:
     """
 
     temperature: float = 1.0
-    top_k: int = 1
+    top_k: int = 50
     top_p: float = 1.0
     do_sample: bool = False
     num_beams: int = 1
