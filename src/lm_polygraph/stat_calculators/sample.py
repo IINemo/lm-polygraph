@@ -38,14 +38,11 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         Returns:
             Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'blackbox_sample_texts' key.
         """
-        default_top_k = model.generation_parameters.top_k
-        top_k = default_top_k if default_top_k > 1 else 50
-
+        
         if isinstance(model, BlackboxModel):
             samples = model.generate_texts(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
-                top_k=top_k,
                 n=self.samples_n,
             )
         else:
@@ -56,7 +53,6 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                 min_length=2,
                 do_sample=True,
                 num_beams=1,
-                top_k=top_k,
                 num_return_sequences=self.samples_n,
             )
             for i in range(len(texts)):
