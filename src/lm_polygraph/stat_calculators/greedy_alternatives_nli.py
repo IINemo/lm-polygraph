@@ -10,16 +10,17 @@ import string
 
 
 class GreedyAlternativesNLICalculator(StatCalculator):
-    def __init__(self):
+    def __init__(self, nli_model):
         super().__init__(
             [
                 "greedy_tokens_alternatives_nli",
             ],
             [
-                "greedy_tokens_alternatives",
-                "deberta",
+                "greedy_tokens_alternatives"
             ],
         )
+
+        self.nli_model = nli_model
 
     def _strip(self, w: str):
         return w.strip(string.punctuation + " \n")
@@ -34,7 +35,6 @@ class GreedyAlternativesNLICalculator(StatCalculator):
     ) -> Dict[str, np.ndarray]:
         greedy_alternatives = dependencies["greedy_tokens_alternatives"]
         greedy_alternatives_nli = []
-        deberta = dependencies["deberta"]
         for sample_alternatives in greedy_alternatives:
             nli_matrixes = []
             for w_number, word_alternatives in enumerate(sample_alternatives):
@@ -60,13 +60,13 @@ class GreedyAlternativesNLICalculator(StatCalculator):
 
                 softmax = nn.Softmax(dim=1)
                 w_probs = defaultdict(lambda: defaultdict(lambda: None))
-                for k in range(0, len(nli_queue), deberta.batch_size):
-                    batch = nli_queue[k : k + deberta.batch_size]
-                    encoded = deberta.deberta_tokenizer.batch_encode_plus(
+                for k in range(0, len(nli_queue), self.nli_model.batch_size):
+                    batch = nli_queue[k : k + self.nli_model.batch_size]
+                    encoded = self.nli_model.deberta_tokenizer.batch_encode_plus( # TODO: rename deberta_tokenizer to tokenizer
                         batch, padding=True, return_tensors="pt"
-                    ).to(deberta.device)
-                    logits = deberta.deberta(**encoded).logits
-                    logits = logits.detach().to(deberta.device)
+                    ).to(self.nli_model.device)
+                    logits = self.nli_model.deberta(**encoded).logits
+                    logits = logits.detach().to(self.nli_model.device)
                     for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
                         w_probs[wi][wj] = prob
 
@@ -74,8 +74,8 @@ class GreedyAlternativesNLICalculator(StatCalculator):
                     for j, wj in enumerate(words):
                         pr = w_probs[wi][wj]
                         id = pr.argmax()
-                        ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
-                        contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
+                        ent_id = self.nli_model.deberta.config.label2id["ENTAILMENT"]
+                        contra_id = self.nli_model.deberta.config.label2id["CONTRADICTION"]
                         if id == ent_id:
                             str_class = "entail"
                         elif id == contra_id:
