@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 from .stat_calculator import StatCalculator
+from .openai_chat import OpenAIChat
 from lm_polygraph.utils.model import WhiteboxModel
 
 
@@ -18,12 +19,14 @@ class Claim:
 
 
 CLAIM_EXTRACTION_PROMPT = '''Please breakdown the sentence into independent claims.
+
 Example:
 Sentence: "He was born in London and raised by his mother and father until 11 years old."
 Claims:
 - He was born in London.
 - He was raised by his mother and father.
 - He was raised by his mother and father until 11 years old.
+
 Sentence: "{sent}"
 Claims:'''
 
@@ -40,8 +43,9 @@ class ClaimsExtractor(StatCalculator):
     Extracts claims from the text of the model generation.
     """
 
-    def __init__(self, sent_separators: str = ".?!\n"):
+    def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!\n"):
         super().__init__(["claims"], ["openai_chat", "greedy_texts", "greedy_tokens"])
+        self.openai_chat = openai_chat
         self.sent_separators = sent_separators
 
     def __call__(
@@ -65,7 +69,6 @@ class ClaimsExtractor(StatCalculator):
         """
         greedy_texts = dependencies["greedy_texts"]
         greedy_tokens = dependencies["greedy_tokens"]
-        openai_chat = dependencies["openai_chat"]
         claims: List[List[Claim]] = []
         for greedy_text, greedy_tok, inp_text in zip(
             greedy_texts,
@@ -76,7 +79,6 @@ class ClaimsExtractor(StatCalculator):
                 greedy_text,
                 greedy_tok,
                 model.tokenizer,
-                openai_chat,
             ))
 
         return {"claims": claims}
@@ -86,7 +88,6 @@ class ClaimsExtractor(StatCalculator):
         text: str,
         tokens: List[int],
         tokenizer,
-        openai_chat,
     ) -> List[Claim]:
         sentences = [
             s
@@ -117,7 +118,6 @@ class ClaimsExtractor(StatCalculator):
                 s,
                 tokens[sent_start_token_idx:sent_end_token_idx],
                 tokenizer,
-                openai_chat,
             ):
                 for i in range(len(c.aligned_tokens)):
                     c.aligned_tokens[i] += sent_start_token_idx
@@ -129,9 +129,8 @@ class ClaimsExtractor(StatCalculator):
         sent: str,
         sent_tokens: List[int],
         tokenizer,
-        openai_chat,
     ) -> List[Claim]:
-        extracted_claims = openai_chat.ask(
+        extracted_claims = self.openai_chat.ask(
             CLAIM_EXTRACTION_PROMPT.format(sent=sent)
         )
         claims = []
@@ -139,7 +138,7 @@ class ClaimsExtractor(StatCalculator):
             if not claim_text.startswith("- "):
                 continue
             claim_text = claim_text[2:].strip()
-            match_words = openai_chat.ask(
+            match_words = self.openai_chat.ask(
                 MATCHING_PROMPT.format(sent=sent, claim=claim_text)
             ).strip().split(', ')
             match_string = self._match_string(sent, match_words)
