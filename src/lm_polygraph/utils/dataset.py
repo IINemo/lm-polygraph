@@ -294,13 +294,17 @@ class Dataset:
                         + "\n"
                     )
             for inst in dataset:
-                x.append(
-                    formatted_few_shot_prompt
-                    + prompt.format(
-                        question=inst["question"],
-                        answer="",
+                try:
+                    x.append(
+                        formatted_few_shot_prompt
+                        + prompt.format(
+                            question=inst["question"],
+                            answer="",
+                        )
                     )
-                )
+                except:
+                    breakpoint()
+                    pass
                 y.append([alias for alias in inst["answer"]["aliases"]])
         else:
             x = dataset[x_column]
