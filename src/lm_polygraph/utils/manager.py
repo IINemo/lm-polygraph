@@ -20,15 +20,15 @@ from lm_polygraph.ue_metrics.ue_metric import (
     normalize_metric,
 )
 from lm_polygraph.estimators.estimator import Estimator
-from lm_polygraph.estimators.common import DEBERTA
-from lm_polygraph.stat_calculators.stat_calculator import (
-    StatCalculator,
-    STAT_CALCULATORS,
-    STAT_DEPENDENCIES,
-)
+from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
+from lm_polygraph.utils.register_stat_calculators import register_stat_calculators
 
 
-def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
+def _order_calculators(
+    stats: List[str],
+    stat_calculators: Dict[str, StatCalculator],
+    stat_dependencies: Dict[str, List[str]],
+) -> Tuple[List[str], Set[str]]:
     ordered: List[str] = []
     have_stats: Set[str] = set()
     while len(stats) > 0:
@@ -37,11 +37,11 @@ def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
             stats = stats[1:]
             continue
         dependent = False
-        if stat not in STAT_DEPENDENCIES.keys():
+        if stat not in stat_dependencies.keys():
             raise Exception(
                 f"Cant find stat calculator for: {stat}. Maybe you forgot to register it by calling register()?"
             )
-        for d in STAT_DEPENDENCIES[stat]:
+        for d in stat_dependencies[stat]:
             if d not in have_stats:
                 stats = [d] + stats
                 if stats.count(d) > 40:
@@ -50,7 +50,7 @@ def _order_calculators(stats: List[str]) -> Tuple[List[str], Set[str]]:
         if not dependent:
             stats = stats[1:]
             ordered.append(stat)
-            for new_stat in STAT_CALCULATORS[stat].stats:
+            for new_stat in stat_calculators[stat].stats:
                 have_stats.add(new_stat)
     return ordered, have_stats
 
@@ -218,6 +218,7 @@ class UEManager:
         ignore_exceptions: bool = True,
         ensemble_model: Optional[WhiteboxModel] = None,
         deberta_batch_size: int = 10,
+        deberta_device: Optional[str] = None,
         verbose: bool = True,
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
@@ -237,14 +238,23 @@ class UEManager:
             ignore_exceptions (bool): If true, exceptions on a new batch will be printed to stderr and
                 the batch will be skipped. Useful to skip CUDA OOM errors on large datasets. Default: True.
             deberta_batch_size (int): Batch size for DeBERTa model used in some estimators. Default: 10.
+            deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
+                'cpu' otherwise. Default: None.
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
+
+        stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
+            deberta_batch_size=deberta_batch_size,
+            deberta_device=deberta_device,
+        )
+
+        self.stat_calculators_dict = stat_calculators_dict
+
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
-        self.deberta_batch_size = deberta_batch_size
         self.data: Dataset = data
         self.estimators: List[Estimator] = estimators
         self.generation_metrics: List[GenerationMetric] = generation_metrics
@@ -263,7 +273,13 @@ class UEManager:
             + [s for m in generation_metrics for s in m.stats_dependencies]
             + greedy
         )
-        stats, have_stats = _order_calculators(stats)
+
+        stats, have_stats = _order_calculators(
+            stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+
         self.stats_names = stats
         stats = [
             s
@@ -277,7 +293,7 @@ class UEManager:
             )
         ]  # below in calculate() we copy X in blackbox_X
         self.stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in stats
+            stat_calculators_dict[c] for c in stats
         ]
         if verbose:
             print("Stat calculators:", self.stat_calculators)
@@ -304,9 +320,13 @@ class UEManager:
             if "train_greedy_log_likelihoods" in train_stats
             else []
         )
-        train_stats, _ = _order_calculators(train_stats)
+        train_stats, _ = _order_calculators(
+            train_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
         self.train_stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in train_stats
+            stat_calculators_dict[c] for c in train_stats
         ]
         background_train_stats = [
             s
@@ -314,9 +334,13 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("background_train")
         ]
-        background_train_stats, _ = _order_calculators(background_train_stats)
+        background_train_stats, _ = _order_calculators(
+            background_train_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
         self.background_train_stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in background_train_stats
+            stat_calculators_dict[c] for c in background_train_stats
         ]
 
         ensemble_stats = [
@@ -325,9 +349,13 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("ensemble")
         ]
-        ensemble_stats, _ = _order_calculators(ensemble_stats)
+        ensemble_stats, _ = _order_calculators(
+            ensemble_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
         self.ensemble_stat_calculators: List[StatCalculator] = [
-            STAT_CALCULATORS[c] for c in ensemble_stats
+            stat_calculators_dict[c] for c in ensemble_stats
         ]
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
@@ -363,13 +391,6 @@ class UEManager:
                 - `ue_metrics` name which was used to calculate quality.
         """
 
-        # load DEBERTA to correct device
-        if hasattr(self.model, "device"):
-            DEBERTA.to(self.model.device())
-        else:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            DEBERTA.to(device)
-
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
@@ -400,7 +421,6 @@ class UEManager:
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
 
-            batch_stats["deberta_batch_size"] = self.deberta_batch_size
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:
                 batch_stats[stat] = train_stats.pop(stat)
@@ -520,7 +540,7 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
-                    if (f"blackbox_{stat}" in STAT_CALCULATORS.keys()) and (
+                    if (f"blackbox_{stat}" in self.stat_calculators_dict.keys()) and (
                         f"blackbox_{stat}" in self.stats_names
                     ):
                         batch_stats[f"blackbox_{stat}"] = stat_value

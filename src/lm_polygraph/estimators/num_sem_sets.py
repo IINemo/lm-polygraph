@@ -3,7 +3,6 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
-from .common import DEBERTA
 import torch.nn as nn
 
 softmax = nn.Softmax(dim=1)
@@ -19,13 +18,8 @@ class NumSemSets(Estimator):
 
     def __init__(
         self,
-        batch_size: int = 10,
         verbose: bool = False,
     ):
-        """
-        Parameters:
-            batch_size (int): batch size for Deberta model.
-        """
         super().__init__(
             [
                 "semantic_matrix_entail",
@@ -34,8 +28,6 @@ class NumSemSets(Estimator):
             ],
             "sequence",
         )
-        self.batch_size = batch_size
-        DEBERTA.setup()
         self.verbose = verbose
 
     def __str__(self):

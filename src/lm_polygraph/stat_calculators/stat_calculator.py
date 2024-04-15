@@ -4,9 +4,6 @@ from typing import List, Dict
 from abc import ABC, abstractmethod
 from lm_polygraph.utils.model import Model
 
-STAT_CALCULATORS: Dict[str, "StatCalculator"] = {}
-STAT_DEPENDENCIES: Dict[str, List[str]] = {}
-
 
 class StatCalculator(ABC):
     """
@@ -72,15 +69,3 @@ class StatCalculator(ABC):
             List[str]: Names of statistics dependencies which this class needs at __call__.
         """
         return self._stat_dependencies
-
-
-def register(calculator_class: StatCalculator):
-    """
-    Registers a new statistics calculator to be seen by UEManager for properly organizing the calculations order.
-    Needs to be called at lm_polygraph/stat_calculators/__init__.py for all stat calculators used in running benchmarks.
-    """
-    for stat in calculator_class.stats:
-        if stat in STAT_CALCULATORS.keys():
-            continue
-        STAT_CALCULATORS[stat] = calculator_class
-        STAT_DEPENDENCIES[stat] = calculator_class.stat_dependencies
