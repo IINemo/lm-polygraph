@@ -47,7 +47,10 @@ class Comet(GenerationMetric):
         Returns:
             np.ndarray: list of COMET Scores for each sample in input.
         """
-        sources = [self._filter_text(src, self.source_ignore_regex) for src in stats["input_texts"]]
+        sources = [
+            self._filter_text(src, self.source_ignore_regex)
+            for src in stats["input_texts"]
+        ]
         scores = np.array(
             self.scorer.compute(
                 predictions=stats["greedy_texts"],
