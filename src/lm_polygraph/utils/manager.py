@@ -273,7 +273,7 @@ class UEManager:
             + [s for m in generation_metrics for s in m.stats_dependencies]
             + greedy
         )
-        
+
         stats, have_stats = _order_calculators(
             stats,
             stat_calculators_dict,

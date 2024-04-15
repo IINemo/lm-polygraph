@@ -24,7 +24,7 @@ class SemanticMatrixCalculator(StatCalculator):
                 "semantic_matrix_classes",
                 "entailment_id",
             ],
-            ["blackbox_sample_texts", "deberta"],
+            ["blackbox_sample_texts"],
         )
         self.is_deberta_setup = False
         self.nli_model = nli_model
