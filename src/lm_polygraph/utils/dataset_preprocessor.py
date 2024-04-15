@@ -10,8 +10,11 @@ def preprocess_translation(dataset, x_column, y_column, prompt):
     source_lang = lang.get(x_column, "English")
     target_lang = lang.get(y_column, "English")
     for inst in dataset["translation"]:
-        x.append(prompt.format(source_lang=source_lang,
-                 target_lang=target_lang, text=inst[x_column]))
+        x.append(
+            prompt.format(
+                source_lang=source_lang, target_lang=target_lang, text=inst[x_column]
+            )
+        )
         y.append(inst[y_column])
     return x, y
 
@@ -64,15 +67,20 @@ def preprocess_with_prompt(dataset, x_column, y_column, prompt):
     return [prompt.format(text=text) for text in dataset[x_column]], dataset[y_column]
 
 
-def preprocess_gsm8k(dataset, y_column, n_shot, description,
-                     prompt, few_shot_dataset, mmlu_max_subject_size):
+def preprocess_gsm8k(
+    dataset,
+    y_column,
+    n_shot,
+    description,
+    prompt,
+    few_shot_dataset,
+    mmlu_max_subject_size,
+):
     answers = ["A", "B", "C", "D"]
     subjects = np.array(dataset["subject"])
     x, y = [], []
     for subject in np.unique(subjects):
-        formatted_description = description.format(
-            subject=subject.replace("_", " ")
-        )
+        formatted_description = description.format(subject=subject.replace("_", " "))
         if n_shot > 0:
             few_shot_ids = np.random.choice(
                 len(few_shot_dataset), n_shot, replace=False
@@ -96,24 +104,27 @@ def preprocess_gsm8k(dataset, y_column, n_shot, description,
                 answer="",
             )
             x.append(
-                formatted_description
-                + formatted_few_shot_prompt
-                + formatted_prompt
+                formatted_description + formatted_few_shot_prompt + formatted_prompt
             )
             y.append(answers[inst[y_column]])
 
     return x, y
 
 
-def preprocess_mmlu(dataset, y_column, n_shot, description,
-                    few_shot_dataset, mmlu_max_subject_size, prompt):
+def preprocess_mmlu(
+    dataset,
+    y_column,
+    n_shot,
+    description,
+    few_shot_dataset,
+    mmlu_max_subject_size,
+    prompt,
+):
     answers = ["A", "B", "C", "D"]
     subjects = np.array(dataset["subject"])
     x, y = [], []
     for subject in np.unique(subjects):
-        formatted_description = description.format(
-            subject=subject.replace("_", " ")
-        )
+        formatted_description = description.format(subject=subject.replace("_", " "))
         if n_shot > 0:
             few_shot_ids = np.random.choice(
                 len(few_shot_dataset), n_shot, replace=False
@@ -137,18 +148,24 @@ def preprocess_mmlu(dataset, y_column, n_shot, description,
                 answer="",
             )
             x.append(
-                formatted_description
-                + formatted_few_shot_prompt
-                + formatted_prompt
+                formatted_description + formatted_few_shot_prompt + formatted_prompt
             )
             y.append(answers[inst[y_column]])
 
     return x, y
 
 
-def preprocess_dataset(dataset, dataset_name, x_column, y_column,
-                       prompt, description, n_shot, few_shot_dataset,
-                       mmlu_max_subject_size):
+def preprocess_dataset(
+    dataset,
+    dataset_name,
+    x_column,
+    y_column,
+    prompt,
+    description,
+    n_shot,
+    few_shot_dataset,
+    mmlu_max_subject_size,
+):
     if "translation" in dataset.column_names:
         return preprocess_translation(dataset, x_column, y_column)
     elif ("coqa" in dataset_name.lower()) and len(prompt):
@@ -158,10 +175,24 @@ def preprocess_dataset(dataset, dataset_name, x_column, y_column,
     elif len(prompt):
         return preprocess_with_prompt(dataset, x_column, y_column, prompt)
     elif ("gsm8k" in dataset_name.lower()) and len(prompt):
-        return preprocess_gsm8k(dataset, y_column, n_shot, description,
-                                prompt, few_shot_dataset, mmlu_max_subject_size)
+        return preprocess_gsm8k(
+            dataset,
+            y_column,
+            n_shot,
+            description,
+            prompt,
+            few_shot_dataset,
+            mmlu_max_subject_size,
+        )
     elif ("mmlu" in dataset_name.lower()) and len(prompt):
-        return preprocess_mmlu(dataset, y_column, n_shot, description,
-                               few_shot_dataset, mmlu_max_subject_size, prompt)
+        return preprocess_mmlu(
+            dataset,
+            y_column,
+            n_shot,
+            description,
+            few_shot_dataset,
+            mmlu_max_subject_size,
+            prompt,
+        )
     else:
         return dataset[x_column], dataset[y_column]

@@ -33,7 +33,7 @@ class Dataset:
                 returns list of input texts and list of corresponding output texts.
         """
         for i in range(0, len(self.x), self.batch_size):
-            yield self.x[i: i + self.batch_size], self.y[i: i + self.batch_size]
+            yield self.x[i : i + self.batch_size], self.y[i : i + self.batch_size]
 
     def __len__(self) -> int:
         """
@@ -171,8 +171,7 @@ class Dataset:
             size (Optional[int]): size to subsample dataset to. If None, the full dataset split will be taken.
                 Default: None.
         """
-        dataset_name, dataset = Dataset.load_hf_dataset(
-            dataset_path, split, **kwargs)
+        dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
         if n_shot > 0:
             _, few_shot_dataset = Dataset.load_hf_dataset(
                 dataset_path, few_shot_split, **kwargs
@@ -181,8 +180,17 @@ class Dataset:
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
-        x, y = preprocess_dataset(dataset, dataset_name, x_column, y_column, prompt,
-                                  description, n_shot, few_shot_dataset, mmlu_max_subject_size)
+        x, y = preprocess_dataset(
+            dataset,
+            dataset_name,
+            x_column,
+            y_column,
+            prompt,
+            description,
+            n_shot,
+            few_shot_dataset,
+            mmlu_max_subject_size,
+        )
         return Dataset(x, y, batch_size)
 
     @staticmethod
