@@ -20,6 +20,8 @@ eval_split: test
 max_new_tokens: 128
 load_from_disk: false
 n_shot: 0
+generate_until: 
+  - "\n"
 
 target_ignore_regex: "(?s).*#### "
 output_ignore_regex: "(?s).*The answer is "
