@@ -20,6 +20,11 @@ train_split: train
 eval_split: test
 max_new_tokens: 107
 load_from_disk: false
+generation_params:
+  generate_until:
+    - "\n"
+
+source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
 
 train_dataset: null
 train_test_split: false

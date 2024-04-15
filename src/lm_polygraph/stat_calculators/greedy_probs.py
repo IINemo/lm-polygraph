@@ -38,11 +38,6 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
             sequences = model.generate_texts(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
-                temperature=model.parameters.temperature,
-                top_p=model.parameters.topp,
-                top_k=model.parameters.topk,
-                presence_penalty=model.parameters.presence_penalty,
-                repetition_penalty=model.parameters.repetition_penalty,
                 n=1,
             )
 
@@ -110,26 +105,19 @@ class GreedyProbsCalculator(StatCalculator):
                 output_scores=True,
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
-                min_length=2,
+                min_new_tokens=2,
                 output_attentions=False,
                 output_hidden_states=True,
-                temperature=model.parameters.temperature,
-                top_k=model.parameters.topk,
-                top_p=model.parameters.topp,
-                do_sample=model.parameters.do_sample,
-                num_beams=model.parameters.num_beams,
-                presence_penalty=model.parameters.presence_penalty,
-                repetition_penalty=model.parameters.repetition_penalty,
+                num_return_sequences=1,
                 suppress_tokens=(
                     []
-                    if model.parameters.allow_newlines
+                    if model.generation_parameters.allow_newlines
                     else [
                         t
                         for t in range(len(model.tokenizer))
                         if "\n" in model.tokenizer.decode([t])
                     ]
                 ),
-                num_return_sequences=1,
             )
             logits = torch.stack(out.scores, dim=1)
 

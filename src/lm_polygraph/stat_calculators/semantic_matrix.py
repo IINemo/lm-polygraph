@@ -16,16 +16,18 @@ class SemanticMatrixCalculator(StatCalculator):
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
 
-    def __init__(self):
+    def __init__(self, nli_model):
         super().__init__(
             [
                 "semantic_matrix_entail",
                 "semantic_matrix_contra",
                 "semantic_matrix_classes",
+                "entailment_id",
             ],
             ["blackbox_sample_texts", "deberta"],
         )
         self.is_deberta_setup = False
+        self.nli_model = nli_model
 
     def __call__(
         self,
@@ -54,7 +56,7 @@ class SemanticMatrixCalculator(StatCalculator):
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
 
-        deberta = dependencies["deberta"]
+        deberta = self.nli_model
         deberta_batch_size = deberta.batch_size
         batch_texts = dependencies["blackbox_sample_texts"]
 
@@ -118,4 +120,5 @@ class SemanticMatrixCalculator(StatCalculator):
             "semantic_matrix_entail": E,
             "semantic_matrix_contra": C,
             "semantic_matrix_classes": P,
+            "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
         }

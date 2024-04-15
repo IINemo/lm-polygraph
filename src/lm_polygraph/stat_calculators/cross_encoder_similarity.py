@@ -13,7 +13,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
 
-    def __init__(self, crossencoder_model_path="cross-encoder/stsb-roberta-large"):
+    def __init__(self, crossencoder_model_path="cross-encoder/stsb-roberta-large", batch_size=100):
         super().__init__(
             [
                 "sample_sentence_similarity",
@@ -31,6 +31,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         self.crossencoder_setup = False
         self.crossencoder_model_path = crossencoder_model_path
+        self.batch_size = batch_size
 
     def _setup(self, device="cuda"):
         self.crossencoder = CrossEncoder(
@@ -44,7 +45,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-
         device = model.device()
         tokenizer = model.tokenizer
 
@@ -54,7 +54,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
-        deberta_batch_size = dependencies["deberta"].batch_size
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
 
@@ -93,7 +92,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                     for t in cropped_tokens
                 ]
                 token_scores = self.crossencoder.predict(
-                    batches, batch_size=deberta_batch_size
+                    batches, batch_size=self.batch_size
                 )
                 token_scores[is_special_tokens] = 1
             else:
@@ -102,7 +101,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         sim_matrices = []
         for i, pairs in enumerate(batch_pairs):
-            sim_scores = self.crossencoder.predict(pairs, batch_size=deberta_batch_size)
+            sim_scores = self.crossencoder.predict(pairs, batch_size=self.batch_size)
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
             sim_scores_matrix = sim_scores.reshape(unique_mat_shape)
@@ -137,7 +136,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                         for t in cropped_tokens
                     ]
                     token_scores = self.crossencoder.predict(
-                        batches, batch_size=deberta_batch_size
+                        batches, batch_size=self.batch_size
                     )
                     token_scores[is_special_tokens] = 1
                 else:

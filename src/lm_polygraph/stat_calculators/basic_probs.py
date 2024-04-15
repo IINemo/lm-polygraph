@@ -9,7 +9,7 @@ import torch
 
 class BasicGreedyProbsCalculatorCausalLM(StatCalculatorBasic):
     """
-    Performs inference of the model and ensures that output contains 
+    Performs inference of the model and ensures that output contains
     1. logprobas
     2. tokens
     3. embeddings

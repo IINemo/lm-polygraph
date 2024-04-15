@@ -8,8 +8,6 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-device: cpu
-
 task: qa
 
 dataset: coqa
@@ -21,6 +19,9 @@ train_split: train
 eval_split: validation
 max_new_tokens: 20
 load_from_disk: false
+generation_params:
+  generate_until:
+    - "\n"
 
 train_dataset: null
 train_test_split: false

@@ -43,11 +43,6 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             samples = model.generate_texts(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
-                temperature=model.parameters.temperature,
-                top_p=model.parameters.topp,
-                presence_penalty=model.parameters.presence_penalty,
-                repetition_penalty=model.parameters.repetition_penalty,
-                top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
                 n=self.samples_n,
             )
         else:
@@ -58,10 +53,6 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                 min_length=2,
                 do_sample=True,
                 num_beams=1,
-                temperature=model.parameters.temperature,
-                top_p=model.parameters.topp,
-                repetition_penalty=model.parameters.repetition_penalty,
-                top_k=model.parameters.topk if model.parameters.topk > 1 else 50,
                 num_return_sequences=self.samples_n,
             )
             for i in range(len(texts)):
@@ -142,10 +133,19 @@ class SamplingGenerationCalculator(StatCalculator):
             output_scores=True,
             return_dict_in_generate=True,
             max_new_tokens=max_new_tokens,
-            min_length=2,
+            min_new_tokens=2,
             do_sample=True,
             num_beams=1,
             num_return_sequences=1,
+            suppress_tokens=(
+                []
+                if model.generation_parameters.allow_newlines
+                else [
+                    t
+                    for t in range(len(model.tokenizer))
+                    if "\n" in model.tokenizer.decode([t])
+                ]
+            ),
         )
 
         log_probs = [[] for _ in range(len(texts))]

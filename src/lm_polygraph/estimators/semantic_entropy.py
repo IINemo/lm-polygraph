@@ -19,7 +19,12 @@ class SemanticEntropy(Estimator):
 
     def __init__(self, verbose: bool = False):
         super().__init__(
-            ["sample_log_probs", "sample_texts", "semantic_matrix_entail", "deberta"],
+            [
+                "sample_log_probs",
+                "sample_texts",
+                "semantic_matrix_entail",
+                "entailment_id",
+            ],
             "sequence",
         )
         self.verbose = verbose
@@ -42,8 +47,8 @@ class SemanticEntropy(Estimator):
         """
         loglikelihoods_list = stats["sample_log_probs"]
 
-        entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"]
-        self._is_entailment = stats["semantic_matrix_classes"] == entailment_id
+        # entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"] # TODO: Why this is here??
+        self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
 
         # Concatenate hypos with input texts
         hyps_list = [[] for _ in stats["input_texts"]]

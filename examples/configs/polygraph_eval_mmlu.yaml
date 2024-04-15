@@ -22,6 +22,9 @@ max_new_tokens: 3
 load_from_disk: false
 n_shot: 5
 max_subject_size: 100
+generation_params:
+  generate_until:
+    - '\n'
 
 train_dataset: null
 train_test_split: false

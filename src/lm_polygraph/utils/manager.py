@@ -21,7 +21,7 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.stat_calculators.register import register_stat_calculators
+from lm_polygraph.utils.register_stat_calculators import register_stat_calculators
 
 
 def _order_calculators(
@@ -249,6 +249,8 @@ class UEManager:
             deberta_device=deberta_device,
         )
 
+        self.stat_calculators_dict = stat_calculators_dict
+
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
@@ -276,14 +278,19 @@ class UEManager:
             stat_calculators_dict,
             stat_dependencies_dict,
         )
+
+        self.stats_names = stats
         stats = [
             s
             for s in stats
             if not (str(s).startswith("ensemble_"))
-            or (
-                (str(s).startswith("blackbox_") and s[len("blackbox_") :] in have_stats)
+            and not (
+                (
+                    str(s).startswith("blackbox_")
+                    and s[len("blackbox_") :] in have_stats
+                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
             )
-        ]
+        ]  # below in calculate() we copy X in blackbox_X
         self.stat_calculators: List[StatCalculator] = [
             stat_calculators_dict[c] for c in stats
         ]
@@ -532,6 +539,10 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
+                    if (f"blackbox_{stat}" in self.stat_calculators_dict.keys()) and (
+                        f"blackbox_{stat}" in self.stats_names
+                    ):
+                        batch_stats[f"blackbox_{stat}"] = stat_value
             except Exception as e:
                 if self.ignore_exceptions:
                     lineno = e.__traceback__.tb_lineno

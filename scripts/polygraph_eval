@@ -23,6 +23,8 @@ from lm_polygraph.generation_metrics.rouge import RougeMetric
 from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
 from lm_polygraph.generation_metrics.sbert import SbertMetric
 from lm_polygraph.generation_metrics.aggregated_metric import AggregatedMetric
+from lm_polygraph.generation_metrics.alignscore import AlignScore
+from lm_polygraph.generation_metrics.comet import Comet
 from lm_polygraph.estimators import *
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
@@ -63,9 +65,10 @@ def main(args):
 
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
-
+        
         model = WhiteboxModel.from_pretrained(
             args.model.path,
+            generation_params=getattr(args, "generation_params", {}),
             **cache_kwargs,
             **model_kwargs
         )
@@ -327,6 +330,8 @@ def get_generation_metrics(args):
                 output_ignore_regex = getattr(args, "output_ignore_regex", None),
                 normalize = getattr(args, "normalize", False),
             ),
+            AlignScore(),
+            Comet(source_ignore_regex = getattr(args, "source_ignore_regex", None)),
         ]
         if not getattr(args, "multiref", False):
             # Currently, BartScoreSeqMetric does not support multiref
