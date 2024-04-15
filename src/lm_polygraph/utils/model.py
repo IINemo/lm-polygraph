@@ -240,7 +240,7 @@ def _validate_args(args):
                 args["presence_penalty"]
             )
         )
-    
+
     # remove arguments that are not supported by the HF model.generate function
     keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
     for key in keys_to_remove:
