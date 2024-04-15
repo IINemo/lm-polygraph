@@ -1,7 +1,7 @@
 import numpy as np
 
 from typing import List, Dict
-from lm_polygraph.stat_calculators.openai_chat import OpenAIChat
+from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
 
 OPENAI_FACT_CHECK_PROMPT = '''Is the claim correct according to the most recent sources of information? Answer "True", "False" or "Not known".

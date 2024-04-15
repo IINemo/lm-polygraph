@@ -1,5 +1,8 @@
+import os
+
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.deberta import Deberta
+from lm_polygraph.utils.openai_chat import OpenAIChat
 
 from typing import Dict, List, Optional, Tuple
 
@@ -8,6 +11,8 @@ def register_stat_calculators(
     deberta_batch_size: int = 10,  # TODO: rename to NLI model
     deberta_device: Optional[str] = None,  # TODO: rename to NLI model
     n_ccp_alternatives: int = 10,
+    openai_access_key: Optional[str] = None,
+    cache_path=os.path.expanduser("~") + "/.cache",
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
     Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations
@@ -17,6 +22,10 @@ def register_stat_calculators(
     stat_dependencies: Dict[str, List[str]] = {}
 
     nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
+    openai_chat = OpenAIChat(
+        openai_access_key=openai_access_key,
+        cache_path=cache_path,
+    )
 
     def _register(calculator_class: StatCalculator):
         for stat in calculator_class.stats:
@@ -55,5 +64,6 @@ def register_stat_calculators(
     _register(CrossEncoderSimilarityMatrixCalculator(nli_model=nli_model))
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
+    _register(ClaimsExtractor(openai_chat=openai_chat))
 
     return stat_calculators, stat_dependencies

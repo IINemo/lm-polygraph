@@ -26,6 +26,7 @@ einops
 accelerate
 bitsandbytes
 openai==0.28.0
+filelock==3.12.2
 wget
 sentence-transformers
 bert-score

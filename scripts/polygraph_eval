@@ -201,7 +201,8 @@ def main(args):
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
-            ensemble_model=ensemble_model
+            ensemble_model=ensemble_model,
+            cache_path=args.cache_path,
         )
 
         man()

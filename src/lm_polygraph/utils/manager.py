@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import sys
 import gc
+import os
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple, Optional
@@ -222,6 +223,7 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
+        cache_path=os.path.expanduser("~") + "/.cache",
     ):
         """
         Parameters:
@@ -247,6 +249,7 @@ class UEManager:
         stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
             deberta_batch_size=deberta_batch_size,
             deberta_device=deberta_device,
+            cache_path=cache_path,
         )
 
         self.stat_calculators_dict = stat_calculators_dict
