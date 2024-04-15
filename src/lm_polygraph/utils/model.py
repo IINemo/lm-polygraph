@@ -259,8 +259,8 @@ class WhiteboxModel(Model):
         self,
         model: AutoModelForCausalLM,
         tokenizer: AutoTokenizer,
-        model_path: str,
-        model_type: str,
+        model_path: str = None,
+        model_type: str = "CausalLM",
         parameters: GenerationParameters = GenerationParameters(),
     ):
         """

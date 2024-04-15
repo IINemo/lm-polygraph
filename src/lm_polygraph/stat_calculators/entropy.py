@@ -17,8 +17,8 @@ class EntropyCalculator(StatCalculator):
     def __call__(
         self,
         dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: WhiteboxModel,
+        texts: List[str] = None,
+        model: WhiteboxModel = None,
         max_new_tokens: int = 100,
         **kwargs
     ) -> Dict[str, np.ndarray]:
