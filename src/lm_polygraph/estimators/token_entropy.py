@@ -53,9 +53,9 @@ class MaxTokenEntropyClaim(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * log p(y_i | y_<i, x) in 'greedy_log_likelihoods'
+                * log p(y_i | y_<i, x) in 'greedy_log_likelihoods',
                 * list of extracted claims of type lm_polygraph.stat_calculators.extract_claims.Claim
-                  in 'claims'
+                  in 'claims'.
         Returns:
             np.ndarray: concatenated minus log probabilities for each claim.
                 Higher values indicate more uncertain samples.
