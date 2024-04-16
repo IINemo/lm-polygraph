@@ -95,6 +95,7 @@ def main(args):
             load_from_disk=args.load_from_disk,
             **cache_kwargs
         )
+        dataset = dataset.select([0, 1, 2, 3, 4])  # TODO(rediska): delete
 
         estimators = []
         estimators += get_ue_methods(args, model)
@@ -316,7 +317,9 @@ def get_ue_methods(args, model):
             MaximumClaimProbability(),
             PerplexityClaim(),
             MaxTokenEntropyClaim(),
-            # TODO(rediska): P(True), PMI, CCP
+            PointwiseMutualInformationClaim(),
+            PTrueClaim(),
+            # TODO(rediska): CCP
         ]
 
     additional_estimators = getattr(args, "additional_estimators", {})

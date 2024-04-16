@@ -9,12 +9,13 @@ from .token_entropy import MeanTokenEntropy, TokenEntropy, MaxTokenEntropyClaim
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,
     PointwiseMutualInformation,
+    PointwiseMutualInformationClaim,
 )
 from .conditional_pointwise_mutual_information import (
     MeanConditionalPointwiseMutualInformation,
     ConditionalPointwiseMutualInformation,
 )
-from .p_true import PTrue
+from .p_true import PTrue, PTrueClaim
 from .p_true_sampling import PTrueSampling
 from .monte_carlo_sequence_entropy import MonteCarloSequenceEntropy
 from .monte_carlo_normalized_sequence_entropy import MonteCarloNormalizedSequenceEntropy

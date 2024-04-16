@@ -44,7 +44,17 @@ class ClaimsExtractor(StatCalculator):
     """
 
     def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!\n"):
-        super().__init__(["claims"], ["greedy_texts", "greedy_tokens"])
+        super().__init__(
+            [
+                "claims",
+                "claim_texts_concatenated",
+                "claim_input_texts_concatenated",
+            ],
+            [
+                "greedy_texts",
+                "greedy_tokens",
+            ],
+        )
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
 
@@ -71,6 +81,9 @@ class ClaimsExtractor(StatCalculator):
         greedy_texts = dependencies["greedy_texts"]
         greedy_tokens = dependencies["greedy_tokens"]
         claims: List[List[Claim]] = []
+        claim_texts_concatenated: List[str] = []
+        claim_input_texts_concatenated: List[str] = []
+
         for greedy_text, greedy_tok, inp_text in zip(
             greedy_texts,
             greedy_tokens,
@@ -81,8 +94,15 @@ class ClaimsExtractor(StatCalculator):
                 greedy_tok,
                 model.tokenizer,
             ))
+            for c in claims[-1]:
+                claim_texts_concatenated.append(c.claim_text)
+                claim_input_texts_concatenated.append(inp_text)
 
-        return {"claims": claims}
+        return {
+            "claims": claims,
+            "claim_texts_concatenated": claim_texts_concatenated,
+            "claim_input_texts_concatenated": claim_input_texts_concatenated,
+        }
 
     def claims_from_text(
         self,

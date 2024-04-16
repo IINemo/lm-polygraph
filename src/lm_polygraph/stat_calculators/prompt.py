@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -13,7 +13,15 @@ class PromptCalculator(StatCalculator):
     Used for P(True)-based methods.
     """
 
-    def __init__(self, prompt: str, expected: str, method: str):
+    def __init__(
+        self,
+        prompt: str,
+        expected: str,
+        method: str,
+        input_text_dependency: str = 'input_texts',
+        sample_text_dependency: Optional[str] = 'sample_texts',
+        generation_text_dependency: str = 'greedy_texts',
+    ):
         """
         Parameters:
             prompt (str): Prompt to use for estimating the answer of.
@@ -26,10 +34,16 @@ class PromptCalculator(StatCalculator):
                 otherwise an exception will be raised.
             method (str): the name of the statistics to calculate with this calculator.
         """
-        super().__init__([method], ["greedy_texts", "sample_texts"])
+        dependencies = [input_text_dependency, generation_text_dependency]
+        if '{s}' in prompt and sample_text_dependency is not None:
+            dependencies.append(sample_text_dependency)
+        super().__init__([method], dependencies)
         self.method = method
         self.prompt = prompt
         self.expected = expected
+        self.input_text_dependency = input_text_dependency
+        self.sample_text_dependency = sample_text_dependency
+        self.generation_text_dependency = generation_text_dependency
 
     def __call__(
         self,
@@ -63,13 +77,20 @@ class PromptCalculator(StatCalculator):
         assert len(expected_tokens) == 1
         expected_token = expected_tokens[0]
 
-        answers = dependencies["greedy_texts"]
-        samples = dependencies["sample_texts"]
+        answers = dependencies[self.generation_text_dependency]
+        samples = [[] for _ in range(len(answers))]
+        if self.sample_text_dependency is not None:
+            samples = dependencies[self.sample_text_dependency]
+        input_texts = dependencies[self.input_text_dependency]
         inp_texts = [
             self.prompt.format(q=text, s=", ".join(sample), a=ans)
-            for text, ans, sample in zip(texts, answers, samples)
+            for text, ans, sample in zip(input_texts, answers, samples)
         ]
 
+        if len(inp_texts) == 0:
+            return {self.method: np.array([])}
+
+        print('Input texts:', inp_texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
 
