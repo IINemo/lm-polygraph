@@ -1,6 +1,7 @@
 import numpy as np
 
 from typing import Dict
+from nltk.corpus import stopwords
 
 from .estimator import Estimator
 
@@ -55,72 +56,109 @@ class ClaimConditionedProbability(Estimator):
         return -np.array(prob_nli)
 
 
+def nltk_stopword(t: str):
+    return t in stopwords.words('english')
+
+
 class ClaimConditionedProbabilityClaim(Estimator):
-    def __init__(self, context="no_context"):
-        super().__init__(
-            [
-                "claims",
-                "greedy_tokens",
-                "greedy_tokens_alternatives",
-                "greedy_tokens_alternatives_nli",
-            ],
-            "claim",
-        )
+    def __init__(self, nli_context: str = "no_context", is_stopword=nltk_stopword):
+        assert nli_context in ["no_context", "fact_pref"]
+        self.nli_context = nli_context
+        self.is_stopword = is_stopword
+        dependencies = [
+            "claims",
+            "greedy_tokens",
+            "greedy_tokens_alternatives",
+        ]
+        if nli_context == "no_context":
+            dependencies.append("greedy_tokens_alternatives_nli")
+        else:
+            dependencies.append("greedy_tokens_alternatives_fact_pref_nli")
+        super().__init__(dependencies, "claim")
 
     def __str__(self):
-        return "CCP_claim"
+        return "CCP_claim_{}".format(self.nli_context)
 
     def _reduce(self, logprobs: list[float]):
         return np.exp(np.sum(logprobs))
 
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        logprobs = stats["greedy_log_likelihoods"]
-        lm_logprobs = stats["greedy_lm_log_likelihoods"]
-        claims = stats["claims"]
-        claim_ue = []
-        for sample_lp, sample_lm_lp, sample_claims in zip(logprobs, lm_logprobs, claims):
-            for claim in sample_claims:
-                sample_lm_lp[0] = 0
-                mi_scores = np.array(sample_lp) - np.array(sample_lm_lp)
-                tokens = np.array(claim.aligned_tokens)
-                claim_pmi = mi_scores[tokens]
-                claim_ue.append(self._reduce(claim_pmi))
-        return np.array(claim_ue)
+    def _combine_nli(self, forward: str, backward: str):
+        if forward == backward:
+            return forward
+        if all(x in [forward, backward] for x in ["entail", "contra"]):
+            return "neutral"
+        for x in ["entail", "contra"]:
+            if x in [forward, backward]:
+                return x
+        return "neutral"
 
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        words = stats["greedy_tokens"]
-        alternatives = stats["greedy_tokens_alternatives"]
-        alternatives_nli = stats["greedy_tokens_alternatives_nli"]
-        claims = stats["claims"]
+    def _token_ccp(self, token_alternatives, token_alternatives_nli):
+        entail_logprobs, entail_words = [], []
+        contra_logprobs, contra_words = [], []
+        for i in range(len(token_alternatives)):
+            word_alt, logprob = token_alternatives[i]
+            if self.is_stopword(token_alternatives[0][0]) or i == 0:
+                nli = "entail"
+            else:
+                nli = self._combine_nli(token_alternatives_nli[0][i], token_alternatives_nli[i][0])
+            if nli == "entail":
+                entail_logprobs.append(logprob)
+                entail_words.append(word_alt)
+            elif nli == "contra":
+                contra_logprobs.append(logprob)
+                contra_words.append(word_alt)
+        entail_logprob = np.logaddexp.reduce(entail_logprobs)
+        total_logprob = np.logaddexp.reduce(entail_logprobs + contra_logprobs)
+        return entail_logprob - total_logprob
+
+    def _claim_ccp_no_context(self, tokens, alternatives, alternatives_nli, claims):
         claim_ue = []
-        for sample_words, sample_alternatives, sample_alternatives_nli, sample_claims in zip(
-            words,
+        for sample_tokens, sample_alternatives, sample_alternatives_nli, sample_claims in zip(
+                tokens,
+                alternatives,
+                alternatives_nli,
+                claims,
+        ):
+            sample_ccp = []
+            for token, token_alternatives, token_alternatives_nli in zip(
+                sample_tokens,
+                sample_alternatives,
+                sample_alternatives_nli,
+            ):
+                sample_ccp.append(self._token_ccp(token_alternatives, token_alternatives_nli))
+            sample_ccp = np.array(sample_ccp)
+            for claim in sample_claims:
+                tokens = np.array(claim.aligned_tokens)
+                claim_ue.append(self._reduce(sample_ccp[tokens]))
+        return -np.array(claim_ue)
+
+    def _claim_ccp_fact_pref(self, tokens, alternatives, alternatives_nli, claims):
+        claim_ue = []
+        for sample_tokens, sample_alternatives, sample_alternatives_nli, sample_claims in zip(
+            tokens,
             alternatives,
             alternatives_nli,
             claims,
         ):
-            sample_ccp = []
-            for token, token_alternatives, token_alternatives_nli in zip(
-                sample_words,
-                sample_alternatives,
-                sample_alternatives_nli,
-            ):
-                entail_logprobs, entail_words = [], []
-                contra_logprobs, contra_words = [], []
-                for i in range(len(token_alternatives)):
-                    word_alt, logprob = token_alternatives[i]
-                    if i == 0 or token_alternatives_nli[0][i] == "entail":
-                        entail_logprobs.append(logprob)
-                        entail_words.append(word_alt)
-                    elif token_alternatives_nli[0][i] == "contra":
-                        contra_logprobs.append(logprob)
-                        contra_words.append(word_alt)
-                entail_logprob = np.logaddexp.reduce(entail_logprobs)
-                total_logprob = np.logaddexp.reduce(entail_logprobs + contra_logprobs)
-                sample_ccp.append(entail_logprob - total_logprob)
-            sample_ccp = np.array(sample_ccp)
-            for claim in sample_claims:
-                tokens = np.array(claim.aligned_tokens)
-                claim_pmi = sample_ccp[tokens]
-                claim_ue.append(self._reduce(claim_pmi))
+            for claim, claim_nlis in zip(sample_claims, sample_alternatives_nli):
+                assert len(claim_nlis) == len(claim.aligned_tokens)
+                token_alternatives = [sample_alternatives[t] for t in claim.aligned_tokens]
+                token_alternatives_nli = claim_nlis
+                token_ccps = []
+                for token_alt, token_nli in zip(token_alternatives, token_alternatives_nli):
+                    token_ccps.append(self._token_ccp(token_alt, token_nli))
+                claim_ue.append(self._reduce(token_ccps))
         return -np.array(claim_ue)
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        tokens = stats["greedy_tokens"]
+        alternatives = stats["greedy_tokens_alternatives"]
+        claims = stats["claims"]
+        if self.nli_context == "no_context":
+            alternatives_nli = stats["greedy_tokens_alternatives_nli"]
+            return self._claim_ccp_no_context(tokens, alternatives, alternatives_nli, claims)
+        elif self.nli_context == "fact_pref":
+            alternatives_nli = stats["greedy_tokens_alternatives_fact_pref_nli"]
+            return self._claim_ccp_fact_pref(tokens, alternatives, alternatives_nli, claims)
+        else:
+            raise Exception(f"Unsupported argument nli_context={self.nli_context}")
