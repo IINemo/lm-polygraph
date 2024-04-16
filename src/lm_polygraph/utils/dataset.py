@@ -200,6 +200,14 @@ class Dataset:
                     )
                 )
                 y.append(inst[y_column])
+        elif ("wiki" in dataset_name.lower()) and len(prompt):
+            x = [prompt.format(context=sample['context'.strip()]) for sample in dataset[x_column]]
+            y = ['' for _ in range(len(dataset))]
+        elif "person" in dataset_name.lower():
+            x = dataset[x_column]
+            if len(prompt):
+                x = [prompt.format(text=text) for text in x]
+            y = ['' for _ in range(len(dataset))]
         elif ("coqa" in dataset_name.lower()) and len(prompt):
 
             def doc_to_text(doc, prompt, i=0):
