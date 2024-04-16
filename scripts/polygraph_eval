@@ -342,7 +342,7 @@ def get_generation_metrics(args):
         ]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
-            results += [Comet(source_ignore_regex = ignore_regex)]
+            result += [Comet(source_ignore_regex = ignore_regex)]
         if not getattr(args, "multiref", False):
             # Currently, BartScoreSeqMetric does not support multiref
             result.append(BartScoreSeqMetric('rh'))
