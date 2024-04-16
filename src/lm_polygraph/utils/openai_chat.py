@@ -21,7 +21,9 @@ class OpenAIChat:
         openai_model: str
             the model to use in OpenAI to chat.
         """
-        openai.api_key = os.environ.get("OPENAI_KEY", None)
+        api_key = os.environ.get("OPENAI_KEY", None)
+        if api_key is not None:
+            openai.api_key = api_key
         self.openai_model = openai_model
 
         self.cache_path = os.path.join(cache_path, "openai_chat_cache.json")
