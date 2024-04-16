@@ -21,21 +21,19 @@ class OpenAIChat:
         openai_model: str
             the model to use in OpenAI to chat.
         """
-        openai.api_key = os.environ['OPENAI_KEY']
+        openai.api_key = os.environ.get('OPENAI_KEY', None)
         self.openai_model = openai_model
 
         self.cache_path = os.path.join(cache_path, 'openai_chat_cache.json')
         self.cache_lock = FileLock(self.cache_path + '.lock')
         with self.cache_lock:
             if not os.path.exists(self.cache_path):
-                os.makedirs(cache_path)
+                if not os.path.exists(cache_path):
+                    os.makedirs(cache_path)
                 with open(self.cache_path, 'w') as f:
                     json.dump({}, f)
 
     def ask(self, message: str) -> str:
-        if openai.api_key is None:
-            raise Exception('Cant ask openAI without token. Please specify OPENAI_KEY in environment parameters.')
-
         # check if the message is cached
         with open(self.cache_path, 'r') as f:
             openai_responses = json.load(f)
@@ -43,6 +41,10 @@ class OpenAIChat:
             reply = openai_responses[self.openai_model][message]
         else:
             # Ask openai
+
+            if openai.api_key is None:
+                raise Exception('Cant ask openAI without token. Please specify OPENAI_KEY in environment parameters.')
+
             messages = [
                 {"role": "system", "content": "You are a intelligent assistant."},
                 {"role": "user", "content": message},

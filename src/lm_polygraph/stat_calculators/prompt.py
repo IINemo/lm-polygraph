@@ -90,7 +90,6 @@ class PromptCalculator(StatCalculator):
         if len(inp_texts) == 0:
             return {self.method: np.array([])}
 
-        print('Input texts:', inp_texts)
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
 

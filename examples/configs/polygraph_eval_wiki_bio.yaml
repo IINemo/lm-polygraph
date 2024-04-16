@@ -10,19 +10,19 @@ save_path: '${hydra:run.dir}'
 
 task: bio
 
-dataset_name: person-bio
-dataset: [rediska0123/person-bio]
+dataset_name: wiki-bio
+dataset: [wiki_bio]
 n_shot: 0
-text_column: question
+text_column: input_text
+prompt: "This is a Wikipedia passage about {context}:\n"
 eval_split: test
+subsample_eval_dataset: 100
 max_new_tokens: 256
 load_from_disk: false
 
 train_dataset: null
 train_test_split: false
 test_split_size: 1
-
-subsample_eval_dataset: -1
 
 use_density_based_ue: false
 use_seq_ue: false

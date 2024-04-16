@@ -84,7 +84,7 @@ def main(args):
         dataset = Dataset.load(
             args.dataset,
             args.text_column,
-            args.label_column,
+            getattr(args, "label_column", None),
             batch_size=args.batch_size,
             prompt=getattr(args, "prompt", ""),
             description=getattr(args, "description", ""),
@@ -95,7 +95,6 @@ def main(args):
             load_from_disk=args.load_from_disk,
             **cache_kwargs
         )
-        dataset = dataset.select([0, 1, 2, 3, 4])  # TODO(rediska): delete
 
         estimators = []
         estimators += get_ue_methods(args, model)
@@ -109,7 +108,7 @@ def main(args):
                 train_dataset = Dataset.load(
                     args.train_dataset,
                     args.text_column,
-                    args.label_column,
+                    getattr(args, "label_column", None),
                     batch_size=args.batch_size,
                     prompt=getattr(args, "prompt", ""),
                     description=getattr(args, "description", ""),
@@ -132,7 +131,7 @@ def main(args):
                 train_dataset = Dataset.load(
                     args.dataset,
                     args.text_column,
-                    args.label_column,
+                    getattr(args, "label_column", None),
                     batch_size=args.batch_size,
                     prompt=getattr(args, "prompt", ""),
                     description=getattr(args, "description", ""),
@@ -320,7 +319,7 @@ def get_ue_methods(args, model):
             PointwiseMutualInformationClaim(),
             PTrueClaim(),
             ClaimConditionedProbabilityClaim(context="no_context"),
-            # TODO: other contexts
+            # TODO(rediska): other contexts
         ]
 
     additional_estimators = getattr(args, "additional_estimators", {})
@@ -378,9 +377,8 @@ def get_generation_metrics(args):
 
 def get_model_kwargs(args):
     model_kwargs = {}
-    # TODO(rediska): uncomment
-    # if getattr(args.model, 'device_map', None):
-    #     model_kwargs['device_map'] = args.model.device_map
+    if getattr(args.model, 'device_map', None):
+        model_kwargs['device_map'] = args.model.device_map
 
     return model_kwargs
 
