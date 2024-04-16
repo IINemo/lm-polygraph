@@ -15,11 +15,14 @@ task: ats
 dataset: xsum
 text_column: document
 label_column: summary
-prompt: "Summarize the text in a one-sentence headline. Output only the summary itself.\n\nText:\n{text}\n\nSummary (one sentence):\n"
+prompt: "Here's the text and it's short summary.\n\nText:\n{text}\n\nSummary (one sentence):\n"
 train_split: train
 eval_split: test
 max_new_tokens: 56
 load_from_disk: false
+generation_params:
+  generate_until:
+    - "\n"
 
 train_dataset: null
 train_test_split: false
@@ -39,8 +42,6 @@ use_density_based_ue: true
 use_seq_ue: true
 use_tok_ue: false
 use_ens_ue: false
-generation_metrics: null
-ens_type: 
 
 # Examples of providing additional UE methods:
 # additional_estimators: {
