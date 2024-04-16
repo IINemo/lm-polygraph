@@ -72,6 +72,7 @@ def register_stat_calculators(
     _register(CrossEncoderSimilarityMatrixCalculator(nli_model=nli_model))
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
+    _register(GreedyAlternativesFactPrefNLICalculator(nli_model=nli_model))
     _register(ClaimsExtractor(openai_chat=openai_chat))
 
     return stat_calculators, stat_dependencies

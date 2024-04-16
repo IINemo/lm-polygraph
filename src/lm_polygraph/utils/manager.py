@@ -40,7 +40,8 @@ def _order_calculators(
         dependent = False
         if stat not in stat_dependencies.keys():
             raise Exception(
-                f"Cant find stat calculator for: {stat}. Maybe you forgot to register it by calling register()?"
+                f"Cant find stat calculator for: {stat}. Maybe you forgot to register it in " +
+                "lm_polygraph.utils.register_stat_calculators.register_stat_calculators()?"
             )
         for d in stat_dependencies[stat]:
             if d not in have_stats:
