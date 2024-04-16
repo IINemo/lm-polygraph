@@ -18,9 +18,9 @@ class PromptCalculator(StatCalculator):
         prompt: str,
         expected: str,
         method: str,
-        input_text_dependency: str = 'input_texts',
-        sample_text_dependency: Optional[str] = 'sample_texts',
-        generation_text_dependency: str = 'greedy_texts',
+        input_text_dependency: str = "input_texts",
+        sample_text_dependency: Optional[str] = "sample_texts",
+        generation_text_dependency: str = "greedy_texts",
     ):
         """
         Parameters:
@@ -35,7 +35,7 @@ class PromptCalculator(StatCalculator):
             method (str): the name of the statistics to calculate with this calculator.
         """
         dependencies = [input_text_dependency, generation_text_dependency]
-        if '{s}' in prompt and sample_text_dependency is not None:
+        if "{s}" in prompt and sample_text_dependency is not None:
             dependencies.append(sample_text_dependency)
         super().__init__([method], dependencies)
         self.method = method

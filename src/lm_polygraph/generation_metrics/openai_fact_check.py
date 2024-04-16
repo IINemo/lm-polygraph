@@ -5,24 +5,27 @@ from typing import List, Dict
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
 
-OPENAI_FACT_CHECK_PROMPT = '''Is the claim correct according to the most recent sources of information? ''' + \
-                           '''Answer "True", "False" or "Not known".
-
-Examples:
-
-Question: Tell me a bio of Albert Einstein.
-Claim: He was born on 14 March.
-Answer: True
-
-Question: Tell me a bio of Albert Einstein.
-Claim: He was born in United Kingdom.
-Answer: False
-
-Your input:
-
-Question: {input}
-Claim: {claim}
-Answer: '''
+OPENAI_FACT_CHECK_PROMPT = (
+    "Is the claim correct according to the most "
+    "recent sources of information? "
+    """Answer "True", "False" or "Not known"."""
+    "\n\n"
+    "Examples:\n"
+    "\n"
+    "Question: Tell me a bio of Albert Einstein.\n"
+    "Claim: He was born on 14 March.\n"
+    "Answer: True\n"
+    "\n"
+    "Question: Tell me a bio of Albert Einstein.\n"
+    "Claim: He was born in United Kingdom.\n"
+    "Answer: False\n"
+    "\n"
+    "Your input:\n"
+    "\n"
+    "Question: {input}\n"
+    "Claim: {claim}\n"
+    "Answer: "
+)
 
 
 class OpenAIFactCheck(GenerationMetric):
@@ -40,10 +43,15 @@ class OpenAIFactCheck(GenerationMetric):
         self.openai_chat = OpenAIChat(openai_model=openai_model, cache_path=cache_path)
 
     def __str__(self):
-        return f"OpenAIFactCheck"
+        return "OpenAIFactCheck"
 
     def _score_single(self, claim: str, input: str, openai_chat) -> int:
-        reply = openai_chat.ask(OPENAI_FACT_CHECK_PROMPT.format(claim=claim, input=input))
+        reply = openai_chat.ask(
+            OPENAI_FACT_CHECK_PROMPT.format(
+                claim=claim,
+                input=input,
+            )
+        )
         reply = reply.strip()
         if reply == "True":
             return 0
@@ -72,5 +80,11 @@ class OpenAIFactCheck(GenerationMetric):
         labels = []
         for inp_text, sample_claims in zip(stats["input_texts"], stats["claims"]):
             for claim in sample_claims:
-                labels.append(self._score_single(claim.claim_text, inp_text, self.openai_chat))
+                labels.append(
+                    self._score_single(
+                        claim.claim_text,
+                        inp_text,
+                        self.openai_chat,
+                    )
+                )
         return np.array(labels)

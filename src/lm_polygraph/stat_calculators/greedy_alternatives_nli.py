@@ -16,7 +16,7 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
     softmax = nn.Softmax(dim=1)
     w_probs = defaultdict(lambda: defaultdict(lambda: None))
     for k in range(0, len(nli_set), deberta.batch_size):
-        batch = nli_set[k: k + deberta.batch_size]
+        batch = nli_set[k : k + deberta.batch_size]
         encoded = deberta.deberta_tokenizer.batch_encode_plus(
             batch, padding=True, return_tensors="pt"
         ).to(deberta.device)
@@ -145,7 +145,7 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
                 alts = [sample_alternatives[t] for t in claim.aligned_tokens]
                 for i in range(len(tokens)):
                     for j in range(len(alts[i])):
-                        text1 = model.tokenizer.decode(tokens[:i + 1])
+                        text1 = model.tokenizer.decode(tokens[: i + 1])
                         text2 = model.tokenizer.decode(tokens[:i] + [alts[i][j][0]])
                         nli_queue.append((text1, text2))
                         nli_queue.append((text2, text1))
@@ -158,9 +158,11 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
                 tokens = [sample_tokens[t] for t in claim.aligned_tokens]
                 alts = [sample_alternatives[t] for t in claim.aligned_tokens]
                 for i in range(len(tokens)):
-                    nli_matrix = [
-                        [None for _ in range(len(alts[i]))]
-                        for _ in range(len(alts[i]))]
+                    nli_matrix = []
+                    for _ in range(len(alts[i])):
+                        nli_matrix.append([])
+                        for i in range(len(alts[i])):
+                            nli_matrix[-1].append(None)
                     for j in range(len(alts[i])):
                         nli_matrix[0][j], nli_matrix[j][0] = nli_classes[:2]
                         nli_classes = nli_classes[2:]

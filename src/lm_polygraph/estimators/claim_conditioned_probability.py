@@ -57,7 +57,7 @@ class ClaimConditionedProbability(Estimator):
 
 
 def nltk_stopword(t: str):
-    return t in stopwords.words('english')
+    return t in stopwords.words("english")
 
 
 class ClaimConditionedProbabilityClaim(Estimator):
@@ -67,7 +67,6 @@ class ClaimConditionedProbabilityClaim(Estimator):
         self.is_stopword = is_stopword
         dependencies = [
             "claims",
-            "greedy_tokens",
             "greedy_tokens_alternatives",
         ]
         if nli_context == "no_context":
@@ -100,7 +99,10 @@ class ClaimConditionedProbabilityClaim(Estimator):
             if self.is_stopword(token_alternatives[0][0]) or i == 0:
                 nli = "entail"
             else:
-                nli = self._combine_nli(token_alternatives_nli[0][i], token_alternatives_nli[i][0])
+                nli = self._combine_nli(
+                    token_alternatives_nli[0][i],
+                    token_alternatives_nli[i][0],
+                )
             if nli == "entail":
                 entail_logprobs.append(logprob)
                 entail_words.append(word_alt)
@@ -111,54 +113,71 @@ class ClaimConditionedProbabilityClaim(Estimator):
         total_logprob = np.logaddexp.reduce(entail_logprobs + contra_logprobs)
         return entail_logprob - total_logprob
 
-    def _claim_ccp_no_context(self, tokens, alternatives, alternatives_nli, claims):
+    def _claim_ccp_no_context(self, alternatives, alternatives_nli, claims):
         claim_ue = []
-        for sample_tokens, sample_alternatives, sample_alternatives_nli, sample_claims in zip(
-                tokens,
-                alternatives,
-                alternatives_nli,
-                claims,
-        ):
-            sample_ccp = []
-            for token, token_alternatives, token_alternatives_nli in zip(
-                sample_tokens,
-                sample_alternatives,
-                sample_alternatives_nli,
-            ):
-                sample_ccp.append(self._token_ccp(token_alternatives, token_alternatives_nli))
-            sample_ccp = np.array(sample_ccp)
-            for claim in sample_claims:
-                tokens = np.array(claim.aligned_tokens)
-                claim_ue.append(self._reduce(sample_ccp[tokens]))
-        return -np.array(claim_ue)
-
-    def _claim_ccp_fact_pref(self, tokens, alternatives, alternatives_nli, claims):
-        claim_ue = []
-        for sample_tokens, sample_alternatives, sample_alternatives_nli, sample_claims in zip(
-            tokens,
+        for s_alternatives, s_alternatives_nli, s_claims in zip(
             alternatives,
             alternatives_nli,
             claims,
         ):
-            for claim, claim_nlis in zip(sample_claims, sample_alternatives_nli):
+            sample_ccp = []
+            for token_alternatives, token_alternatives_nli in zip(
+                s_alternatives,
+                s_alternatives_nli,
+            ):
+                sample_ccp.append(
+                    self._token_ccp(
+                        token_alternatives,
+                        token_alternatives_nli,
+                    ),
+                )
+            sample_ccp = np.array(sample_ccp)
+            for claim in s_claims:
+                tokens = np.array(claim.aligned_tokens)
+                claim_ue.append(self._reduce(sample_ccp[tokens]))
+        return -np.array(claim_ue)
+
+    def _claim_ccp_fact_pref(self, alternatives, alternatives_nli, claims):
+        claim_ue = []
+        for s_alternatives, s_alternatives_nli, s_claims in zip(
+            alternatives,
+            alternatives_nli,
+            claims,
+        ):
+            for claim, claim_nlis in zip(
+                s_claims,
+                s_alternatives_nli,
+            ):
                 assert len(claim_nlis) == len(claim.aligned_tokens)
-                token_alternatives = [sample_alternatives[t] for t in claim.aligned_tokens]
+                token_alternatives = []
+                for t in claim.aligned_tokens:
+                    token_alternatives.append(s_alternatives[t])
                 token_alternatives_nli = claim_nlis
                 token_ccps = []
-                for token_alt, token_nli in zip(token_alternatives, token_alternatives_nli):
+                for token_alt, token_nli in zip(
+                    token_alternatives,
+                    token_alternatives_nli,
+                ):
                     token_ccps.append(self._token_ccp(token_alt, token_nli))
                 claim_ue.append(self._reduce(token_ccps))
         return -np.array(claim_ue)
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        tokens = stats["greedy_tokens"]
         alternatives = stats["greedy_tokens_alternatives"]
         claims = stats["claims"]
         if self.nli_context == "no_context":
             alternatives_nli = stats["greedy_tokens_alternatives_nli"]
-            return self._claim_ccp_no_context(tokens, alternatives, alternatives_nli, claims)
+            return self._claim_ccp_no_context(
+                alternatives,
+                alternatives_nli,
+                claims,
+            )
         elif self.nli_context == "fact_pref":
             alternatives_nli = stats["greedy_tokens_alternatives_fact_pref_nli"]
-            return self._claim_ccp_fact_pref(tokens, alternatives, alternatives_nli, claims)
+            return self._claim_ccp_fact_pref(
+                alternatives,
+                alternatives_nli,
+                claims,
+            )
         else:
             raise Exception(f"Unsupported argument nli_context={self.nli_context}")

@@ -4,7 +4,10 @@ from .greedy_lm_probs import GreedyLMProbsCalculator
 from .prompt import PromptCalculator
 from .entropy import EntropyCalculator
 from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator
-from .greedy_alternatives_nli import GreedyAlternativesNLICalculator, GreedyAlternativesFactPrefNLICalculator
+from .greedy_alternatives_nli import (
+    GreedyAlternativesNLICalculator,
+    GreedyAlternativesFactPrefNLICalculator,
+)
 from .bart_score import BartScoreCalculator
 from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
