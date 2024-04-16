@@ -4,7 +4,10 @@ from .max_probability import (
     MaximumTokenProbability,
     MaximumClaimProbability,
 )
-from .claim_conditioned_probability import ClaimConditionedProbability
+from .claim_conditioned_probability import (
+    ClaimConditionedProbability,
+    ClaimConditionedProbabilityClaim,
+)
 from .token_entropy import MeanTokenEntropy, TokenEntropy, MaxTokenEntropyClaim
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,

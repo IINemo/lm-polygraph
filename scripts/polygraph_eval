@@ -319,7 +319,8 @@ def get_ue_methods(args, model):
             MaxTokenEntropyClaim(),
             PointwiseMutualInformationClaim(),
             PTrueClaim(),
-            # TODO(rediska): CCP
+            ClaimConditionedProbabilityClaim(context="no_context"),
+            # TODO: other contexts
         ]
 
     additional_estimators = getattr(args, "additional_estimators", {})
