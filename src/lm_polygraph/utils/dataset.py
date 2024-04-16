@@ -183,12 +183,16 @@ class Dataset:
             source_lang = (
                 "German"
                 if x_column == "de"
-                else "French" if x_column == "fr" else "English"
+                else "French"
+                if x_column == "fr"
+                else "English"
             )
             target_lang = (
                 "German"
                 if y_column == "de"
-                else "French" if y_column == "fr" else "English"
+                else "French"
+                if y_column == "fr"
+                else "English"
             )
             for inst in dataset["translation"]:
                 x.append(
@@ -294,17 +298,13 @@ class Dataset:
                         + "\n"
                     )
             for inst in dataset:
-                try:
-                    x.append(
-                        formatted_few_shot_prompt
-                        + prompt.format(
-                            question=inst["question"],
-                            answer="",
-                        )
+                x.append(
+                    formatted_few_shot_prompt
+                    + prompt.format(
+                        question=inst["question"],
+                        answer="",
                     )
-                except:
-                    breakpoint()
-                    pass
+                )
                 y.append([alias for alias in inst["answer"]["aliases"]])
         else:
             x = dataset[x_column]

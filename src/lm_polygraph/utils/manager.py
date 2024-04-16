@@ -494,9 +494,9 @@ class UEManager:
                         oracle_score = ue_metric(-metric, metric)
                         random_score = get_random_scores(ue_metric, metric)
                         ue_metric_val = ue_metric(ue, metric)
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
-                            ue_metric_val
-                        )
+                        self.metrics[
+                            e_level, e_name, gen_name, str(ue_metric)
+                        ] = ue_metric_val
                         self.metrics[
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
@@ -637,20 +637,16 @@ class UEManager:
                     )
 
         return result_train_stat
-    
+
     def _tokenize_target_texts(self, target_texts: List[str]) -> List[List[int]]:
         if isinstance(target_texts[0], list):
             target_tokens = [
-                [
-                    self.model.tokenizer([text])["input_ids"][0]
-                    for text in target_text
-                ]
+                [self.model.tokenizer([text])["input_ids"][0] for text in target_text]
                 for target_text in target_texts
             ]
         else:
             target_tokens = [
-                self.model.tokenizer([text])["input_ids"][0]
-                for text in target_texts
+                self.model.tokenizer([text])["input_ids"][0] for text in target_texts
             ]
 
         return target_tokens
