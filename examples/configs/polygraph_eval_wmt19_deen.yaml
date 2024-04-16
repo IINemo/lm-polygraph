@@ -10,19 +10,21 @@ save_path: '${hydra:run.dir}'
 
 device: cpu
 
-task: ats
+task: nmt
 
-dataset: xsum
-text_column: document
-label_column: summary
-prompt: "Here's the text and it's short summary.\n\nText:\n{text}\n\nSummary (one sentence):\n"
+dataset: [wmt19, de-en]
+text_column: de
+label_column: en
+prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
-max_new_tokens: 56
+max_new_tokens: 107
 load_from_disk: false
 generation_params:
   generate_until:
     - "\n"
+
+source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
 
 train_dataset: null
 train_test_split: false
@@ -39,9 +41,9 @@ subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
 use_density_based_ue: true
+use_ens_ue: false
 use_seq_ue: true
 use_tok_ue: false
-use_ens_ue: false
 
 # Examples of providing additional UE methods:
 # additional_estimators: {
@@ -60,3 +62,4 @@ deberta_batch_size: 10
 
 seed:
     - 1
+    
