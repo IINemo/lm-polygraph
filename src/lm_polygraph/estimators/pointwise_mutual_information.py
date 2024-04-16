@@ -114,7 +114,11 @@ class PointwiseMutualInformationClaim(Estimator):
         lm_logprobs = stats["greedy_lm_log_likelihoods"]
         claims = stats["claims"]
         claim_ue = []
-        for sample_lp, sample_lm_lp, sample_claims in zip(logprobs, lm_logprobs, claims):
+        for sample_lp, sample_lm_lp, sample_claims in zip(
+            logprobs,
+            lm_logprobs,
+            claims,
+        ):
             for claim in sample_claims:
                 sample_lm_lp[0] = 0
                 mi_scores = np.array(sample_lp) - np.array(sample_lm_lp)

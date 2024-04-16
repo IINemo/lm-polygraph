@@ -18,24 +18,27 @@ class Claim:
     aligned_tokens: List[int]
 
 
-CLAIM_EXTRACTION_PROMPT = '''Please breakdown the sentence into independent claims.
+CLAIM_EXTRACTION_PROMPT = """Please breakdown the sentence into independent claims.
 
 Example:
-Sentence: "He was born in London and raised by his mother and father until 11 years old."
+Sentence: \"He was born in London and raised by his mother and father until 11 years old.\"
 Claims:
 - He was born in London.
 - He was raised by his mother and father.
 - He was raised by his mother and father until 11 years old.
 
-Sentence: "{sent}"
-Claims:'''
+Sentence: \"{sent}\"
+Claims:"""
 
-MATCHING_PROMPT = '''Given the fact, identify the corresponding words in the original sentence ''' + \
-    '''that help derive this fact. Please list all words that are related to the fact, ''' + \
-    '''in the order they appear in the original sentence, each word separated by comma.\n''' + \
-    '''Fact: {claim}\n''' + \
-    '''Sentence: {sent}\n''' + \
-    '''Words from sentence that helps to derive the fact, separated by comma: '''
+MATCHING_PROMPT = (
+    "Given the fact, identify the corresponding words "
+    "in the original sentence that help derive this fact. "
+    "Please list all words that are related to the fact, "
+    "in the order they appear in the original sentence, "
+    "each word separated by comma.\nFact: {claim}\n"
+    "Sentence: {sent}\nWords from sentence that helps to "
+    "derive the fact, separated by comma: "
+)
 
 
 class ClaimsExtractor(StatCalculator):
@@ -64,7 +67,7 @@ class ClaimsExtractor(StatCalculator):
         texts: List[str],
         model: WhiteboxModel,
         *args,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, np.ndarray]:
         """
         Extracts the claims out of each generation text.
@@ -89,11 +92,13 @@ class ClaimsExtractor(StatCalculator):
             greedy_tokens,
             texts,
         ):
-            claims.append(self.claims_from_text(
-                greedy_text,
-                greedy_tok,
-                model.tokenizer,
-            ))
+            claims.append(
+                self.claims_from_text(
+                    greedy_text,
+                    greedy_tok,
+                    model.tokenizer,
+                )
+            )
             for c in claims[-1]:
                 claim_texts_concatenated.append(c.claim_text)
                 claim_input_texts_concatenated.append(inp_text)
@@ -110,11 +115,10 @@ class ClaimsExtractor(StatCalculator):
         tokens: List[int],
         tokenizer,
     ) -> List[Claim]:
-        sentences = [
-            s
-            for s in re.split(f'[{self.sent_separators}]', text)
-            if len(s) > 0
-        ]
+        sentences = []
+        for s in re.split(f"[{self.sent_separators}]", text):
+            if len(s) > 0:
+                sentences.append(s)
         if not any(text.endswith(x) for x in self.sent_separators):
             # remove last unfinished sentence
             sentences = sentences[:-1]
@@ -155,26 +159,30 @@ class ClaimsExtractor(StatCalculator):
             CLAIM_EXTRACTION_PROMPT.format(sent=sent)
         )
         claims = []
-        for claim_text in extracted_claims.split('\n'):
+        for claim_text in extracted_claims.split("\n"):
             if not claim_text.startswith("- "):
                 continue
             if "there aren't any claims" in claim_text.lower():
                 continue
             claim_text = claim_text[2:].strip()
-            match_words = self.openai_chat.ask(
-                MATCHING_PROMPT.format(sent=sent, claim=claim_text)
-            ).strip().split(', ')
+            chat_ask = MATCHING_PROMPT.format(sent=sent, claim=claim_text)
+            match_words = self.openai_chat.ask(chat_ask)
+            match_words = match_words.strip().split(",")
+            for i in range(len(match_words)):
+                match_words[i] = match_words[i].strip()
             match_string = self._match_string(sent, match_words)
             if match_string is None:
                 continue
             aligned_tokens = self._align(sent, match_string, sent_tokens, tokenizer)
             if len(aligned_tokens) == 0:
                 continue
-            claims.append(Claim(
-                claim_text=claim_text,
-                sentence=sent,
-                aligned_tokens=aligned_tokens,
-            ))
+            claims.append(
+                Claim(
+                    claim_text=claim_text,
+                    sentence=sent,
+                    aligned_tokens=aligned_tokens,
+                )
+            )
         return claims
 
     def _match_string(self, sent: str, match_words: List[str]) -> Optional[str]:
@@ -189,25 +197,27 @@ class ClaimsExtractor(StatCalculator):
 
         last = 0  # pointer to the sentence
         last_match = 0  # pointer to the match_words list
-        match_str = ''
+        match_str = ""
         while last < len(sent):
-            check_boundaries = (last == 0 or not sent[last - 1].isalpha())
+            check_boundaries = False
+            if last == 0 or not sent[last - 1].isalpha():
+                check_boundaries = True
             if check_boundaries and last_match < len(match_words):
                 right_idx = last + len(match_words[last_match])
                 if right_idx < len(sent):
                     check_boundaries = not sent[right_idx].isalpha()
 
-            if last_match < len(match_words) and check_boundaries and sent[last:].startswith(
-                    match_words[last_match]):
-                # match at sent[last] and match_words[last_match]
-                len_w = len(match_words[last_match])
-                last += len_w
-                match_str += '^' * len_w
-                last_match += 1
-            else:
-                # no match at sent[last]
-                last += 1
-                match_str += ' '
+            if last_match < len(match_words) and check_boundaries:
+                if sent[last:].startswith(match_words[last_match]):
+                    # match at sent[last] and match_words[last_match]
+                    len_w = len(match_words[last_match])
+                    last += len_w
+                    match_str += "^" * len_w
+                    last_match += 1
+                    continue
+            # no match at sent[last]
+            last += 1
+            match_str += " "
 
         if last_match < len(match_words):
             # didn't match all words to the sentence
@@ -215,7 +225,13 @@ class ClaimsExtractor(StatCalculator):
 
         return match_str
 
-    def _align(self, sent: str, match_str: str, sent_tokens: List[int], tokenizer) -> List[int]:
+    def _align(
+        self,
+        sent: str,
+        match_str: str,
+        sent_tokens: List[int],
+        tokenizer,
+    ) -> List[int]:
         last = 0
         last_token = 0
         aligned_tokens = []
@@ -225,7 +241,7 @@ class ClaimsExtractor(StatCalculator):
             cur_token = tokenizer.decode(sent_tokens[last_token])
             if len(cur_token) > 0 and sent[last:].startswith(cur_token):
                 # if the match string corresponding to the token contains matches, add to answer
-                if any(t == '^' for t in match_str[last:last + len(cur_token)]):
+                if any(t == "^" for t in match_str[last : last + len(cur_token)]):
                     aligned_tokens.append(last_token)
                 last_token += 1
                 last += len(cur_token)
