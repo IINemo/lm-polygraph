@@ -256,12 +256,11 @@ class Dataset:
                             question=inst["question"].strip(),
                             answer=answers[inst["answer"]],
                         )
-                
-                
+
                 subject_data = dataset.select(
                     np.argwhere(subjects == subject).flatten()
                 )
-                
+
                 if len(subject_data) > mmlu_max_subject_size:
                     subject_data = subject_data.select(range(mmlu_max_subject_size))
 
