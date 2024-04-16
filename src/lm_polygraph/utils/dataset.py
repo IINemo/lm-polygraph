@@ -302,6 +302,12 @@ class Dataset:
                     )
                 )
                 y.append([alias for alias in inst["answer"]["aliases"]])
+        elif "allenai/c4" in dataset_name.lower():
+            x, y = [], []
+            for inst in dataset:
+                if len(inst[x_column]) <= 1024:
+                    x.append(inst[x_column])
+                    y.append(inst[y_column])
         else:
             x = dataset[x_column]
             y = dataset[y_column]
