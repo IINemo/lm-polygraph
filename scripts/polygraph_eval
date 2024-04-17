@@ -17,23 +17,13 @@ from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
 from lm_polygraph.utils.processor import Logger
-from lm_polygraph.generation_metrics.accuracy import AccuracyMetric
-from lm_polygraph.generation_metrics.bart_score import BartScoreSeqMetric
-from lm_polygraph.generation_metrics.rouge import RougeMetric
-from lm_polygraph.generation_metrics.bert_score import BertScoreMetric
-from lm_polygraph.generation_metrics.sbert import SbertMetric
-from lm_polygraph.generation_metrics.aggregated_metric import AggregatedMetric
-from lm_polygraph.generation_metrics.alignscore import AlignScore
-from lm_polygraph.generation_metrics.comet import Comet
+from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
+from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
 from lm_polygraph.estimators.ensemble_token_measures import *
-from lm_polygraph.ue_metrics import (
-    ReversedPairsProportion,
-    PredictionRejectionArea,
-    RiskCoverageCurveAUC,
-)
+from lm_polygraph.ue_metrics import *
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -94,9 +84,9 @@ def main(args):
         dataset = Dataset.load(
             args.dataset,
             args.text_column,
-            args.label_column,
+            getattr(args, "label_column", None),
             batch_size=args.batch_size,
-            prompt=args.prompt,
+            prompt=getattr(args, "prompt", ""),
             description=getattr(args, "description", ""),
             mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
             n_shot=getattr(args, "n_shot", 5),
@@ -118,9 +108,9 @@ def main(args):
                 train_dataset = Dataset.load(
                     args.train_dataset,
                     args.text_column,
-                    args.label_column,
+                    getattr(args, "label_column", None),
                     batch_size=args.batch_size,
-                    prompt=args.prompt,
+                    prompt=getattr(args, "prompt", ""),
                     description=getattr(args, "description", ""),
                     mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
                     n_shot=getattr(args, "n_shot", 5),
@@ -141,9 +131,9 @@ def main(args):
                 train_dataset = Dataset.load(
                     args.dataset,
                     args.text_column,
-                    args.label_column,
+                    getattr(args, "label_column", None),
                     batch_size=args.batch_size,
-                    prompt=args.prompt,
+                    prompt=getattr(args, "prompt", ""),
                     description=getattr(args, "description", ""),
                     mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
                     n_shot=getattr(args, "n_shot", 5),
@@ -183,16 +173,14 @@ def main(args):
 
         generation_metrics = get_generation_metrics(args)
 
+        ue_metrics = get_ue_metrics(args)
+
         man = UEManager(
             dataset,
             model,
             estimators,
             generation_metrics,
-            [
-                ReversedPairsProportion(),
-                PredictionRejectionArea(),
-                RiskCoverageCurveAUC(),
-            ],
+            ue_metrics,
             [
                 Logger(),
             ],
@@ -201,12 +189,27 @@ def main(args):
             ignore_exceptions=args.ignore_exceptions,
             background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
-            ensemble_model=ensemble_model
+            ensemble_model=ensemble_model,
+            cache_path=args.cache_path,
         )
 
         man()
 
         man.save(save_path + f"/ue_manager_seed{seed}")
+
+
+def get_ue_metrics(args):
+    ue_metrics = [
+        ReversedPairsProportion(),
+        PredictionRejectionArea(),
+        RiskCoverageCurveAUC(),
+    ]
+    if getattr(args, "use_claim_ue", False):
+        ue_metrics += [
+            ROCAUC(),
+            PRAUC(),
+        ]
+    return ue_metrics
 
 
 def get_density_based_ue_methods(args, model_type):
@@ -308,6 +311,17 @@ def get_ue_methods(args, model):
             SemanticEntropyToken(model.model_path, args.cache_path),
         ]
 
+    if getattr(args, "use_claim_ue", False):
+        estimators += [
+            MaximumClaimProbability(),
+            PerplexityClaim(),
+            MaxTokenEntropyClaim(),
+            PointwiseMutualInformationClaim(),
+            PTrueClaim(),
+            ClaimConditionedProbabilityClaim(nli_context="no_context"),
+            ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
+        ]
+
     additional_estimators = getattr(args, "additional_estimators", {})
     additional_estimators_kwargs = getattr(args, "additional_estimators_kwargs", {})
 
@@ -339,6 +353,7 @@ def get_generation_metrics(args):
                 normalize = getattr(args, "normalize", False),
             ),
             AlignScore(),
+            OpenAIFactCheck(cache_path=args.cache_path),
         ]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
