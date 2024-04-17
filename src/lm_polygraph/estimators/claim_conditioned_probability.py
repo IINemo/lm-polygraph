@@ -114,12 +114,13 @@ class ClaimConditionedProbabilityClaim(Estimator):
         return entail_logprob - total_logprob
 
     def _claim_ccp_no_context(self, alternatives, alternatives_nli, claims):
-        claim_ue = []
+        all_claim_ue = []
         for s_alternatives, s_alternatives_nli, s_claims in zip(
             alternatives,
             alternatives_nli,
             claims,
         ):
+            claim_ue = []
             sample_ccp = []
             for token_alternatives, token_alternatives_nli in zip(
                 s_alternatives,
@@ -134,8 +135,11 @@ class ClaimConditionedProbabilityClaim(Estimator):
             sample_ccp = np.array(sample_ccp)
             for claim in s_claims:
                 tokens = np.array(claim.aligned_tokens)
-                claim_ue.append(self._reduce(sample_ccp[tokens]))
-        return -np.array(claim_ue)
+                claim_ue.append(-self._reduce(sample_ccp[tokens]))
+            
+            all_claim_ue.append(np.asarray(claim_ue))
+        
+        return all_claim_ue
 
     def _claim_ccp_fact_pref(self, alternatives, alternatives_nli, claims):
         claim_ue = []
