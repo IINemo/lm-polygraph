@@ -15,3 +15,4 @@ from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
+from .infer_causal_lm_calculator import InferCausalLMCalculator
