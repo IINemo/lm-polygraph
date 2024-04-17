@@ -161,7 +161,7 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
                     nli_matrix = []
                     for _ in range(len(alts[i])):
                         nli_matrix.append([])
-                        for i in range(len(alts[i])):
+                        for j in range(len(alts[i])):
                             nli_matrix[-1].append(None)
                     for j in range(len(alts[i])):
                         nli_matrix[0][j], nli_matrix[j][0] = nli_classes[:2]
