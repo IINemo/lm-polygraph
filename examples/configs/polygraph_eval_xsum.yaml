@@ -15,7 +15,7 @@ task: ats
 dataset: xsum
 text_column: document
 label_column: summary
-prompt: "Here's the text and it's short summary.\n\nText:\n{text}\n\nSummary (one sentence):\n"
+prompt: "Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):\n"
 train_split: train
 eval_split: test
 max_new_tokens: 56
