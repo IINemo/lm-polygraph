@@ -491,11 +491,11 @@ class WhiteboxModel(Model):
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
         model_type = self.model.config._name_or_path.lower()
-        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
+        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type: # TODO: this is omg
             prompted_texts = []
             for text in texts:
                 if "llama" in model_type:
-                    template = LlamaPromptTemplate()
+                    template = LlamaPromptTemplate() # TODO: remove this
                     template.add_user_message(text)
                     prompted_texts.append(template.build_prompt())
                 elif "vicuna" in model_type:
