@@ -7,8 +7,6 @@ from datasets import load_dataset, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List
 
-from lm_polygraph.utils.dataset_preprocessor import preprocess_dataset
-
 
 class Dataset:
     """
@@ -180,17 +178,149 @@ class Dataset:
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
-        x, y = preprocess_dataset(
-            dataset,
-            dataset_name,
-            x_column,
-            y_column,
-            prompt,
-            description,
-            n_shot,
-            few_shot_dataset,
-            mmlu_max_subject_size,
-        )
+        if "translation" in dataset.column_names:
+            x, y = [], []
+            source_lang = (
+                "German"
+                if x_column == "de"
+                else "French" if x_column == "fr" else "English"
+            )
+            target_lang = (
+                "German"
+                if y_column == "de"
+                else "French" if y_column == "fr" else "English"
+            )
+            for inst in dataset["translation"]:
+                x.append(
+                    prompt.format(
+                        source_lang=source_lang,
+                        target_lang=target_lang,
+                        text=inst[x_column],
+                    )
+                )
+                y.append(inst[y_column])
+        elif ("xsum" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                x.append(prompt.format(text=inst[x_column]))
+                y.append(inst[y_column])
+        elif ("coqa" in dataset_name.lower()) and len(prompt):
+
+            def doc_to_text(doc, prompt, i=0):
+                # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
+                # and a question qi, the task is to predict the answer ai
+                doc_text = ""
+                for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
+                    doc_text += prompt.format(question=q, answer=a)
+                return doc_text
+
+            x, y = [], []
+            for inst in dataset:
+                formatted_description = description.format(story=inst["story"])
+                for j, (question, answer) in enumerate(
+                    zip(inst[x_column], inst[y_column]["input_text"])
+                ):
+                    formatted_prompt = (
+                        formatted_description
+                        + doc_to_text(inst, prompt, j)
+                        + prompt.format(
+                            question=question,
+                            answer="",
+                        )
+                    )
+                    x.append(formatted_prompt)
+                    y.append(answer)
+        elif ("babi_qa" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                inst = inst["story"]
+                context = ""
+                for text, answer in zip(inst[x_column], inst[y_column]):
+                    if answer == "":
+                        context += text + " "
+                    else:
+                        x.append(prompt.format(context=context.strip(), question=text))
+                        y.append(answer)
+        elif ("mmlu" in dataset_name.lower()) and len(prompt):
+            answers = ["A", "B", "C", "D"]
+            subjects = np.array(dataset["subject"])
+            x, y = [], []
+            for subject in np.unique(subjects):
+                formatted_description = description.format(
+                    subject=subject.replace("_", " ")
+                )
+                if n_shot > 0:
+                    few_shot_ids = np.random.choice(
+                        len(few_shot_dataset), n_shot, replace=False
+                    )
+                    few_shot_data = few_shot_dataset.select(few_shot_ids)
+                    formatted_few_shot_prompt = ""
+                    for inst in few_shot_data:
+                        formatted_few_shot_prompt += prompt.format(
+                            choices=inst["choices"],
+                            question=inst["question"].strip(),
+                            answer=answers[inst["answer"]],
+                        )
+
+                subject_data = dataset.select(
+                    np.argwhere(subjects == subject).flatten()
+                )
+
+                if len(subject_data) > mmlu_max_subject_size:
+                    subject_data = subject_data.select(range(mmlu_max_subject_size))
+
+                for inst in subject_data:
+                    formatted_prompt = prompt.format(
+                        choices=inst["choices"],
+                        question=inst["question"].strip(),
+                        answer="",
+                    )
+                    x.append(
+                        formatted_description
+                        + formatted_few_shot_prompt
+                        + formatted_prompt
+                    )
+                    y.append(answers[inst[y_column]])
+        elif ("gsm8k" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                x.append(prompt.format(question=inst[x_column]))
+                y.append(inst[y_column])
+        elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            if n_shot > 0:
+                few_shot_ids = np.random.choice(
+                    len(few_shot_dataset), n_shot, replace=False
+                )
+                few_shot_data = few_shot_dataset.select(few_shot_ids)
+                formatted_few_shot_prompt = ""
+                for inst in few_shot_data:
+                    formatted_few_shot_prompt += (
+                        prompt.format(
+                            question=inst["question"].strip(),
+                            answer=inst["answer"]["normalized_value"],
+                        )
+                        + "\n"
+                    )
+            for inst in dataset:
+                x.append(
+                    formatted_few_shot_prompt
+                    + prompt.format(
+                        question=inst["question"],
+                        answer="",
+                    )
+                )
+                y.append([alias for alias in inst["answer"]["aliases"]])
+        elif "allenai/c4" in dataset_name.lower():
+            x, y = [], []
+            for inst in dataset:
+                if len(inst[x_column]) <= 1024:
+                    x.append(inst[x_column])
+                    y.append(inst[y_column])
+        else:
+            x = dataset[x_column]
+            y = dataset[y_column]
+
         return Dataset(x, y, batch_size)
 
     @staticmethod

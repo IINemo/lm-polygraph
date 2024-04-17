@@ -8,21 +8,23 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-task: qa
+device: cpu
 
-dataset: coqa
-text_column: questions
-label_column: answers
-description: "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}"
-prompt: "\n\nQuestion: {question}\nAnswer:{answer}"
+task: nmt
+
+dataset: [wmt19, de-en]
+text_column: de
+label_column: en
+prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: validation
-max_new_tokens: 20
+max_new_tokens: 107
 load_from_disk: false
-normalize: true
 generation_params:
   generate_until:
     - "\n"
+
+source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
 
 train_dataset: null
 train_test_split: false
@@ -39,11 +41,9 @@ subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
 use_density_based_ue: true
+use_ens_ue: false
 use_seq_ue: true
 use_tok_ue: false
-use_ens_ue: false
-generation_metrics: null
-ens_type: 
 
 # Examples of providing additional UE methods:
 # additional_estimators: {

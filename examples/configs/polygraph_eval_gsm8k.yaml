@@ -17,9 +17,10 @@ prompt: "Q: There are 15 trees in the grove. Grove workers will plant trees in t
 train_split: train
 few_shot_split: train
 eval_split: test
-max_new_tokens: 128
+max_new_tokens: 256
 load_from_disk: false
 n_shot: 0
+normalize: true
 generate_until: 
   - "\n"
 

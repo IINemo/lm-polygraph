@@ -50,7 +50,7 @@ class AlignScore(GenerationMetric):
         """
         scores = np.array(
             self.scorer.score(
-                claims=stats["target_texts"],
+                claims=target_texts,
                 contexts=stats["greedy_texts"],
             )
         )

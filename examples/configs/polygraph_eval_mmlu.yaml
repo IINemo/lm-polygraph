@@ -15,8 +15,8 @@ text_column: question
 label_column: answer
 description: "The following are multiple choice questions (with answers) about {subject}.\n"
 prompt: "\nQ:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}"
-few_shot_split: validation
-train_split: auxiliary_train
+few_shot_split: dev
+train_split: validation
 eval_split: test
 max_new_tokens: 3
 load_from_disk: false
@@ -24,7 +24,7 @@ n_shot: 5
 max_subject_size: 100
 generation_params:
   generate_until:
-    - '\n'
+    - "\n"
 
 train_dataset: null
 train_test_split: false
