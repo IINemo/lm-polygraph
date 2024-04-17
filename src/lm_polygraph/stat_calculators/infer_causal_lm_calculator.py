@@ -160,7 +160,7 @@ class InferCausalLMCalculator(StatCalculator):
         """
 
         if self._tokenize:
-            model_inputs = model.tokenizer(
+            model_inputs = model.tokenize(
                 texts, padding=True, return_tensors="pt")
         else:
             model_inputs = dependencies["model_inputs"]
@@ -174,7 +174,7 @@ class InferCausalLMCalculator(StatCalculator):
             'output_scores': True,
             'output_hidden_states': True
         })
-        out = model.model.generate(
+        out = model.generate(
             model_inputs,
             **args_generate
         )
