@@ -24,7 +24,7 @@ n_shot: 5
 max_subject_size: 100
 generation_params:
   generate_until:
-    - '\n'
+    - "\n"
 
 train_dataset: null
 train_test_split: false

@@ -199,6 +199,11 @@ class Dataset:
                     )
                 )
                 y.append(inst[y_column])
+        elif ("xsum" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for inst in dataset:
+                x.append(prompt.format(text=inst[x_column]))
+                y.append(inst[y_column])
         elif ("coqa" in dataset_name.lower()) and len(prompt):
 
             def doc_to_text(doc, prompt, i=0):
