@@ -136,9 +136,7 @@ class ClaimConditionedProbabilityClaim(Estimator):
             for claim in s_claims:
                 tokens = np.array(claim.aligned_tokens)
                 claim_ue.append(-self._reduce(sample_ccp[tokens]))
-            
             all_claim_ue.append(claim_ue)
-        
         return all_claim_ue
 
     def _claim_ccp_fact_pref(self, alternatives, alternatives_nli, claims):

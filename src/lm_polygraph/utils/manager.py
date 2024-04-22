@@ -178,7 +178,9 @@ def estimate_uncertainty(
 
 def _flatten_estimates(e, calculator_class):
     if not isinstance(e, list) or not all(isinstance(x, list) for x in e):
-        raise Exception(f"Class {calculator_class} returned {e}, expected list of lists")
+        raise Exception(
+            f"Class {calculator_class} returned {e}, expected list of lists"
+        )
     return [ue for sample_ue in e for ue in sample_ue]
 
 
