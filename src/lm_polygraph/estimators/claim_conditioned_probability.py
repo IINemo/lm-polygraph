@@ -137,7 +137,7 @@ class ClaimConditionedProbabilityClaim(Estimator):
                 tokens = np.array(claim.aligned_tokens)
                 claim_ue.append(-self._reduce(sample_ccp[tokens]))
             
-            all_claim_ue.append(np.asarray(claim_ue))
+            all_claim_ue.append(claim_ue)
         
         return all_claim_ue
 
@@ -148,6 +148,7 @@ class ClaimConditionedProbabilityClaim(Estimator):
             alternatives_nli,
             claims,
         ):
+            claim_ue.append([])
             for claim, claim_nlis in zip(
                 s_claims,
                 s_alternatives_nli,
@@ -163,8 +164,8 @@ class ClaimConditionedProbabilityClaim(Estimator):
                     token_alternatives_nli,
                 ):
                     token_ccps.append(self._token_ccp(token_alt, token_nli))
-                claim_ue.append(self._reduce(token_ccps))
-        return -np.array(claim_ue)
+                claim_ue[-1].append(-self._reduce(token_ccps))
+        return claim_ue
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         alternatives = stats["greedy_tokens_alternatives"]

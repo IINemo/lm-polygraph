@@ -64,11 +64,12 @@ class MaxTokenEntropyClaim(Estimator):
         claims = stats["claims"]
         claim_ue = []
         for sample_ent, sample_claims in zip(entropies, claims):
+            claim_ue.append([])
             for claim in sample_claims:
                 tokens = np.array(claim.aligned_tokens)
                 claim_ent = np.array(sample_ent)[tokens]
-                claim_ue.append(self._reduce(claim_ent))
-        return np.array(claim_ue)
+                claim_ue[-1].append(self._reduce(claim_ent))
+        return claim_ue
 
 
 class TokenEntropy(Estimator):
