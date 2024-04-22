@@ -30,9 +30,9 @@ use_seq_ue: false
 use_tok_ue: false
 use_ens_ue: false
 use_claim_ue: true
-generation_metrics: [{
-  'name': 'OpenAIFactCheck'
-}]
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
 ens_type:
 
 ignore_exceptions: false
