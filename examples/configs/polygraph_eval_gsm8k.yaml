@@ -21,8 +21,9 @@ max_new_tokens: 256
 load_from_disk: false
 n_shot: 0
 normalize: true
-generate_until: 
-  - "\n"
+generation_params:
+  generate_until:
+    - "\n"
 
 target_ignore_regex: "(?s).*#### "
 output_ignore_regex: "(?s).*The answer is "
