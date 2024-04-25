@@ -8,7 +8,7 @@ save_path: '${hydra:run.dir}'
 num_bins: 100
 
 manager_paths:
-  - /Users/romanvashurin/workspace/polygraph_calibration/vicuna_aeslc_train_2000.man
+  - /some/absolute/path/to/manager1
 
 generation_metrics:
   - Rouge_rougeL
@@ -17,8 +17,6 @@ ue_methods:
   - MaximumSequenceProbability
   - Perplexity
   - MeanTokenEntropy
-
-plot: true
 
 smoothing:
   do_smooth: true
