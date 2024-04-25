@@ -2,7 +2,7 @@ hydra:
   run:
     dir: ${cache_path}
 
-cache_path: ./workdir/calibrated
+cache_path: ./workdir/output/calibrated
 save_path: '${hydra:run.dir}'
 
 num_bins: 100
