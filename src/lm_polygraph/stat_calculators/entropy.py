@@ -40,5 +40,5 @@ class EntropyCalculator(StatCalculator):
             entropies.append([])
             for lp in s_lp:
                 mask = ~np.isinf(lp)
-                entropies[-1].append(-np.mean(np.array(lp[mask]) * np.exp(lp[mask])))
+                entropies[-1].append(-np.sum(np.array(lp[mask]) * np.exp(lp[mask])))
         return {"entropy": entropies}
