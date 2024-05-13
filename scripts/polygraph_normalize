@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
+import pickle
 import json
 from pathlib import Path
 
 import numpy as np
 
-from lm_polygraph.utils.normalize import get_mans_ues_metrics, filter_nans
+from lm_polygraph.utils.normalize import get_mans_ues_metrics, filter_nans, fit_min_max, fit_quantile, fit_binned_pcc, fit_isotonic_pcc
 
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
@@ -26,10 +27,30 @@ def fit(args):
                                     ue_method_names,
                                     gen_metric_names)
 
+    fitted_normalizers = {}
     for metric_name, metric_data in gen_metrics.items():
         for ue_method_name, ue_data in ues.items():
             filtered_gen_metrics, filtered_ues = filter_nans(metric_data, ue_data)
-            # Do something with the filtered data
+
+            for normalization_method in args.normalization_methods:
+                if normalization_method == "min_max":
+                    normalizer = fit_min_max(filtered_ues)
+                elif normalization_method == "quantile":
+                    normalizer = fit_quantile(filtered_ues)
+                elif normalization_method == "binned_pcc":
+                    normalizer = fit_binned_pcc(filtered_gen_metrics, filtered_ues)
+                elif normalization_method == "isotonic_pcc":
+                    normalizer = fit_isotonic_pcc(filtered_gen_metrics, filtered_ues)
+                else:
+                    raise ValueError(f"Unknown normalization method: {normalization_method}")
+
+                str_normalizer = pickle.dumps(normalizer)
+
+                fitted_normalizers[(metric_name, ue_method_name, normalization_method)] = str_normalizer
+
+    with open(args.output_path, "w") as f:
+        json.dump(fitted_normalizers, f)
+
 
 @hydra.main(
     version_base=None,
