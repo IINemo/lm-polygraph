@@ -1,8 +1,10 @@
 from typing import List, Tuple, Dict
+import math
 
 import numpy as np
 from cir_model import CenteredIsotonicRegression
 from scipy.stats import binned_statistic
+from sklearn.preprocessing import QuantileTransformer, MinMaxScaler
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.common import seq_man_key
@@ -57,8 +59,8 @@ def get_mans_ues_metrics(man_paths: List[str], ue_method_names: List[str], gen_m
     mans_ues = [man.estimations for man in mans]
     mans_gen_metrics = [man.gen_metrics for man in mans]
 
-    ues = concat_mans_data(mans_ues, ue_method_names)
-    gen_metrics = concat_mans_data(mans_gen_metrics, gen_metric_names)
+    ues = _concat_mans_data(mans_ues, ue_method_names)
+    gen_metrics = _concat_mans_data(mans_gen_metrics, gen_metric_names)
 
     return ues, gen_metrics
 
@@ -132,7 +134,7 @@ def _get_bins(ue, metric, edges):
 def fit_binned_pcc(gen_metrics: np.ndarray,
                    ues: np.ndarray, num_bins: int) -> CenteredIsotonicRegression:
     bin_edges = _get_bin_edges(ues, num_bins)
-    metric_bins, std_bins, sem_bins = _get_bins(ues, gen_metrics, bin_edges)
+    metric_bins = _get_bins(ues, gen_metrics, bin_edges)
 
     binned_metric = metric_bins.statistic
 
@@ -145,7 +147,7 @@ def fit_binned_pcc(gen_metrics: np.ndarray,
 def fit_quantile(ues: np.ndarray) -> QuantileTransformer:
     """Fits QuantileTransformer to the gen_metrics and ues data."""
     scaler = QuantileTransformer(output_distribution='uniform')
-    scaler.fit(ues)
+    scaler.fit(ues[:, None])
 
     return scaler
 
@@ -153,6 +155,6 @@ def fit_quantile(ues: np.ndarray) -> QuantileTransformer:
 def fit_min_max(ues: np.ndarray) -> MinMaxScaler:
     """Fits MinMaxScaler to the gen_metrics and ues data."""
     scaler = MinMaxScaler(clip=True)
-    scaler.fit(ues)
+    scaler.fit(ues[:, None])
 
     return scaler
