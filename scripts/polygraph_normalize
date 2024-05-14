@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import pickle
 import json
+import hydra
+from typing import Dict, List
 from pathlib import Path
 
 import numpy as np
@@ -23,9 +26,9 @@ def fit(args):
     ue_method_names = args.ue_method_names
     gen_metric_names = args.gen_metric_names
 
-    ues, gen_metrics = get_mans_ues(man_paths,
-                                    ue_method_names,
-                                    gen_metric_names)
+    ues, gen_metrics = get_mans_ues_metrics(man_paths,
+                                           ue_method_names,
+                                           gen_metric_names)
 
     fitted_normalizers = {}
     for metric_name, metric_data in gen_metrics.items():
@@ -38,7 +41,7 @@ def fit(args):
                 elif normalization_method == "quantile":
                     normalizer = fit_quantile(filtered_ues)
                 elif normalization_method == "binned_pcc":
-                    normalizer = fit_binned_pcc(filtered_gen_metrics, filtered_ues)
+                    normalizer = fit_binned_pcc(filtered_gen_metrics, filtered_ues, args.num_bins)
                 elif normalization_method == "isotonic_pcc":
                     normalizer = fit_isotonic_pcc(filtered_gen_metrics, filtered_ues)
                 else:
@@ -48,8 +51,8 @@ def fit(args):
 
                 fitted_normalizers[(metric_name, ue_method_name, normalization_method)] = str_normalizer
 
-    with open(args.output_path, "w") as f:
-        json.dump(fitted_normalizers, f)
+    with open(args.save_path + '/fitted_normalizers.json', "wb") as f:
+        pickle.dump(fitted_normalizers, f)
 
 
 @hydra.main(
@@ -61,11 +64,11 @@ def predict(args):
     pass
 
 if __name__ == "__main__":
-    _callable = sys.argv[1]
-
-    if _callable == "fit":
-        fit()
-    elif _callable == "predict":
-        predict()
-    else:
-        raise ValueError(f"Unknown action: {_callable}. Use 'fit' or 'predict'")
+    fit()
+    #_callable = sys.argv[1]
+    #if _callable == "fit":
+    #    fit()
+    #elif _callable == "predict":
+    #    predict()
+    #else:
+    #    raise ValueError(f"Unknown action: {_callable}. Use 'fit' or 'predict'")
