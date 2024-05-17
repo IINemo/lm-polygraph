@@ -66,20 +66,5 @@ def fit(args):
         pickle.dump(fitted_normalizers, f)
 
 
-@hydra.main(
-    version_base=None,
-    config_path=str(hydra_config.parent),
-    config_name=str(hydra_config.name),
-)
-def predict(args):
-    pass
-
 if __name__ == "__main__":
     fit()
-    #_callable = sys.argv[1]
-    #if _callable == "fit":
-    #    fit()
-    #elif _callable == "predict":
-    #    predict()
-    #else:
-    #    raise ValueError(f"Unknown action: {_callable}. Use 'fit' or 'predict'")
