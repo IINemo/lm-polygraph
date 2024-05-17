@@ -7,13 +7,14 @@ from sklearn.preprocessing import QuantileTransformer
 
 from lm_polygraph.normalizers.base import BaseUENormalizer
 
+
 class QuantileNormalizer(BaseUENormalizer):
     def __init__(self):
         self.scaler = None
 
     def fit(self, ues: np.ndarray) -> None:
         """Fits QuantileTransformer to the gen_metrics and ues data."""
-        self.scaler = QuantileTransformer(output_distribution='uniform')
+        self.scaler = QuantileTransformer(output_distribution="uniform")
         conf = -ues
         self.scaler.fit(conf[:, None])
 
