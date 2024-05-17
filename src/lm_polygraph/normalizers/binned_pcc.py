@@ -14,14 +14,14 @@ class BinnedPCCNormalizer(BaseUENormalizer):
         self.params = None
 
     def _get_bin_indices(self, ue, num_bins):
-        """ Given an array of unceratinty estimates, returns the
+        """Given an array of unceratinty estimates, returns the
         indices of the elements that should be used to create the bins.
         Bins are created such that each bin has approximately the same number of
         elements.
         """
         # Calculate the number of elements in each bin
         per_bin = len(ue) / num_bins
-        
+
         # If the number of elements is not divisible by the number of bins,
         # then the number of elements in each bin will not be exactly equal.
         # If it is divisible, then lesser_bin and greater_bin will be the same.
@@ -34,7 +34,7 @@ class BinnedPCCNormalizer(BaseUENormalizer):
         # one less element in them, i.e. n_lesser_bins.
         n_lesser_bins = (greater_bin * num_bins) - len(ue)
         n_greater_bins = num_bins - n_lesser_bins
-    
+
         # Calculate total number of elements in lesser bins. This is the index
         # where the greater bins start.
         greater_start_index = n_lesser_bins * lesser_bin
@@ -51,8 +51,8 @@ class BinnedPCCNormalizer(BaseUENormalizer):
         return bin_indices
 
     def _get_bin_edges(self, ue, num_bins):
-        """ Given an array of unceratinty estimates, returns the bin edges
-        for the given number of bins. 
+        """Given an array of unceratinty estimates, returns the bin edges
+        for the given number of bins.
         Bins are created such that each bin has approximately the same number of
         elements.
         """
