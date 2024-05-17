@@ -1,5 +1,4 @@
 from typing import List, Tuple, Dict
-import math
 
 import numpy as np
 
@@ -12,7 +11,7 @@ def _concat_mans_data(mans_data_dicts, names):
 
     Args:
     mans_data_dicts: List of dictionaries, where each dictionary contains
-      data of particular type from a single manager. 
+      data of particular type from a single manager.
       Each dictionary should have the same keys.
     names: List of value types to extract from the dictionaries.
 
@@ -35,9 +34,11 @@ def _concat_mans_data(mans_data_dicts, names):
     return data
 
 
-def get_mans_ues_metrics(man_paths: List[str], ue_method_names: List[str], gen_metric_names: List[str]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+def get_mans_ues_metrics(
+    man_paths: List[str], ue_method_names: List[str], gen_metric_names: List[str]
+) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     """Extracts and concats data from a list of paths to
-    saved manager data files.    
+    saved manager data files.
 
     Args:
     man_paths: List of paths to manager data files
@@ -58,11 +59,13 @@ def get_mans_ues_metrics(man_paths: List[str], ue_method_names: List[str], gen_m
 
     ues = _concat_mans_data(mans_ues, ue_method_names)
     gen_metrics = _concat_mans_data(mans_gen_metrics, gen_metric_names)
-    
+
     return ues, gen_metrics
 
 
-def filter_nans(gen_metrics: np.ndarray, ues: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def filter_nans(
+    gen_metrics: np.ndarray, ues: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     """Filters out NaNs from gen_metrics and ues if they occur at least
     in one of the arrays.
 

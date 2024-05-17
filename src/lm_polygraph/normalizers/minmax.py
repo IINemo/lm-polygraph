@@ -7,6 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from lm_polygraph.normalizers.base import BaseUENormalizer
 
+
 class MinMaxNormalizer(BaseUENormalizer):
     def __init__(self):
         self.scaler = None

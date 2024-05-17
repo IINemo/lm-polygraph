@@ -1,6 +1,7 @@
 # Description: Base class for all UE normalizers
 
-class BaseUENormalizer():
+
+class BaseUENormalizer:
     def __init__(self):
         pass
 
