@@ -3,7 +3,7 @@
 import pickle
 
 import numpy as np
-from sklearn.preprocessing import QuantileTransformer
+from scipy.stats import ecdf
 
 from lm_polygraph.normalizers.base import BaseUENormalizer
 
@@ -14,14 +14,13 @@ class QuantileNormalizer(BaseUENormalizer):
 
     def fit(self, ues: np.ndarray) -> None:
         """Fits QuantileTransformer to the gen_metrics and ues data."""
-        self.scaler = QuantileTransformer(output_distribution="uniform")
         conf = -ues
-        self.scaler.fit(conf[:, None])
+        self.scaler = ecdf(conf).cdf
 
     def transform(self, ues: np.ndarray) -> np.ndarray:
         """Transforms the ues data using the fitted QuantileTransformer."""
         conf = -ues
-        return self.scaler.transform(conf[:, None]).squeeze()
+        return self.scaler.evaluate(conf)
 
     def dumps(self) -> str:
         """Dumps the QuantileNormalizer object to a string."""
