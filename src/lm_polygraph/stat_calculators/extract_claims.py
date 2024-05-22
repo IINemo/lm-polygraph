@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.utils.model import WhiteboxModel
-
+from .prompts import CLAIM_EXTRACTION_PROMPTS, MATCHING_PROMPTS
 
 @dataclass
 class Claim:
@@ -17,28 +17,6 @@ class Claim:
     # Indices in the original generation of the tokens, which are related to the current claim
     aligned_tokens: List[int]
 
-
-CLAIM_EXTRACTION_PROMPT = """Please breakdown the sentence into independent claims.
-
-Example:
-Sentence: \"He was born in London and raised by his mother and father until 11 years old.\"
-Claims:
-- He was born in London.
-- He was raised by his mother and father.
-- He was raised by his mother and father until 11 years old.
-
-Sentence: \"{sent}\"
-Claims:"""
-
-MATCHING_PROMPT = (
-    "Given the fact, identify the corresponding words "
-    "in the original sentence that help derive this fact. "
-    "Please list all words that are related to the fact, "
-    "in the order they appear in the original sentence, "
-    "each word separated by comma.\nFact: {claim}\n"
-    "Sentence: {sent}\nWords from sentence that helps to "
-    "derive the fact, separated by comma: "
-)
 
 
 class ClaimsExtractor(StatCalculator):
@@ -66,6 +44,7 @@ class ClaimsExtractor(StatCalculator):
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: WhiteboxModel,
+        language: str = "en",
         *args,
         **kwargs,
     ) -> Dict[str, np.ndarray]:
@@ -97,6 +76,7 @@ class ClaimsExtractor(StatCalculator):
                     greedy_text,
                     greedy_tok,
                     model.tokenizer,
+                    language
                 )
             )
             for c in claims[-1]:
@@ -114,6 +94,7 @@ class ClaimsExtractor(StatCalculator):
         text: str,
         tokens: List[int],
         tokenizer,
+        language
     ) -> List[Claim]:
         sentences = []
         for s in re.split(f"[{self.sent_separators}]", text):
@@ -143,6 +124,7 @@ class ClaimsExtractor(StatCalculator):
                 s,
                 tokens[sent_start_token_idx:sent_end_token_idx],
                 tokenizer,
+                language
             ):
                 for i in range(len(c.aligned_tokens)):
                     c.aligned_tokens[i] += sent_start_token_idx
@@ -154,9 +136,10 @@ class ClaimsExtractor(StatCalculator):
         sent: str,
         sent_tokens: List[int],
         tokenizer,
+        language
     ) -> List[Claim]:
         extracted_claims = self.openai_chat.ask(
-            CLAIM_EXTRACTION_PROMPT.format(sent=sent)
+            CLAIM_EXTRACTION_PROMPTS[language].format(sent=sent)
         )
         claims = []
         for claim_text in extracted_claims.split("\n"):
@@ -165,7 +148,7 @@ class ClaimsExtractor(StatCalculator):
             if "there aren't any claims" in claim_text.lower():
                 continue
             claim_text = claim_text[2:].strip()
-            chat_ask = MATCHING_PROMPT.format(sent=sent, claim=claim_text)
+            chat_ask = MATCHING_PROMPTS[language].format(sent=sent, claim=claim_text)
             match_words = self.openai_chat.ask(chat_ask)
             match_words = match_words.strip().split(",")
             for i in range(len(match_words)):
