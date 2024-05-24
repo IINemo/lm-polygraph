@@ -57,7 +57,7 @@ class PTrueClaim(Estimator):
     """
 
     def __init__(self):
-        super().__init__(["p_true_claim"], "claim")
+        super().__init__(["p_true_claim", "claims"], "claim")
 
     def __str__(self):
         return "PTrueClaim"
@@ -73,5 +73,13 @@ class PTrueClaim(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
+        claims = stats["claims"]
         ptrue = stats["p_true_claim"]
-        return -np.array(ptrue)
+        claim_ue = []
+        j = 0
+        for sample_claims in claims:
+            claim_ue.append([])
+            for _ in sample_claims:
+                claim_ue[-1].append(-ptrue[j])
+                j += 1
+        return claim_ue

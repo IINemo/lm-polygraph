@@ -119,10 +119,11 @@ class PointwiseMutualInformationClaim(Estimator):
             lm_logprobs,
             claims,
         ):
+            claim_ue.append([])
             for claim in sample_claims:
                 sample_lm_lp[0] = 0
                 mi_scores = np.array(sample_lp) - np.array(sample_lm_lp)
                 tokens = np.array(claim.aligned_tokens)
                 claim_pmi = mi_scores[tokens]
-                claim_ue.append(self._reduce(claim_pmi))
-        return np.array(claim_ue)
+                claim_ue[-1].append(self._reduce(claim_pmi))
+        return claim_ue
