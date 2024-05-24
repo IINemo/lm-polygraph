@@ -79,12 +79,13 @@ class OpenAIFactCheck(GenerationMetric):
         """
         labels = []
         for inp_text, sample_claims in zip(stats["input_texts"], stats["claims"]):
+            labels.append([])
             for claim in sample_claims:
-                labels.append(
+                labels[-1].append(
                     self._score_single(
                         claim.claim_text,
                         inp_text,
                         self.openai_chat,
                     )
                 )
-        return np.array(labels)
+        return labels

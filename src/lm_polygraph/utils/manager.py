@@ -177,6 +177,14 @@ def estimate_uncertainty(
     return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
 
 
+def _flatten_estimates(e, calculator_class):
+    if not isinstance(e, list) or not all(isinstance(x, list) for x in e):
+        raise Exception(
+            f"Class {calculator_class} returned {e}, expected list of lists"
+        )
+    return [ue for sample_ue in e for ue in sample_ue]
+
+
 class UEManager:
     """
     Manager to conduct uncertainty estimation experiments by using several uncertainty methods, ground-truth
@@ -438,7 +446,11 @@ class UEManager:
             for generation_metric in self.generation_metrics:
                 m = generation_metric(
                     batch_stats, target_texts=target_texts, target_tokens=target_tokens
-                ).tolist()
+                )
+                if not isinstance(m, list):
+                    m = m.tolist()
+                if generation_metric.level != "sequence":
+                    m = _flatten_estimates(m, generation_metric)
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
@@ -561,7 +573,12 @@ class UEManager:
 
         for estimator in estimators:
             try:
-                e = estimator(batch_stats).tolist()
+                e = estimator(batch_stats)
+                if not isinstance(e, list):
+                    e = e.tolist()
+                if estimator.level != "sequence":
+                    e = _flatten_estimates(e, estimator)
+
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
             except Exception as e:
