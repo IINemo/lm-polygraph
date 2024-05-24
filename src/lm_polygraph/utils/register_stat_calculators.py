@@ -1,5 +1,8 @@
+import os
+
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.deberta import Deberta
+from lm_polygraph.utils.openai_chat import OpenAIChat
 
 from typing import Dict, List, Optional, Tuple
 
@@ -8,6 +11,7 @@ def register_stat_calculators(
     deberta_batch_size: int = 10,  # TODO: rename to NLI model
     deberta_device: Optional[str] = None,  # TODO: rename to NLI model
     n_ccp_alternatives: int = 10,
+    cache_path=os.path.expanduser("~") + "/.cache",
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
     Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations
@@ -17,6 +21,7 @@ def register_stat_calculators(
     stat_dependencies: Dict[str, List[str]] = {}
 
     nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
+    openai_chat = OpenAIChat(cache_path=cache_path)
 
     def _register(calculator_class: StatCalculator):
         for stat in calculator_class.stats:
@@ -35,6 +40,7 @@ def register_stat_calculators(
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
             "True",
             "p_true",
+            sample_text_dependency=None,  # Not calculate T text samples for P(True)
         )
     )
     _register(
@@ -43,6 +49,17 @@ def register_stat_calculators(
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
             "True",
             "p_true_sampling",
+        )
+    )
+    _register(
+        PromptCalculator(
+            "Question: {q}\n Possible answer:{a}\n "
+            "Is the possible answer True or False? The possible answer is: ",
+            "True",
+            "p_true_claim",
+            input_text_dependency="claim_input_texts_concatenated",
+            sample_text_dependency=None,
+            generation_text_dependency="claim_texts_concatenated",
         )
     )
     _register(SamplingGenerationCalculator())
@@ -55,5 +72,7 @@ def register_stat_calculators(
     _register(CrossEncoderSimilarityMatrixCalculator(nli_model=nli_model))
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
+    _register(GreedyAlternativesFactPrefNLICalculator(nli_model=nli_model))
+    _register(ClaimsExtractor(openai_chat=openai_chat))
 
     return stat_calculators, stat_dependencies

@@ -2,7 +2,6 @@
 src/lm_polygraph/app/node_modules
 **/.DStore
 workdir/
-**/normalization/*
 
 *.npy
 *.csv

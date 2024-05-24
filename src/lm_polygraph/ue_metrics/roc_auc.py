@@ -3,7 +3,7 @@ from sklearn.metrics import roc_auc_score
 
 from typing import List
 
-from .ue_metric import UEMetric
+from .ue_metric import UEMetric, skip_target_nans
 
 
 class ROCAUC(UEMetric):
@@ -22,4 +22,5 @@ class ROCAUC(UEMetric):
 
     def __call__(self, estimator: List[float], target: List[int]) -> float:
         estimator = [self.preprocess_inf(x, estimator) for x in estimator]
-        return roc_auc_score(target, estimator)
+        t, e = skip_target_nans(target, estimator)
+        return roc_auc_score(t, e)

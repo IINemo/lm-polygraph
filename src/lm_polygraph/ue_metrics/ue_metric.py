@@ -13,6 +13,16 @@ def normalize(target: List[float]):
     return target
 
 
+def skip_target_nans(target, estimator):
+    newt, newe = [], []
+    for t, e in zip(target, estimator):
+        if np.isnan(t):
+            continue
+        newt.append(t)
+        newe.append(e)
+    return newt, newe
+
+
 class UEMetric(ABC):
     """
     Abstract class, which measures the quality of uncertainty estimations from some Estimator using

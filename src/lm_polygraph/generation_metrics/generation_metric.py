@@ -21,7 +21,7 @@ class GenerationMetric(ABC):
                 * 'sequence': method should output GenerationMetric for each input sequence in __call__.
                 * 'token': method should output GenerationMetric for each token in input sequence in __call__.
         """
-        assert level in ["sequence", "token"]
+        assert level in ["sequence", "claim", "token"]
         self.level = level
         self.stats_dependencies = stats_dependencies
 

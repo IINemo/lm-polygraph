@@ -19,7 +19,7 @@ class Estimator(ABC):
                 * 'sequence': method estimates uncertainty (single float) for the whole model generation.
                 * 'token': method estimates uncertainty for each token in the model generation.
         """
-        assert level in ["sequence", "token"]
+        assert level in ["sequence", "claim", "token"]
         self.level = level
         self.stats_dependencies = stats_dependencies
 
