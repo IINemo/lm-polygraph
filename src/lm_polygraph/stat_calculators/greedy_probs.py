@@ -59,7 +59,7 @@ def _extract_attention(orig_attention, input_tokens, greedy_tokens):
                 attn_mask = np.zeros((y, x + y))
                 for i in range(len(attention)):
                     a = attention[i][layer][0][head][-1]
-                    attn_mask[i, :len(a)] = a.cpu()
+                    attn_mask[i, : len(a)] = a.cpu()
                 attn_masks.append(attn_mask)
         res = np.max(attn_masks, 0)
         sm = res.sum(1)

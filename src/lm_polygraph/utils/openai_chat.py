@@ -44,25 +44,11 @@ class OpenAIChat:
             reply = openai_responses[self.openai_model][message]
         else:
             # Ask openai
-
-            not_found = []
-            if os.path.exists('/home/esfadeeva/openai_chat_not_found.json'):
-                with open('/home/esfadeeva/openai_chat_not_found.json', 'r') as f:
-                    not_found = json.load(f)
-            not_found.append([self.openai_model, message])
-            with open('/home/esfadeeva/openai_chat_not_found.json', 'w') as f:
-                json.dump(not_found, f)
-            return ''
-
             if openai.api_key is None:
-                import sys
-                sys.stderr.write(f'No answer for question: {message}\n')
-                return ''
                 raise Exception(
                     "Cant ask openAI without token. "
                     "Please specify OPENAI_KEY in environment parameters."
                 )
-
             messages = [
                 {"role": "system", "content": "You are a intelligent assistant."},
                 {"role": "user", "content": message},

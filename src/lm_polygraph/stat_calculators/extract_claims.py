@@ -1,4 +1,3 @@
-import numpy as np
 import re
 
 from typing import Dict, List, Optional
@@ -293,7 +292,10 @@ class ClaimsExtractor(StatCalculator):
                 continue
             if sent[sent_pos:].startswith(cur_token_text):
                 # If the match string corresponding to the token contains matches, add to answer
-                if any(t == "^" for t in match_str[sent_pos : sent_pos + len(cur_token_text)]):
+                if any(
+                    t == "^"
+                    for t in match_str[sent_pos : sent_pos + len(cur_token_text)]
+                ):
                     aligned_token_ids.append(cur_token_i)
                 cur_token_i += 1
                 sent_pos += len(cur_token_text)

@@ -1,5 +1,3 @@
-import numpy as np
-
 from typing import Dict, List
 
 from lm_polygraph.estimators.estimator import Estimator

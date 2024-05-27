@@ -42,7 +42,11 @@ class ClaimConditionedProbabilityClaim(Estimator):
     `lm_polygraph.stat_calculators.greedy_alternatives_nli.GreedyAlternativesNLICalculator`.
     """
 
-    def __init__(self, nli_context: str = "no_context", is_stopword: Callable[[str], bool] = nltk_stopword):
+    def __init__(
+        self,
+        nli_context: str = "no_context",
+        is_stopword: Callable[[str], bool] = nltk_stopword,
+    ):
         """
         Initializes the ClaimConditionedProbabilityClaim estimator.
 
