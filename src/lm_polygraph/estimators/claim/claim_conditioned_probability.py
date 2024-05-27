@@ -90,7 +90,11 @@ class ClaimConditionedProbabilityClaim(Estimator):
                 return x
         return "neutral"
 
-    def _token_ccp(self, token_alternatives: List[Tuple[str, float]], token_alternatives_nli: List[List[str]]):
+    def _token_ccp(
+        self,
+        token_alternatives: List[Tuple[str, float]],
+        token_alternatives_nli: List[List[str]],
+    ):
         """
         Calculates the logarithm of the token-level CCP for a single token.
 

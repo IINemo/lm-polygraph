@@ -44,30 +44,6 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         return {"blackbox_greedy_texts": sequences}
 
 
-def _extract_attention(orig_attention, input_tokens, greedy_tokens):
-    attns = []
-    for attn in orig_attention:
-        if attn[0][0][0].shape[0] != 1:
-            attns.append([])
-        attns[-1].append(attn)
-    extracted = []
-    for attention, inp_tokens, text_tokens in zip(attns, input_tokens, greedy_tokens):
-        attn_masks = []
-        for layer in range(len(attention[0])):
-            for head in range(len(attention[0][layer][0])):
-                x, y = len(inp_tokens), len(text_tokens)
-                attn_mask = np.zeros((y, x + y))
-                for i in range(len(attention)):
-                    a = attention[i][layer][0][head][-1]
-                    attn_mask[i, : len(a)] = a.cpu()
-                attn_masks.append(attn_mask)
-        res = np.max(attn_masks, 0)
-        sm = res.sum(1)
-        res[sm > 0, :] /= sm[sm > 0, np.newaxis]
-        extracted.append(res)
-    return extracted
-
-
 class GreedyProbsCalculator(StatCalculator):
     """
     For Whitebox model (lm_polygraph.WhiteboxModel), at input texts batch calculates:
@@ -90,7 +66,6 @@ class GreedyProbsCalculator(StatCalculator):
                 "greedy_log_likelihoods",
                 "train_greedy_log_likelihoods",
                 "embeddings",
-                "maxpool_attention",
             ],
             [],
         )
@@ -131,7 +106,7 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_new_tokens=2,
-                output_attentions=True,
+                output_attentions=False,
                 output_hidden_states=True,
                 num_return_sequences=1,
                 suppress_tokens=(
@@ -145,11 +120,6 @@ class GreedyProbsCalculator(StatCalculator):
                 ),
             )
             logits = torch.stack(out.scores, dim=1)
-
-            if model.model_type == "Seq2SeqLM":
-                attentions = out.decoder_attentions
-            elif model.model_type == "CausalLM":
-                attentions = out.attentions
 
             sequences = out.sequences
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
@@ -207,16 +177,14 @@ class GreedyProbsCalculator(StatCalculator):
         else:
             raise NotImplementedError
 
-        input_tokens = batch["input_ids"].to("cpu").tolist()
         result_dict = {
             "input_texts": texts,
-            "input_tokens": input_tokens,
+            "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
             "greedy_tokens": cut_sequences,
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,
-            "maxpool_attention": _extract_attention(attentions, input_tokens, cut_sequences),
         }
         result_dict.update(embeddings_dict)
 
