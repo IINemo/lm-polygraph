@@ -15,7 +15,7 @@ class Claim:
     # The sentence of the generation, from which the claim was extracted
     sentence: str
     # Indices in the original generation of the tokens, which are related to the current claim
-    aligned_tokens: List[int]
+    aligned_token_ids: List[int]
 
 
 CLAIM_EXTRACTION_PROMPT = """Please breakdown the sentence into independent claims.
@@ -63,21 +63,21 @@ class ClaimsExtractor(StatCalculator):
 
     def __call__(
         self,
-        dependencies: Dict[str, np.array],
+        dependencies: Dict[str, object],
         texts: List[str],
         model: WhiteboxModel,
         *args,
         **kwargs,
-    ) -> Dict[str, np.ndarray]:
+    ) -> Dict[str, List]:
         """
         Extracts the claims out of each generation text.
         Parameters:
-            dependencies (Dict[str, np.ndarray]): input statistics, which includes:
+            dependencies (Dict[str, object]): input statistics, which includes:
                 * 'greedy_log_probs' (List[List[float]]): log-probabilities of the generation tokens.
             texts (List[str]): Input texts batch used for model generation.
             model (Model): Model used for generation.
         Returns:
-            Dict[str, np.ndarray]: dictionary with :
+            Dict[str, List]: dictionary with :
                 * 'claims' (List[List[lm_polygraph.stat_calculators.extract_claims.Claim]]):
                   list of claims for each input text;
                 * 'claim_texts_concatenated' (List[str]): list of all textual claims extracted;
@@ -138,6 +138,8 @@ class ClaimsExtractor(StatCalculator):
             while not text[:sent_end_idx].endswith(s):
                 sent_end_idx += 1
 
+            # Iteratively decode tokenized text until decoded sequence length is
+            # greater or equal to the starting position of current sentence.
             # Find sentence location in tokens: tokens[sent_start_token_idx:sent_end_token_idx]
             while len(tokenizer.decode(tokens[:sent_start_token_idx])) < sent_start_idx:
                 sent_start_token_idx += 1
@@ -151,8 +153,8 @@ class ClaimsExtractor(StatCalculator):
                 tokenizer,
             ):
                 # Correct aligned tokens positions from sentence-level to generation-level
-                for i in range(len(c.aligned_tokens)):
-                    c.aligned_tokens[i] += sent_start_token_idx
+                for i in range(len(c.aligned_token_ids)):
+                    c.aligned_token_ids[i] += sent_start_token_idx
                 claims.append(c)
         return claims
 
@@ -178,6 +180,11 @@ class ClaimsExtractor(StatCalculator):
             claim_text = claim_text[2:].strip()
             # Get words which matches the claim using specific prompt
             chat_ask = MATCHING_PROMPT.format(sent=sent, claim=claim_text)
+            # Example:
+            # sent = 'Lanny Flaherty is an American actor born on December 18, 1949, in Pensacola, Florida.'
+            # claim = 'Lanny Flaherty was born on December 18, 1949.'
+            # GPT response: 'Lanny, Flaherty, born, on, December, 18, 1949'
+            # match_words = ['Lanny', 'Flaherty', 'born', 'on', 'December', '18', '1949']
             match_words = self.openai_chat.ask(chat_ask)
             match_words = match_words.strip().split(",")
             match_words = list(map(lambda x: x.strip(), match_words))
@@ -186,14 +193,14 @@ class ClaimsExtractor(StatCalculator):
             if match_string is None:
                 continue
             # Get token positions which intersect with highlighted regions, that is, correspond to the claim
-            aligned_tokens = self._align(sent, match_string, sent_tokens, tokenizer)
-            if len(aligned_tokens) == 0:
+            aligned_token_ids = self._align(sent, match_string, sent_tokens, tokenizer)
+            if len(aligned_token_ids) == 0:
                 continue
             claims.append(
                 Claim(
                     claim_text=claim_text,
                     sentence=sent,
-                    aligned_tokens=aligned_tokens,
+                    aligned_token_ids=aligned_token_ids,
                 )
             )
         return claims
@@ -215,36 +222,36 @@ class ClaimsExtractor(StatCalculator):
             return '^^^^^ ^^^^^^^^                      ^^^^ ^^ ^^^^^^^^ ^^  ^^^^                        '
         """
 
-        last = 0  # pointer to the sentence
-        last_match = 0  # pointer to the match_words list
+        sent_pos = 0  # pointer to the sentence
+        match_words_pos = 0  # pointer to the match_words list
         # Iteratively construct match_str with highlighted symbols, start with empty string
         match_str = ""
-        while last < len(sent):
-            cur_word = match_words[last_match]
-            # Check if current word cur_word can be located in sent[last:last + len(cur_word)]:
+        while sent_pos < len(sent):
+            cur_match_word = match_words[match_words_pos]
+            # Check if current word cur_word can be located in sent[sent_pos:sent_pos + len(cur_word)]:
             # 1. check if symbols around word position are not letters
             check_boundaries = False
-            if last == 0 or not sent[last - 1].isalpha():
+            if sent_pos == 0 or not sent[sent_pos - 1].isalpha():
                 check_boundaries = True
-            if check_boundaries and last_match < len(match_words):
-                right_idx = last + len(cur_word)
+            if check_boundaries and match_words_pos < len(match_words):
+                right_idx = sent_pos + len(cur_match_word)
                 if right_idx < len(sent):
                     check_boundaries = not sent[right_idx].isalpha()
-            if last_match < len(match_words) and check_boundaries:
+            if match_words_pos < len(match_words) and check_boundaries:
                 # 2. check if symbols in word position are the same as cur_word
-                if sent[last:].startswith(cur_word):
-                    # Found match at sent[last] with cur_word
-                    len_w = len(cur_word)
-                    last += len_w
+                if sent[sent_pos:].startswith(cur_match_word):
+                    # Found match at sent[sent_pos] with cur_word
+                    len_w = len(cur_match_word)
+                    sent_pos += len_w
                     # Highlight this position in match string
                     match_str += "^" * len_w
-                    last_match += 1
+                    match_words_pos += 1
                     continue
-            # No match at sent[last], continue with the next position
-            last += 1
+            # No match at sent[sent_pos], continue with the next position
+            sent_pos += 1
             match_str += " "
 
-        if last_match < len(match_words):
+        if match_words_pos < len(match_words):
             # Didn't match all words to the sentence.
             # Possibly because the match words are in the wrong order or are not present in sentence.
             return None
@@ -259,25 +266,38 @@ class ClaimsExtractor(StatCalculator):
         tokenizer,
     ) -> List[int]:
         """
-        Get positions of the tokens which intersects with match string match_str corresponding to the sentence sent.
+        Identifies token indices in `sent_tokens` that align with matching characters (marked by '^')
+        in `match_str`. All tokens, which textual representations intersect with any of matching
+        characters, are included. Partial intersections should be uncommon in practice.
+
+        Args:
+            sent: the original sentence.
+            match_str: a string of the same length as `sent` where '^' characters indicate matches.
+            sent_tokens: a list of token ids representing the tokenized version of `sent`.
+            tokenizer: the tokenizer used to decode tokens.
+
+        Returns:
+            A list of integers representing the indices of tokens in `sent_tokens` that align with
+            matching characters in `match_str`.
         """
-        last = 0
-        last_token = 0
+        sent_pos = 0
+        cur_token_i = 0
         # Iteratively find position of each new token.
-        aligned_tokens = []
-        while last < len(sent):
-            if last_token >= len(sent_tokens):
-                # Already aligned all tokens.
-                return aligned_tokens
-            cur_token = tokenizer.decode(sent_tokens[last_token])
-            # Try to find the position of cur_token in sentence, possibly in sent[last]
-            if len(cur_token) > 0 and sent[last:].startswith(cur_token):
+        aligned_token_ids = []
+        while sent_pos < len(sent) and cur_token_i < len(sent_tokens):
+            cur_token_text = tokenizer.decode(sent_tokens[cur_token_i])
+            # Try to find the position of cur_token_text in sentence, possibly in sent[sent_pos]
+            if len(cur_token_text) == 0:
+                # Skip non-informative token
+                cur_token_i += 1
+                continue
+            if sent[sent_pos:].startswith(cur_token_text):
                 # If the match string corresponding to the token contains matches, add to answer
-                if any(t == "^" for t in match_str[last : last + len(cur_token)]):
-                    aligned_tokens.append(last_token)
-                last_token += 1
-                last += len(cur_token)
+                if any(t == "^" for t in match_str[sent_pos : sent_pos + len(cur_token_text)]):
+                    aligned_token_ids.append(cur_token_i)
+                cur_token_i += 1
+                sent_pos += len(cur_token_text)
             else:
                 # Continue with the same token and next position in the sentence.
-                last += 1
-        return aligned_tokens
+                sent_pos += 1
+        return aligned_token_ids

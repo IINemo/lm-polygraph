@@ -141,8 +141,8 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
         ):
             nli_queue = []
             for claim in sample_claims:
-                tokens = [sample_tokens[t] for t in claim.aligned_tokens]
-                alts = [sample_alternatives[t] for t in claim.aligned_tokens]
+                tokens = [sample_tokens[t] for t in claim.aligned_token_ids]
+                alts = [sample_alternatives[t] for t in claim.aligned_token_ids]
                 for i in range(len(tokens)):
                     for j in range(len(alts[i])):
                         text1 = model.tokenizer.decode(tokens[: i + 1])
@@ -155,8 +155,8 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
             nli_matrixes = []
             for claim in sample_claims:
                 nli_matrixes.append([])
-                tokens = [sample_tokens[t] for t in claim.aligned_tokens]
-                alts = [sample_alternatives[t] for t in claim.aligned_tokens]
+                tokens = [sample_tokens[t] for t in claim.aligned_token_ids]
+                alts = [sample_alternatives[t] for t in claim.aligned_token_ids]
                 for i in range(len(tokens)):
                     nli_matrix = []
                     for _ in range(len(alts[i])):

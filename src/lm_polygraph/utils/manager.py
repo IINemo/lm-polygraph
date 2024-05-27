@@ -176,12 +176,30 @@ def estimate_uncertainty(
     return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
 
 
-def _flatten_estimates(e, calculator_class):
-    if not isinstance(e, list) or not all(isinstance(x, list) for x in e):
+def _flatten_results(results, result_generator_class):
+    """
+    Flattens a list of lists into a single list.
+    Сan be used with any type of result, such as UEs, statistics, or generation metrics.
+
+    Args:
+        results: A list of lists, where each sublist contains results for a single input.
+                 Expected shape: [num_inputs, num_token_level_results_per_input].
+        result_generator_class: The class of the object that generated the results.
+                                 Used for error reporting.
+
+    Returns:
+        A flattened list of results of shape [num_inputs * num_token_level_results_per_input].
+
+    Raises:
+        Exception: If the input is not a list of lists.
+    """
+    if not isinstance(results, list) or not all(isinstance(x, list) for x in results):
         raise Exception(
-            f"Class {calculator_class} returned {e}, expected list of lists"
+            f"Class {result_generator_class} returned {results}, expected list of lists"
         )
-    return [ue for sample_ue in e for ue in sample_ue]
+    # Flatten the list of lists into a single list
+    # The expected shape is [num_inputs, num_token_level_results_per_input]
+    return [result for sample_results in results for result in sample_results]
 
 
 class UEManager:
@@ -449,7 +467,7 @@ class UEManager:
                 if not isinstance(m, list):
                     m = m.tolist()
                 if generation_metric.level != "sequence":
-                    m = _flatten_estimates(m, generation_metric)
+                    m = _flatten_results(m, generation_metric)
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
@@ -576,7 +594,7 @@ class UEManager:
                 if not isinstance(e, list):
                     e = e.tolist()
                 if estimator.level != "sequence":
-                    e = _flatten_estimates(e, estimator)
+                    e = _flatten_results(e, estimator)
 
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
