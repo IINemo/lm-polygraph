@@ -29,7 +29,7 @@ class PTrue(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
-        Estimates minus log-probability of true token for each sample in the input statistics.
+        Estimates minus log-probability of True token for each sample in the input statistics.
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:

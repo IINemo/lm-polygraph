@@ -170,6 +170,7 @@ class Dataset:
                 Default: None.
         """
         dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
+        few_shot_dataset = None
         if n_shot > 0:
             _, few_shot_dataset = Dataset.load_hf_dataset(
                 dataset_path, few_shot_split, **kwargs
@@ -204,6 +205,19 @@ class Dataset:
             for inst in dataset:
                 x.append(prompt.format(text=inst[x_column]))
                 y.append(inst[y_column])
+        elif ("wiki" in dataset_name.lower()) and len(prompt):
+            x, y = [], []
+            for sample in dataset[x_column]:
+                x.append(prompt.format(context=sample["context".strip()]))
+                y.append("")
+        elif "person" in dataset_name.lower():
+            x = dataset[x_column]
+            if len(prompt):
+                for i in range(len(x)):
+                    x[i] = prompt.format(text=x[i])
+            y = []
+            for _ in x:
+                y.append("")
         elif ("coqa" in dataset_name.lower()) and len(prompt):
 
             def doc_to_text(doc, prompt, i=0):

@@ -455,6 +455,15 @@ class WhiteboxModel(Model):
             if "falcon" in model_path:
                 model.transformer.alibi = True
         elif any(
+            ["JAISLMHeadModel" in architecture for architecture in config.architectures]
+        ):
+            model_type = "CausalLM"
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                trust_remote_code=True,
+                **kwargs,
+            )
+        elif any(
             ["BartModel" in architecture for architecture in config.architectures]
         ):
             model_type = "Seq2SeqLM"
