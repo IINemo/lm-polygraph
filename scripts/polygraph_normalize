@@ -38,7 +38,7 @@ def fit(args):
     for metric_name, metric_data in gen_metrics.items():
         for ue_method_name, ue_data in ues.items():
             filtered_gen_metrics, filtered_ues = filter_nans(metric_data, ue_data)
-            
+
             for normalization_method in args.normalization_methods:
                 if normalization_method == "min_max":
                     normalizer = MinMaxNormalizer()
