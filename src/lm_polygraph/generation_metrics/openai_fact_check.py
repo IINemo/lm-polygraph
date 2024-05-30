@@ -4,7 +4,7 @@ import os
 from typing import List, Dict
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
-from lm_polygraph.stat_calculators.prompts import FACT_CHECK_PROMPTS
+from lm_polygraph.stat_calculators.claim_level_prompts import FACT_CHECK_PROMPTS
 
 
 
