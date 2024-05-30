@@ -226,19 +226,18 @@ class ClaimsExtractor(StatCalculator):
         # Iteratively construct match_str with highlighted symbols, start with empty string
         match_str = ""
         while sent_pos < len(sent):
-            cur_match_word = match_words[match_words_pos]
             # Check if current word cur_word can be located in sent[sent_pos:sent_pos + len(cur_word)]:
             # 1. check if symbols around word position are not letters
             check_boundaries = False
             if sent_pos == 0 or not sent[sent_pos - 1].isalpha():
                 check_boundaries = True
             if check_boundaries and match_words_pos < len(match_words):
+                cur_match_word = match_words[match_words_pos]
                 right_idx = sent_pos + len(cur_match_word)
                 if right_idx < len(sent):
                     check_boundaries = not sent[right_idx].isalpha()
-            if match_words_pos < len(match_words) and check_boundaries:
                 # 2. check if symbols in word position are the same as cur_word
-                if sent[sent_pos:].startswith(cur_match_word):
+                if check_boundaries and sent[sent_pos:].startswith(cur_match_word):
                     # Found match at sent[sent_pos] with cur_word
                     len_w = len(cur_match_word)
                     sent_pos += len_w
