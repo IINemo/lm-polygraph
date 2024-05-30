@@ -236,10 +236,8 @@ class ClaimsExtractor(StatCalculator):
                 right_idx = sent_pos + len(cur_match_word)
                 if right_idx < len(sent):
                     check_boundaries = not sent[right_idx].isalpha()
-            if match_words_pos < len(match_words) and check_boundaries:
                 # 2. check if symbols in word position are the same as cur_word
-                cur_match_word = match_words[match_words_pos]
-                if sent[sent_pos:].startswith(cur_match_word):
+                if check_boundaries and sent[sent_pos:].startswith(cur_match_word):
                     # Found match at sent[sent_pos] with cur_word
                     len_w = len(cur_match_word)
                     sent_pos += len_w
