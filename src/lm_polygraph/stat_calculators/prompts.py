@@ -79,6 +79,35 @@ FACT_CHECK_PORMPTS = { "en": (
 }
 
 FACT_CHECK_PORMPTS_TWO_STEPS = {
+
+    "en":
+    {'first' :
+'''
+Question: {input}
+
+Reason step by step. Determine if all provided information in the following claim is true according to the most recent sources of information.
+
+Claim: {claim}
+''',
+
+'second':
+"""Question: {input}
+
+Claim: {claim}
+
+Is the following claim true?
+
+Reply: {reply}
+
+Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known".
+"""
+},
+
+
+
+
+
+
     "ar": 
     {'first' : 
 '''
