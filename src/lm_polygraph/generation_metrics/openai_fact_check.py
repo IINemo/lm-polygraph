@@ -4,7 +4,7 @@ import os
 from typing import List, Dict
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
-from lm_polygraph.stat_calculators.prompts import FACT_CHECK_PORMPTS
+from lm_polygraph.stat_calculators.prompts import FACT_CHECK_PORMPTS, FACT_CHECK_PORMPTS_TWO_STEPS
 
 
 
@@ -16,7 +16,7 @@ class OpenAIFactCheck(GenerationMetric):
 
     def __init__(
         self,
-        openai_model: str = "gpt-4",
+        openai_model: str = "gpt-4o",
         cache_path: str = os.path.expanduser("~") + "/.cache",
         language: str = "en",
     ):
@@ -28,16 +28,27 @@ class OpenAIFactCheck(GenerationMetric):
         return "OpenAIFactCheck"
 
     def _score_single(self, claim: str, input: str, openai_chat,language) -> int:
+
+
         reply = openai_chat.ask(
-            FACT_CHECK_PORMPTS[language].format(
+            FACT_CHECK_PORMPTS_TWO_STEPS[language]['first'].format(
                 claim=claim,
                 input=input,
             )
         )
+
+        reply = openai_chat.ask(
+            FACT_CHECK_PORMPTS_TWO_STEPS[language]['second'].format(
+                claim=claim,
+                input=input,
+                reply=reply
+            )
+        )
+
         reply = reply.strip()
-        if  "True" in reply or "نعم" in reply:
+        if  "True" in reply or "نعم" in reply or "صحيح" in reply:
             return 0
-        elif "False" in reply or "لا" in reply:
+        elif "False" in reply or "لا" in reply or "خطأ" in reply:
             return 1
         else:
             return np.nan
