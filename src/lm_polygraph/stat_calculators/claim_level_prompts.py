@@ -60,26 +60,12 @@ MATCHING_PROMPTS = {
 }
 
 
-FACT_CHECK_PROMPTS = { "en": (
-    "Is the claim correct according to the most "
-    "recent sources of information? "
-    """Answer "True", "False" or "Not known"."""
-    "\n\n"
-    "Examples:\n"
-    "\n"
-    "Question: Tell me a bio of Albert Einstein.\n"
-    "Claim: He was born on 14 March.\n"
-    "Answer: True\n"
-    "\n"
-    "Question: Tell me a bio of Albert Einstein.\n"
-    "Claim: He was born in United Kingdom.\n"
-    "Answer: False\n"
-    "\n"
-    "Your input:\n"
-    "\n"
-    "Question: {input}\n"
-    "Claim: {claim}\n"
-    "Answer: "
+OPENAI_FACT_CHECK_PROMPTS = {"en": ("""Question: {input}
+
+Determine if all provided information in the following claim is true according to the most recent sources of information.
+
+Claim: {claim}
+"""
 ),
 "ar": """
 هل الادعاءات صحيحة وفقًا لأحدث مصادر المعلومات؟
@@ -96,23 +82,61 @@ FACT_CHECK_PROMPTS = { "en": (
 الجواب:
 """,
 "zh":(
-    "根据最新的信息来源，这个命题是否正确？ "
-    """回答 "True"表明命题为真，"False"表明命题为假，"Not known"表明命题无法判断。"""
-    "\n\n"
-    "例子:\n"
-    "\n"
-    "Question: 介绍一下爱因斯坦。\n"
-    "Claim: 爱因斯坦出生于3月14日。\n"
-    "Answer: True\n"
-    "\n"
-    "Question: 介绍一下爱因斯坦。\n"
-    "Claim: 爱因斯坦出生在伦敦。\n"
-    "Answer: False\n"
-    "\n"
-    "Your input:\n"
-    "\n"
-    "Question: {input}\n"
-    "Claim: {claim}\n"
-    "Answer: "
+    """Question: {input}
+
+请根据最新的信息来源，确定以下声明（Claim）中提供的所有信息是否属实。
+
+Claim: {claim}
+"""
 )
 }
+
+OPENAI_FACT_CHECK_SUMMARIZE_PROMPT = {
+"en":
+("""Question: {input}
+
+Claim: {claim}
+
+Is the following claim true?
+
+Reply: {reply}
+
+Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known".
+"""),
+
+"zh":
+("""Question: {input}
+
+Claim: {claim}
+
+以下的陈述是否正确？
+
+Reply: {reply}
+
+请将此回复总结为一个词，即该陈述是否正确："True"，"False"或"Not known"。
+"""
+)
+}
+
+
+# old prompt
+# "zh":(
+#     "根据最新的信息来源，这个命题是否正确？ "
+#     """回答 "True"表明命题为真，"False"表明命题为假，"Not known"表明命题无法判断。"""
+#     "\n\n"
+#     "例子:\n"
+#     "\n"
+#     "Question: 介绍一下爱因斯坦。\n"
+#     "Claim: 爱因斯坦出生于3月14日。\n"
+#     "Answer: True\n"
+#     "\n"
+#     "Question: 介绍一下爱因斯坦。\n"
+#     "Claim: 爱因斯坦出生在伦敦。\n"
+#     "Answer: False\n"
+#     "\n"
+#     "Your input:\n"
+#     "\n"
+#     "Question: {input}\n"
+#     "Claim: {claim}\n"
+#     "Answer: "
+# )

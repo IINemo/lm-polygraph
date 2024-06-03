@@ -16,7 +16,7 @@ class OpenAIFactCheck(GenerationMetric):
 
     def __init__(
         self,
-        openai_model: str = "gpt-4",
+        openai_model: str = "gpt-4o",
         cache_path: str = os.path.expanduser("~") + "/.cache",
     ):
         super().__init__(["input_texts"], "claim")
@@ -25,17 +25,24 @@ class OpenAIFactCheck(GenerationMetric):
     def __str__(self):
         return "OpenAIFactCheck"
 
-    def _score_single(self, claim: str, input: str, openai_chat,language) -> int:
+    def _score_single(self, claim: str, input: str, openai_chat, language) -> int:
         reply = openai_chat.ask(
-            FACT_CHECK_PROMPTS[language].format(
+            OPENAI_FACT_CHECK_PROMPT[language].format(
                 claim=claim,
                 input=input,
             )
         )
+        reply = openai_chat.ask(
+            OPENAI_FACT_CHECK_SUMMARIZE_PROMPT[language].format(
+                claim=claim,
+                input=input,
+                reply=reply,
+            )
+        )
         reply = reply.strip()
-        if  "True" in reply or "نعم" in reply:
+        if reply.endswith('True') or reply.endswith('"True"'):
             return 0
-        elif "False" in reply or "لا" in reply:
+        elif reply.endswith('False') or reply.endswith('"False"'):
             return 1
         else:
             return np.nan
