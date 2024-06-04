@@ -44,13 +44,11 @@ class OpenAIChat:
             reply = openai_responses[self.openai_model][message]
         else:
             # Ask openai
-
             if openai.api_key is None:
                 raise Exception(
                     "Cant ask openAI without token. "
                     "Please specify OPENAI_KEY in environment parameters."
                 )
-
             messages = [
                 {"role": "system", "content": "You are a intelligent assistant."},
                 {"role": "user", "content": message},
