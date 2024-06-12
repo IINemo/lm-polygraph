@@ -4,6 +4,7 @@ hydra:
 
 defaults:
   - model: default
+  - _self_
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
