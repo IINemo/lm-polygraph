@@ -58,18 +58,8 @@ class OpenAIChat:
                 {"role": "system", "content": "You are an intelligent assistant."},
                 {"role": "user", "content": message},
             ]
-            try:
-                chat = openai.ChatCompletion.create(
-                    model=self.openai_model, messages=messages
-                )
-            except Exception as e:
-                log.info(
-                    f"Request to OpenAI failed with exception: {e}. Retrying after 30 seconds..."
-                )
-                time.sleep(30)
-                chat = openai.ChatCompletion.create(
-                    model=self.openai_model, messages=messages
-                )
+            chat = self._send_request(messages)
+            
             reply = chat.choices[0].message.content
 
             # add reply to cache
@@ -90,3 +80,22 @@ class OpenAIChat:
             return ""
 
         return reply
+
+    def _send_request(self, messages):
+        chat = None
+        sleep_time_values = (5, 10, 30, 60, 120)
+        for i in range(len(sleep_time_values)):
+            try:
+                return openai.ChatCompletion.create(
+                    model=self.openai_model, messages=messages
+                )
+            except Exception as e:
+                sleep_time = sleep_time_values[i]
+                log.info(
+                    f"Request to OpenAI failed with exception: {e}. Retrying after {sleep_time} seconds."
+                )
+                time.sleep(sleep_time)
+
+        return openai.ChatCompletion.create(
+            model=self.openai_model, messages=messages
+        )
