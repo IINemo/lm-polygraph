@@ -92,7 +92,7 @@ class OpenAIChat:
             except Exception as e:
                 sleep_time = sleep_time_values[i]
                 log.info(
-                    f"Request to OpenAI failed with exception: {e}. Retrying after {sleep_time} seconds."
+                    f"Request to OpenAI failed with exception: {e}. Retry #{i}/5 after {sleep_time} seconds."
                 )
                 time.sleep(sleep_time)
 
