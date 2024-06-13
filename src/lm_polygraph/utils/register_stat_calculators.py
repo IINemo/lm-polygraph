@@ -1,10 +1,13 @@
 import os
+import logging
 
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.deberta import Deberta
 from lm_polygraph.utils.openai_chat import OpenAIChat
 
 from typing import Dict, List, Optional, Tuple
+
+log = logging.getLogger("lm_polygraph")
 
 
 def register_stat_calculators(
@@ -17,6 +20,9 @@ def register_stat_calculators(
     Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations
     order.
     """
+    log.info("="*100)
+    log.info("Initializing stat calculators...")
+
     stat_calculators: Dict[str, "StatCalculator"] = {}
     stat_dependencies: Dict[str, List[str]] = {}
 

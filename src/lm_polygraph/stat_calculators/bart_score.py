@@ -14,6 +14,7 @@ from lm_polygraph.utils.common import polygraph_module_init
 
 
 class BartScoreCalculator(StatCalculator):
+    @polygraph_module_init
     def __init__(
         self, device=None, max_length=256, checkpoint="facebook/bart-large-cnn"
     ):

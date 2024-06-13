@@ -6,6 +6,7 @@ from typing import Dict, List
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
 from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
@@ -13,6 +14,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
 
+    @polygraph_module_init
     def __init__(self, nli_model):
         super().__init__(
             [

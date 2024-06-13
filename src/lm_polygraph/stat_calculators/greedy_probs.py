@@ -6,6 +6,7 @@ from typing import Dict, List
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class BlackboxGreedyTextsCalculator(StatCalculator):
@@ -13,6 +14,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
     Calculates generation texts for Blackbox model (lm_polygraph.BlackboxModel).
     """
 
+    @polygraph_module_init
     def __init__(self):
         super().__init__(["blackbox_greedy_texts"], [])
 
@@ -53,7 +55,8 @@ class GreedyProbsCalculator(StatCalculator):
     * attention masks across the model (if applicable)
     * embeddings from the model
     """
-
+    
+    @polygraph_module_init
     def __init__(self, n_alternatives: int = 10):
         super().__init__(
             [

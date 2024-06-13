@@ -9,9 +9,11 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.token_restoration import (
     get_collect_fn,
 )
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class EnsembleTokenLevelDataCalculator(StatCalculator):
+    @polygraph_module_init
     def __init__(self):
         super().__init__(["ensemble_token_scores"], [])
 

@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class PromptCalculator(StatCalculator):
@@ -12,7 +13,8 @@ class PromptCalculator(StatCalculator):
     Calculates the probability for a specific token to be generated from the specific prompt.
     Used for P(True)-based methods.
     """
-
+    
+    @polygraph_module_init
     def __init__(
         self,
         prompt: str,

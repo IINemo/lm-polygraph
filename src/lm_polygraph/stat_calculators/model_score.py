@@ -7,6 +7,7 @@ from typing import List, Dict
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel):
@@ -19,6 +20,8 @@ def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel):
 
 
 class ModelScoreCalculator(StatCalculator):
+
+    @polygraph_module_init
     def __init__(self, prompt: str = 'Paraphrase "{}": ', batch_size: int = 10):
         super().__init__(["model_rh"], ["greedy_tokens", "input_tokens"])
         self.batch_size = batch_size

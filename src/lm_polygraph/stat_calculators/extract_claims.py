@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 @dataclass
@@ -45,6 +46,7 @@ class ClaimsExtractor(StatCalculator):
     Extracts claims from the text of the model generation.
     """
 
+    @polygraph_module_init
     def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!\n"):
         super().__init__(
             [
