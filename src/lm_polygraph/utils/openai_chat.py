@@ -59,7 +59,7 @@ class OpenAIChat:
                 {"role": "user", "content": message},
             ]
             chat = self._send_request(messages)
-            
+
             reply = chat.choices[0].message.content
 
             # add reply to cache
@@ -82,7 +82,6 @@ class OpenAIChat:
         return reply
 
     def _send_request(self, messages):
-        chat = None
         sleep_time_values = (5, 10, 30, 60, 120)
         for i in range(len(sleep_time_values)):
             try:
@@ -96,6 +95,4 @@ class OpenAIChat:
                 )
                 time.sleep(sleep_time)
 
-        return openai.ChatCompletion.create(
-            model=self.openai_model, messages=messages
-        )
+        return openai.ChatCompletion.create(model=self.openai_model, messages=messages)
