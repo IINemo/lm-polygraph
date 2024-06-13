@@ -2,6 +2,7 @@ import numpy as np
 from typing import List, Dict
 
 from .generation_metric import GenerationMetric
+from lm_polygraph.utils.common import polygraph_module_init
 
 BART_SCORES = ["rh"]
 
@@ -12,6 +13,7 @@ class BartScoreSeqMetric(GenerationMetric):
     between model-generated texts and ground truth texts.
     """
 
+    @polygraph_module_init
     def __init__(self, score: str):
         assert score in BART_SCORES
         self.score = score

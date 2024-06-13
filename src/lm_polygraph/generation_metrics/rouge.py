@@ -3,13 +3,18 @@ from rouge_score import rouge_scorer
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+from lm_polygraph.utils.common import polygraph_module_init
 
+from absl import logging as absl_logging
+# This prevents bullshit spam from rouge scorer
+absl_logging.set_verbosity(absl_logging.WARNING)
 
 class RougeMetric(GenerationMetric):
     """
     Calculates Rouge metric between model-generated texts and ground truth texts.
     """
-
+    
+    @polygraph_module_init
     def __init__(self, rouge_name):
         """
         Parameters:

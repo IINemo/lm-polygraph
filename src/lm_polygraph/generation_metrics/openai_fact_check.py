@@ -4,6 +4,7 @@ import os
 from typing import List, Dict
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
+from lm_polygraph.utils.common import polygraph_module_init
 
 OPENAI_FACT_CHECK_PROMPT = (
     "Is the claim correct according to the most "
@@ -33,7 +34,8 @@ class OpenAIFactCheck(GenerationMetric):
     Calculates for each claim, whether it is true of not, using OpenAI model specified in
     lm_polygraph.stat_calculators.openai_chat.OpenAIChat.
     """
-
+    
+    @polygraph_module_init
     def __init__(
         self,
         openai_model: str = "gpt-4",

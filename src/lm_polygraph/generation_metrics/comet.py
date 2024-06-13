@@ -4,6 +4,7 @@ from evaluate import load
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class Comet(GenerationMetric):
@@ -11,7 +12,8 @@ class Comet(GenerationMetric):
     Calculates COMET metric (https://aclanthology.org/2020.emnlp-main.213/)
     between model-generated texts and ground truth texts.
     """
-
+    
+    @polygraph_module_init
     def __init__(self, source_ignore_regex=None, lang="en"):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
         self.scorer = load("comet")

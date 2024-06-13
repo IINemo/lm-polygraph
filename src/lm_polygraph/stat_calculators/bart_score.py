@@ -10,6 +10,7 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 from .stat_calculator import StatCalculator
 
 from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class BartScoreCalculator(StatCalculator):

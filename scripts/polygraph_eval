@@ -11,7 +11,7 @@ import json
 
 import logging
 
-log = logging.getLogger()
+log = logging.getLogger('lm_polygraph')
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -26,7 +26,6 @@ from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import *
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
-
 
 @hydra.main(
     version_base=None,
@@ -339,6 +338,9 @@ def get_ue_methods(args, model):
 
 
 def get_generation_metrics(args):
+    log.info("="*100)
+    log.info("Initializing generation metrics...")
+
     generation_metrics = getattr(args, "generation_metrics", None)
     if not generation_metrics:
         result = [
@@ -372,6 +374,9 @@ def get_generation_metrics(args):
                 raise ValueError("BartScoreSeqMetric does not support multiref")
             metric_class = globals()[metric_name]
             result.append(metric_class(*metric.get("args", [])))
+
+    log.info("Done with initializing generation metrics.")
+
     return result
 
 
