@@ -36,7 +36,6 @@ class AlignScorer:
         evaluation_mode="nli_sp",
         verbose=True,
     ) -> None:
-        breakpoint()
         self.model = Inferencer(
             ckpt_path=ckpt_path,
             model=model,

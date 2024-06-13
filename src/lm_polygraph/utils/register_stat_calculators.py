@@ -20,13 +20,16 @@ def register_stat_calculators(
     Registers all available statistic calculators to be seen by UEManager for properly organizing the calculations
     order.
     """
+    stat_calculators: Dict[str, "StatCalculator"] = {}
+    stat_dependencies: Dict[str, List[str]] = {}
+    
+    log.info("="*100)
+    log.info("Loading NLI model...")
+    nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
+
     log.info("="*100)
     log.info("Initializing stat calculators...")
 
-    stat_calculators: Dict[str, "StatCalculator"] = {}
-    stat_dependencies: Dict[str, List[str]] = {}
-
-    nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
     openai_chat = OpenAIChat(cache_path=cache_path)
 
     def _register(calculator_class: StatCalculator):
@@ -80,5 +83,7 @@ def register_stat_calculators(
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
     _register(GreedyAlternativesFactPrefNLICalculator(nli_model=nli_model))
     _register(ClaimsExtractor(openai_chat=openai_chat))
+
+    log.info("Done intitializing stat calculators...")
 
     return stat_calculators, stat_dependencies
