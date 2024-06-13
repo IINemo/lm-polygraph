@@ -2,8 +2,12 @@ import openai
 import json
 import os
 import time
+import logging
 
 from filelock import FileLock
+
+
+log = logging.getLogger()
 
 
 class OpenAIChat:
@@ -58,7 +62,10 @@ class OpenAIChat:
                 chat = openai.ChatCompletion.create(
                     model=self.openai_model, messages=messages
                 )
-            except:
+            except Exception as e:
+                log.info(
+                    f"Request to OpenAI failed with exception: {e}. Retrying after 30 seconds..."
+                )
                 time.sleep(30)
                 chat = openai.ChatCompletion.create(
                     model=self.openai_model, messages=messages
