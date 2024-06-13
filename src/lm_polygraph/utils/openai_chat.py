@@ -1,6 +1,7 @@
 import openai
 import json
 import os
+import time
 
 from filelock import FileLock
 
@@ -50,12 +51,18 @@ class OpenAIChat:
                     "Please specify OPENAI_KEY in environment parameters."
                 )
             messages = [
-                {"role": "system", "content": "You are a intelligent assistant."},
+                {"role": "system", "content": "You are an intelligent assistant."},
                 {"role": "user", "content": message},
             ]
-            chat = openai.ChatCompletion.create(
-                model=self.openai_model, messages=messages
-            )
+            try:
+                chat = openai.ChatCompletion.create(
+                    model=self.openai_model, messages=messages
+                )
+            except:
+                time.sleep(30)
+                chat = openai.ChatCompletion.create(
+                    model=self.openai_model, messages=messages
+                )
             reply = chat.choices[0].message.content
 
             # add reply to cache
