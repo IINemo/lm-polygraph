@@ -521,7 +521,7 @@ class WhiteboxModel(Model):
             )
         else:
             tokenized = self.tokenizer(
-                texts, truncation=True, padding=True, return_tensors="pt"
+                texts, padding=True, return_tensors="pt"
             )
 
         return tokenized
