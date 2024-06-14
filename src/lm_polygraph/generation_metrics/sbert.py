@@ -3,11 +3,9 @@ from sentence_transformers import SentenceTransformer, util
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 class SbertMetric(GenerationMetric):
-    @polygraph_module_init
     def __init__(self):
         super().__init__(["greedy_texts"], "sequence")
         self.sbert = SentenceTransformer("all-mpnet-base-v2")

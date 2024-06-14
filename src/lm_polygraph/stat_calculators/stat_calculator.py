@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class StatCalculator(ABC):
@@ -20,6 +21,7 @@ class StatCalculator(ABC):
     Each new StatCalculator needs to be registered at lm_polygraph/stat_calculators/__init__.py to be seen be UEManager.
     """
 
+    @polygraph_module_init
     def __init__(self, stats: List[str], stat_dependencies: List[str]):
         """
         Parameters:

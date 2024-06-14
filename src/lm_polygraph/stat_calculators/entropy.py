@@ -4,7 +4,6 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 class EntropyCalculator(StatCalculator):
@@ -12,7 +11,6 @@ class EntropyCalculator(StatCalculator):
     Calculates entropy of probabilities at each token position in the generation of a Whitebox model.
     """
 
-    @polygraph_module_init
     def __init__(self):
         super().__init__(["entropy"], ["greedy_log_probs"])
 

@@ -4,7 +4,6 @@ import numpy as np
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 class AccuracyMetric(GenerationMetric):
@@ -13,7 +12,6 @@ class AccuracyMetric(GenerationMetric):
     Two texts are considered equal if theis string representation is equal.
     """
     
-    @polygraph_module_init
     def __init__(
         self, target_ignore_regex=None, output_ignore_regex=None, normalize=False
     ):

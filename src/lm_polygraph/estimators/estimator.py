@@ -2,13 +2,15 @@ import numpy as np
 
 from abc import ABC, abstractmethod
 from typing import List, Dict
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class Estimator(ABC):
     """
     Abstract estimator class, which estimates the uncertainty of a language model.
     """
-
+    
+    @polygraph_module_init
     def __init__(self, stats_dependencies: List[str], level: str):
         """
         Parameters:

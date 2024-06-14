@@ -5,7 +5,6 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 def get_embeddings_from_output(
@@ -160,7 +159,6 @@ def aggregate(x, aggregation_method, axis):
 
 
 class EmbeddingsCalculator(StatCalculator):
-    @polygraph_module_init
     def __init__(self):
         super().__init__(["train_embeddings", "background_train_embeddings"], [])
         self.hidden_layer = -1

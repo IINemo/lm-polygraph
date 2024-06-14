@@ -5,7 +5,6 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 class GreedyLMProbsCalculator(StatCalculator):
@@ -14,7 +13,6 @@ class GreedyLMProbsCalculator(StatCalculator):
     Used to calculate P(y_t|y_<t) subtrahend in PointwiseMutualInformation.
     """
     
-    @polygraph_module_init
     def __init__(self):
         super().__init__(
             ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]

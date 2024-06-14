@@ -5,7 +5,6 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
@@ -13,7 +12,6 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
     Calculates several sampled texts for Blackbox model (lm_polygraph.BlackboxModel).
     """
     
-    @polygraph_module_init
     def __init__(self, samples_n: int = 10):
         """
         Parameters:
@@ -88,7 +86,6 @@ class SamplingGenerationCalculator(StatCalculator):
     * probabilities of the sampled tokens generation
     """
     
-    @polygraph_module_init
     def __init__(self, samples_n: int = 10):
         """
         Parameters:

@@ -5,7 +5,6 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.utils.common import polygraph_module_init
 import torch.nn as nn
 import torch
 
@@ -17,7 +16,6 @@ class SemanticMatrixCalculator(StatCalculator):
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
     
-    @polygraph_module_init
     def __init__(self, nli_model):
         super().__init__(
             [

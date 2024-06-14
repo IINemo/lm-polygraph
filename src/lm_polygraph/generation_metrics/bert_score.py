@@ -3,7 +3,6 @@ from bert_score import BERTScorer
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
-from lm_polygraph.utils.common import polygraph_module_init
 
 
 class BertScoreMetric(GenerationMetric):
@@ -12,7 +11,6 @@ class BertScoreMetric(GenerationMetric):
     between model-generated texts and ground truth texts.
     """
     
-    @polygraph_module_init
     def __init__(self, lang="en"):
         super().__init__(["greedy_texts"], "sequence")
         self.scorer = BERTScorer(lang=lang)

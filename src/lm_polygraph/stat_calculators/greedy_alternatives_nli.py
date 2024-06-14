@@ -5,7 +5,6 @@ from typing import Dict, List, Tuple
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.deberta import Deberta
-from lm_polygraph.utils.common import polygraph_module_init
 from collections import defaultdict
 import torch.nn as nn
 import string
@@ -44,7 +43,6 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
 
 class GreedyAlternativesNLICalculator(StatCalculator):
 
-    @polygraph_module_init
     def __init__(self, nli_model):
         super().__init__(
             [
@@ -108,7 +106,6 @@ class GreedyAlternativesNLICalculator(StatCalculator):
 
 
 class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
-    @polygraph_module_init
     def __init__(self, nli_model):
         super().__init__(
             [
