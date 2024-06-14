@@ -22,12 +22,12 @@ def register_stat_calculators(
     """
     stat_calculators: Dict[str, "StatCalculator"] = {}
     stat_dependencies: Dict[str, List[str]] = {}
-    
-    log.info("="*100)
+
+    log.info("=" * 100)
     log.info("Loading NLI model...")
     nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
 
-    log.info("="*100)
+    log.info("=" * 100)
     log.info("Initializing stat calculators...")
 
     openai_chat = OpenAIChat(cache_path=cache_path)

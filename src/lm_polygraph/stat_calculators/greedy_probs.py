@@ -53,7 +53,7 @@ class GreedyProbsCalculator(StatCalculator):
     * attention masks across the model (if applicable)
     * embeddings from the model
     """
-    
+
     def __init__(self, n_alternatives: int = 10):
         super().__init__(
             [

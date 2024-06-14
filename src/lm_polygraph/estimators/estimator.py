@@ -9,7 +9,7 @@ class Estimator(ABC):
     """
     Abstract estimator class, which estimates the uncertainty of a language model.
     """
-    
+
     @polygraph_module_init
     def __init__(self, stats_dependencies: List[str], level: str):
         """

@@ -33,7 +33,7 @@ class OpenAIFactCheck(GenerationMetric):
     Calculates for each claim, whether it is true of not, using OpenAI model specified in
     lm_polygraph.stat_calculators.openai_chat.OpenAIChat.
     """
-    
+
     def __init__(
         self,
         openai_model: str = "gpt-4",

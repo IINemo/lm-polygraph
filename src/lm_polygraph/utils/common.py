@@ -1,7 +1,8 @@
 import inspect
 import logging
 
-log = logging.getLogger('lm_polygraph')
+log = logging.getLogger("lm_polygraph")
+
 
 def polygraph_module_init(func):
     def wrapper(*args, **kwargs):

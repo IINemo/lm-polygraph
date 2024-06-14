@@ -11,7 +11,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
     """
     Calculates several sampled texts for Blackbox model (lm_polygraph.BlackboxModel).
     """
-    
+
     def __init__(self, samples_n: int = 10):
         """
         Parameters:
@@ -85,7 +85,7 @@ class SamplingGenerationCalculator(StatCalculator):
     * tokens of the sampled texts
     * probabilities of the sampled tokens generation
     """
-    
+
     def __init__(self, samples_n: int = 10):
         """
         Parameters:

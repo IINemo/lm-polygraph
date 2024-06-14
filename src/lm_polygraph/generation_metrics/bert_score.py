@@ -10,7 +10,7 @@ class BertScoreMetric(GenerationMetric):
     Calculates BERTScore metric (https://arxiv.org/abs/1904.09675)
     between model-generated texts and ground truth texts.
     """
-    
+
     def __init__(self, lang="en"):
         super().__init__(["greedy_texts"], "sequence")
         self.scorer = BERTScorer(lang=lang)

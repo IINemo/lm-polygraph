@@ -11,7 +11,7 @@ class Comet(GenerationMetric):
     Calculates COMET metric (https://aclanthology.org/2020.emnlp-main.213/)
     between model-generated texts and ground truth texts.
     """
-    
+
     def __init__(self, source_ignore_regex=None, lang="en"):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
         self.scorer = load("comet")

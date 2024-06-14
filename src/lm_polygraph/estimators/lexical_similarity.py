@@ -7,8 +7,10 @@ from typing import Dict
 from .estimator import Estimator
 
 from absl import logging as absl_logging
+
 # This prevents bullshit spam from rouge scorer
 absl_logging.set_verbosity(absl_logging.WARNING)
+
 
 class LexicalSimilarity(Estimator):
     """

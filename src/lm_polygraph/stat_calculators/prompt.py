@@ -12,7 +12,7 @@ class PromptCalculator(StatCalculator):
     Calculates the probability for a specific token to be generated from the specific prompt.
     Used for P(True)-based methods.
     """
-    
+
     def __init__(
         self,
         prompt: str,
