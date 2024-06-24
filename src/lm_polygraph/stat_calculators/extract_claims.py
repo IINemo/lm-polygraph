@@ -23,7 +23,12 @@ class ClaimsExtractor(StatCalculator):
     Extracts claims from the text of the model generation.
     """
 
-    def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!。？！\n"):
+    def __init__(
+        self,
+        openai_chat: OpenAIChat,
+        sent_separators: str = ".?!。？！\n",
+        language: str = "en",
+    ):
         super().__init__(
             [
                 "claims",
@@ -35,6 +40,7 @@ class ClaimsExtractor(StatCalculator):
                 "greedy_tokens",
             ],
         )
+        self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
 
@@ -76,8 +82,7 @@ class ClaimsExtractor(StatCalculator):
                 self.claims_from_text(
                     greedy_text,
                     greedy_tok,
-                    model.tokenizer,
-                    language
+                    model.tokenizer
                 )
             )
             # Iterate over newly added claims to concatenate into list
@@ -95,8 +100,7 @@ class ClaimsExtractor(StatCalculator):
         self,
         text: str,
         tokens: List[int],
-        tokenizer,
-        language
+        tokenizer
     ) -> List[Claim]:
         sentences = []
         for s in re.split(f"[{self.sent_separators}]", text):
@@ -129,8 +133,7 @@ class ClaimsExtractor(StatCalculator):
             for c in self._claims_from_sentence(
                 s,
                 tokens[sent_start_token_idx:sent_end_token_idx],
-                tokenizer,
-                language
+                tokenizer
             ):
                 # Correct aligned tokens positions from sentence-level to generation-level
                 for i in range(len(c.aligned_token_ids)):
@@ -142,12 +145,11 @@ class ClaimsExtractor(StatCalculator):
         self,
         sent: str,
         sent_tokens: List[int],
-        tokenizer,
-        language
+        tokenizer
     ) -> List[Claim]:
         # Extract claims with specific prompt
         extracted_claims = self.openai_chat.ask(
-            CLAIM_EXTRACTION_PROMPTS[language].format(sent=sent)
+            CLAIM_EXTRACTION_PROMPTS[self.language].format(sent=sent)
         )
         claims = []
         for claim_text in extracted_claims.split("\n"):
@@ -165,16 +167,16 @@ class ClaimsExtractor(StatCalculator):
             # claim = 'Lanny Flaherty was born on December 18, 1949.'
             # GPT response: 'Lanny, Flaherty, born, on, December, 18, 1949'
             # match_words = ['Lanny', 'Flaherty', 'born', 'on', 'December', '18', '1949']
-            chat_ask = MATCHING_PROMPTS[language].format(sent=sent, claim=claim_text)
+            chat_ask = MATCHING_PROMPTS[self.language].format(sent=sent, claim=claim_text)
             match_words = self.openai_chat.ask(chat_ask)
             # comma has a different form in Chinese and space works better
-            if language == "zh":
+            if self.language == "zh":
                 match_words = match_words.strip().split(" ")
             else:
                 match_words = match_words.strip().split(",")
             match_words = list(map(lambda x: x.strip(), match_words))
             # Try to highlight matched symbols in sent
-            if language == "zh":
+            if self.language == "zh":
                 match_string = self._match_string_zh(sent, match_words)
             else:
                 match_string = self._match_string(sent, match_words)
