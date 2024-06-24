@@ -190,6 +190,7 @@ def main(args):
             max_new_tokens=args.max_new_tokens,
             ensemble_model=ensemble_model,
             cache_path=args.cache_path,
+            language=getattr(args, 'language', 'en'),
         )
 
         man()
@@ -354,11 +355,11 @@ def get_generation_metrics(args):
                 target_ignore_regex = getattr(args, "target_ignore_regex", None),
                 output_ignore_regex = getattr(args, "output_ignore_regex", None),
                 normalize = getattr(args, "normalize", False),
-            ),
+            ),Ï
             AlignScore(),
         ]
         if getattr(args, "use_claim_ue", False):
-            result += [OpenAIFactCheck(cache_path=args.cache_path)]
+            result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]

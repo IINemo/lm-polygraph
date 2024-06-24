@@ -4,8 +4,7 @@ import os
 from typing import List, Dict
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
-from lm_polygraph.stat_calculators.claim_level_prompts import FACT_CHECK_PROMPTS
-
+from lm_polygraph.stat_calculators.claim_level_prompts import *
 
 
 class OpenAIFactCheck(GenerationMetric):
@@ -18,22 +17,24 @@ class OpenAIFactCheck(GenerationMetric):
         self,
         openai_model: str = "gpt-4o",
         cache_path: str = os.path.expanduser("~") + "/.cache",
+        language: str = "en",
     ):
         super().__init__(["input_texts"], "claim")
         self.openai_chat = OpenAIChat(openai_model=openai_model, cache_path=cache_path)
+        self.language = language
 
     def __str__(self):
         return "OpenAIFactCheck"
 
-    def _score_single(self, claim: str, input: str, openai_chat, language) -> int:
+    def _score_single(self, claim: str, input: str, openai_chat) -> int:
         reply = openai_chat.ask(
-            OPENAI_FACT_CHECK_PROMPT[language].format(
+            OPENAI_FACT_CHECK_PROMPTS[self.language].format(
                 claim=claim,
                 input=input,
             )
         )
         reply = openai_chat.ask(
-            OPENAI_FACT_CHECK_SUMMARIZE_PROMPT[language].format(
+            OPENAI_FACT_CHECK_SUMMARIZE_PROMPT[self.language].format(
                 claim=claim,
                 input=input,
                 reply=reply,
@@ -51,8 +52,7 @@ class OpenAIFactCheck(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
-        language: str = "en"
+        target_tokens: List[List[int]]
     ) -> np.ndarray:
         """
         For each claim in stats['claims'], asks OpenAI model whether this fact is correct or not.
@@ -73,8 +73,7 @@ class OpenAIFactCheck(GenerationMetric):
                     self._score_single(
                         claim.claim_text,
                         inp_text,
-                        self.openai_chat,
-                        language= language
+                        self.openai_chat
                     )
                 )
         return labels

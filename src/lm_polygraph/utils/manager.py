@@ -242,6 +242,7 @@ class UEManager:
         ensemble_model: Optional[WhiteboxModel] = None,
         deberta_batch_size: int = 10,
         deberta_device: Optional[str] = None,
+        language: str = 'en',
         verbose: bool = True,
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
@@ -264,6 +265,7 @@ class UEManager:
             deberta_batch_size (int): Batch size for DeBERTa model used in some estimators. Default: 10.
             deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
                 'cpu' otherwise. Default: None.
+            language (str): Language to test in claim-level benchmark, one of 'en', 'zh', 'ar', 'ru'. Default: 'en'.
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
@@ -271,6 +273,7 @@ class UEManager:
         stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
             deberta_batch_size=deberta_batch_size,
             deberta_device=deberta_device,
+            language=language,
             cache_path=cache_path,
         )
 

@@ -2,7 +2,7 @@ import os
 import logging
 
 from lm_polygraph.stat_calculators import *
-from lm_polygraph.utils.deberta import Deberta
+from lm_polygraph.utils.deberta import Deberta, MultilingualDeberta
 from lm_polygraph.utils.openai_chat import OpenAIChat
 
 from typing import Dict, List, Optional, Tuple
@@ -13,6 +13,7 @@ log = logging.getLogger("lm_polygraph")
 def register_stat_calculators(
     deberta_batch_size: int = 10,  # TODO: rename to NLI model
     deberta_device: Optional[str] = None,  # TODO: rename to NLI model
+    language: str = 'en',
     n_ccp_alternatives: int = 10,
     cache_path=os.path.expanduser("~") + "/.cache",
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
@@ -26,6 +27,13 @@ def register_stat_calculators(
     log.info("=" * 100)
     log.info("Loading NLI model...")
     nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
+
+    if language == "en":
+        nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
+    elif language in ["zh", "ar", "ru"]:
+        nli_model = MultilingualDeberta(batch_size=deberta_batch_size, device=deberta_device)
+    else:
+        raise Exception(f"Unsupported language: {language}")
 
     log.info("=" * 100)
     log.info("Initializing stat calculators...")
@@ -82,7 +90,7 @@ def register_stat_calculators(
     _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
     _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
     _register(GreedyAlternativesFactPrefNLICalculator(nli_model=nli_model))
-    _register(ClaimsExtractor(openai_chat=openai_chat))
+    _register(ClaimsExtractor(openai_chat=openai_chat, language=language))
 
     log.info("Done intitializing stat calculators...")
 
