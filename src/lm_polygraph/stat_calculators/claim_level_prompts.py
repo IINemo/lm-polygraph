@@ -109,34 +109,65 @@ Summarize this reply into one word, whether the claim is true: "True", "False" o
 
 Claim: {claim}
 
-以下的陈述是否正确？
+以下的表述是否正确？
 
 Reply: {reply}
 
-请将此回复总结为一个词，即该陈述是否正确："True"，"False"或"Not known"。
+请用一个词回答该表述(Reply)是否正确："True"，"False"或"Not known"。
 """
 )
 }
 
+FACT_CHECK_PORMPTS_TWO_STEPS = {
 
-# old prompt
-# "zh":(
-#     "根据最新的信息来源，这个命题是否正确？ "
-#     """回答 "True"表明命题为真，"False"表明命题为假，"Not known"表明命题无法判断。"""
-#     "\n\n"
-#     "例子:\n"
-#     "\n"
-#     "Question: 介绍一下爱因斯坦。\n"
-#     "Claim: 爱因斯坦出生于3月14日。\n"
-#     "Answer: True\n"
-#     "\n"
-#     "Question: 介绍一下爱因斯坦。\n"
-#     "Claim: 爱因斯坦出生在伦敦。\n"
-#     "Answer: False\n"
-#     "\n"
-#     "Your input:\n"
-#     "\n"
-#     "Question: {input}\n"
-#     "Claim: {claim}\n"
-#     "Answer: "
-# )
+"en":
+    {'first' :
+'''
+Question: {input}
+Reason step by step. Determine if all provided information in the following claim is true according to the most recent sources of information.
+Claim: {claim}
+''',
+
+'second':
+"""Question: {input}
+Claim: {claim}
+Is the following claim true?
+Reply: {reply}
+Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known".
+"""
+},
+
+"zh":
+    {'first' :
+'''
+Question: {input}
+请一步一步推理，根据你所有的历史知识，确定以下声明（Claim）中所有信息是否正确。
+Claim: {claim}
+''',
+
+'second':
+"""Question: {input}
+Claim: {claim}
+以下的表述是否正确？
+Reply: {reply}
+请总结Reply的内容，用一个词表述Reply认为Claim是否正确："True"，"False"或"Not known"。
+"""
+},
+
+
+"ar": 
+    {'first' : 
+'''
+السؤال: {input}
+حدد ما إذا كانت جميع المعلومات المقدمة في الادعاء التالي صحيحة وفقًا لأحدث مصادر المعلومات.
+الادعاء: {claim}
+''',
+
+'second': 
+'''
+السؤال: {input}
+الادعاء: {claim}
+هل الادعاء التالي صحيح؟
+الاجابة: {reply}
+قم بتلخيص هذه الجملة في كلمة واحدة، سواء كان الادعاء صحيح: "صحيح" أو "خطأ" أو "غير معروف".
+'''}}
