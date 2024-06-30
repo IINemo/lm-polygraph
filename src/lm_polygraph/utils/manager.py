@@ -252,6 +252,7 @@ class UEManager:
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
         cache_path=os.path.expanduser("~") + "/.cache",
+        stat_calculators = None
     ):
         """
         Parameters:
@@ -274,11 +275,15 @@ class UEManager:
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
 
-        stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
-            deberta_batch_size=deberta_batch_size,
-            deberta_device=deberta_device,
-            cache_path=cache_path,
-        )
+        if stat_calculators is None:
+            stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
+                deberta_batch_size=deberta_batch_size,
+                deberta_device=deberta_device,
+                cache_path=cache_path,
+            )
+        else:
+            stat_calculators_dict = stat_calculators
+            stat_dependencies_dict = {k : v.stat_dependencies for k, v in stat_calculators.items()}
 
         self.stat_calculators_dict = stat_calculators_dict
 
