@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
@@ -13,8 +13,16 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
     Calculates generation texts for Blackbox model (lm_polygraph.BlackboxModel).
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["blackbox_greedy_texts"], []
+
     def __init__(self):
-        super().__init__(["blackbox_greedy_texts"], [])
+        super().__init__()
 
     def __call__(
         self,
@@ -53,23 +61,28 @@ class GreedyProbsCalculator(StatCalculator):
     * attention masks across the model (if applicable)
     * embeddings from the model
     """
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "input_texts",
+            "input_tokens",
+            "greedy_log_probs",
+            "greedy_tokens",
+            "greedy_tokens_alternatives",
+            "greedy_texts",
+            "greedy_log_likelihoods",
+            "train_greedy_log_likelihoods",
+            "embeddings",
+            ], []
 
     def __init__(self, n_alternatives: int = 10):
-        super().__init__(
-            [
-                "input_texts",
-                "input_tokens",
-                "greedy_log_probs",
-                "greedy_tokens",
-                "greedy_tokens_alternatives",
-                "greedy_texts",
-                "greedy_log_likelihoods",
-                "train_greedy_log_likelihoods",
-                "embeddings",
-            ],
-            [],
-        )
+        super().__init__()
         self.n_alternatives = n_alternatives
+
 
     def __call__(
         self,
