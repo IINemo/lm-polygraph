@@ -1,7 +1,9 @@
 from .stat_calculator import StatCalculator
 from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
-from .prompt import PromptCalculator
+from .prompt import (PromptCalculator,
+                     SamplingPromptCalculator,
+                     ClaimPromptCalculator)
 from .entropy import EntropyCalculator
 from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator
 from .greedy_alternatives_nli import (

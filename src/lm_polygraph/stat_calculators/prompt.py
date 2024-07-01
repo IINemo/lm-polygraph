@@ -1,13 +1,13 @@
 import torch
 import numpy as np
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 
 
-class PromptCalculator(StatCalculator):
+class BasePromptCalculator(StatCalculator):
     """
     Calculates the probability for a specific token to be generated from the specific prompt.
     Used for P(True)-based methods.
@@ -18,9 +18,7 @@ class PromptCalculator(StatCalculator):
         prompt: str,
         expected: str,
         method: str,
-        input_text_dependency: str = "input_texts",
-        sample_text_dependency: Optional[str] = "sample_texts",
-        generation_text_dependency: str = "greedy_texts",
+        sample_text_dependency: Optional[str] = None,
     ):
         """
         Parameters:
@@ -34,16 +32,13 @@ class PromptCalculator(StatCalculator):
                 otherwise an exception will be raised.
             method (str): the name of the statistics to calculate with this calculator.
         """
-        dependencies = [input_text_dependency, generation_text_dependency]
-        if "{s}" in prompt and sample_text_dependency is not None:
-            dependencies.append(sample_text_dependency)
-        super().__init__([method], dependencies)
+        super().__init__()
         self.method = method
         self.prompt = prompt
         self.expected = expected
-        self.input_text_dependency = input_text_dependency
+        self.input_text_dependency = "input_texts"
         self.sample_text_dependency = sample_text_dependency
-        self.generation_text_dependency = generation_text_dependency
+        self.generation_text_dependency = "greedy_texts"
 
     def __call__(
         self,
@@ -107,3 +102,64 @@ class PromptCalculator(StatCalculator):
         log_probs = logits[:, -1, expected_token].cpu().numpy()
 
         return {self.method: log_probs}
+
+
+class PromptCalculator(BasePromptCalculator):
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the PromptCalculator.
+        """
+
+        return ["p_true"], ["greedy_texts"]
+
+
+    def __init__(self):
+        super().__init__(
+            "Question: {q}\n Possible answer:{a}\n " \
+            "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+            "True",
+            "p_true",
+        )
+
+
+class SamplingPromptCalculator(BasePromptCalculator):
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the SamplingPromptCalculator.
+        """
+
+        return ["p_true_sampling"], ["greedy_texts", "sample_texts"]
+
+
+    def __init__(self):
+        super().__init__(
+            "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n " \
+            "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+            "True",
+            "p_true_sampling",
+            sample_text_dependency="sample_texts",
+        )
+
+
+class ClaimPromptCalculator(BasePromptCalculator):
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the ClaimPromptCalculator.
+        """
+
+        return ["p_true_claim"], ["greedy_texts"]
+
+
+    def __init__(self):
+        super().__init__(
+            "Question: {q}\n Possible answer:{a}\n " \
+            "Is the possible answer True or False? The possible answer is: ",
+            "True",
+            "p_true_claim",
+        )

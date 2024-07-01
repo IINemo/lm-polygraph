@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from functools import partial
 
 import torch
@@ -12,8 +12,16 @@ from lm_polygraph.utils.token_restoration import (
 
 
 class EnsembleTokenLevelDataCalculator(StatCalculator):
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["ensemble_token_scores"], []
+
     def __init__(self):
-        super().__init__(["ensemble_token_scores"], [])
+        super().__init__()
 
     def __call__(
         self,

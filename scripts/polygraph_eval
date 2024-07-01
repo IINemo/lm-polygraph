@@ -230,30 +230,23 @@ def get_density_based_ue_methods(args, model_type):
         if model_type == "Seq2SeqLM":
             estimators += [
                 MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
-                MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
                 RelativeMahalanobisDistanceSeq(
                     "encoder", parameters_path=parameters_path
                 ),
-                RelativeMahalanobisDistanceSeq(
-                    "decoder", parameters_path=parameters_path
-                ),
                 RDESeq("encoder", parameters_path=parameters_path),
-                RDESeq("decoder", parameters_path=parameters_path),
                 PPLMDSeq("encoder", md_type="MD", parameters_path=parameters_path),
                 PPLMDSeq("encoder", md_type="RMD", parameters_path=parameters_path),
-                PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-                PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
             ]
-        else:
-            estimators += [
-                MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-                RelativeMahalanobisDistanceSeq(
-                    "decoder", parameters_path=parameters_path
-                ),
-                RDESeq("decoder", parameters_path=parameters_path),
-                PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-                PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
-            ]
+
+        estimators += [
+            MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
+            RelativeMahalanobisDistanceSeq(
+                "decoder", parameters_path=parameters_path
+            ),
+            RDESeq("decoder", parameters_path=parameters_path),
+            PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
+            PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
+        ]
     return estimators
 
 
