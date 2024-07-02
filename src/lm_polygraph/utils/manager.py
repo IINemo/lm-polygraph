@@ -4,6 +4,7 @@ import torch
 import sys
 import gc
 import os
+import logging
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple, Optional
@@ -24,6 +25,7 @@ from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 from lm_polygraph.utils.stat_resolver import StatResolver
 
+log = logging.getLogger("lm_polygraph")
 
 def _check_unique_names(xs):
     names = set()
@@ -271,6 +273,9 @@ class UEManager:
 
 
     def _resolve_stat_calculators(self):
+        log.info("=" * 100)
+        log.info("Initializing stat calculators...")
+
         stat_calculators_dict = self.stat_resolver.stat_calculators
         stat_dependencies_dict = self.stat_resolver.stat_dependencies
 
@@ -375,6 +380,8 @@ class UEManager:
             self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in ensemble_stats]
             )
+
+        log.info("Done intitializing stat calculators...")
 
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
