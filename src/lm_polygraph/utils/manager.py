@@ -236,16 +236,11 @@ class UEManager:
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
 
-        stat_resolver = StatResolver(
+        self.stat_resolver = StatResolver(
             nli_model_batch_size=deberta_batch_size,
             nli_model_device=deberta_device,
             cache_path=cache_path,
         )
-
-        stat_calculators_dict, stat_dependencies_dict = \
-            stat_resolver.stat_calculators, stat_resolver.stat_dependencies
-
-        self.stat_calculators_dict = stat_calculators_dict
 
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -259,18 +254,40 @@ class UEManager:
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
 
-        if isinstance(model, BlackboxModel):
+
+        self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+        self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+        self.metrics: Dict[Tuple[str, str, str, str], float] = {}
+        self.total_bad_estimators: Dict[Estimator, float] = {}
+        self.stats: Dict[str, List] = defaultdict(list)
+
+        self.processors = processors
+        self.ignore_exceptions = ignore_exceptions
+        self.verbose = verbose
+        self.max_new_tokens = max_new_tokens
+        self.background_train_dataset_max_new_tokens = (
+            background_train_dataset_max_new_tokens
+        )
+
+
+    def _resolve_stat_calculators(self):
+        stat_calculators_dict = self.stat_resolver.stat_calculators
+        stat_dependencies_dict = self.stat_resolver.stat_dependencies
+
+        self.stat_calculators_dict = stat_calculators_dict
+
+        if isinstance(self.model, BlackboxModel):
             greedy = ["blackbox_greedy_texts"]
         else:
             greedy = ["greedy_tokens", "greedy_texts"]
 
         stats = (
             [s for e in self.estimators for s in e.stats_dependencies]
-            + [s for m in generation_metrics for s in m.stats_dependencies]
+            + [s for m in self.generation_metrics for s in m.stats_dependencies]
             + greedy
         )
 
-        stats, have_stats = stat_resolver.order_stats(
+        stats, have_stats = self.stat_resolver.order_stats(
             stats,
             stat_calculators_dict,
             stat_dependencies_dict,
@@ -289,15 +306,15 @@ class UEManager:
             )
         ]  # below in calculate() we copy X in blackbox_X
 
-        self.stat_calculators: List[StatCalculator] = stat_resolver.init_calculators(
+        self.stat_calculators: List[StatCalculator] = self.stat_resolver.init_calculators(
             [stat_calculators_dict[c] for c in stats]
         )
-        if verbose:
+        if self.verbose:
             print("Stat calculators:", self.stat_calculators)
 
         self.ensemble_estimators = []
         single_estimators = []
-        for e in estimators:
+        for e in self.estimators:
             for s in e.stats_dependencies:
                 if s.startswith("ensemble"):
                     self.ensemble_estimators.append(e)
@@ -317,13 +334,13 @@ class UEManager:
             if "train_greedy_log_likelihoods" in train_stats
             else []
         )
-        train_stats, _ = stat_resolver.order_stats(
+        train_stats, _ = self.stat_resolver.order_stats(
             train_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
         self.train_stat_calculators: List[StatCalculator] = \
-            stat_resolver.init_calculators(
+            self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in train_stats]
             )
 
@@ -333,13 +350,13 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("background_train")
         ]
-        background_train_stats, _ = stat_resolver.order_stats(
+        background_train_stats, _ = self.stat_resolver.order_stats(
             background_train_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
         self.background_train_stat_calculators: List[StatCalculator] = \
-            stat_resolver.init_calculators(
+            self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in background_train_stats]
             )
 
@@ -349,29 +366,16 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("ensemble")
         ]
-        ensemble_stats, _ = stat_resolver.order_stats(
+        ensemble_stats, _ = self.stat_resolver.order_stats(
             ensemble_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
         self.ensemble_stat_calculators: List[StatCalculator] = \
-            stat_resolver.init_calculators(
+            self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in ensemble_stats]
             )
 
-        self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-        self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-        self.metrics: Dict[Tuple[str, str, str, str], float] = {}
-        self.total_bad_estimators: Dict[Estimator, float] = {}
-        self.stats: Dict[str, List] = defaultdict(list)
-
-        self.processors = processors
-        self.ignore_exceptions = ignore_exceptions
-        self.verbose = verbose
-        self.max_new_tokens = max_new_tokens
-        self.background_train_dataset_max_new_tokens = (
-            background_train_dataset_max_new_tokens
-        )
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """
@@ -391,7 +395,7 @@ class UEManager:
                 - generation metrics name,
                 - `ue_metrics` name which was used to calculate quality.
         """
-
+        self._resolve_stat_calculators()
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
