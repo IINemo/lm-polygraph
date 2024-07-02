@@ -22,7 +22,7 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.utils.register_stat_calculators import register_stat_calculators
+from lm_polygraph.utils.stat_resolver import StatResolver
 
 
 def _check_unique_names(xs):
@@ -236,11 +236,14 @@ class UEManager:
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
 
-        stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
-            deberta_batch_size=deberta_batch_size,
-            deberta_device=deberta_device,
+        stat_resolver = StatResolver(
+            nli_model_batch_size=deberta_batch_size,
+            nli_model_device=deberta_device,
             cache_path=cache_path,
         )
+
+        stat_calculators_dict, stat_dependencies_dict = \
+            stat_resolver.stat_calculators, stat_resolver.stat_dependencies
 
         self.stat_calculators_dict = stat_calculators_dict
 
@@ -267,104 +270,108 @@ class UEManager:
             + greedy
         )
 
-        #stats, have_stats = _order_calculators(
-        #    stats,
-        #    stat_calculators_dict,
-        #    stat_dependencies_dict,
-        #)
+        stats, have_stats = stat_resolver.order_stats(
+            stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
 
-        #self.stats_names = stats
-        #stats = [
-        #    s
-        #    for s in stats
-        #    if not (str(s).startswith("ensemble_"))
-        #    and not (
-        #        (
-        #            str(s).startswith("blackbox_")
-        #            and s[len("blackbox_") :] in have_stats
-        #        )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
-        #    )
-        #]  # below in calculate() we copy X in blackbox_X
+        self.stats_names = stats
+        stats = [
+            s
+            for s in stats
+            if not (str(s).startswith("ensemble_"))
+            and not (
+                (
+                    str(s).startswith("blackbox_")
+                    and s[len("blackbox_") :] in have_stats
+                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
+            )
+        ]  # below in calculate() we copy X in blackbox_X
 
-        #self.stat_calculators: List[StatCalculator] = [
-        #    stat_calculators_dict[c] for c in stats
-        #]
-        #if verbose:
-        #    print("Stat calculators:", self.stat_calculators)
+        self.stat_calculators: List[StatCalculator] = stat_resolver.init_calculators(
+            [stat_calculators_dict[c] for c in stats]
+        )
+        if verbose:
+            print("Stat calculators:", self.stat_calculators)
 
-        #self.ensemble_estimators = []
-        #single_estimators = []
-        #for e in estimators:
-        #    for s in e.stats_dependencies:
-        #        if s.startswith("ensemble"):
-        #            self.ensemble_estimators.append(e)
-        #            break
-        #    if e not in self.ensemble_estimators:
-        #        single_estimators.append(e)
-        #self.estimators = single_estimators
+        self.ensemble_estimators = []
+        single_estimators = []
+        for e in estimators:
+            for s in e.stats_dependencies:
+                if s.startswith("ensemble"):
+                    self.ensemble_estimators.append(e)
+                    break
+            if e not in self.ensemble_estimators:
+                single_estimators.append(e)
+        self.estimators = single_estimators
 
-        #train_stats = [
-        #    s
-        #    for e in self.estimators
-        #    for s in e.stats_dependencies
-        #    if s.startswith("train")
-        #]
-        #train_stats += (
-        #    ["greedy_tokens", "greedy_texts"]
-        #    if "train_greedy_log_likelihoods" in train_stats
-        #    else []
-        #)
-        #train_stats, _ = _order_calculators(
-        #    train_stats,
-        #    stat_calculators_dict,
-        #    stat_dependencies_dict,
-        #)
-        #self.train_stat_calculators: List[StatCalculator] = [
-        #    stat_calculators_dict[c] for c in train_stats
-        #]
-        #background_train_stats = [
-        #    s
-        #    for e in self.estimators
-        #    for s in e.stats_dependencies
-        #    if s.startswith("background_train")
-        #]
-        #background_train_stats, _ = _order_calculators(
-        #    background_train_stats,
-        #    stat_calculators_dict,
-        #    stat_dependencies_dict,
-        #)
-        #self.background_train_stat_calculators: List[StatCalculator] = [
-        #    stat_calculators_dict[c] for c in background_train_stats
-        #]
+        train_stats = [
+            s
+            for e in self.estimators
+            for s in e.stats_dependencies
+            if s.startswith("train")
+        ]
+        train_stats += (
+            ["greedy_tokens", "greedy_texts"]
+            if "train_greedy_log_likelihoods" in train_stats
+            else []
+        )
+        train_stats, _ = stat_resolver.order_stats(
+            train_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+        self.train_stat_calculators: List[StatCalculator] = \
+            stat_resolver.init_calculators(
+                [stat_calculators_dict[c] for c in train_stats]
+            )
 
-        #ensemble_stats = [
-        #    s
-        #    for e in self.ensemble_estimators
-        #    for s in e.stats_dependencies
-        #    if s.startswith("ensemble")
-        #]
-        #ensemble_stats, _ = _order_calculators(
-        #    ensemble_stats,
-        #    stat_calculators_dict,
-        #    stat_dependencies_dict,
-        #)
-        #self.ensemble_stat_calculators: List[StatCalculator] = [
-        #    stat_calculators_dict[c] for c in ensemble_stats
-        #]
+        background_train_stats = [
+            s
+            for e in self.estimators
+            for s in e.stats_dependencies
+            if s.startswith("background_train")
+        ]
+        background_train_stats, _ = stat_resolver.order_stats(
+            background_train_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+        self.background_train_stat_calculators: List[StatCalculator] = \
+            stat_resolver.init_calculators(
+                [stat_calculators_dict[c] for c in background_train_stats]
+            )
 
-        #self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-        #self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
-        #self.metrics: Dict[Tuple[str, str, str, str], float] = {}
-        #self.total_bad_estimators: Dict[Estimator, float] = {}
-        #self.stats: Dict[str, List] = defaultdict(list)
+        ensemble_stats = [
+            s
+            for e in self.ensemble_estimators
+            for s in e.stats_dependencies
+            if s.startswith("ensemble")
+        ]
+        ensemble_stats, _ = stat_resolver.order_stats(
+            ensemble_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+        self.ensemble_stat_calculators: List[StatCalculator] = \
+            stat_resolver.init_calculators(
+                [stat_calculators_dict[c] for c in ensemble_stats]
+            )
 
-        #self.processors = processors
-        #self.ignore_exceptions = ignore_exceptions
-        #self.verbose = verbose
-        #self.max_new_tokens = max_new_tokens
-        #self.background_train_dataset_max_new_tokens = (
-        #    background_train_dataset_max_new_tokens
-        #)
+        self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+        self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
+        self.metrics: Dict[Tuple[str, str, str, str], float] = {}
+        self.total_bad_estimators: Dict[Estimator, float] = {}
+        self.stats: Dict[str, List] = defaultdict(list)
+
+        self.processors = processors
+        self.ignore_exceptions = ignore_exceptions
+        self.verbose = verbose
+        self.max_new_tokens = max_new_tokens
+        self.background_train_dataset_max_new_tokens = (
+            background_train_dataset_max_new_tokens
+        )
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """

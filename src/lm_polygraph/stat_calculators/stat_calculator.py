@@ -39,7 +39,7 @@ class StatCalculator(ABC):
                 other StatCalculators. Any cycle dependencies among calculators will be spotted by UEManager and
                 end with an exception.
         """
-        self._stats, self._stat_dependencies = self._class.metainfo()
+        self._stats, self._stat_dependencies = self.__class__.meta_info()
 
     @abstractmethod
     def __call__(
