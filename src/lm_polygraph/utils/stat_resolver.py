@@ -35,9 +35,6 @@ class StatResolver:
         Registers all available statistic calculators to be seen by UEManager
         for properly organizing the calculations order.
         """
-        log.info("=" * 100)
-        log.info("Initializing stat calculators...")
-
         stat_calculators: Dict[str, "StatCalculator"] = {}
         stat_dependencies: Dict[str, List[str]] = {}
 
@@ -119,7 +116,7 @@ class StatResolver:
                 # lazily to avoid unnecessary memory usage.
                 # It will be reused by all calculators that need it.
                 if self.nli_model is None:
-                    log.info("NLI model required by a calculator. Initializing...")
+                    log.info(f"NLI model required by a calculator {_class}. Initializing...")
                     self.nli_model = Deberta(
                         batch_size=self.nli_model_batch_size,
                         device=self.nli_model_device
@@ -132,7 +129,5 @@ class StatResolver:
                 args["openai_chat"] = self.openai_chat
 
             calculators.append(_class(**args))
-
-        log.info("Done intitializing stat calculators...")
 
         return calculators
