@@ -114,10 +114,9 @@ class PromptCalculator(BasePromptCalculator):
 
         return ["p_true"], ["greedy_texts"]
 
-
     def __init__(self):
         super().__init__(
-            "Question: {q}\n Possible answer:{a}\n " \
+            "Question: {q}\n Possible answer:{a}\n "
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
             "True",
             "p_true",
@@ -134,10 +133,9 @@ class SamplingPromptCalculator(BasePromptCalculator):
 
         return ["p_true_sampling"], ["greedy_texts", "sample_texts"]
 
-
     def __init__(self):
         super().__init__(
-            "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n " \
+            "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n "
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
             "True",
             "p_true_sampling",
@@ -155,10 +153,9 @@ class ClaimPromptCalculator(BasePromptCalculator):
 
         return ["p_true_claim"], ["greedy_texts"]
 
-
     def __init__(self):
         super().__init__(
-            "Question: {q}\n Possible answer:{a}\n " \
+            "Question: {q}\n Possible answer:{a}\n "
             "Is the possible answer True or False? The possible answer is: ",
             "True",
             "p_true_claim",

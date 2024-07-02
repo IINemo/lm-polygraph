@@ -16,7 +16,7 @@ class StatResolver:
         self,
         nli_model_batch_size: int = 10,
         nli_model_device: Optional[str] = None,
-        cache_path: str = os.path.expanduser("~") + "/.cache"
+        cache_path: str = os.path.expanduser("~") + "/.cache",
     ):
 
         self.nli_model_batch_size = nli_model_batch_size
@@ -25,11 +25,12 @@ class StatResolver:
         self.nli_model = None
         self.openai_chat = None
 
-        self.stat_calculators, self.stat_dependencies = \
+        self.stat_calculators, self.stat_dependencies = (
             self._register_stat_calculators()
+        )
 
     def _register_stat_calculators(
-        self
+        self,
     ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
         """
         Registers all available statistic calculators to be seen by UEManager
@@ -68,7 +69,6 @@ class StatResolver:
 
         return stat_calculators, stat_dependencies
 
-
     def order_stats(
         self,
         stats: List[str],
@@ -102,8 +102,9 @@ class StatResolver:
 
         return ordered, have_stats
 
-
-    def init_calculators(self, calculator_classes: List[StatCalculator]) -> List[StatCalculator]:
+    def init_calculators(
+        self, calculator_classes: List[StatCalculator]
+    ) -> List[StatCalculator]:
         """
         Initializes all calculators needed for the given list of estimators
         """
@@ -116,13 +117,15 @@ class StatResolver:
                 # lazily to avoid unnecessary memory usage.
                 # It will be reused by all calculators that need it.
                 if self.nli_model is None:
-                    log.info(f"NLI model required by a calculator {_class}. Initializing...")
+                    log.info(
+                        f"NLI model required by a calculator {_class}. Initializing..."
+                    )
                     self.nli_model = Deberta(
                         batch_size=self.nli_model_batch_size,
-                        device=self.nli_model_device
+                        device=self.nli_model_device,
                     )
                 args["nli_model"] = self.nli_model
-            if "openai_chat" in init_params: 
+            if "openai_chat" in init_params:
                 # Same for OpenAI chat to reuse cache
                 if self.openai_chat is None:
                     self.openai_chat = OpenAIChat(cache_path=self.cache_path)
