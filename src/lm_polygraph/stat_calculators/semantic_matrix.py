@@ -1,7 +1,7 @@
 import numpy as np
 
 import itertools
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -16,17 +16,21 @@ class SemanticMatrixCalculator(StatCalculator):
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "semantic_matrix_entail",
+            "semantic_matrix_contra",
+            "semantic_matrix_classes",
+            "entailment_id",
+        ], ["blackbox_sample_texts"]
+
     def __init__(self, nli_model):
-        super().__init__(
-            [
-                "semantic_matrix_entail",
-                "semantic_matrix_contra",
-                "semantic_matrix_classes",
-                "entailment_id",
-            ],
-            ["blackbox_sample_texts"],
-        )
-        self.is_deberta_setup = False
+        super().__init__()
         self.nli_model = nli_model
 
     def __call__(

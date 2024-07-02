@@ -1,7 +1,7 @@
 import numpy as np
 
 import itertools
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
@@ -13,16 +13,20 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
 
-    def __init__(self, nli_model):
-        super().__init__(
-            [
-                "sample_sentence_similarity",
-                "sample_token_similarity",
-                "token_similarity",
-            ],
-            ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"],
-        )
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
 
+        return [
+            "sample_sentence_similarity",
+            "sample_token_similarity",
+            "token_similarity",
+        ], ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"]
+
+    def __init__(self, nli_model):
+        super().__init__()
         self.crossencoder_setup = False
         self.nli_model = nli_model
 
