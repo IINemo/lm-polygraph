@@ -1,9 +1,6 @@
 import os
-<<<<<<< HEAD:src/lm_polygraph/utils/register_stat_calculators.py
 import logging
-=======
 import inspect
->>>>>>> 585519b (Move stat dependency resolution to resolver):src/lm_polygraph/utils/stat_resolver.py
 
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.deberta import Deberta
@@ -38,17 +35,11 @@ class StatResolver:
         Registers all available statistic calculators to be seen by UEManager
         for properly organizing the calculations order.
         """
-        stat_calculators: Dict[str, "StatCalculator"] = {}
-        stat_dependencies: Dict[str, List[str]] = {}
-
-        log.info("=" * 100)
-        log.info("Loading NLI model...")
-        #nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
-        nli_model = None
-        openai_chat = OpenAIChat(cache_path=cache_path)
-
         log.info("=" * 100)
         log.info("Initializing stat calculators...")
+
+        stat_calculators: Dict[str, "StatCalculator"] = {}
+        stat_dependencies: Dict[str, List[str]] = {}
 
         def _register(calculator_class: StatCalculator):
             stats, dependencies = calculator_class.meta_info()
@@ -111,19 +102,11 @@ class StatResolver:
                 ordered.append(stat)
                 for new_stat in stat_calculators[stat].meta_info()[0]:
                     have_stats.add(new_stat)
+
         return ordered, have_stats
 
 
-<<<<<<< HEAD:src/lm_polygraph/utils/register_stat_calculators.py
-<<<<<<< HEAD
-    log.info("Done intitializing stat calculators...")
-
-    return stat_calculators, stat_dependencies
-=======
-    def init_calculators(self, 
-=======
     def init_calculators(self, calculator_classes: List[StatCalculator]) -> List[StatCalculator]:
->>>>>>> 585519b (Move stat dependency resolution to resolver):src/lm_polygraph/utils/stat_resolver.py
         """
         Initializes all calculators needed for the given list of estimators
         """
@@ -136,6 +119,7 @@ class StatResolver:
                 # lazily to avoid unnecessary memory usage.
                 # It will be reused by all calculators that need it.
                 if self.nli_model is None:
+                    log.info("NLI model required by a calculator. Initializing...")
                     self.nli_model = Deberta(
                         batch_size=self.nli_model_batch_size,
                         device=self.nli_model_device
@@ -149,5 +133,6 @@ class StatResolver:
 
             calculators.append(_class(**args))
 
+        log.info("Done intitializing stat calculators...")
+
         return calculators
->>>>>>> 9098ef0 (WiP)
