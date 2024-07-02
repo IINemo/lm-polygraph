@@ -4,6 +4,11 @@ from rouge_score import rouge_scorer
 from typing import List, Dict
 from .generation_metric import GenerationMetric
 
+from absl import logging as absl_logging
+
+# This prevents bullshit spam from rouge scorer
+absl_logging.set_verbosity(absl_logging.WARNING)
+
 
 class RougeMetric(GenerationMetric):
     """

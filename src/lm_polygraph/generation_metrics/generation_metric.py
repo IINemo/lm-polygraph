@@ -2,6 +2,7 @@ import numpy as np
 
 from typing import List, Dict
 from abc import ABC, abstractmethod
+from lm_polygraph.utils.common import polygraph_module_init
 
 
 class GenerationMetric(ABC):
@@ -11,6 +12,7 @@ class GenerationMetric(ABC):
     compared with different estimators' uncertainties in UEManager using ue_metrics.
     """
 
+    @polygraph_module_init
     def __init__(self, stats_dependencies: List[str], level: str):
         """
         Parameters:

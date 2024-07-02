@@ -42,6 +42,7 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
 
 
 class GreedyAlternativesNLICalculator(StatCalculator):
+
     def __init__(self, nli_model):
         super().__init__(
             [
