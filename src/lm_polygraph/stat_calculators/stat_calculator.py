@@ -29,7 +29,6 @@ class StatCalculator(ABC):
 
         raise NotImplementedError("Implement stats_and_dependencies method")
 
-
     @polygraph_module_init
     def __init__(self):
         """

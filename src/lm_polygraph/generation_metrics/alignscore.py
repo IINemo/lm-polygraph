@@ -18,7 +18,7 @@ class AlignScore(GenerationMetric):
         ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt",
     ):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
-        #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         device = torch.device("mps")
         self.scorer = AlignScorer(
             model="roberta-large",

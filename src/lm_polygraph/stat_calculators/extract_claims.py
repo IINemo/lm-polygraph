@@ -44,6 +44,7 @@ class ClaimsExtractor(StatCalculator):
     """
     Extracts claims from the text of the model generation.
     """
+
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """

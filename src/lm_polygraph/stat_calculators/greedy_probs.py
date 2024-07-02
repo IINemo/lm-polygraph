@@ -61,6 +61,7 @@ class GreedyProbsCalculator(StatCalculator):
     * attention masks across the model (if applicable)
     * embeddings from the model
     """
+
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
@@ -77,12 +78,11 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_log_likelihoods",
             "train_greedy_log_likelihoods",
             "embeddings",
-            ], []
+        ], []
 
     def __init__(self, n_alternatives: int = 10):
         super().__init__()
         self.n_alternatives = n_alternatives
-
 
     def __call__(
         self,

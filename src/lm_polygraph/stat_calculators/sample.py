@@ -89,7 +89,7 @@ class SamplingGenerationCalculator(StatCalculator):
     * tokens of the sampled texts
     * probabilities of the sampled tokens generation
     """
-    
+
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """

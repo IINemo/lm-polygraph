@@ -7,7 +7,7 @@ import os
 import logging
 
 from collections import defaultdict
-from typing import List, Set, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -26,6 +26,7 @@ from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 from lm_polygraph.utils.stat_resolver import StatResolver
 
 log = logging.getLogger("lm_polygraph")
+
 
 def _check_unique_names(xs):
     names = set()
@@ -256,7 +257,6 @@ class UEManager:
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
 
-
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
@@ -270,7 +270,6 @@ class UEManager:
         self.background_train_dataset_max_new_tokens = (
             background_train_dataset_max_new_tokens
         )
-
 
     def _resolve_stat_calculators(self):
         log.info("=" * 100)
@@ -311,8 +310,10 @@ class UEManager:
             )
         ]  # below in calculate() we copy X in blackbox_X
 
-        self.stat_calculators: List[StatCalculator] = self.stat_resolver.init_calculators(
-            [stat_calculators_dict[c] for c in stats]
+        self.stat_calculators: List[StatCalculator] = (
+            self.stat_resolver.init_calculators(
+                [stat_calculators_dict[c] for c in stats]
+            )
         )
         if self.verbose:
             print("Stat calculators:", self.stat_calculators)
@@ -344,10 +345,11 @@ class UEManager:
             stat_calculators_dict,
             stat_dependencies_dict,
         )
-        self.train_stat_calculators: List[StatCalculator] = \
+        self.train_stat_calculators: List[StatCalculator] = (
             self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in train_stats]
             )
+        )
 
         background_train_stats = [
             s
@@ -360,10 +362,11 @@ class UEManager:
             stat_calculators_dict,
             stat_dependencies_dict,
         )
-        self.background_train_stat_calculators: List[StatCalculator] = \
+        self.background_train_stat_calculators: List[StatCalculator] = (
             self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in background_train_stats]
             )
+        )
 
         ensemble_stats = [
             s
@@ -376,13 +379,13 @@ class UEManager:
             stat_calculators_dict,
             stat_dependencies_dict,
         )
-        self.ensemble_stat_calculators: List[StatCalculator] = \
+        self.ensemble_stat_calculators: List[StatCalculator] = (
             self.stat_resolver.init_calculators(
                 [stat_calculators_dict[c] for c in ensemble_stats]
             )
+        )
 
         log.info("Done intitializing stat calculators...")
-
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """
