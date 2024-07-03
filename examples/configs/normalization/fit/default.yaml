@@ -1,0 +1,58 @@
+hydra:
+  run:
+    dir: ${cache_path}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+cache_path: ./workdir/output/normalization
+save_path: '${hydra:run.dir}'
+
+normalization_methods:
+  - min_max
+  - quantile
+  - binned_pcc
+  - isotonic_pcc
+
+num_bins: 100
+
+man_paths:
+  - polygraph_tacl_stablelm12b_coqa_train.man
+  - polygraph_tacl_stablelm12b_gsm8k_train.man
+  - polygraph_tacl_stablelm12b_mmlu_train.man
+  - polygraph_tacl_stablelm12b_triviaqa_train.man
+  - polygraph_tacl_stablelm12b_wmt14_train.man
+  - polygraph_tacl_stablelm12b_wmt19_train.man
+  - polygraph_tacl_stablelm12b_xsum_train.man
+
+ue_method_names:
+  - MaximumSequenceProbability
+  - Perplexity
+  - MeanTokenEntropy
+  - MeanPointwiseMutualInformation
+  - MeanConditionalPointwiseMutualInformation
+  - CCP
+  - PTrue
+  - PTrueSampling
+  - MonteCarloSequenceEntropy
+  - MonteCarloNormalizedSequenceEntropy
+  - LexicalSimilarity_rouge1
+  - LexicalSimilarity_rouge2
+  - LexicalSimilarity_rougeL
+  - LexicalSimilarity_BLEU
+  - NumSemSets
+  - EigValLaplacian_NLI_score_entail
+  - EigValLaplacian_NLI_score_contra
+  - EigValLaplacian_Jaccard_score
+  - DegMat_NLI_score_entail
+  - DegMat_NLI_score_contra
+  - DegMat_Jaccard_score
+  - Eccentricity_NLI_score_entail
+  - Eccentricity_NLI_score_contra
+  - Eccentricity_Jaccard_score
+  - SemanticEntropy
+  - SAR
+  - TokenSAR
+  - SentenceSAR
+  - RenyiNeg
+  - FisherRao
+
+gen_metric_names:
+  - AlignScore
