@@ -346,6 +346,8 @@ class Dataset:
         Parameters:
             path_or_path_and_files (str or List[str]): local path to .csv table or HF path to dataset.
         """
-        if isinstance(path_or_path_and_files, str) and os.path.isfile(path_or_path_and_files):
+        if isinstance(path_or_path_and_files, str) and os.path.isfile(
+            path_or_path_and_files
+        ):
             return Dataset.from_csv(path_or_path_and_files, *args, **kwargs)
         return Dataset.from_datasets(path_or_path_and_files, *args, **kwargs)
