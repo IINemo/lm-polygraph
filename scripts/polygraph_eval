@@ -24,6 +24,8 @@ from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
 from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import *
+from lm_polygraph.utils.common import load_external_module
+from lm_polygraph.utils.generation_parameters import GenerationParameters
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -54,13 +56,17 @@ def main(args):
 
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
-        
-        model = WhiteboxModel.from_pretrained(
-            args.model.path,
-            generation_params=getattr(args, "generation_params", {}),
-            **cache_kwargs,
-            **model_kwargs
-        )
+
+        load_module = load_external_module(args.model.path_to_load_script)
+        base_model, model_type = load_module.load_model()
+        tokenizer = load_module.load_tokenizer()
+        generation_params = GenerationParameters(**getattr(args, ",generation_params", {}))
+
+        model = WhiteboxModel(base_model,
+                              tokenizer,
+                              args.model.path,
+                              model_type,
+                              generation_params)
 
         if args.model.ensemble:
             # Only MC-ensembles for now

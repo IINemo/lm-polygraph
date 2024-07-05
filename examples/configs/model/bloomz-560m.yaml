@@ -2,3 +2,4 @@ defaults:
   - default
 
 path: bigscience/bloomz-560m
+path_to_load_script: /Users/romanvashurin/workspace/lm-polygraph/examples/configs/model/bloomz_560m.py
