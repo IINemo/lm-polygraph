@@ -3,6 +3,7 @@ import torch
 import sys
 import openai
 import time
+import logging
 
 from dataclasses import asdict
 from typing import List, Dict, Optional
@@ -24,6 +25,8 @@ from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
 from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
+
+log = logging.getLogger("lm_polygraph")
 
 
 class Model(ABC):

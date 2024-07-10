@@ -44,8 +44,6 @@ def main(args):
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
-    model_kwargs = get_model_kwargs(args)
-
     cache_kwargs = {}
     if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
         cache_kwargs = {'cache_dir': args.cache_path}
