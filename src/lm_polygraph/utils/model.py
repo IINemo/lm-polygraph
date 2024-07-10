@@ -434,8 +434,8 @@ class WhiteboxModel(Model):
             model_path (str): model path in HuggingFace.
         """
         log.warning(
-            "This method is deprecated and will be removed in the next release.
-            Please use instantiate `WhiteboxModel` directly by passing
+            "This method is deprecated and will be removed in the next release. \
+            Please use instantiate `WhiteboxModel` directly by passing \
             an already loaded model, tokenizer and model path."
         )
 

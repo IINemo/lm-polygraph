@@ -1,11 +1,11 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 
 
-def load_model(model_path: str):
+def load_model(model_path: str, device_map: str):
     config = get_config(model_path)
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_path, trust_remote_code=True
+        model_path, trust_remote_code=True, device_map=device_map
     )
     model.eval()
 

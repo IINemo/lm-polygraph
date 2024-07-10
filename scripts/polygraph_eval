@@ -382,14 +382,6 @@ def get_generation_metrics(args):
     return result
 
 
-def get_model_kwargs(args):
-    model_kwargs = {}
-    if getattr(args.model, 'device_map', None):
-        model_kwargs['device_map'] = args.model.device_map
-
-    return model_kwargs
-
-
 def get_model(args):
     path_to_load_script = Path(args.model.path_to_load_script)
     if not os.path.isabs(path_to_load_script):
