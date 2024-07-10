@@ -15,10 +15,12 @@ class BLEUMetric(GenerationMetric):
         self.scorer = BLEU(effective_order=True, lowercase=True)
 
     def __str__(self):
-        return f"BLEU"
+        return "BLEU"
 
     def _score_single(self, t1: str, t2: str):
-        return self.scorer.sentence_score(t1.strip().rstrip('.'), [t2.strip().rstrip('.')]).score
+        return self.scorer.sentence_score(
+            t1.strip().rstrip("."), [t2.strip().rstrip(".")]
+        ).score
 
     def __call__(
         self,
