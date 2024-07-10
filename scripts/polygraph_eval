@@ -380,7 +380,18 @@ def get_generation_metrics(args):
     return result
 
 
-def get_model(args):
+def get_model(args, cache_kwargs={}):
+    if not "path_to_load_script" in args.model:
+        log.warning(
+            "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
+        )
+        return WhiteboxModel.from_pretrained(
+            args.model.path,
+            getattr(args, "generation_params", {}),
+            device_map=args.model.device_map,
+            **cache_kwargs
+        )
+
     path_to_load_script = Path(args.model.path_to_load_script)
     if not os.path.isabs(path_to_load_script):
         path_to_load_script = hydra_config.parent / path_to_load_script
