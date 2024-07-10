@@ -111,9 +111,9 @@ To evaluate the performance of uncertainty estimation methods consider a quick e
 ```
 HYDRA_CONFIG=../examples/configs/polygraph_eval_coqa.yaml python ./scripts/polygraph_eval \
     dataset="coqa" \
-    model="databricks/dolly-v2-3b" \
+    model.path="databricks/dolly-v2-3b" \
     save_path="./workdir/output" \
-    seed=[1,2,3,4,5]
+    "seed=[1,2,3,4,5]"
 ```
 
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) or [`result_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/result_tables.ipynb) to generate the summarizing tables for an experiment.

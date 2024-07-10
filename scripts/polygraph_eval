@@ -352,6 +352,7 @@ def get_generation_metrics(args):
             RougeMetric("rouge1"),
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
+            BLEUMetric(),
             BertScoreMetric('rh'),
             SbertMetric(),
             AccuracyMetric(
@@ -360,8 +361,9 @@ def get_generation_metrics(args):
                 normalize = getattr(args, "normalize", False),
             ),
             AlignScore(),
-            OpenAIFactCheck(cache_path=args.cache_path),
         ]
+        if getattr(args, "use_claim_ue", False):
+            result += [OpenAIFactCheck(cache_path=args.cache_path)]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]
