@@ -60,14 +60,14 @@ def main(args):
         if args.model.ensemble:
             # Only MC-ensembles for now
             log.info(f"Creating ensemble...")
-            ensemble_model = create_ensemble(model_paths=[args.model.path],
+            base_model = get_model(args)
+            ensemble_model = create_ensemble(models=[base_model],
                                              mc=True,
                                              seed=args.seed[0],
                                              ensembling_mode=args.model.ensembling_mode,
                                              mc_seeds=args.model.mc_seeds,
                                              dropout_rate=float(args.model.dropout_rate),
-                                             **cache_kwargs,
-                                             **model_kwargs
+                                             **cache_kwargs
                                              )
         else:
             ensemble_model = None

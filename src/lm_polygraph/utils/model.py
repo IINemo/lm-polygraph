@@ -535,7 +535,7 @@ class WhiteboxModel(Model):
 
 
 def create_ensemble(
-    model_paths: List[str] = [],
+    models: List[WhiteboxModel] = [],
     mc: bool = False,
     seed: int = 1,
     mc_seeds: List[int] = [1],
@@ -543,7 +543,7 @@ def create_ensemble(
     dropout_rate: float = 0.1,
     **kwargs,
 ) -> WhiteboxModel:
-    model = WhiteboxModel.from_pretrained(model_paths[0], **kwargs)
+    model = models[0]
     ens = model.model
 
     ens.__class__ = type(
