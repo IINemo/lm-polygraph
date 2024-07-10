@@ -423,6 +423,78 @@ class WhiteboxModel(Model):
         """
         return self.model.device
 
+    @staticmethod
+    def from_pretrained(
+        model_path: str, generation_params: Optional[Dict] = {}, **kwargs
+    ):
+        """
+        Initializes the model from HuggingFace. Automatically determines model type.
+
+        Parameters:
+            model_path (str): model path in HuggingFace.
+        """
+        log.warning(
+            "This method is deprecated and will be removed in the next release.
+            Please use instantiate `WhiteboxModel` directly by passing
+            an already loaded model, tokenizer and model path."
+        )
+
+        config = AutoConfig.from_pretrained(
+            model_path, trust_remote_code=True, **kwargs
+        )
+        generation_params = GenerationParameters(**generation_params)
+
+        if any(["CausalLM" in architecture for architecture in config.architectures]):
+            model_type = "CausalLM"
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path, trust_remote_code=True, **kwargs
+            )
+        elif any(
+            [
+                ("Seq2SeqLM" in architecture)
+                or ("ConditionalGeneration" in architecture)
+                for architecture in config.architectures
+            ]
+        ):
+            model_type = "Seq2SeqLM"
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, **kwargs)
+            if "falcon" in model_path:
+                model.transformer.alibi = True
+        elif any(
+            ["JAISLMHeadModel" in architecture for architecture in config.architectures]
+        ):
+            model_type = "CausalLM"
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                trust_remote_code=True,
+                **kwargs,
+            )
+        elif any(
+            ["BartModel" in architecture for architecture in config.architectures]
+        ):
+            model_type = "Seq2SeqLM"
+            model = BartForConditionalGeneration.from_pretrained(model_path, **kwargs)
+        else:
+            raise ValueError(
+                f"Model {model_path} is not adapted for the sequence generation task"
+            )
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            padding_side="left",
+            add_bos_token=True,
+            **kwargs,
+        )
+
+        model.eval()
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        instance = WhiteboxModel(
+            model, tokenizer, model_path, model_type, generation_params
+        )
+
+        return instance
 
     def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
         """

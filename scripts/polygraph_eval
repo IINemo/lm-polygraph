@@ -56,17 +56,8 @@ def main(args):
 
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
-
-        load_module = load_external_module(args.model.path_to_load_script)
-        base_model, model_type = load_module.load_model()
-        tokenizer = load_module.load_tokenizer()
-        generation_params = GenerationParameters(**getattr(args, ",generation_params", {}))
-
-        model = WhiteboxModel(base_model,
-                              tokenizer,
-                              args.model.path,
-                              model_type,
-                              generation_params)
+        
+        model = get_model(args)
 
         if args.model.ensemble:
             # Only MC-ensembles for now
@@ -397,6 +388,32 @@ def get_model_kwargs(args):
         model_kwargs['device_map'] = args.model.device_map
 
     return model_kwargs
+
+
+def get_model(args):
+    path_to_load_script = Path(args.model.path_to_load_script)
+    if not os.path.isabs(path_to_load_script):
+        path_to_load_script = hydra_config.parent / path_to_load_script
+
+    load_module = load_external_module(path_to_load_script)
+
+    load_model_args = {'model_path': args.model.path}
+    load_model_args.update(args.model.load_model_args)
+    base_model = load_module.load_model(**load_model_args)
+
+    load_tok_args = {'model_path': args.model.path}
+    load_tok_args.update(args.model.load_tokenizer_args)
+    tokenizer = load_module.load_tokenizer(**load_tok_args)
+
+    generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
+
+    model = WhiteboxModel(base_model,
+                          tokenizer,
+                          args.model.path,
+                          args.model.type,
+                          generation_params)
+
+    return model
 
 
 if __name__ == "__main__":

@@ -2,4 +2,8 @@ defaults:
   - default
 
 path: bigscience/bloomz-560m
-path_to_load_script: /Users/romanvashurin/workspace/lm-polygraph/examples/configs/model/bloomz_560m.py
+type: CausalLM
+path_to_load_script: model/default_causal.py
+
+load_model_args: {}
+load_tokenizer_args: {}

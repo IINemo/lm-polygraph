@@ -1,23 +1,22 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 
-MODEL_PATH = "bigscience/bloomz-560m"
 
-def load_model():
-    config = get_config()
-    model_type = "CausalLM"
+def load_model(model_path: str):
+    config = get_config(model_path)
 
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_PATH, trust_remote_code=True
+        model_path, trust_remote_code=True
     )
     model.eval()
 
-    return model, model_type
+    return model
 
-def load_tokenizer():
-    config = get_config()
+
+def load_tokenizer(model_path: str):
+    config = get_config(model_path)
 
     tokenizer = AutoTokenizer.from_pretrained(
-        MODEL_PATH,
+        model_path,
         padding_side="left",
         add_bos_token=True,
     )
@@ -26,5 +25,6 @@ def load_tokenizer():
 
     return tokenizer
 
-def get_config():
-    return AutoConfig.from_pretrained(MODEL_PATH, trust_remote_code=True)
+
+def get_config(model_path: str):
+    return AutoConfig.from_pretrained(model_path, trust_remote_code=True)
