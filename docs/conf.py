@@ -8,15 +8,13 @@
 
 import os
 import sys
-from pathlib import Path
-import setuptools_scm
 from datetime import datetime
 
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath("../src"))
 
 project = "LM-Polygraph"
 author = "MBZUAI"
-copyright = f'{datetime.now().year}, {author}'
+copyright = f"{datetime.now().year}, {author}"
 
 # release = setuptools_scm.get_version(root='..', relative_to=__file__)
 
@@ -34,5 +32,4 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["Thumbs.db", ".DS_Store"]
-html_theme = 'sphinx_rtd_theme'
-#html_static_path = ["_static"]
+html_theme = "sphinx_rtd_theme"
