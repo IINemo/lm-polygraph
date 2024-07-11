@@ -17,7 +17,7 @@ Welcome to LM-Polygraph's documentation!
 LM-Polygraph parts
 ========================================
 
-.. automodule:: src.lm_polygraph
+.. automodule:: lm_polygraph
    :members:
    
 
