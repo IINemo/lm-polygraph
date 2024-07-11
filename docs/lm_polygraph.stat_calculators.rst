@@ -12,6 +12,14 @@ lm\_polygraph.stat\_calculators.bart\_score module
    :undoc-members:
    :show-inheritance:
 
+lm\_polygraph.stat\_calculators.cross\_encoder\_similarity module
+-----------------------------------------------------------------
+
+.. automodule:: lm_polygraph.stat_calculators.cross_encoder_similarity
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 lm\_polygraph.stat\_calculators.embeddings module
 -------------------------------------------------
 
@@ -32,6 +40,22 @@ lm\_polygraph.stat\_calculators.entropy module
 ----------------------------------------------
 
 .. automodule:: lm_polygraph.stat_calculators.entropy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.stat\_calculators.extract\_claims module
+------------------------------------------------------
+
+.. automodule:: lm_polygraph.stat_calculators.extract_claims
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.stat\_calculators.greedy\_alternatives\_nli module
+----------------------------------------------------------------
+
+.. automodule:: lm_polygraph.stat_calculators.greedy_alternatives_nli
    :members:
    :undoc-members:
    :show-inheritance:

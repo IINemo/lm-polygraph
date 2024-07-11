@@ -1,8 +1,33 @@
 lm\_polygraph.utils package
 ===========================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   lm_polygraph.utils.ensemble_utils
+   lm_polygraph.utils.prompt_templates
+
 Submodules
 ----------
+
+lm\_polygraph.utils.cir\_model module
+-------------------------------------
+
+.. automodule:: lm_polygraph.utils.cir_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.utils.common module
+---------------------------------
+
+.. automodule:: lm_polygraph.utils.common
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 lm\_polygraph.utils.dataset module
 ----------------------------------
@@ -12,10 +37,10 @@ lm\_polygraph.utils.dataset module
    :undoc-members:
    :show-inheritance:
 
-lm\_polygraph.utils.ensemble\_generator module
-----------------------------------------------
+lm\_polygraph.utils.deberta module
+----------------------------------
 
-.. automodule:: lm_polygraph.utils.ensemble_generator
+.. automodule:: lm_polygraph.utils.deberta
    :members:
    :undoc-members:
    :show-inheritance:
@@ -52,10 +77,34 @@ lm\_polygraph.utils.normalize module
    :undoc-members:
    :show-inheritance:
 
+lm\_polygraph.utils.ood\_detection module
+-----------------------------------------
+
+.. automodule:: lm_polygraph.utils.ood_detection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.utils.openai\_chat module
+---------------------------------------
+
+.. automodule:: lm_polygraph.utils.openai_chat
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 lm\_polygraph.utils.processor module
 ------------------------------------
 
 .. automodule:: lm_polygraph.utils.processor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.utils.register\_stat\_calculators module
+------------------------------------------------------
+
+.. automodule:: lm_polygraph.utils.register_stat_calculators
    :members:
    :undoc-members:
    :show-inheritance:

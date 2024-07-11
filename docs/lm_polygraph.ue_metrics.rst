@@ -4,6 +4,22 @@ lm\_polygraph.ue\_metrics package
 Submodules
 ----------
 
+lm\_polygraph.ue\_metrics.kendalltau module
+-------------------------------------------
+
+.. automodule:: lm_polygraph.ue_metrics.kendalltau
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.ue\_metrics.pr\_auc module
+----------------------------------------
+
+.. automodule:: lm_polygraph.ue_metrics.pr_auc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 lm\_polygraph.ue\_metrics.pred\_rej\_area module
 ------------------------------------------------
 
@@ -24,6 +40,22 @@ lm\_polygraph.ue\_metrics.risk\_cov\_curve module
 -------------------------------------------------
 
 .. automodule:: lm_polygraph.ue_metrics.risk_cov_curve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.ue\_metrics.roc\_auc module
+-----------------------------------------
+
+.. automodule:: lm_polygraph.ue_metrics.roc_auc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.ue\_metrics.spearmanr module
+------------------------------------------
+
+.. automodule:: lm_polygraph.ue_metrics.spearmanr
    :members:
    :undoc-members:
    :show-inheritance:

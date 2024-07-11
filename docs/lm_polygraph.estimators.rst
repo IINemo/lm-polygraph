@@ -4,6 +4,14 @@ lm\_polygraph.estimators package
 Submodules
 ----------
 
+lm\_polygraph.estimators.claim\_conditioned\_probability module
+---------------------------------------------------------------
+
+.. automodule:: lm_polygraph.estimators.claim_conditioned_probability
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 lm\_polygraph.estimators.common module
 --------------------------------------
 
@@ -64,6 +72,14 @@ lm\_polygraph.estimators.estimator module
 -----------------------------------------
 
 .. automodule:: lm_polygraph.estimators.estimator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.estimators.fisher\_rao module
+-------------------------------------------
+
+.. automodule:: lm_polygraph.estimators.fisher_rao
    :members:
    :undoc-members:
    :show-inheritance:
@@ -172,6 +188,22 @@ lm\_polygraph.estimators.relative\_mahalanobis\_distance module
    :undoc-members:
    :show-inheritance:
 
+lm\_polygraph.estimators.renyi\_neg module
+------------------------------------------
+
+.. automodule:: lm_polygraph.estimators.renyi_neg
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.estimators.sar module
+-----------------------------------
+
+.. automodule:: lm_polygraph.estimators.sar
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 lm\_polygraph.estimators.semantic\_entropy module
 -------------------------------------------------
 
@@ -188,10 +220,26 @@ lm\_polygraph.estimators.semantic\_entropy\_token module
    :undoc-members:
    :show-inheritance:
 
+lm\_polygraph.estimators.sentence\_sar module
+---------------------------------------------
+
+.. automodule:: lm_polygraph.estimators.sentence_sar
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 lm\_polygraph.estimators.token\_entropy module
 ----------------------------------------------
 
 .. automodule:: lm_polygraph.estimators.token_entropy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+lm\_polygraph.estimators.token\_sar module
+------------------------------------------
+
+.. automodule:: lm_polygraph.estimators.token_sar
    :members:
    :undoc-members:
    :show-inheritance:
