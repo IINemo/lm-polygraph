@@ -9,8 +9,9 @@
 import subprocess
 import sys
 from pathlib import Path
+import setuptools_scm
+from datetime import datetime
 
-# Assuming conf.py is located in /Users/sergeypetrakov/Documents/Documents/Skoltech_PhD/rtd_to_main/lm-polygraph/src/lm_polygraph/docs
 
 # Get the absolute path of the root directory
 root_path = Path(__file__).resolve().parents[2]
@@ -24,9 +25,10 @@ subprocess.run(["pip", "install", "-e", "."], cwd=root_path)
 
 
 project = "LM-Polygraph"
-copyright = "2023, MBZUAI"
 author = "MBZUAI"
-release = "0.3.0"
+copyright = f'{datetime.now().year}, {author}'
+
+release = setuptools_scm.get_version(root='..', relative_to=__file__)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -41,19 +43,5 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["Thumbs.db", ".DS_Store"]  # '_build',
-# autodoc_mock_imports = ['lm_polygraph']
-
-# , 'datasets>=2.14.2', "rouge-score>=0.0.4", "nlpaug>=1.1.10",
-#                         "scikit-learn", "tqdm>=4.64.1", "matplotlib>=3.6", "pandas>=1.3.5", "torch>=1.13.0",
-#                         "bs4", "transformers>=4.30.2", "nltk>=3.6.5", "sacrebleu>=1.5.0", "sentencepiece>=0.1.97",
-#                         "hf-lfs==0.0.3", "pytest>=4.4.1", "pytreebank>=0.2.7", "setuptools>=60.2.0",
-#                         "numpy>=1.23.5", "dill>=0.3.5.1", "scipy>=1.9.3", "flask>=2.3.2", "protobuf>=4.23",
-#                         "einops", "accelerate", "bitsandbytes", "openai", "wget"]
-
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-# html_theme = 'sphinx_rtd_theme'
+exclude_patterns = ["Thumbs.db", ".DS_Store"]
 html_static_path = ["_static"]
