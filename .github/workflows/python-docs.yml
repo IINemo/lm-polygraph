@@ -17,8 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Trigger RTDs build
-        uses: dfm/rtds-action@v1
+        uses: distributhor/workflow-webhook@v3
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
-          webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
-          commit_ref: ${{ github.ref }}
+          webhook_secret: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
