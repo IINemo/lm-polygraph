@@ -1,6 +1,6 @@
 # %%
 import traceback
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import numpy as np
 import torch
@@ -13,10 +13,18 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 
 class BartScoreCalculator(StatCalculator):
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["rh"], ["greedy_tokens", "input_tokens"]
+
     def __init__(
         self, device=None, max_length=256, checkpoint="facebook/bart-large-cnn"
     ):
-        super().__init__(["rh"], ["greedy_tokens", "input_tokens"])
+        super().__init__()
         self.max_length = max_length
         self.checkpoint = checkpoint
         self.device = device

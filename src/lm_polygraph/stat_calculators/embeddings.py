@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -159,8 +159,16 @@ def aggregate(x, aggregation_method, axis):
 
 
 class EmbeddingsCalculator(StatCalculator):
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["train_embeddings", "background_train_embeddings"], []
+
     def __init__(self):
-        super().__init__(["train_embeddings", "background_train_embeddings"], [])
+        super().__init__()
         self.hidden_layer = -1
 
     def __call__(

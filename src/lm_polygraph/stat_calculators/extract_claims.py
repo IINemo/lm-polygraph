@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
 from .stat_calculator import StatCalculator
@@ -45,18 +45,23 @@ class ClaimsExtractor(StatCalculator):
     Extracts claims from the text of the model generation.
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the SamplingPromptCalculator.
+        """
+
+        return [
+            "claims",
+            "claim_texts_concatenated",
+            "claim_input_texts_concatenated",
+        ], [
+            "greedy_texts",
+            "greedy_tokens",
+        ]
+
     def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!\n"):
-        super().__init__(
-            [
-                "claims",
-                "claim_texts_concatenated",
-                "claim_input_texts_concatenated",
-            ],
-            [
-                "greedy_texts",
-                "greedy_tokens",
-            ],
-        )
+        super().__init__()
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
 

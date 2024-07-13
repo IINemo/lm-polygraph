@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from abc import ABC, abstractmethod
 from lm_polygraph.utils.model import Model
 from lm_polygraph.utils.common import polygraph_module_init
@@ -21,8 +21,16 @@ class StatCalculator(ABC):
     Each new StatCalculator needs to be registered at lm_polygraph/stat_calculators/__init__.py to be seen be UEManager.
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Placeholder method to return the list of statistics and dependencies for the calculator.
+        """
+
+        raise NotImplementedError("Implement stats_and_dependencies method")
+
     @polygraph_module_init
-    def __init__(self, stats: List[str], stat_dependencies: List[str]):
+    def __init__(self):
         """
         Parameters:
             stats: List[str]: Names of statiscits which can be calculated by using this StatCalculator.
@@ -30,8 +38,7 @@ class StatCalculator(ABC):
                 other StatCalculators. Any cycle dependencies among calculators will be spotted by UEManager and
                 end with an exception.
         """
-        self._stats = stats
-        self._stat_dependencies = stat_dependencies
+        self._stats, self._stat_dependencies = self.__class__.meta_info()
 
     @abstractmethod
     def __call__(

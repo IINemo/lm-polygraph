@@ -3,7 +3,7 @@ import traceback
 import numpy as np
 
 from torch.nn.utils.rnn import pad_sequence
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -19,8 +19,16 @@ def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel):
 
 
 class ModelScoreCalculator(StatCalculator):
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["model_rh"], ["greedy_tokens", "input_tokens"]
+
     def __init__(self, prompt: str = 'Paraphrase "{}": ', batch_size: int = 10):
-        super().__init__(["model_rh"], ["greedy_tokens", "input_tokens"])
+        super().__init__()
         self.batch_size = batch_size
         self.prompt = prompt
 

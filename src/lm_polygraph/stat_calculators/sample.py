@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
@@ -12,13 +12,17 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
     Calculates several sampled texts for Blackbox model (lm_polygraph.BlackboxModel).
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["blackbox_sample_texts"], []
+
     def __init__(self, samples_n: int = 10):
-        """
-        Parameters:
-            samples_n (int): number of samples to generate per input text. Default: 10
-        """
+        super().__init__()
         self.samples_n = samples_n
-        super().__init__(["blackbox_sample_texts"], [])
 
     def __call__(
         self,
@@ -86,21 +90,22 @@ class SamplingGenerationCalculator(StatCalculator):
     * probabilities of the sampled tokens generation
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "sample_log_probs",
+            "sample_tokens",
+            "sample_texts",
+            "sample_log_likelihoods",
+        ], []
+
     def __init__(self, samples_n: int = 10):
-        """
-        Parameters:
-            samples_n (int): number of samples to generate per input text. Default: 10
-        """
+        super().__init__()
         self.samples_n = samples_n
-        super().__init__(
-            [
-                "sample_log_probs",
-                "sample_tokens",
-                "sample_texts",
-                "sample_log_likelihoods",
-            ],
-            [],
-        )
 
     def __call__(
         self,
