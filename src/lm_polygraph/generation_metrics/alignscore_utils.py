@@ -1,6 +1,8 @@
 # the code adapted from https://github.com/yuh-zha/AlignScore
 import os
 import math
+import subprocess
+import sys
 import spacy
 from typing import Optional, Tuple
 from transformers import (
@@ -36,6 +38,23 @@ class AlignScorer:
         evaluation_mode="nli_sp",
         verbose=True,
     ) -> None:
+        try:
+            spacy.load("en_core_web_sm")
+        except OSError:
+            subprocess.check_call(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl",
+                    "--retries",
+                    "1",
+                    "--timeout",
+                    "1",
+                    "-q",
+                ]
+            )
         self.model = Inferencer(
             ckpt_path=ckpt_path,
             model=model,

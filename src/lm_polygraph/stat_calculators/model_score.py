@@ -19,7 +19,6 @@ def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel):
 
 
 class ModelScoreCalculator(StatCalculator):
-
     def __init__(self, prompt: str = 'Paraphrase "{}": ', batch_size: int = 10):
         super().__init__(["model_rh"], ["greedy_tokens", "input_tokens"])
         self.batch_size = batch_size

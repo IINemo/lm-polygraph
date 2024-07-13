@@ -28,7 +28,6 @@ def _concat_mans_data(mans_data_dicts, names):
                 man_data.append(man_data_dict[key])
             except KeyError:
                 raise KeyError(f"{key} not found in manager data")
-
         data[name] = np.concatenate(man_data)
 
     return data

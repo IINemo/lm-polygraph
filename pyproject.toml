@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lm_polygraph"
-version = "0.0.2.dev1"
+version = "0.0.0"
 authors = [
   { name = "List of contributors: https://github.com/IINemo/lm-polygraph/graphs/contributors", email = "artemshelmanov@gmail.com" },
 ]

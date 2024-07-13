@@ -26,6 +26,12 @@ model:
   mc: true
   mc_seeds: [42, 43]
   dropout_rate: 0.1
+  type: Seq2SeqLM
+  path_to_load_script: ../../examples/configs/model/bart.py
+
+  load_model_args:
+    device_map: cpu
+  load_tokenizer_args: {}
 
 use_seq_ue: false
 use_tok_ue: false

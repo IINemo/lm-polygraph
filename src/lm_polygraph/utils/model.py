@@ -3,6 +3,7 @@ import torch
 import sys
 import openai
 import time
+import logging
 
 from dataclasses import asdict
 from typing import List, Dict, Optional
@@ -24,6 +25,8 @@ from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
 from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
+
+log = logging.getLogger("lm_polygraph")
 
 
 class Model(ABC):
@@ -433,6 +436,10 @@ class WhiteboxModel(Model):
         Parameters:
             model_path (str): model path in HuggingFace.
         """
+        log.warning(
+            "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
+        )
+
         config = AutoConfig.from_pretrained(
             model_path, trust_remote_code=True, **kwargs
         )
@@ -526,7 +533,7 @@ class WhiteboxModel(Model):
 
 
 def create_ensemble(
-    model_paths: List[str] = [],
+    models: List[WhiteboxModel] = [],
     mc: bool = False,
     seed: int = 1,
     mc_seeds: List[int] = [1],
@@ -534,7 +541,7 @@ def create_ensemble(
     dropout_rate: float = 0.1,
     **kwargs,
 ) -> WhiteboxModel:
-    model = WhiteboxModel.from_pretrained(model_paths[0], **kwargs)
+    model = models[0]
     ens = model.model
 
     ens.__class__ = type(

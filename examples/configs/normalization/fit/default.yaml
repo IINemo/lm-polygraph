@@ -23,30 +23,36 @@ man_paths:
   - polygraph_tacl_stablelm12b_xsum_train.man
 
 ue_method_names:
-   - MaximumSequenceProbability
-   - Perplexity
-   - MeanTokenEntropy
-   - MeanPointwiseMutualInformation
-   - MeanConditionalPointwiseMutualInformation
-   - PTrue
-   - PTrueSampling
-   - MonteCarloSequenceEntropy
-   - MonteCarloNormalizedSequenceEntropy
-   - LexicalSimilarity_rouge1
-   - LexicalSimilarity_rouge2
-   - LexicalSimilarity_rougeL
-   - LexicalSimilarity_BLEU
-   - NumSemSets
-   - EigValLaplacian_NLI_score_entail
-   - EigValLaplacian_NLI_score_contra
-   - EigValLaplacian_Jaccard_score
-   - DegMat_NLI_score_entail
-   - DegMat_NLI_score_contra
-   - DegMat_Jaccard_score
-   - Eccentricity_NLI_score_entail
-   - Eccentricity_NLI_score_contra
-   - Eccentricity_Jaccard_score
-   - SemanticEntropy
+  - MaximumSequenceProbability
+  - Perplexity
+  - MeanTokenEntropy
+  - MeanPointwiseMutualInformation
+  - MeanConditionalPointwiseMutualInformation
+  - CCP
+  - PTrue
+  - PTrueSampling
+  - MonteCarloSequenceEntropy
+  - MonteCarloNormalizedSequenceEntropy
+  - LexicalSimilarity_rouge1
+  - LexicalSimilarity_rouge2
+  - LexicalSimilarity_rougeL
+  - LexicalSimilarity_BLEU
+  - NumSemSets
+  - EigValLaplacian_NLI_score_entail
+  - EigValLaplacian_NLI_score_contra
+  - EigValLaplacian_Jaccard_score
+  - DegMat_NLI_score_entail
+  - DegMat_NLI_score_contra
+  - DegMat_Jaccard_score
+  - Eccentricity_NLI_score_entail
+  - Eccentricity_NLI_score_contra
+  - Eccentricity_Jaccard_score
+  - SemanticEntropy
+  - SAR
+  - TokenSAR
+  - SentenceSAR
+  - RenyiNeg
+  - FisherRao
 
 gen_metric_names:
   - AlignScore

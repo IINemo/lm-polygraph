@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset as hf_dataset
 
-from typing import Iterable, Tuple, List
+from typing import Iterable, Tuple, List, Union
 
 
 class Dataset:
@@ -124,7 +124,7 @@ class Dataset:
 
     @staticmethod
     def load_hf_dataset(
-        path: str,
+        path: Union[str, List[str]],
         split: str,
         **kwargs,
     ):
@@ -143,7 +143,7 @@ class Dataset:
 
     @staticmethod
     def from_datasets(
-        dataset_path: str,
+        dataset_path: Union[str, List[str]],
         x_column: str,
         y_column: str,
         batch_size: int,
@@ -351,14 +351,16 @@ class Dataset:
         return Dataset(x, y, batch_size)
 
     @staticmethod
-    def load(csv_path, *args, **kwargs):
+    def load(path_or_path_and_files: Union[str, List[str]], *args, **kwargs):
         """
         Creates the dataset from either local .csv path (if such exists) or Huggingface datasets.
         See `from_csv` and `from_datasets` static functions for the description of *args and **kwargs arguments.
 
         Parameters:
-            csv_path (str): local path to .csv table or HF path to dataset.
+            path_or_path_and_files (str or List[str]): local path to .csv table or HF path to dataset.
         """
-        if isinstance(csv_path, str) and os.path.isfile(csv_path):
-            return Dataset.from_csv(csv_path, *args, **kwargs)
-        return Dataset.from_datasets(csv_path, *args, **kwargs)
+        if isinstance(path_or_path_and_files, str) and os.path.isfile(
+            path_or_path_and_files
+        ):
+            return Dataset.from_csv(path_or_path_and_files, *args, **kwargs)
+        return Dataset.from_datasets(path_or_path_and_files, *args, **kwargs)
