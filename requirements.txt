@@ -34,3 +34,4 @@ unbabel-comet==2.2.1
 nltk>=3.7,<4
 evaluate
 spacy>=3.4.0,<4
+fastchat
