@@ -7,7 +7,7 @@ import os
 import logging
 
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Set
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -23,7 +23,6 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.utils.stat_resolver import StatResolver
 
 log = logging.getLogger("lm_polygraph")
 
@@ -65,6 +64,39 @@ def _recombine_data(ue, gen_metric, inputs):
         recombined_gen_metric.append(gen_metric[ids].max())
 
     return recombined_ue, recombined_gen_metric
+
+
+def order_stats(
+    stats: List[str],
+    stat_calculators: Dict[str, StatCalculator],
+    stat_dependencies: Dict[str, List[str]],
+) -> Tuple[List[str], Set[str]]:
+    ordered: List[str] = []
+    have_stats: Set[str] = set()
+    while len(stats) > 0:
+        stat = stats[0]
+        if stat in have_stats:
+            stats = stats[1:]
+            continue
+        dependent = False
+        if stat not in stat_dependencies.keys():
+            raise Exception(
+                f"Cant find stat calculator for: {stat}. Maybe you forgot to register it in "
+                + "lm_polygraph.utils.register_stat_calculators.register_stat_calculators()?"
+            )
+        for d in stat_dependencies[stat]:
+            if d not in have_stats:
+                stats = [d] + stats
+                if stats.count(d) > 40:
+                    raise Exception(f"Found possibly cyclic dependencies: {d}")
+                dependent = True
+        if not dependent:
+            stats = stats[1:]
+            ordered.append(stat)
+            for new_stat in stat_calculators[stat].meta_info()[0]:
+                have_stats.add(new_stat)
+
+    return ordered, have_stats
 
 
 @dataclass
@@ -204,6 +236,8 @@ class UEManager:
         data: Dataset,
         model: Model,
         estimators: List[Estimator],
+        builder_stat_calculators,
+        available_stat_calculators,
         generation_metrics: List[GenerationMetric],
         ue_metrics: List[UEMetric],
         processors: List[Processor],
@@ -211,13 +245,10 @@ class UEManager:
         background_train_data: Dataset = None,
         ignore_exceptions: bool = True,
         ensemble_model: Optional[WhiteboxModel] = None,
-        deberta_batch_size: int = 10,
-        deberta_device: Optional[str] = None,
         verbose: bool = True,
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
-        cache_path=os.path.expanduser("~") + "/.cache",
-        stat_calculators = None
+        cache_path=os.path.expanduser("~") + "/.cache"
     ):
         """
         Parameters:
@@ -240,11 +271,11 @@ class UEManager:
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
 
-        self.stat_resolver = StatResolver(
-            nli_model_batch_size=deberta_batch_size,
-            nli_model_device=deberta_device,
-            cache_path=cache_path,
-        )
+        # self.stat_resolver = StatResolver(
+        #     nli_model_batch_size=deberta_batch_size,
+        #     nli_model_device=deberta_device,
+        #     cache_path=cache_path,
+        # )
 
         self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
@@ -272,14 +303,19 @@ class UEManager:
             background_train_dataset_max_new_tokens
         )
 
+        self.stat_calculators_dict = available_stat_calculators[0]
+        self.stat_dependencies_dict = available_stat_calculators[1]
+
+        self.builder_stat_calculators = builder_stat_calculators
+
     def _resolve_stat_calculators(self):
         log.info("=" * 100)
         log.info("Initializing stat calculators...")
 
-        stat_calculators_dict = self.stat_resolver.stat_calculators
-        stat_dependencies_dict = self.stat_resolver.stat_dependencies
+        stat_calculators_dict = self.stat_calculators_dict
+        stat_dependencies_dict = self.stat_dependencies_dict
 
-        self.stat_calculators_dict = stat_calculators_dict
+        #self.stat_calculators_dict = stat_calculators_dict
 
         if isinstance(self.model, BlackboxModel):
             greedy = ["blackbox_greedy_texts"]
@@ -292,7 +328,7 @@ class UEManager:
             + greedy
         )
 
-        stats, have_stats = self.stat_resolver.order_stats(
+        stats, have_stats = order_stats(
             stats,
             stat_calculators_dict,
             stat_dependencies_dict,
@@ -311,11 +347,13 @@ class UEManager:
             )
         ]  # below in calculate() we copy X in blackbox_X
 
-        self.stat_calculators: List[StatCalculator] = (
-            self.stat_resolver.init_calculators(
-                [stat_calculators_dict[c] for c in stats]
-            )
-        )
+        self.stat_calculators = self.builder_stat_calculators([stat_calculators_dict[c] for c in stats])
+        
+        # : List[StatCalculator] = (
+        #     self.stat_resolver.init_calculators(
+        #         [stat_calculators_dict[c] for c in stats]
+        #     )
+        # )
         if self.verbose:
             print("Stat calculators:", self.stat_calculators)
 
@@ -341,16 +379,17 @@ class UEManager:
             if "train_greedy_log_likelihoods" in train_stats
             else []
         )
-        train_stats, _ = self.stat_resolver.order_stats(
+        train_stats, _ = order_stats(
             train_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
-        self.train_stat_calculators: List[StatCalculator] = (
-            self.stat_resolver.init_calculators(
-                [stat_calculators_dict[c] for c in train_stats]
-            )
-        )
+        # self.train_stat_calculators: List[StatCalculator] = (
+        #     self.stat_resolver.init_calculators(
+        #         [stat_calculators_dict[c] for c in train_stats]
+        #     )
+        # )
+        self.train_stat_calculators = self.builder_stat_calculators(train_stats)
 
         background_train_stats = [
             s
@@ -358,16 +397,19 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("background_train")
         ]
-        background_train_stats, _ = self.stat_resolver.order_stats(
+        background_train_stats, _ = order_stats(
             background_train_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
-        self.background_train_stat_calculators: List[StatCalculator] = (
-            self.stat_resolver.init_calculators(
-                [stat_calculators_dict[c] for c in background_train_stats]
-            )
-        )
+
+        self.background_train_stat_calculators = self.builder_stat_calculators(background_train_stats)
+
+        # self.background_train_stat_calculators: List[StatCalculator] = (
+        #     self.stat_resolver.init_calculators(
+        #         [stat_calculators_dict[c] for c in background_train_stats]
+        #     )
+        # )
 
         ensemble_stats = [
             s
@@ -375,16 +417,17 @@ class UEManager:
             for s in e.stats_dependencies
             if s.startswith("ensemble")
         ]
-        ensemble_stats, _ = self.stat_resolver.order_stats(
+        ensemble_stats, _ = order_stats(
             ensemble_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
-        self.ensemble_stat_calculators: List[StatCalculator] = (
-            self.stat_resolver.init_calculators(
-                [stat_calculators_dict[c] for c in ensemble_stats]
-            )
-        )
+        self.ensemble_stat_calculators = self.builder_stat_calculators(ensemble_stats)
+        # self.ensemble_stat_calculators: List[StatCalculator] = (
+        #     self.stat_resolver.init_calculators(
+        #         [stat_calculators_dict[c] for c in ensemble_stats]
+        #     )
+        # )
 
         log.info("Done intitializing stat calculators...")
 

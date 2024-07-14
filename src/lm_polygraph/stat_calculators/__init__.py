@@ -17,3 +17,4 @@ from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
 from .infer_causal_lm_calculator import InferCausalLMCalculator
 from .extract_claims_zh import ClaimsExtractorZH
+from .prompt import BasePromptCalculator

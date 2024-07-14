@@ -6,6 +6,8 @@ import logging
 
 from filelock import FileLock
 
+from singleton_decorator import singleton
+
 
 log = logging.getLogger()
 
@@ -96,3 +98,9 @@ class OpenAIChat:
                 time.sleep(sleep_time)
 
         return openai.ChatCompletion.create(model=self.openai_model, messages=messages)
+
+
+@singleton
+class SingletonOpenAIChat(OpenAIChat):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

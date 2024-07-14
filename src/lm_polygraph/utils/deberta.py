@@ -2,6 +2,8 @@ import torch
 
 from transformers import DebertaForSequenceClassification, DebertaTokenizer
 
+from singleton_decorator import singleton
+
 
 class Deberta:
     """
@@ -64,3 +66,9 @@ class Deberta:
         self._deberta_tokenizer = DebertaTokenizer.from_pretrained(self.deberta_path)
         self._deberta.to(self.device)
         self._deberta.eval()
+
+
+@singleton
+class SingletonDeberta(Deberta):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
