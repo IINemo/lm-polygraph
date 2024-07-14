@@ -12,8 +12,8 @@ class StatCalculatorContainer:
         cfg=dict(),
     ):
         self._name = name
-        self.stats = stats
-        self.dependencies = dependencies
+        self.stats = stats if stats is not None else []
+        self.dependencies = dependencies if dependencies is not None else []
         self.obj = obj
         self.cfg = cfg
         self.builder = builder
@@ -33,8 +33,8 @@ class StatCalculatorContainer:
 
 
 class DefaultBuilderStatCalculators:
-    def __init__(self):
-        pass
+    def __init__(self, model):
+        self.model = model
 
     def __call__(self, stat_calculators_info):
         factory = FactoryStatCalculator()
