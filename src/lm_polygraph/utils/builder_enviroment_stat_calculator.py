@@ -32,7 +32,7 @@ class StatCalculatorContainer:
         return self.stats, self.dependencies
 
 
-class DefaultBuilderStatCalculators:
+class BuilderEnvironmentStatCalculator:
     def __init__(self, model):
         self.model = model
 

@@ -4,7 +4,6 @@ import torch
 import sys
 import gc
 import os
-import logging
 
 from collections import defaultdict
 from typing import List, Dict, Tuple, Optional, Set
@@ -23,7 +22,9 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
+from lm_polygraph.utils.builder_enviroment_stat_calculator import BuilderEnvironmentStatCalculator
 
+import logging
 log = logging.getLogger("lm_polygraph")
 
 
@@ -236,7 +237,7 @@ class UEManager:
         data: Dataset,
         model: Model,
         estimators: List[Estimator],
-        builder_stat_calculators,
+        builder_stat_calculators: BuilderEnvironmentStatCalculator,
         available_stat_calculators,
         generation_metrics: List[GenerationMetric],
         ue_metrics: List[UEMetric],
