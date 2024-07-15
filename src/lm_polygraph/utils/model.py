@@ -287,6 +287,16 @@ class WhiteboxModel(Model):
         self.tokenizer = tokenizer
         self.generation_parameters = generation_parameters
 
+    def __getattr__(self, method_name):
+        # Forward all unknown method calls to the model
+        # to align WhiteboxModel with HuggingFace model API
+        attr = getattr(self.model, method_name)
+        def method(*args, **kwargs):
+            return attr(*args, **kwargs)
+        if callable(attr):
+            return method
+        return attr
+
     class _ScoresProcessor:
         # Stores original token scores instead of the ones modified with generation parameters
         def __init__(self):
@@ -360,6 +370,7 @@ class WhiteboxModel(Model):
         Returns:
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
+        print("Using WhiteboxModel.generate")
         default_params = asdict(self.generation_parameters)
 
         if len(self.generation_parameters.generate_until) > 0:
