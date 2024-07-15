@@ -44,8 +44,9 @@ class OpenAIChat:
 
     def ask(self, message: str) -> str:
         # check if the message is cached
-        with open(self.cache_path, "r") as f:
-            openai_responses = json.load(f)
+        with self.cache_lock:
+            with open(self.cache_path, "r") as f:
+                openai_responses = json.load(f)
 
         if message in openai_responses.get(self.openai_model, {}).keys():
             reply = openai_responses[self.openai_model][message]
