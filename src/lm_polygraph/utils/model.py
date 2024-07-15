@@ -428,15 +428,6 @@ class WhiteboxModel(Model):
         """
         return self.model(**args)
 
-    def device(self):
-        """
-        Returns the device the model is currently loaded on.
-
-        Returns:
-            str: device string.
-        """
-        return self.model.device
-
     @staticmethod
     def from_pretrained(
         model_path: str, generation_params: Optional[Dict] = {}, **kwargs
