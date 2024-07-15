@@ -205,7 +205,7 @@ class Dataset:
             for sample in dataset[x_column]:
                 x.append(prompt.format(context=sample["context".strip()]))
                 y.append("")
-        elif "person" in dataset_name.lower():
+        elif "person" in dataset_name.lower() or "bio" in dataset_name.lower():
             x = dataset[x_column]
             if len(prompt):
                 for i in range(len(x)):
