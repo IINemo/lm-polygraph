@@ -46,7 +46,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
             generation_params["num_beams"] = num_return_sequences
 
         with torch.no_grad():
-            output = ensemble_model.generate(
+            output = ensemble_model.pg_generate(
                 **batch,
                 max_length=max_length,
                 min_length=min_length,

@@ -217,7 +217,7 @@ class BlackboxModel(Model):
 
         return texts
 
-    def generate(self, **args):
+    def pg_generate(self, **args):
         """
         Not implemented for blackbox models.
         """
@@ -361,8 +361,9 @@ class WhiteboxModel(Model):
             ]
         )
 
-    def generate(self, **args):
+    def pg_generate(self, **args):
         """
+        Polygraph-specific generation.
         Generates the model output with scores from batch formed by HF Tokenizer.
 
         Parameters:
@@ -370,7 +371,6 @@ class WhiteboxModel(Model):
         Returns:
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
-        print("Using WhiteboxModel.generate")
         default_params = asdict(self.generation_parameters)
 
         if len(self.generation_parameters.generate_until) > 0:

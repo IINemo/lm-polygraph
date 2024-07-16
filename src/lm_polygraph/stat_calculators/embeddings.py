@@ -173,7 +173,7 @@ class EmbeddingsCalculator(StatCalculator):
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
-            out = model.generate(
+            out = model.pg_generate(
                 **batch,
                 output_scores=True,
                 return_dict_in_generate=True,
