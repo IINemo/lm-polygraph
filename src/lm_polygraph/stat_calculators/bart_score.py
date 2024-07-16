@@ -143,7 +143,7 @@ class BartScoreCalculator(StatCalculator):
         if self.model is None:
             self._setup()
         srcs, tgts = dependencies["greedy_texts"], dependencies["target_texts"]
-        self.device = model.device()
+        self.device = model.device
         self.model.to(self.device)
 
         scores = {"rh": self.score(srcs, tgts)}

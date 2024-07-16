@@ -36,8 +36,8 @@ class ModelScoreCalculator(StatCalculator):
                     encoded_src = _batch_tokens(
                         [s + t for s, t in zip(src_list, tgt_list)], model
                     )
-                    src_tokens = encoded_src["input_ids"].to(model.device())
-                    src_mask = encoded_src["attention_mask"].to(model.device())
+                    src_tokens = encoded_src["input_ids"].to(model.device)
+                    src_mask = encoded_src["attention_mask"].to(model.device)
                     if model.model_type == "CausalLM":
                         logits = model(
                             input_ids=src_tokens,
@@ -47,9 +47,9 @@ class ModelScoreCalculator(StatCalculator):
                         encoded_src = _batch_tokens(src_list, model)
                         encoded_tgt = _batch_tokens(tgt_list, model)
 
-                        src_tokens = encoded_src["input_ids"].to(model.device())
-                        tgt_tokens = encoded_tgt["input_ids"].long().to(model.device())
-                        src_mask = encoded_src["attention_mask"].to(model.device())
+                        src_tokens = encoded_src["input_ids"].to(model.device)
+                        tgt_tokens = encoded_tgt["input_ids"].long().to(model.device)
+                        src_mask = encoded_src["attention_mask"].to(model.device)
 
                         logits = model(
                             input_ids=src_tokens,

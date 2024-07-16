@@ -10,6 +10,7 @@ from typing import List, Set, Dict, Tuple, Optional
 from tqdm import tqdm
 from dataclasses import dataclass
 
+from lm_polygraph.utils.common import is_list_like
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
@@ -115,7 +116,7 @@ class UncertaintyOutput:
 
 
 def estimate_uncertainty(
-    model: Model, estimator: Estimator, input_text: str
+    model: Model, estimator: Estimator, input_text: str, batch_size: int = 1
 ) -> UncertaintyOutput:
     """
     Estimated uncertainty of the model generation using the provided esitmator.
@@ -155,10 +156,18 @@ def estimate_uncertainty(
     UncertaintyOutput(uncertainty=1.0022274826855433, input_text='When did Albert Einstein die?', generation_text='Albert Einstein died on April 18, 1955.', model_path='gpt-3.5-turbo')
     ```
     """
+    if not is_list_like(estimator):
+        estimator = [estimator]
+
+    if not is_list_like(input_text):
+        input_text = [input_text]
+
+    targets = ["" for _ in input_text]
+
     man = UEManager(
-        Dataset([input_text], [""], batch_size=1),
+        Dataset(input_text, targets, batch_size=batch_size),
         model,
-        [estimator],
+        estimator,
         [],
         [],
         [],
@@ -166,9 +175,11 @@ def estimate_uncertainty(
         verbose=False,
     )
     man()
-    ue = man.estimations[estimator.level, str(estimator)]
+    ue = {
+        estimator_name: values for (level, estimator_name), values in man.estimations.items()
+    }
     texts = man.stats.get("greedy_texts", man.stats.get("blackbox_greedy_texts", None))
-    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
+    return UncertaintyOutput(ue, input_text, texts[0], model.model_path)
 
 
 def _flatten_results(results, result_generator_class):

@@ -25,6 +25,7 @@ from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
 from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
+from lm_polygraph.utils.dataset import Dataset
 
 log = logging.getLogger("lm_polygraph")
 
@@ -411,7 +412,7 @@ class WhiteboxModel(Model):
         args = _validate_args(args)
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
-        batch = {k: v.to(self.device()) for k, v in batch.items()}
+        batch = {k: v.to(self.device) for k, v in batch.items()}
         sequences = self.model.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
@@ -421,6 +422,39 @@ class WhiteboxModel(Model):
             else:
                 texts.append(self.tokenizer.decode(seq[1:]))
         return texts
+
+    def generate(self, uncertainty_args: Dict = {}, **args):
+        """
+        Acts like a proxy method to underlying model's generate method
+        with uncertanty estimation on top.
+        Should return the same output as the underlying model's generate method
+        augmented with uncertainty estimation.
+
+        Parameters:
+            uncertainty_args (Dict): uncertainty estimation parameters.
+            **args: any additional arguments to pass to the underlying model's generate method.
+
+        Returns:
+            Tuple: tuple of two elements: base_out - the output of the underlying model's generate method,
+                ue_out - the output of the uncertainty estimation.
+        """
+
+        base_out = self.model.generate(**args)
+        input_texts = self.tokenizer.batch_decode(args["input_ids"],
+                                                  skip_special_tokens=True)
+
+        estimators = uncertainty_args.get("estimators", [])
+        if len(estimators) == 0:
+            return base_out, None
+
+        #estimators = get_estimators_from_str(estimators)
+        batch_size = getattr(uncertainty_args, "batch_size", args["input_ids"].shape[0])
+
+        # Ugly as fuck, but it's the only way to avoid circular imports
+        from lm_polygraph.utils.manager import estimate_uncertainty
+        ue_out = estimate_uncertainty(self, estimators, input_texts, batch_size)
+
+        return base_out, ue_out
 
     def __call__(self, **args):
         """

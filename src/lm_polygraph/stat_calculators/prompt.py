@@ -91,7 +91,7 @@ class PromptCalculator(StatCalculator):
             return {self.method: np.array([])}
 
         batch: Dict[str, torch.Tensor] = model.tokenize(inp_texts)
-        batch = {k: v.to(model.device()) for k, v in batch.items()}
+        batch = {k: v.to(model.device) for k, v in batch.items()}
 
         with torch.no_grad():
             out = model.pg_generate(

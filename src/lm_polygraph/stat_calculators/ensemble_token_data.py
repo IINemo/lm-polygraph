@@ -26,7 +26,7 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
 
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
 
-        batch = {k: v.to(ensemble_model.device()) for k, v in batch.items()}
+        batch = {k: v.to(ensemble_model.device) for k, v in batch.items()}
         generation_params = dependencies["ensemble_generation_params"]
 
         max_length = generation_params.get("generation_max_length", max_new_tokens)

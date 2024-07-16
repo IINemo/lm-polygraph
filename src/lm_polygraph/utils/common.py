@@ -1,5 +1,7 @@
 import logging
 import importlib.util
+import numpy as np
+import pandas as pd
 
 from typing import Tuple
 
@@ -30,3 +32,9 @@ def load_external_module(path_to_file: str):
     spec.loader.exec_module(module)
 
     return module
+
+
+def is_list_like(obj):
+    """Check if object is list-like."""
+    valid_types = (list, tuple, set, np.ndarray, pd.Series)
+    return isinstance(obj, valid_types)

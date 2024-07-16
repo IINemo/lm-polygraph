@@ -125,7 +125,7 @@ class SamplingGenerationCalculator(StatCalculator):
                 - 'sample_log_likelihoods' (List[List[List[float]]]): log probabilities at each token of the sampling generation.
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
-        batch = {k: v.to(model.device()) for k, v in batch.items()}
+        batch = {k: v.to(model.device) for k, v in batch.items()}
         sequences, logits = _gen_samples(
             self.samples_n,
             model,

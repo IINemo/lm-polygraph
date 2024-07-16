@@ -45,7 +45,7 @@ class GreedyLMProbsCalculator(StatCalculator):
         tokens = dependencies["greedy_tokens"]
         try:
             batch = model.tokenize([model.tokenizer.decode(t) for t in tokens])
-            batch = {k: v.to(model.device()) for k, v in batch.items()}
+            batch = {k: v.to(model.device) for k, v in batch.items()}
             with torch.no_grad():
                 if model.model_type == "Seq2SeqLM":
                     logprobs = model.model(
@@ -72,10 +72,10 @@ class GreedyLMProbsCalculator(StatCalculator):
             greedy_lm_log_probs = []
             greedy_lm_ll = []
             for toks in tokens:
-                input_ids = torch.LongTensor([toks]).to(model.device())
+                input_ids = torch.LongTensor([toks]).to(model.device)
                 batch = {
                     "input_ids": input_ids,
-                    "attention_mask": torch.ones_like(input_ids).to(model.device()),
+                    "attention_mask": torch.ones_like(input_ids).to(model.device),
                 }
                 with torch.no_grad():
                     if model.model_type == "Seq2SeqLM":

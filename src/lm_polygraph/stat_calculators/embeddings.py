@@ -171,7 +171,7 @@ class EmbeddingsCalculator(StatCalculator):
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
-        batch = {k: v.to(model.device()) for k, v in batch.items()}
+        batch = {k: v.to(model.device) for k, v in batch.items()}
         with torch.no_grad():
             out = model.pg_generate(
                 **batch,
