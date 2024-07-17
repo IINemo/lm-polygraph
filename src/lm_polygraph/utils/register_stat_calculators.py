@@ -13,7 +13,7 @@ log = logging.getLogger("lm_polygraph")
 def register_stat_calculators(
     deberta_batch_size: int = 10,  # TODO: rename to NLI model
     deberta_device: Optional[str] = None,  # TODO: rename to NLI model
-    language: str = 'en',
+    language: str = "en",
     n_ccp_alternatives: int = 10,
     cache_path=os.path.expanduser("~") + "/.cache",
 ) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
@@ -26,12 +26,14 @@ def register_stat_calculators(
 
     log.info("=" * 100)
     log.info("Loading NLI model...")
-    nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
 
     if language == "en":
         nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
     elif language in ["zh", "ar", "ru"]:
-        nli_model = MultilingualDeberta(batch_size=deberta_batch_size, device=deberta_device)
+        nli_model = MultilingualDeberta(
+            batch_size=deberta_batch_size,
+            device=deberta_device,
+        )
     else:
         raise Exception(f"Unsupported language: {language}")
 

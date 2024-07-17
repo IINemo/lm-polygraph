@@ -41,9 +41,9 @@ class OpenAIFactCheck(GenerationMetric):
             )
         )
         reply = reply.strip()
-        if "True" in reply or '"True"' in reply or '是' in reply or '真' in reply:
+        if any(x in reply for x in ["True", '"True"', "是", "真"]):
             return 0
-        elif "False" in reply or '"False"' in reply or '否' in reply or '假' in reply:
+        elif any(x in reply for x in ["False", '"False"', "否", "假"]):
             return 1
         else:
             return np.nan
@@ -52,7 +52,7 @@ class OpenAIFactCheck(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]]
+        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         For each claim in stats['claims'], asks OpenAI model whether this fact is correct or not.
@@ -73,7 +73,7 @@ class OpenAIFactCheck(GenerationMetric):
                     self._score_single(
                         claim.claim_text,
                         inp_text,
-                        self.openai_chat
+                        self.openai_chat,
                     )
                 )
         return labels

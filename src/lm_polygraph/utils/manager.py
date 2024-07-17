@@ -242,7 +242,7 @@ class UEManager:
         ensemble_model: Optional[WhiteboxModel] = None,
         deberta_batch_size: int = 10,
         deberta_device: Optional[str] = None,
-        language: str = 'en',
+        language: str = "en",
         verbose: bool = True,
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,

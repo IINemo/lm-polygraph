@@ -79,11 +79,7 @@ class ClaimsExtractor(StatCalculator):
             texts,
         ):
             claims.append(
-                self.claims_from_text(
-                    greedy_text,
-                    greedy_tok,
-                    model.tokenizer
-                )
+                self.claims_from_text(greedy_text, greedy_tok, model.tokenizer)
             )
             # Iterate over newly added claims to concatenate into list
             for c in claims[-1]:
@@ -96,12 +92,7 @@ class ClaimsExtractor(StatCalculator):
             "claim_input_texts_concatenated": claim_input_texts_concatenated,
         }
 
-    def claims_from_text(
-        self,
-        text: str,
-        tokens: List[int],
-        tokenizer
-    ) -> List[Claim]:
+    def claims_from_text(self, text: str, tokens: List[int], tokenizer) -> List[Claim]:
         sentences = []
         for s in re.split(f"[{self.sent_separators}]", text):
             if len(s) > 0:
@@ -131,9 +122,7 @@ class ClaimsExtractor(StatCalculator):
 
             # Extract claims from current sentence
             for c in self._claims_from_sentence(
-                s,
-                tokens[sent_start_token_idx:sent_end_token_idx],
-                tokenizer
+                s, tokens[sent_start_token_idx:sent_end_token_idx], tokenizer
             ):
                 # Correct aligned tokens positions from sentence-level to generation-level
                 for i in range(len(c.aligned_token_ids)):
@@ -145,7 +134,7 @@ class ClaimsExtractor(StatCalculator):
         self,
         sent: str,
         sent_tokens: List[int],
-        tokenizer
+        tokenizer,
     ) -> List[Claim]:
         # Extract claims with specific prompt
         extracted_claims = self.openai_chat.ask(
@@ -167,7 +156,10 @@ class ClaimsExtractor(StatCalculator):
             # claim = 'Lanny Flaherty was born on December 18, 1949.'
             # GPT response: 'Lanny, Flaherty, born, on, December, 18, 1949'
             # match_words = ['Lanny', 'Flaherty', 'born', 'on', 'December', '18', '1949']
-            chat_ask = MATCHING_PROMPTS[self.language].format(sent=sent, claim=claim_text)
+            chat_ask = MATCHING_PROMPTS[self.language].format(
+                sent=sent,
+                claim=claim_text,
+            )
             match_words = self.openai_chat.ask(chat_ask)
             # comma has a different form in Chinese and space works better
             if self.language == "zh":

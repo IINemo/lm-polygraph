@@ -1,12 +1,16 @@
 import torch
 
-from transformers import DebertaForSequenceClassification, DebertaTokenizer, AutoTokenizer, \
-    AutoModelForSequenceClassification
+from transformers import (
+    DebertaForSequenceClassification,
+    DebertaTokenizer,
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+)
 
 
 class Deberta:
     """
-    Allows for the implementation of a singleton DeBERTa model which can be shared acrossÏ
+    Allows for the implementation of a singleton DeBERTa model which can be shared across
     different uncertainty estimation methods in the code.
     """
 
@@ -106,11 +110,11 @@ class MultilingualDeberta(Deberta):
             return
         self._deberta_tokenizer = AutoTokenizer.from_pretrained(self.deberta_path)
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
-            self.deberta_path)
+            self.deberta_path
+        )
         self._deberta.to(self.device)
         self._deberta.eval()
         # Make label2id classes uppercase to match implementation of microsoft/deberta-large-mnli
         self._deberta.deberta.config.label2id = {
-            k.upper(): v
-            for k, v in self._deberta.deberta.config.label2id.items()
+            k.upper(): v for k, v in self._deberta.deberta.config.label2id.items()
         }

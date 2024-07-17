@@ -431,7 +431,7 @@ class WhiteboxModel(Model):
         model_path: str,
         generation_params: Optional[Dict] = {},
         add_bos_token: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
