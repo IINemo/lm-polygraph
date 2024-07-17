@@ -24,6 +24,9 @@ test_split_size: 1
 
 subsample_eval_dataset: -1
 
+model:
+  load_tokenizer_args: {"add_bos_token": false}
+
 use_density_based_ue: false
 use_seq_ue: false
 use_tok_ue: false

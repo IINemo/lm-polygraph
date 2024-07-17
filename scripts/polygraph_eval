@@ -392,6 +392,7 @@ def get_model(args, cache_kwargs={}):
             args.model.path,
             getattr(args, "generation_params", {}),
             device_map=args.model.device_map,
+            add_bos_token=getattr(args.model, "add_bos_token", True),
             **cache_kwargs
         )
 
