@@ -355,7 +355,7 @@ def get_generation_metrics(args):
                 target_ignore_regex = getattr(args, "target_ignore_regex", None),
                 output_ignore_regex = getattr(args, "output_ignore_regex", None),
                 normalize = getattr(args, "normalize", False),
-            ),Ï
+            ),
             AlignScore(),
         ]
         if getattr(args, "use_claim_ue", False):
