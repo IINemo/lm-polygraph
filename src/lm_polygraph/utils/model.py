@@ -428,13 +428,19 @@ class WhiteboxModel(Model):
 
     @staticmethod
     def from_pretrained(
-        model_path: str, generation_params: Optional[Dict] = {}, **kwargs
+        model_path: str,
+        generation_params: Optional[Dict] = {},
+        add_bos_token: bool = True,
+        **kwargs,
     ):
         """
         Initializes the model from HuggingFace. Automatically determines model type.
 
         Parameters:
             model_path (str): model path in HuggingFace.
+            generation_params (Dict): generation arguments for
+                lm_polygraph.utils.generation_parametersGenerationParameters
+            add_bos_token (bool): tokenizer argument. Default: True.
         """
         log.warning(
             "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
@@ -483,7 +489,7 @@ class WhiteboxModel(Model):
         tokenizer = AutoTokenizer.from_pretrained(
             model_path,
             padding_side="left",
-            add_bos_token=True,
+            add_bos_token=add_bos_token,
             **kwargs,
         )
 

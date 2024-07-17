@@ -190,6 +190,7 @@ def main(args):
             max_new_tokens=args.max_new_tokens,
             ensemble_model=ensemble_model,
             cache_path=args.cache_path,
+            language=getattr(args, 'language', 'en'),
         )
 
         man()
@@ -358,7 +359,7 @@ def get_generation_metrics(args):
             AlignScore(),
         ]
         if getattr(args, "use_claim_ue", False):
-            result += [OpenAIFactCheck(cache_path=args.cache_path)]
+            result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]
@@ -391,6 +392,7 @@ def get_model(args, cache_kwargs={}):
             args.model.path,
             getattr(args, "generation_params", {}),
             device_map=args.model.device_map,
+            add_bos_token=getattr(args.model, "add_bos_token", True),
             **cache_kwargs
         )
 

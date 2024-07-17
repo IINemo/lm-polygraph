@@ -10,11 +10,11 @@ def load_model(model_path: str, device_map: str):
     return model
 
 
-def load_tokenizer(model_path: str):
+def load_tokenizer(model_path: str, add_bos_token: bool = True):
     tokenizer = AutoTokenizer.from_pretrained(
         model_path,
         padding_side="left",
-        add_bos_token=True,
+        add_bos_token=add_bos_token,
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token

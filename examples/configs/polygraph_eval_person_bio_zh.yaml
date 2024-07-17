@@ -1,0 +1,57 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: bio
+
+dataset_name: person-bio
+dataset: [ruixing76/person-bio-zh]
+n_shot: 0
+text_column: question
+eval_split: train
+max_new_tokens: 256
+load_from_disk: false
+
+train_dataset: null
+train_test_split: false
+test_split_size: 1
+
+subsample_eval_dataset: -1
+
+model:
+  load_tokenizer_args: {"add_bos_token": false}
+
+use_density_based_ue: false
+use_seq_ue: false
+use_tok_ue: false
+use_ens_ue: false
+use_claim_ue: true
+generation_metrics: [{
+  'name': 'OpenAIFactCheck'
+}]
+ens_type:
+
+# Examples of providing additional UE methods:
+# additional_estimators: {
+#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
+#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
+# }
+# additional_estimators_kwargs: {
+#   'Perplexity': {},
+#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
+# }
+
+ignore_exceptions: false
+
+batch_size: 1
+deberta_batch_size: 10
+language: zh
+
+seed:
+    - 1
