@@ -22,6 +22,17 @@ Claims:
 
 Sentence: \"{sent}\"
 Claims:""",
+    "ru": """Пожалуйста разбей предложение на независимые утверждения.
+
+Example:
+Sentence: \"Он родился в Лондоне и воспитывался матерью и отцом до 11 лет.\"
+Claims:
+- Он родился в Лондоне.
+- Он воспитывался матерью и отцом.
+- Он воспитывался матерью и отцом до 11 лет.
+
+Sentence: \"{sent}\"
+Claims:"""
 }
 
 MATCHING_PROMPTS = {
@@ -39,6 +50,18 @@ MATCHING_PROMPTS = {
         "请按照它们在原句子中出现的顺序列出所有与事实相关的词，每个词之间用空格分隔。\nFact: {claim}\n"
         "Sentence: {sent}\n: Output:"
     ),
+    "ru": (
+        "Используя факт, определи соответствующие слова "
+        "в исходном предложении, которые помогают получить этот факт "
+        "Пожалуйста, перечисли все слова через запятую, "
+        "имеющие отношение к данному не изменяя форм слов"
+        "в том порядке, в котором они появляются в исходном предложении. "
+        "Не используй кавычки при перечислении."
+        "Не меняй форму слова"
+        "\nFact: {claim}\n"
+        "Sentence: {sent}\nСлова из предложения, которые помогают "
+        "получить факт, через запятую без кавычек: "
+)
 }
 
 
@@ -59,6 +82,19 @@ Claim: {claim}
 Claim: {claim}
 """
     ),
+    "ru": (    
+   "Question: {input}\n"
+    "Определи, соответствует ли вся предоставленная информация в следующем"
+    "утверждении действительности согласно самым последним источникам информации. \n"
+    "Если хотя бы часть утверждения неверна, склоняйся к выводу, что информация ложная. \n"
+    "Think in English. \n"
+    "Think step by step on how to summarize the claim within the provided <sketchpad>. \n"
+    "Then, return a <summary> based on the <sketchpad>."
+    "\n\n"
+    "Claim: {claim}\n"
+    "Answer: "
+
+)
 }
 
 OPENAI_FACT_CHECK_SUMMARIZE_PROMPT = {
@@ -86,4 +122,15 @@ Reply: {reply}
 请用一个词回答该表述(Reply)是否正确："True"，"False"或"Not known"。
 """
     ),
+    "ru": ( 
+    """Question: {input}
+
+Claim: {claim}
+
+Is the following claim true?
+
+Reply: {reply}
+
+Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known".
+"""
 }
