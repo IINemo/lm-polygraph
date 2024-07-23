@@ -32,7 +32,7 @@ Claims:
 - Он воспитывался матерью и отцом до 11 лет.
 
 Sentence: \"{sent}\"
-Claims:"""
+Claims:""",
 }
 
 MATCHING_PROMPTS = {
@@ -61,7 +61,7 @@ MATCHING_PROMPTS = {
         "\nFact: {claim}\n"
         "Sentence: {sent}\nСлова из предложения, которые помогают "
         "получить факт, через запятую без кавычек: "
-)
+),
 }
 
 
@@ -94,7 +94,7 @@ Claim: {claim}
     "Claim: {claim}\n"
     "Answer: "
 
-)
+),
 }
 
 OPENAI_FACT_CHECK_SUMMARIZE_PROMPT = {
@@ -133,4 +133,5 @@ Reply: {reply}
 
 Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known".
 """
+    ),
 }
