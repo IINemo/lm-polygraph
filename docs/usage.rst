@@ -32,7 +32,7 @@ However code from the main branch may be unstable, so it is recommended to check
     (env) $ cd lm-polygraph
     (env) $ pip install .
 
-Specific version from PyPI
+From PyPI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To install the latest stable version from PyPI, run:
@@ -56,30 +56,50 @@ To install a specific version, run:
 Quick start
 -----------
 
-1. Initialize the model (encoder-decoder or decoder-only) from HuggingFace or a local file. For example, `bigscience/bloomz-3b`::
-    
-    from lm_polygraph.utils.model import WhiteboxModel
+1.
+    Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the `WhiteboxModel` for evaluation. For example, with `bigscience/bloomz-560m`:
 
-    model = WhiteboxModel.from_pretrained(
-        "bigscience/bloomz-3b",
-        device="cuda:0",
-    )
+    .. code-block:: python
 
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from lm_polygraph.utils.model import WhiteboxModel
 
-2. Specify UE method::
+        model_path = "bigscience/bloomz-560m"
+        base_model = AutoModelForCausalLM.from_pretrained(model_path, device_map="cuda:0")
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = WhiteboxModel(base_model, tokenizer, model_path=model_path)
 
-    from lm_polygraph.estimators import *
+    Alternatively, you can use `WhiteboxModel#from_pretrained` method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
 
-    ue_method = MeanPointwiseMutualInformation()
+    .. code-block:: python
 
+        from lm_polygraph.utils.model import WhiteboxModel
 
-3. Get predictions and their uncertainty scores::
+        model = WhiteboxModel.from_pretrained(
+            "bigscience/bloomz-3b",
+            device_map="cuda:0",
+        )
 
-    from lm_polygraph.utils.manager import estimate_uncertainty
+2.
+    Specify UE method:
 
-    input_text = "Who is George Bush?"
-    estimate_uncertainty(model, ue_method, input_text=input_text)
+    .. code-block:: python
 
+        from lm_polygraph.estimators import *
+
+        ue_method = MeanPointwiseMutualInformation()
+
+3.
+    Get predictions and their uncertainty scores:
+
+    .. code-block:: python
+
+        from lm_polygraph.utils.manager import estimate_uncertainty
+
+        input_text = "Who is George Bush?"
+        ue = estimate_uncertainty(model, ue_method, input_text=input_text)
+        print(ue)
+        # UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')
 
 Other examples:
 
