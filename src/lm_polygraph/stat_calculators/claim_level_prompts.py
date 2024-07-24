@@ -1,4 +1,4 @@
-CLAIM_EXTRACTION_PROMPTS = {
+ CLAIM_EXTRACTION_PROMPTS = {
     "en": """Please breakdown the sentence into independent claims.
 
 Example:
@@ -82,18 +82,18 @@ Claim: {claim}
 Claim: {claim}
 """
     ),
-    "ru": (    
+    "ru": (
         """Question: {input}\n
     Определи, соответствует ли вся предоставленная информация в следующем
-    утверждении действительности согласно самым последним источникам информации. 
-    Если хотя бы часть утверждения неверна, склоняйся к выводу, что информация ложная. 
+    утверждении действительности согласно самым последним источникам информации.
+    Если хотя бы часть утверждения неверна, склоняйся к выводу, что информация ложная.
     Think in English.
-    Think step by step on how to summarize the claim within the provided <sketchpad>. 
+    Think step by step on how to summarize the claim within the provided <sketchpad>.
     Then, return a <summary> based on the <sketchpad>.
-    
+
     Claim: {claim}
 """
-),
+    ),
 }
 
 OPENAI_FACT_CHECK_SUMMARIZE_PROMPT = {
@@ -121,8 +121,8 @@ Reply: {reply}
 请用一个词回答该表述(Reply)是否正确："True"，"False"或"Not known"。
 """
     ),
-    "ru": ( 
-    """Question: {input}
+    "ru": (
+        """Question: {input}
 
 Claim: {claim}
 
