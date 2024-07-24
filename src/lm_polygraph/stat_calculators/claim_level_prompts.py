@@ -83,17 +83,16 @@ Claim: {claim}
 """
     ),
     "ru": (    
-   "Question: {input}\n"
-    "Определи, соответствует ли вся предоставленная информация в следующем"
-    "утверждении действительности согласно самым последним источникам информации. \n"
-    "Если хотя бы часть утверждения неверна, склоняйся к выводу, что информация ложная. \n"
-    "Think in English. \n"
-    "Think step by step on how to summarize the claim within the provided <sketchpad>. \n"
-    "Then, return a <summary> based on the <sketchpad>."
-    "\n\n"
-    "Claim: {claim}\n"
-    "Answer: "
-
+        """Question: {input}\n
+    Определи, соответствует ли вся предоставленная информация в следующем
+    утверждении действительности согласно самым последним источникам информации. 
+    Если хотя бы часть утверждения неверна, склоняйся к выводу, что информация ложная. 
+    Think in English.
+    Think step by step on how to summarize the claim within the provided <sketchpad>. 
+    Then, return a <summary> based on the <sketchpad>.
+    
+    Claim: {claim}
+"""
 ),
 }
 
