@@ -1,4 +1,4 @@
- CLAIM_EXTRACTION_PROMPTS = {
+CLAIM_EXTRACTION_PROMPTS = {
     "en": """Please breakdown the sentence into independent claims.
 
 Example:
@@ -84,8 +84,7 @@ Claim: {claim}
     ),
     "ru": (
         """Question: {input}\n
-    Определи, соответствует ли вся предоставленная информация в следующем
-    утверждении действительности согласно самым последним источникам информации.
+    Определи, соответствует ли вся предоставленная информация в следующем утверждении действительности согласно самым последним источникам информации.
     Если хотя бы часть утверждения неверна, склоняйся к выводу, что информация ложная.
     Think in English.
     Think step by step on how to summarize the claim within the provided <sketchpad>.
