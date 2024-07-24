@@ -6,7 +6,10 @@ Basic usage
 Installation
 ------------
 
-To use LM-Polygraph, first clone the repo and conduct installation using pip, it is recommended to use virtual environment.
+From GitHub
+^^^^^^^^^^^^^^^^^^
+
+To install latest from main brach, clone the repo and conduct installation using pip, it is recommended to use virtual environment.
 Code example is presented below:
 
 .. code-block:: console
@@ -17,7 +20,37 @@ Code example is presented below:
     (env) $ cd lm-polygraph
     (env) $ pip install .
 
-   
+Installation from GitHub is recommended if you want to explore notebooks with examples or use default benchmarking configurations, as they are included in the repository but not in the PyPI package.
+However code from the main branch may be unstable, so it is recommended to checkout to the latest stable release before installation:
+
+.. code-block:: console
+    
+    $ git clone https://github.com/IINemo/lm-polygraph.git
+    $ git checkout tags/v0.3.0
+    $ python3 -m venv env
+    $ source env/bin/activate
+    (env) $ cd lm-polygraph
+    (env) $ pip install .
+
+Specific version from PyPI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To install the latest stable version from PyPI, run:
+
+.. code-block:: console
+
+    $ python3 -m venv env
+    $ source env/bin/activate
+    $ pip install lm-polygraph
+
+To install a specific version, run:
+
+.. code-block:: console
+
+    $ python3 -m venv env
+    $ source env/bin/activate
+    $ pip install lm-polygraph==0.3.0
+
 .. _quick_start:
 
 Quick start
