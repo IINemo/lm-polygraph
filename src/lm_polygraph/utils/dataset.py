@@ -302,12 +302,12 @@ class Dataset:
                 y.append(inst[y_column])
         elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []
+            formatted_few_shot_prompt = ""
             if n_shot > 0:
                 few_shot_ids = np.random.choice(
                     len(few_shot_dataset), n_shot, replace=False
                 )
                 few_shot_data = few_shot_dataset.select(few_shot_ids)
-                formatted_few_shot_prompt = ""
                 for inst in few_shot_data:
                     formatted_few_shot_prompt += (
                         prompt.format(
@@ -318,8 +318,8 @@ class Dataset:
                     )
             for inst in dataset:
                 x.append(
-                    formatted_few_shot_prompt
-                    + prompt.format(
+                    formatted_few_shot_prompt + \
+                    prompt.format(
                         question=inst["question"],
                         answer="",
                     )

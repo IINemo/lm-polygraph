@@ -58,9 +58,7 @@ class MaximumTokenProbability(Estimator):
                 Higher values indicate more uncertain samples.
         """
         log_likelihoods = stats["greedy_log_likelihoods"]
-        return np.concatenate(
-            [
+        return [
                 -np.exp(np.array(log_likelihood[:-1]))
                 for log_likelihood in log_likelihoods
-            ]
-        )
+               ]

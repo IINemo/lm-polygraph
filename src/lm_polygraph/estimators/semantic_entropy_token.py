@@ -109,7 +109,7 @@ class SemanticEntropyToken(Estimator):
                 p = np.exp(lp)[: len(self.classes)]
                 class_probs = np.bincount(self.classes, weights=p)
                 sem_ent[-1].append(-np.mean(class_probs * np.log(class_probs)))
-        return np.concatenate(sem_ent)
+        return sem_ent
 
 
 if __name__ == "__main__":

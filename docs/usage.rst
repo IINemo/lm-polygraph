@@ -104,10 +104,10 @@ Quick start
 
 Other examples:
 
-* examples of library usage: https://github.com/IINemo/lm-polygraph/blob/main/notebooks/example.ipynb
-* examples of library usage for the QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset: https://github.com/IINemo/lm-polygraph/blob/main/notebooks/qa_example.ipynb
-* examples of library usage for the NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset: https://github.com/IINemo/lm-polygraph/blob/main/notebooks/mt_example.ipynb
-* examples of library usage for the ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset: https://github.com/IINemo/lm-polygraph/blob/main/notebooks/ats_example.ipynb 
+* examples of library usage: https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb
+* examples of library usage for the QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/qa_example.ipynb
+* examples of library usage for the NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/mt_example.ipynb
+* examples of library usage for the ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb 
 * example of running interface from notebook (careful: only `bloomz-560m`, `gpt-3.5-turbo` and `gpt-4` fits default memory limit, other models can be run only with Colab-pro subscription): https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing
 
 
