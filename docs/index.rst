@@ -11,6 +11,7 @@ Welcome to LM-Polygraph's documentation!
    :caption: Contents:
 
    usage
+   ue_manager
    web_demo
    modules
 
