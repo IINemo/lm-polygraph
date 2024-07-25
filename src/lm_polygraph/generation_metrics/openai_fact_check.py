@@ -41,9 +41,9 @@ class OpenAIFactCheck(GenerationMetric):
             )
         )
         reply = reply.strip()
-        if any(x in reply for x in ["True", '"True"', "是", "真"]):
+        if any(x in reply for x in ["True", '"True"', "是", "真", "نعم"]):
             return 0
-        elif any(x in reply for x in ["False", '"False"', "否", "假"]):
+        elif any(x in reply for x in ["False", '"False"', "否", "假", "لا"]):
             return 1
         else:
             return np.nan
