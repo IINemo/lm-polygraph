@@ -53,8 +53,8 @@ To install a specific version, run:
 
 .. _quick_start:
 
-Quick start
------------
+Uncertainty for single input
+----------------------------
 
 1.
     Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the `WhiteboxModel` for evaluation. For example, with `bigscience/bloomz-560m`:
@@ -102,46 +102,43 @@ Quick start
         print(ue)
         # UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')
 
-Other examples:
-
-* examples of library usage: https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb
-* examples of library usage for the QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/qa_example.ipynb
-* examples of library usage for the NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/mt_example.ipynb
-* examples of library usage for the ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb 
-* example of running interface from notebook (careful: only `bloomz-560m`, `gpt-3.5-turbo` and `gpt-4` fits default memory limit, other models can be run only with Colab-pro subscription): https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing
-
-
+More examples for obtaining uncertainty for single generation: https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb
 
 .. _benchmarks:
 
-Benchmarks
-----------
+Benchmarking uncertainty estimation on a dataset
+------------------------------------------------
 
-Hydra
-^^^^^^^^^^
-We recommend using Hydra YAMLs to configure LM-Polygraph. Detailed description of various parameters can be found in `examples/configs/polygraph_eval_example.yaml`. 
+CLI
+^^^
 
-Evaluation is invoked like so::
+Recommended way of running benchmarks is by invoking the `polygraph_eval` script. Configuration for experiments is done via Hydra YAML config files. 
 
-    HYDRA_CONFIG=/absolute/path/to/config.yaml polygraph_eval
+Basic evaluation is invoked like so:
 
-Direct configuration
-^^^^^^^^^^
-To evaluate the performance of uncertainty estimation methods run::
+.. code-block:: console
 
-    polygraph_eval --dataset triviaqa.csv --model databricks/dolly-v2-3b --save_path test.man --cache_path . --seed 1 2 3 4 5
+    $ HYDRA_CONFIG=/absolute/path/to/config.yaml polygraph_eval
 
+As usual with Hydra, you can override any parameter from the config file by specifying it in the command line. For example, to override the batch size:
 
-Parameters:
+.. code-block:: console
 
-* `dataset`: path to .csv dataset
-* `model`: path to huggingface model
-* `batch_size`: batch size for generation (default: 2)
-* `seed`: seed for generation (default: 1; can specify several seeds for multiple tests)
-* `device`: `cpu` or `cuda:N` (default: `cuda:0` if avaliable, `cpu` otherwise)
-* `save_path`: file path to save test results (the directory better be existing)
-* `cache_path`: directory path to cache intermediate calculations (the directory better be existing)
+    $ HYDRA_CONFIG=/absolute/path/to/config.yaml polygraph_eval --batch_size=4
 
-Use `visualization_tables.ipynb` to generate the summarizing tables for an experiment.
+Examples of configuration files for several widely used datasets can be found in the `examples/configs` directory of the repository.
 
-The XSUM, TriviaQA, WMT16ru-en datasets downsampled to 300 samples can be found `here <https://drive.google.com/drive/folders/1bQlvPRZHdZvdpAyBQ_lQiXLq9t5whTfi?usp=sharing>`_.
+The results of evaluation will be saved as a serialized UEManager object to the directory specified by `save_path` in the config file. Refer to :ref:`ue_manager` for more information about the structure of the UEManager object.
+
+To visualize benchmarking results, use and adapt for your case the `notebooks/visualization_tables.ipynb` notebook.
+
+Python
+^^^^^^
+
+It is also possible to run benchmarks from Python code. Examples of how to do this can be found in the following notebooks:
+
+* examples for the QA task with `bigscience/bloomz-3b` on the `TriviaQA` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/qa_example.ipynb
+* examples for the NMT task with `facebook/wmt19-en-de` on the `WMT14 En-De` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/mt_example.ipynb
+* examples for the ATS task with `facebook/bart-large-cnn` model on the `XSUM` dataset: https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb 
+
+To run more elaborate benchmarks directly from python, refer to the source code of `polygraph_eval` script.
