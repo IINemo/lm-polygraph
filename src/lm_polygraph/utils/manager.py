@@ -175,7 +175,9 @@ def estimate_uncertainty(
         # Remove last token, which is the end of the sequence token
         # since we don't include it's uncertainty in the estimator's output
         tokens = tokens[0][:-1]
-    return UncertaintyOutput(ue[0], input_text, texts[0], tokens, model.model_path, str(estimator))
+    return UncertaintyOutput(
+        ue[0], input_text, texts[0], tokens, model.model_path, str(estimator)
+    )
 
 
 def _flatten_results(results, result_generator_class):

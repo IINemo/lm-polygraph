@@ -318,8 +318,8 @@ class Dataset:
                     )
             for inst in dataset:
                 x.append(
-                    formatted_few_shot_prompt + \
-                    prompt.format(
+                    formatted_few_shot_prompt
+                    + prompt.format(
                         question=inst["question"],
                         answer="",
                     )
