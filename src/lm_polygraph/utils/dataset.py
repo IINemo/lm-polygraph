@@ -258,16 +258,20 @@ class Dataset:
         elif ("mmlu" in dataset_name.lower()) and len(prompt):
             answers = ["A", "B", "C", "D"]
             subjects = np.array(dataset["subject"])
+            few_shot_subjects = np.array(few_shot_dataset["subject"])
             x, y = [], []
             for subject in np.unique(subjects):
                 formatted_description = description.format(
                     subject=subject.replace("_", " ")
                 )
                 if n_shot > 0:
-                    few_shot_ids = np.random.choice(
-                        len(few_shot_dataset), n_shot, replace=False
+                    few_shot_subject = few_shot_dataset.select(
+                        np.argwhere(few_shot_subjects == subject).flatten()
                     )
-                    few_shot_data = few_shot_dataset.select(few_shot_ids)
+                    few_shot_ids = np.random.choice(
+                        len(few_shot_subject), n_shot, replace=False
+                    )
+                    few_shot_data = few_shot_subject.select(few_shot_ids)
                     formatted_few_shot_prompt = ""
                     for inst in few_shot_data:
                         formatted_few_shot_prompt += prompt.format(
