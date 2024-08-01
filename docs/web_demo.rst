@@ -23,6 +23,12 @@ run this command::
 
 The server should be available on `http://localhost:3001`
 
+Demo running in the Jupyter notebook
+------------------------------------
+
+Example of running interface from notebook (careful: only `bloomz-560m`, `gpt-3.5-turbo` and `gpt-4` fits default memory limit, other models can be run only with Colab-pro subscription): https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing
+
+
 Original implementation
 -----------------------
 The chat GUI is based on the following project: https://github.com/ioanmo226/chatgpt-web-application

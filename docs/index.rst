@@ -11,10 +11,12 @@ Welcome to LM-Polygraph's documentation!
    :caption: Contents:
 
    usage
+   advanced_usage
+   components/index
    web_demo
    modules
 
-LM-Polygraph parts
+API Reference
 ========================================
 
 .. automodule:: lm_polygraph
