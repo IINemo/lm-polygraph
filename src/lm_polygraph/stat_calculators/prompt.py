@@ -16,7 +16,6 @@ class PromptCalculator(StatCalculator):
     def __init__(
         self,
         prompt: str,
-        expected: str,
         method: str,
         input_text_dependency: str = "input_texts",
         sample_text_dependency: Optional[str] = "sample_texts",
@@ -30,17 +29,15 @@ class PromptCalculator(StatCalculator):
                 - a: generation text
                 - s: list of several generation samples.
                 Prompt example: 'Question: {q}. Is the following answer true? {a}'.
-            expected (str): string to measure probability of. Must be decoded into one token,
                 otherwise an exception will be raised.
             method (str): the name of the statistics to calculate with this calculator.
         """
         dependencies = [input_text_dependency, generation_text_dependency]
         if "{s}" in prompt and sample_text_dependency is not None:
             dependencies.append(sample_text_dependency)
-        super().__init__([method], dependencies)
+        super().__init__([f"{method}_response", f"{method}_logits"], dependencies)
         self.method = method
         self.prompt = prompt
-        self.expected = expected
         self.input_text_dependency = input_text_dependency
         self.sample_text_dependency = sample_text_dependency
         self.generation_text_dependency = generation_text_dependency
@@ -68,15 +65,6 @@ class PromptCalculator(StatCalculator):
                 - `method` (List[float]): logarithms of probability of generating `expected` from prompt formatted
                     at each input text.
         """
-        expected_tokens = model.tokenizer([self.expected])["input_ids"][0]
-        expected_tokens = [
-            t
-            for t in expected_tokens
-            if t != model.tokenizer.eos_token_id and t != model.tokenizer.bos_token_id
-        ]
-        assert len(expected_tokens) == 1
-        expected_token = expected_tokens[0]
-
         answers = dependencies[self.generation_text_dependency]
         samples = [[] for _ in range(len(answers))]
         if self.sample_text_dependency is not None:
@@ -104,6 +92,6 @@ class PromptCalculator(StatCalculator):
             )
 
         logits = torch.stack(out.scores, dim=1)
-        log_probs = logits[:, -1, expected_token].cpu().numpy()
 
-        return {self.method: log_probs}
+        return {f"{self.method}_logits": logits
+                f"{self.method}_response": out.texts}

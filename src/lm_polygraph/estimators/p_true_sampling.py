@@ -24,7 +24,7 @@ class PTrueSampling(Estimator):
     """
 
     def __init__(self):
-        super().__init__(["p_true_sampling"], "sequence")
+        super().__init__(["p_true_sampling_logits"], "sequence")
 
     def __str__(self):
         return "PTrueSampling"
@@ -40,5 +40,9 @@ class PTrueSampling(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        pue = stats["p_true_sampling"]
+        tok = tokenize_as_single_token("True")
+
+        pue = stats["p_true_sampling_logits"]
+        log_probs = pue[:, -1, tok].cpu().numpy()
+
         return -np.array(pue)

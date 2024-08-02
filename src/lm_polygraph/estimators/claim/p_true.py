@@ -18,7 +18,7 @@ class PTrueClaim(Estimator):
     """
 
     def __init__(self):
-        super().__init__(["p_true_claim", "claims"], "claim")
+        super().__init__(["p_true_claim_logits", "claims"], "claim")
 
     def __str__(self):
         return "PTrueClaim"
@@ -34,8 +34,12 @@ class PTrueClaim(Estimator):
             List[List[float]]: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
+        tok = tokenize_as_single_token("True")
+
         claims = stats["claims"]
-        ptrue = stats["p_true_claim"]
+        ptrue_logits = stats["p_true_claim_logits"]
+        ptrue = logits[:, -1, tok].cpu().numpy()
+
         claim_ue = []
         j = 0
         for sample_claims in claims:
