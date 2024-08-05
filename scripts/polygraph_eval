@@ -289,6 +289,15 @@ def get_ue_methods(args, model):
             FisherRao(),
         ]
 
+    if args.use_verb_ue:
+        estimators += [
+            Verbalized1S(topk=1),
+            Verbalized1S(topk=5),
+            Verbalized2S(topk=1),
+            Verbalized2S(topk=5),
+            Verbalized2S(cot=True),
+        ]
+
     if args.use_ens_ue:
         if not (model.model_type == "Seq2SeqLM"):
             raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')

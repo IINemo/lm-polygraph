@@ -39,9 +39,9 @@ class PTrue(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        tok = tokenize_as_single_token("True")
+        tok = tokenize_as_single_token(stats["model"], "True")
 
         ptrue_logits = stats["p_true_logits"]
-        log_probs = logits[:, -1, tok].cpu().numpy()
+        log_probs = ptrue_logits[:, -1, tok].cpu().numpy()
 
         return -np.array(log_probs)

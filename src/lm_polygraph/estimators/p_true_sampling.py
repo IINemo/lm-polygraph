@@ -3,6 +3,7 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
+from .common import tokenize_as_single_token
 
 
 class PTrueSampling(Estimator):
@@ -40,9 +41,9 @@ class PTrueSampling(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        tok = tokenize_as_single_token("True")
+        tok = tokenize_as_single_token(stats["model"], "True")
 
-        pue = stats["p_true_sampling_logits"]
-        log_probs = pue[:, -1, tok].cpu().numpy()
+        ptrue_logits = stats["p_true_sampling_logits"]
+        log_probs = ptrue_logits[:, -1, tok].cpu().numpy()
 
-        return -np.array(pue)
+        return -np.array(log_probs)

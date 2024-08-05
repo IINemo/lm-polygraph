@@ -38,7 +38,7 @@ class PTrueClaim(Estimator):
 
         claims = stats["claims"]
         ptrue_logits = stats["p_true_claim_logits"]
-        ptrue = logits[:, -1, tok].cpu().numpy()
+        ptrue = ptrue_logits[:, -1, tok].cpu().numpy()
 
         claim_ue = []
         j = 0
