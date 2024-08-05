@@ -1,5 +1,7 @@
 import numpy as np
 
+from lm_polygraph.utils.model import WhiteboxModel
+
 
 def _get_pairs(lst):
     pairs = []

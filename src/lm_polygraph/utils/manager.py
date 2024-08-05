@@ -421,7 +421,7 @@ class UEManager:
         * Saving uncertainty estimations, ground-truth uncertainties and ue_metrics values for further usage.
 
         Returns:
-            Dict[Tuple[str, str, str, str], float]: dictionary with metrics results. Dictionary keys consist of
+            [Tuple[str, str, str, str], float]: dictionary with metrics results. Dictionary keys consist of
                 - uncertainty estimation level: 'sequence' or 'token',
                 - estimator name,
                 - generation metrics name,
@@ -445,6 +445,8 @@ class UEManager:
                 target_tokens = self._tokenize_target_texts(target_texts)
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
+                batch_stats["model"] = self.model
+                batch_stats["max_new_tokens"] = self.max_new_tokens
 
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:

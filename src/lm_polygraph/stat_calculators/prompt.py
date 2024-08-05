@@ -20,6 +20,7 @@ class PromptCalculator(StatCalculator):
         input_text_dependency: str = "input_texts",
         sample_text_dependency: Optional[str] = "sample_texts",
         generation_text_dependency: str = "greedy_texts",
+        max_new_tokens: int = 1,
     ):
         """
         Parameters:
@@ -35,12 +36,13 @@ class PromptCalculator(StatCalculator):
         dependencies = [input_text_dependency, generation_text_dependency]
         if "{s}" in prompt and sample_text_dependency is not None:
             dependencies.append(sample_text_dependency)
-        super().__init__([f"{method}_response", f"{method}_logits"], dependencies)
+        super().__init__([f"{method}_texts", f"{method}_logits"], dependencies)
         self.method = method
         self.prompt = prompt
         self.input_text_dependency = input_text_dependency
         self.sample_text_dependency = sample_text_dependency
         self.generation_text_dependency = generation_text_dependency
+        self.max_new_tokens = max_new_tokens
 
     def __call__(
         self,
@@ -87,11 +89,12 @@ class PromptCalculator(StatCalculator):
                 output_scores=True,
                 return_dict_in_generate=True,
                 min_new_tokens=1,
-                max_new_tokens=1,
+                max_new_tokens=self.max_new_tokens,
                 num_beams=1,
             )
 
         logits = torch.stack(out.scores, dim=1)
+        texts = model.tokenizer.batch_decode(out.sequences, skip_special_tokens=True)
 
-        return {f"{self.method}_logits": logits
-                f"{self.method}_response": out.texts}
+        return {f"{self.method}_logits": logits,
+                f"{self.method}_texts": texts}
