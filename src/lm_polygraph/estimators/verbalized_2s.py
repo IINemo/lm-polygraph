@@ -7,9 +7,9 @@ from .estimator import Estimator
 
 
 VERB_2S_FIRST_PROMPT_COT = "Provide your best guess for the following question. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is: {q}"
-VERB_2S_SECOND_PROMPT_COT = "Provide the probability that your guess is correct. Give ONLY the probability, no other words or explanation.\n\nFor example:\n\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>\n"
+VERB_2S_SECOND_PROMPT_COT = "Provide the probability that your guess is correct. Give ONLY the probability, no other words or explanation.\n\nFor example:\n\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>"
 
-VERB_2S_FIRST_PROMPT_TOP1 = "Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is:{q}"
+VERB_2S_FIRST_PROMPT_TOP1 = "Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is: {q}"
 VERB_2S_SECOND_PROMPT_TOP1 = VERB_2S_SECOND_PROMPT_COT
 
 VERB_2S_FIRST_PROMPT_TOPK = "Provide your {k} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n... G{k}: <{k}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is:{q}"
