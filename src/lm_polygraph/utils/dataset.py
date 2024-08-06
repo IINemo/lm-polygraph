@@ -147,8 +147,12 @@ class Dataset:
             dataset_path (str): HF path to dataset,
             batch_size (int): the size of the texts batch,
             split (str): dataset split to take data from (default: 'text'),
+            size (Optional[int]): size to subsample dataset to. If None, the full dataset split will be taken.
+                Default: None.
         """
         _, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
+        if size is not None and size < len(dataset):
+            dataset = dataset.select(range(size))
         return Dataset(dataset["input"], dataset["output"], batch_size)
 
     @staticmethod

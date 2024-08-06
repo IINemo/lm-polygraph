@@ -54,7 +54,7 @@ def main(args):
 
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
-        
+
         model = get_model(args)
 
         if args.model.ensemble:
@@ -77,14 +77,7 @@ def main(args):
         log.info(f"Loading dataset {args.dataset}...")
         dataset = Dataset.load(
             args.dataset,
-            args.text_column,
-            getattr(args, "label_column", None),
             batch_size=args.batch_size,
-            prompt=getattr(args, "prompt", ""),
-            description=getattr(args, "description", ""),
-            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
-            n_shot=getattr(args, "n_shot", 5),
-            few_shot_split=getattr(args, "few_shot_split", "train"),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             **cache_kwargs
@@ -107,16 +100,8 @@ def main(args):
             ):
                 train_dataset = Dataset.load(
                     args.train_dataset,
-                    args.text_column,
-                    getattr(args, "label_column", None),
                     batch_size=args.batch_size,
-                    prompt=getattr(args, "prompt", ""),
-                    description=getattr(args, "description", ""),
-                    mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
-                    n_shot=getattr(args, "n_shot", 5),
-                    few_shot_split=getattr(args, "few_shot_split", "train"),
                     split=args.train_split,
-                    size=10_000,
                     load_from_disk=args.load_from_disk,
                     **cache_kwargs
                 )
@@ -130,14 +115,7 @@ def main(args):
             else:
                 train_dataset = Dataset.load(
                     args.dataset,
-                    args.text_column,
-                    getattr(args, "label_column", None),
                     batch_size=args.batch_size,
-                    prompt=getattr(args, "prompt", ""),
-                    description=getattr(args, "description", ""),
-                    mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
-                    n_shot=getattr(args, "n_shot", 5),
-                    few_shot_split=getattr(args, "few_shot_split", "train"),
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
@@ -146,10 +124,7 @@ def main(args):
 
             background_train_dataset = Dataset.load(
                 args.background_train_dataset,
-                args.background_train_dataset_text_column,
-                args.background_train_dataset_label_column,
                 batch_size=args.batch_size,
-                data_files=args.background_train_dataset_data_files,
                 split="train",
                 size=100_000,
                 load_from_disk=args.background_load_from_disk,
@@ -222,7 +197,7 @@ def get_density_based_ue_methods(args, model_type):
             dataset_name = dataset_name.split("/")[-1].split(".")[0]
             model_name = args.model.path.split("/")[-1]
             parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
-        
+
         if model_type == "Seq2SeqLM":
             estimators += [
                 MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
