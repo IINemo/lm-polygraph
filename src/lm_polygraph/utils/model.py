@@ -404,7 +404,7 @@ class WhiteboxModel(Model):
         texts = []
 
         decode_args = {}
-        if (self.tokenizer.chat_template is None):
+        if (self.tokenizer.chat_template is not None):
             decode_args['skip_special_tokens'] = True
 
         for seq in sequences:

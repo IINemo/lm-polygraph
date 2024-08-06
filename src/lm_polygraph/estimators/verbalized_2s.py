@@ -12,7 +12,7 @@ VERB_2S_SECOND_PROMPT_COT = "Provide the probability that your guess is correct.
 VERB_2S_FIRST_PROMPT_TOP1 = "Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is:{q}"
 VERB_2S_SECOND_PROMPT_TOP1 = VERB_2S_SECOND_PROMPT_COT
 
-VERB_2S_FIRST_PROMPT_TOPK = "Provide your {k} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!> ... G{k}: <{k}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is:{q}"
+VERB_2S_FIRST_PROMPT_TOPK = "Provide your {k} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n... G{k}: <{k}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is:{q}"
 VERB_2S_SECOND_PROMPT_TOPK = "Provide the probability that each of your guesses is correct. Give ONLY the probabilities, no other words or explanation.\n\nFor example:\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n... P{k}: <the probability between 0.0 and 1.0 that G{k} is correct, without any extra commentary whatsoever; just the probability!>"
 
 TOP1_CONFIDENCE_REGEX = r"(\d+\.\d+)"
@@ -43,7 +43,7 @@ class Verbalized2S(Estimator):
             if self.cot:
                 first_prompt = VERB_2S_FIRST_PROMPT_COT.format(q=text)
                 second_prompt = VERB_2S_SECOND_PROMPT_COT
-            if self.topk > 1:
+            elif self.topk > 1:
                 first_prompt = VERB_2S_FIRST_PROMPT_TOPK.format(k=self.topk, q=text)
                 second_prompt = VERB_2S_SECOND_PROMPT_TOPK.format(k=self.topk)
             else:
@@ -52,7 +52,12 @@ class Verbalized2S(Estimator):
             first_prompts.append(first_prompt)
             second_prompts.append(second_prompt)
 
-        max_new_tokens = self.topk * stats["max_new_tokens"]
+        if self.cot:
+            # 200 tokens for CoT explanation
+            max_new_tokens = stats["max_new_tokens"] + 200
+        else:
+            max_new_tokens = self.topk * stats["max_new_tokens"]
+
         guesses = model.generate_texts(
             first_prompts,
             min_new_tokens=2,
