@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 from typing import Dict
 
@@ -14,7 +15,7 @@ VERB_2S_SECOND_PROMPT_TOP1 = VERB_2S_SECOND_PROMPT_COT
 VERB_2S_FIRST_PROMPT_TOPK = "Provide your {k} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!> ... G{k}: <{k}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is:{q}"
 VERB_2S_SECOND_PROMPT_TOPK = "Provide the probability that each of your guesses is correct. Give ONLY the probabilities, no other words or explanation.\n\nFor example:\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n... P{k}: <the probability between 0.0 and 1.0 that G{k} is correct, without any extra commentary whatsoever; just the probability!>"
 
-TOP1_CONFIDENCE_REGEX = r"\d+\.\d+"
+TOP1_CONFIDENCE_REGEX = r"(\d+\.\d+)"
 TOPK_CONFIDENCE_REGEX = r"P1: (\d+\.\d+)"
 
 
@@ -23,10 +24,10 @@ class Verbalized2S(Estimator):
         self.cot = cot
         if cot:
             self.topk = 1
-            super().__init__([f"verbalized_2s_cot_texts"], "sequence")
+            super().__init__([], "sequence")
         else:
             self.topk = topk
-            super().__init__([f"verbalized_2s_top{topk}_response"], "sequence")
+            super().__init__([], "sequence")
 
     def __str__(self):
         if self.cot:
@@ -43,10 +44,10 @@ class Verbalized2S(Estimator):
                 first_prompt = VERB_2S_FIRST_PROMPT_COT.format(q=text)
                 second_prompt = VERB_2S_SECOND_PROMPT_COT
             if self.topk > 1:
-                first_prompt = VERB_2S_PROMPT_TOPK.format(k=self.topk, q=text)
+                first_prompt = VERB_2S_FIRST_PROMPT_TOPK.format(k=self.topk, q=text)
                 second_prompt = VERB_2S_SECOND_PROMPT_TOPK.format(k=self.topk)
             else:
-                first_prompt = VERB_2S_PROMPT_TOP1.format(q=text)
+                first_prompt = VERB_2S_FIRST_PROMPT_TOP1.format(q=text)
                 second_prompt = VERB_2S_SECOND_PROMPT_TOP1
             first_prompts.append(first_prompt)
             second_prompts.append(second_prompt)
