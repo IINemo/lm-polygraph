@@ -43,6 +43,7 @@ script-files = [
   "scripts/polygraph_eval_ood",
   "scripts/polygraph_server",
   "scripts/polygraph_normalize",
+  "scripts/prepare_dataset",
 ]
 
 [tool.setuptools.dynamic]
