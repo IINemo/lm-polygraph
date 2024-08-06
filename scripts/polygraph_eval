@@ -214,7 +214,7 @@ def get_ue_metrics(args):
 
 def get_density_based_ue_methods(args, model_type):
     estimators = []
-    if args.use_density_based_ue:
+    if getattr(args, "use_density_based_ue", False):
         if getattr(args, 'parameters_path', False):
             parameters_path = args.parameters_path
         else:
@@ -255,7 +255,7 @@ def get_density_based_ue_methods(args, model_type):
 
 def get_ue_methods(args, model):
     estimators = []
-    if args.use_seq_ue:
+    if getattr(args, "use_seq_ue", False):
         estimators += [
             MaximumSequenceProbability(),
             Perplexity(),
@@ -289,7 +289,7 @@ def get_ue_methods(args, model):
             FisherRao(),
         ]
 
-    if args.use_verb_ue:
+    if getattr(args, "use_verb_ue", False):
         estimators += [
             Verbalized1S(topk=1),
             Verbalized1S(topk=5),
@@ -299,7 +299,7 @@ def get_ue_methods(args, model):
             Linguistic1S(),
         ]
 
-    if args.use_ens_ue:
+    if getattr(args, "use_ens_ue", False):
         if not (model.model_type == "Seq2SeqLM"):
             raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
 
@@ -312,7 +312,7 @@ def get_ue_methods(args, model):
             raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
         estimators += (token_measures + sequence_measures)
 
-    if args.use_tok_ue:
+    if getattr(args, "use_tok_ue", False):
         estimators += [
             MaximumTokenProbability(),
             TokenEntropy(),
