@@ -14,7 +14,8 @@ task: qa
 dataset: [trivia_qa, rc.nocontext]
 text_column: question
 label_column: answer
-prompt: "Please answer the following question, without providing any explanation or additional information, only the short answer. Question: {question}"
+description: "Please answer the following question, without providing any explanation or additional information, only the short answer."
+prompt: "Question: {question}\nAnswer: {answer}"
 few_shot_split: train
 train_split: train
 eval_split: validation

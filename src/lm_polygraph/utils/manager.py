@@ -158,7 +158,7 @@ def estimate_uncertainty(
     ```
     """
     man = UEManager(
-        Dataset([input_text], [""], batch_size=1),
+        Dataset([input_text], [input_text], [""], batch_size=1),
         model,
         [estimator],
         [],
@@ -432,9 +432,10 @@ class UEManager:
         background_train_stats = self._extract_train_embeddings(background=True)
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
-        for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
+        for batch_i, (raw_texts, inp_texts, target_texts) in enumerate(iterable_data):
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
+                ("raw_texts", raw_texts),
                 ("input_texts", inp_texts),
                 ("target_texts", target_texts),
             ]:
@@ -488,9 +489,10 @@ class UEManager:
 
         if self.ensemble_model is not None:
             iterable_data = tqdm(self.data) if self.verbose else self.data
-            for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
+            for batch_i, (raw_texts, inp_texts, target_texts) in enumerate(iterable_data):
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
+                    ("raw_texts", raw_texts),
                     ("input_texts", inp_texts),
                     ("target_texts", target_texts),
                 ]:
@@ -634,11 +636,12 @@ class UEManager:
             stat_calculators = self.train_stat_calculators
             max_new_tokens = self.max_new_tokens
         if len(stat_calculators) and (data is not None):
-            for inp_texts, target_texts in tqdm(data):
+            for raw_texts, inp_texts, target_texts in tqdm(data):
                 target_tokens = self._tokenize_target_texts(target_texts)
 
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
+                    ("raw_texts", raw_texts),
                     ("input_texts", inp_texts),
                     ("target_texts", target_texts),
                     ("target_tokens", target_tokens),
@@ -656,6 +659,7 @@ class UEManager:
 
                 for stat in batch_stats.keys():
                     if stat in [
+                        "raw_texts",
                         "input_tokens",
                         "input_texts",
                         "target_texts",
