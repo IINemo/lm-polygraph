@@ -1,0 +1,337 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+
+
+from datasets import Dataset, load_dataset
+
+
+lang_full = {
+    "de": "German",
+    "fr": "French",
+}
+
+
+def only_with_prompt(func):
+    def wrapper(dataset, x_column, y_column, prompt, **kwargs):
+        if prompt:  # prompt
+            return func(dataset, x_column, y_column, prompt, **kwargs)
+        else:
+            return dataset[x_column], dataset[y_column]
+
+    return wrapper
+
+
+def prepare_translation_dataset(dataset, x_column, y_column, **kwargs):
+    x, y = [], []
+    source_lang = lang_full.get(x_column, "English")
+    target_lang = lang_full.get(y_column, "English")
+    for inst in dataset["translation"]:
+        x.append(
+            prompt.format(
+                source_lang=source_lang,
+                target_lang=target_lang,
+                text=inst[x_column],
+            )
+        )
+        y.append(inst[y_column])
+    return x, y
+
+
+@only_with_prompt
+def prepare_xsum_dataset(dataset, x_column, y_column, prompt, **kwargs):
+    x, y = [], []
+    for inst in dataset:
+        x.append(prompt.format(text=inst[x_column]))
+        y.append(inst[y_column])
+    return x, y
+
+
+@only_with_prompt
+def prepare_wiki_dataset(dataset, x_column, y_column, prompt, **kwargs):
+    x, y = [], []
+    for sample in dataset[x_column]:
+        x.append(prompt.format(context=sample["context".strip()]))
+        y.append("")
+    return x, y
+
+
+def prepare_person_dataset(dataset, x_column, y_column, prompt, **kwargs):
+    x = dataset[x_column]
+    if len(prompt):
+        for i in range(len(x)):
+            x[i] = prompt.format(text=x[i])
+    y = []
+    for _ in x:
+        y.append("")
+    return x, y
+
+
+@only_with_prompt
+def prepare_coqa_dataset(dataset, x_column, y_column, prompt, **kwargs):
+    def doc_to_text(doc, prompt, i=0):
+        # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
+        # and a question qi, the task is to predict the answer ai
+        doc_text = ""
+        for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
+            doc_text += prompt.format(question=q, answer=a)
+        return doc_text
+
+    x, y = [], []
+    for inst in dataset:
+        formatted_description = description.format(story=inst["story"])
+        for j, (question, answer) in enumerate(
+            zip(inst[x_column], inst[y_column]["input_text"])
+        ):
+            formatted_prompt = (
+                formatted_description
+                + doc_to_text(inst, prompt, j)
+                + prompt.format(
+                    question=question,
+                    answer="",
+                )
+            )
+            x.append(formatted_prompt)
+            y.append(answer)
+    return x, y
+
+
+@only_with_prompt
+def prepare_babi_qa_dataset(dataset, x_column, y_column, prompt, **kwargs):
+    x, y = [], []
+    for inst in dataset:
+        inst = inst["story"]
+        context = ""
+        for text, answer in zip(inst[x_column], inst[y_column]):
+            if answer == "":
+                context += text + " "
+            else:
+                x.append(prompt.format(context=context.strip(), question=text))
+                y.append(answer)
+    return x, y
+
+
+@only_with_prompt
+def prepare_mmlu_dataset(
+    dataset, x_column, y_column, prompt, mmlu_max_subject_size, **kwargs
+):
+    answers = ["A", "B", "C", "D"]
+    subjects = np.array(dataset["subject"])
+    x, y = [], []
+    for subject in np.unique(subjects):
+        formatted_description = description.format(subject=subject.replace("_", " "))
+        if n_shot > 0:
+            few_shot_ids = np.random.choice(
+                len(few_shot_dataset), n_shot, replace=False
+            )
+            few_shot_data = few_shot_dataset.select(few_shot_ids)
+            formatted_few_shot_prompt = ""
+            for inst in few_shot_data:
+                formatted_few_shot_prompt += prompt.format(
+                    choices=inst["choices"],
+                    question=inst["question"].strip(),
+                    answer=answers[inst["answer"]],
+                )
+
+        subject_data = dataset.select(np.argwhere(subjects == subject).flatten())
+
+        if len(subject_data) > mmlu_max_subject_size:
+            subject_data = subject_data.select(range(mmlu_max_subject_size))
+
+        for inst in subject_data:
+            formatted_prompt = prompt.format(
+                choices=inst["choices"],
+                question=inst["question"].strip(),
+                answer="",
+            )
+            x.append(
+                formatted_description + formatted_few_shot_prompt + formatted_prompt
+            )
+            y.append(answers[inst[y_column]])
+    return x, y
+
+
+@only_with_prompt
+def prepare_gsm8k_dataset(dataset, x_column, y_column, prompt, **kwargs):
+    x, y = [], []
+    for inst in dataset:
+        x.append(prompt.format(question=inst[x_column]))
+        y.append(inst[y_column])
+    return x, y
+
+
+@only_with_prompt
+def prepare_trivia_qa_dataset(
+    dataset, x_column, y_column, prompt, n_shot, few_shot_dataset, **kwargs
+):
+    x, y = [], []
+    formatted_few_shot_prompt = ""
+    if n_shot > 0:
+        few_shot_ids = np.random.choice(len(few_shot_dataset), n_shot, replace=False)
+        few_shot_data = few_shot_dataset.select(few_shot_ids)
+        for inst in few_shot_data:
+            formatted_few_shot_prompt += (
+                prompt.format(
+                    question=inst["question"].strip(),
+                    answer=inst["answer"]["normalized_value"],
+                )
+                + "\n"
+            )
+    for inst in dataset:
+        x.append(
+            formatted_few_shot_prompt
+            + prompt.format(
+                question=inst["question"],
+                answer="",
+            )
+        )
+        y.append([alias for alias in inst["answer"]["aliases"]])
+    return x, y
+
+
+def prepare_allenai_c4_dataset(dataset, x_column, y_column, **kwargs):
+    x, y = [], []
+    for inst in dataset:
+        if len(inst[x_column]) <= 1024:
+            x.append(inst[x_column])
+            y.append(inst[y_column])
+    return x, y
+
+
+def prepare_other_dataset(dataset, x_column, y_column, **kwargs):
+    return dataset[x_column], dataset[y_column]
+
+
+DATASET_PREPARATOR = {
+    "translation": prepare_translation_dataset,
+    "xsum": prepare_xsum_dataset,
+    "wiki": prepare_wiki_dataset,
+    "person": prepare_person_dataset,
+    "coqa": prepare_coqa_dataset,
+    "babi_qa": prepare_babi_qa_dataset,
+    "mmlu": prepare_mmlu_dataset,
+    "gsm8k": prepare_gsm8k_dataset,
+    "trivia_qa": prepare_trivia_qa_dataset,
+    "allenai/c4": prepare_allenai_c4_dataset,
+}
+
+
+def get_prepare_func(dataset_name):
+    for dataset_substr, prepare_func in DATASET_PREPARATOR.items():
+        if dataset_substr in dataset_name.lower():
+            return prepare_func
+    return prepare_other_dataset
+
+
+def is_disk_path(path_list: list[str]):
+    if len(path_list) > 1:
+        return False
+    path = path_list[0]
+    if os.path.exists(path):
+        return True
+    if "." in path:  # Extension
+        return True
+    if len(path.split("/")) > 2:
+        return True
+    return False
+
+
+def load_hf_dataset(
+    path: list[str],
+    split: str,
+) -> Dataset:
+    if is_disk_path(path):
+        return Dataset.load_from_disk(path)
+    else:
+        return load_dataset(*path, split=split)
+
+
+def output_dataset(dataset: Dataset, path: str):
+    if is_disk_path([path]):
+        dataset.to_csv(path)
+    else:
+        raise NotImplementedError("upload to HF is currently not supported")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-d",
+        "--dataset",
+        required=True,
+        help="Path to dataset to prepare, separated by comma",
+    )
+    parser.add_argument(
+        "-x",
+        "--input-column",
+        required=True,
+        help="Column in dataset that contains input",
+    )
+    parser.add_argument(
+        "-y",
+        "--output-column",
+        required=True,
+        help="Column in dataset that contains expected output",
+    )
+
+    parser.add_argument(
+        "-o", "--output-path", default=None, help="Path where dataset will be stored"
+    )
+    parser.add_argument(
+        "-p",
+        "--prompt",
+        default=None,
+        help="Prompt that will be used to format dataset",
+    )
+    parser.add_argument(
+        "-n",
+        "--n-shot",
+        default=0,
+        help="n for n-shot in dataset (applicable only to some datasets)",
+    )
+    parser.add_argument(
+        "-f",
+        "--few-shot-dataset",
+        default=None,
+        help="Path to dataset with few-shot examples, separated by comma",
+    )
+    parser.add_argument("-s", "--split", default="test", help="Split used in dataset")
+    parser.add_argument(
+        "-m",
+        "--mmlu_max_subject_size",
+        default=0,
+        help="Amount of subjects when preparing mmlu",
+    )
+
+    args = parser.parse_args()
+    if args.output_path is None:
+        args.output_path = args.dataset.split("/")[-1] + ".csv"
+    return args
+
+
+def main():
+    args = parse_args()
+
+    preparator = get_prepare_func(args.dataset)
+    dataset = load_hf_dataset(args.dataset.split(","), args.split)
+    x, y = preparator(
+        dataset=dataset,
+        x_column=args.input_column,
+        y_column=args.output_column,
+        prompt=args.prompt,
+        n_shot=args.n_shot,
+        few_shot_dataset=(
+            None
+            if args.few_shot_dataset is None
+            else load_hf_dataset(args.few_shot_dataset.split(","), "test")
+        ),
+        mmlu_max_subject_size=args.mmlu_max_subject_size,
+    )
+
+    new_dataset = Dataset.from_dict({"input": x, "output": y})
+    output_dataset(new_dataset, args.output_path)
+
+
+if __name__ == "__main__":
+    main()

@@ -11,7 +11,7 @@ save_path: '${hydra:run.dir}'
 
 task: qa
 
-dataset: SpeedOfMagic/trivia_qa_tiny
+dataset: trivia_qa_tiny.csv
 train_split: train
 eval_split: test
 text_column: question

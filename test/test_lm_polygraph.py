@@ -1,5 +1,6 @@
 import subprocess
 import pathlib
+import os
 
 import numpy as np
 
@@ -27,6 +28,8 @@ def load_test_manager():
 
 
 def run_config_with_overrides(config_name, **overrides):
+    if not os.path.exists("trivia_qa_tiny.csv"):
+        exec_bash("prepare_dataset -d SpeedOfMagic/trivia_qa_tiny -x question -y answer")
     command = f"HYDRA_CONFIG={pwd()}/configs/{config_name}.yaml polygraph_eval"
     for key, value in overrides.items():
         command += f" {key}='{value}'"
