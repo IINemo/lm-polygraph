@@ -138,6 +138,7 @@ class Dataset:
         dataset_path: Union[str, List[str]],
         batch_size: int,
         split: str = "test",
+        size: int = None,
         **kwargs,
     ):
         """

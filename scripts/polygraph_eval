@@ -102,6 +102,7 @@ def main(args):
                     args.train_dataset,
                     batch_size=args.batch_size,
                     split=args.train_split,
+                    size=10_000,
                     load_from_disk=args.load_from_disk,
                     **cache_kwargs
                 )
