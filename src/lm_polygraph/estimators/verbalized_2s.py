@@ -39,7 +39,7 @@ class Verbalized2S(Estimator):
 
         first_prompts = []
         second_prompts = []
-        for text in stats["input_texts"]:
+        for text in stats["raw_texts"]:
             if self.cot:
                 first_prompt = VERB_2S_FIRST_PROMPT_COT.format(q=text)
                 second_prompt = VERB_2S_SECOND_PROMPT_COT

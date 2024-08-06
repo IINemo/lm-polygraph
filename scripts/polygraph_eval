@@ -121,11 +121,11 @@ def main(args):
                     **cache_kwargs
                 )
             elif args.train_test_split:
-                X_train, X_test, y_train, y_test = dataset.train_test_split(
+                raw_X_train, raw_X_test, X_train, X_test, y_train, y_test = dataset.train_test_split(
                     test_size=args.test_split_size, seed=seed, split=args.eval_split
                 )
                 train_dataset = Dataset(
-                    x=X_train, y=y_train, batch_size=args.batch_size
+                    raw_x=raw_X_train, x=X_train, y=y_train, batch_size=args.batch_size
                 )
             else:
                 train_dataset = Dataset.load(
@@ -373,12 +373,12 @@ def get_generation_metrics(args):
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]
-        if not getattr(args, "multiref", False):
-            # Currently, BartScoreSeqMetric does not support multiref
-            result.append(BartScoreSeqMetric('rh'))
-        else:
+        if getattr(args, "multiref", False):
             # Wrap each metric in AggregatedMetric
             result = [AggregatedMetric(base_metric=metric) for metric in result]
+        else:
+            # Currently, BartScoreSeqMetric can only be used with single reference
+            result.append(BartScoreSeqMetric('rh'))
     else:
         result = []
         for metric in generation_metrics:
