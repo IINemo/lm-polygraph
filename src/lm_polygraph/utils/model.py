@@ -402,11 +402,17 @@ class WhiteboxModel(Model):
         sequences = self.model.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
+
+        decode_args = {}
+        if (self.tokenizer.chat_template is None):
+            decode_args['skip_special_tokens'] = True
+
         for seq in sequences:
             if self.model_type == "CausalLM":
-                texts.append(self.tokenizer.decode(seq[input_len:]))
+                texts.append(self.tokenizer.decode(seq[input_len:], **decode_args))
             else:
-                texts.append(self.tokenizer.decode(seq[1:]))
+                texts.append(self.tokenizer.decode(seq[1:], **decode_args))
+
         return texts
 
     def __call__(self, **args):
