@@ -296,6 +296,7 @@ def get_ue_methods(args, model):
             Verbalized2S(topk=1),
             Verbalized2S(topk=5),
             Verbalized2S(cot=True),
+            Linguistic1S(),
         ]
 
     if args.use_ens_ue:
