@@ -12,8 +12,8 @@ VERB_2S_SECOND_PROMPT_COT = "Provide the probability that your guess is correct.
 VERB_2S_FIRST_PROMPT_TOP1 = "Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is: {q}"
 VERB_2S_SECOND_PROMPT_TOP1 = VERB_2S_SECOND_PROMPT_COT
 
-VERB_2S_FIRST_PROMPT_TOPK = "Provide your {k} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n... G{k}: <{k}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is: {q}"
-VERB_2S_SECOND_PROMPT_TOPK = "Provide the probability that each of your guesses is correct. Give ONLY the probabilities, no other words or explanation.\n\nFor example:\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n... P{k}: <the probability between 0.0 and 1.0 that G{k} is correct, without any extra commentary whatsoever; just the probability!>"
+VERB_2S_FIRST_PROMPT_TOPK = "Provide your {k} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG{k}: <{k}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\n\nThe question is: {q}"
+VERB_2S_SECOND_PROMPT_TOPK = "Provide the probability that each of your guesses is correct. Give ONLY the probabilities, no other words or explanation.\n\nFor example:\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nP{k}: <the probability between 0.0 and 1.0 that G{k} is correct, without any extra commentary whatsoever; just the probability!>"
 
 TOP1_CONFIDENCE_REGEX = r"(\d+\.\d+)"
 TOPK_CONFIDENCE_REGEX = r"P1: (\d+\.\d+)"
