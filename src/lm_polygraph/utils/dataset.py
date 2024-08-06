@@ -98,10 +98,7 @@ class Dataset:
     @staticmethod
     def from_csv(
         csv_path: str,
-        x_column: str,
-        y_column: str,
         batch_size: int,
-        prompt: str = "",
         **kwargs,
     ):
         """
@@ -109,16 +106,11 @@ class Dataset:
 
         Parameters:
             csv_path (str): path to .csv table,
-            x_column (str): name of column to take input texts from,
-            y_column (str): name of column to take target texts from,
             batch_size (int): the size of the texts batch.
         """
         csv = pd.read_csv(csv_path)
-        x = csv[x_column].tolist()
-        y = csv[y_column].tolist()
-
-        if len(prompt):
-            x = [prompt.format(text=text) for text in x]
+        x = csv["input"].tolist()
+        y = csv["output"].tolist()
 
         return Dataset(x, y, batch_size)
 
@@ -153,13 +145,8 @@ class Dataset:
 
         Parameters:
             dataset_path (str): HF path to dataset,
-            x_column (str): name of column to take input texts from,
-            y_column (str): name of column to take target texts from,
             batch_size (int): the size of the texts batch,
-            prompt (str): prompt template to use for input texts (default: ''),
             split (str): dataset split to take data from (default: 'text'),
-            size (Optional[int]): size to subsample dataset to. If None, the full dataset split will be taken.
-                Default: None.
         """
         _, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
         return Dataset(dataset["input"], dataset["output"], batch_size)
