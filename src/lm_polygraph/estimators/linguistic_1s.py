@@ -29,12 +29,11 @@ LING_1S_PROMPT = "Provide your best guess for the following question, and descri
 
 
 class Linguistic1S(Estimator):
-    def __init__(self, topk=1):
-        self.topk = topk
+    def __init__(self):
         super().__init__([], "sequence")
 
     def __str__(self):
-        return f"Linguistic1STop{self.topk}"
+        return f"Linguistic1S"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         model = stats["model"]
@@ -42,7 +41,7 @@ class Linguistic1S(Estimator):
         prompts = []
         expressions = "\n".join(EXPRESSION_LIST.keys())
         for text in stats["input_texts"]:
-            prompt = LING_1S_PROMPT_TOPK.format(q=text, e=expressions)
+            prompt = LING_1S_PROMPT.format(q=text, e=expressions)
             prompts.append(prompt)
 
         # 10 tokens for confidence, times number of guesses
