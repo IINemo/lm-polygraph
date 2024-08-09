@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset as hf_dataset
 
-from typing import Iterable, Tuple, List, Union
+from typing import Iterable, Tuple, List, Union, Optional
 
 
 class Dataset:
@@ -166,6 +166,7 @@ class Dataset:
         mmlu_max_subject_size: int = 100,
         n_shot: int = 0,
         few_shot_split: str = "train",
+        few_shot_prompt: Optional[str] = None,
         split: str = "test",
         size: int = None,
         **kwargs,
@@ -330,21 +331,21 @@ class Dataset:
             raw_x, x, y = [], [], []
 
             formatted_few_shot_prompt = description
-            if n_shot > 0:
-                formatted_few_shot_prompt += " Here are a few examples of questions and answers:\n\n"
+            if n_shot > 0 and few_shot_prompt is not None:
+                formatted_few_shot_prompt += "Here are a few examples of questions and answers:\n\n"
                 few_shot_ids = np.random.choice(
                     len(few_shot_dataset), n_shot, replace=False
                 )
                 few_shot_data = few_shot_dataset.select(few_shot_ids)
                 for inst in few_shot_data:
                     formatted_few_shot_prompt += (
-                        prompt.format(
+                        few_shot_prompt.format(
                             question=inst["question"].strip(),
                             answer=inst["answer"]["normalized_value"],
                         )
-                        + "\n"
+                        + "\n\n"
                     )
-                formatted_few_shot_prompt += "\nNow answer the following question in the same format:\n\n"
+                formatted_few_shot_prompt += "Now answer the following question in the same format:\n\n"
             else:
                 formatted_few_shot_prompt += "\n"
 
@@ -353,8 +354,7 @@ class Dataset:
                 x.append(
                     formatted_few_shot_prompt
                     + prompt.format(
-                        question=inst["question"],
-                        answer="",
+                        question=inst["question"]
                     )
                 )
                 y.append([alias for alias in inst["answer"]["aliases"]])
