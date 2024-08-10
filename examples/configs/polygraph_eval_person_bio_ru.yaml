@@ -1,11 +1,9 @@
-
-
 hydra:
   run:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
-  - model: Vikhrmodels/Vikhr-7B-instruct_0.3
+  - model: default
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -16,7 +14,7 @@ dataset_name: person-bio
 dataset: [rvanova/person-bio]
 n_shot: 0
 text_column: question
-eval_split: train
+eval_split: test
 max_new_tokens: 256
 load_from_disk: false
 
