@@ -17,6 +17,7 @@ class Linguistic1S(Estimator):
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         model = stats["model"]
 
+        ues = []
         for answer in stats["greedy_texts"]:
             ue = np.nan
             for expression, confidence in self.expressions.items():
