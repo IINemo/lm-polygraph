@@ -134,10 +134,10 @@ class Dataset:
             dataset = hf_dataset.load_from_disk(path)
         elif isinstance(path, str):
             dataset_name = path
-            dataset = load_dataset(path, split=split, **kwargs)
+            dataset = load_dataset(path, split=split, trust_remote_code=True, **kwargs)
         else:
             dataset_name = path[0]
-            dataset = load_dataset(*path, split=split, **kwargs)
+            dataset = load_dataset(*path, split=split, trust_remote_code=True, **kwargs)
 
         return dataset_name, dataset
 
