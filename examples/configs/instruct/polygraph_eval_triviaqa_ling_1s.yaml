@@ -25,7 +25,7 @@ expressions_of_confidence:
 description: "Provide your best guess for the following question, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>\n\n"
 few_shot_prompt: "Question: {question}\nGuess: {answer}\nConfidence: <appropriate level of confidence in this guess>"
 prompt: "Question: {question}\n"
-max_new_tokens: 20
+max_new_tokens: 30
 n_shot: 5
 output_ignore_regex: "(?s).*Guess: |\nConfidence:.*"
 
