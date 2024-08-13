@@ -9,7 +9,7 @@ few_shot_prompt: "Question: {question}\nG1: {answer}\n...\nG${topk}: <other gues
 prompt: "Question: {question}\n"
 max_new_tokens: 125
 n_shot: 5
-output_ignore_regex: "(?s).*G1:"
+output_ignore_regex: "(?s).*G1:|G2:.*"
 
 use_density_based_ue: false
 use_seq_ue: false
