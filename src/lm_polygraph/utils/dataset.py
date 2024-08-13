@@ -332,7 +332,7 @@ class Dataset:
 
             formatted_few_shot_prompt = description
             if n_shot > 0 and few_shot_prompt is not None:
-                formatted_few_shot_prompt += "\nHere are a few examples of questions and answers:\n\n"
+                formatted_few_shot_prompt += "\n\nHere are a few examples of questions and answers:\n\n"
                 few_shot_ids = np.random.choice(
                     len(few_shot_dataset), n_shot, replace=False
                 )
