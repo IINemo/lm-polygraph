@@ -15,8 +15,6 @@ class Verbalized1S(Estimator):
         return f"Verbalized1S"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        model = stats["model"]
-
         ues = []
         conf_re = re.compile(self.confidence_regex)
         for answer in stats["greedy_texts"]:

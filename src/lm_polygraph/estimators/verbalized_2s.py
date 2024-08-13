@@ -8,6 +8,7 @@ from .estimator import Estimator
 
 class Verbalized2S(Estimator):
     def __init__(self, confidence_prompt: str, confidence_regex: str = "", max_new_tokens: int = 10):
+        self.max_new_tokens = max_new_tokens
         self.confidence_prompt = confidence_prompt
         self.confidence_regex = confidence_regex
         super().__init__(["input_texts", "greedy_texts"], "sequence")
@@ -31,7 +32,7 @@ class Verbalized2S(Estimator):
         out = model.generate_texts(
             chats,
             min_new_tokens=2,
-            max_new_tokens=max_new_tokens,
+            max_new_tokens=self.max_new_tokens,
             num_return_sequences=1,
         )
 
