@@ -57,6 +57,7 @@ def register_stat_calculators(
         PromptCalculator(
             "Question: {q}\n Possible answer:{a}\n "
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+            "True",
             "p_true",
             sample_text_dependency=None,  # Not calculate T text samples for P(True)
         )
@@ -65,6 +66,7 @@ def register_stat_calculators(
         PromptCalculator(
             "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n "
             "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+            "True",
             "p_true_sampling",
         )
     )
@@ -72,6 +74,7 @@ def register_stat_calculators(
         PromptCalculator(
             "Question: {q}\n Possible answer:{a}\n "
             "Is the possible answer True or False? The possible answer is: ",
+            "True",
             "p_true_claim",
             input_text_dependency="claim_input_texts_concatenated",
             sample_text_dependency=None,

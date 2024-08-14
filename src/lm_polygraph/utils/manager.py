@@ -158,7 +158,7 @@ def estimate_uncertainty(
     ```
     """
     man = UEManager(
-        Dataset([input_text], [input_text], [""], batch_size=1),
+        Dataset([input_text], [""], batch_size=1),
         model,
         [estimator],
         [],
@@ -446,7 +446,6 @@ class UEManager:
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
                 batch_stats["model"] = self.model
-                batch_stats["max_new_tokens"] = self.max_new_tokens
 
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:
@@ -488,9 +487,7 @@ class UEManager:
 
         if self.ensemble_model is not None:
             iterable_data = tqdm(self.data) if self.verbose else self.data
-            for batch_i, (inp_texts, target_texts) in enumerate(
-                iterable_data
-            ):
+            for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
                     ("input_texts", inp_texts),
