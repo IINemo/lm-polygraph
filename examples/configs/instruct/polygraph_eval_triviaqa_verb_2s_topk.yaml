@@ -1,6 +1,5 @@
 defaults:
   - polygraph_eval_triviaqa_default_instruct
-  - model: bloomz-560m
   - _self_
 
 topk: 5
@@ -8,16 +7,7 @@ description: "Provide your ${topk} best guesses for the following question. Give
 few_shot_prompt: "Question: {question}\nG1: {answer}\n...\nG${topk}: <other guess>"
 prompt: "Question: {question}\n"
 max_new_tokens: 125
-n_shot: 5
 output_ignore_regex: "(?s).*G1:|G2:.*"
-
-use_density_based_ue: false
-use_seq_ue: false
-use_tok_ue: false
-use_ens_ue: false
-use_verb_ue: false
-generation_metrics: null
-ens_type: 
 
 additional_estimators: 
   - module: lm_polygraph.estimators.verbalized_2s

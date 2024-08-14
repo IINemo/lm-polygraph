@@ -1,22 +1,12 @@
 defaults:
   - polygraph_eval_triviaqa_default_instruct
-  - model: bloomz-560m
   - _self_
 
 description: "Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>"
 few_shot_prompt: "Question: {question}\nGuess: {answer}"
 prompt: "Question: {question}\n"
 max_new_tokens: 30
-n_shot: 5
 output_ignore_regex: "(?s).*Guess:"
-
-use_density_based_ue: false
-use_seq_ue: false
-use_tok_ue: false
-use_ens_ue: false
-use_verb_ue: false
-generation_metrics: null
-ens_type: 
 
 additional_estimators: 
   - module: lm_polygraph.estimators.verbalized_2s

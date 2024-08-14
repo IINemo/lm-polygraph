@@ -3,7 +3,7 @@ hydra:
     dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
-  - model: bloomz-560m
+  - model: mistral-7b-instruct-v0.2
   - _self_
 
 cache_path: ./workdir/output
@@ -17,7 +17,6 @@ label_column: answer
 few_shot_split: train
 train_split: train
 eval_split: validation
-max_new_tokens: 20
 load_from_disk: false
 n_shot: 5
 multiref: true
@@ -45,16 +44,6 @@ use_ens_ue: false
 use_verb_ue: false
 generation_metrics: null
 ens_type: 
-
-# Examples of providing additional UE methods:
-# additional_estimators: {
-#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
-#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
-# }
-# additional_estimators_kwargs: {
-#   'Perplexity': {},
-#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
-# }
 
 ignore_exceptions: false
 
