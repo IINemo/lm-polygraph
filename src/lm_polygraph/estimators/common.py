@@ -1,7 +1,5 @@
 import numpy as np
 
-from lm_polygraph.utils.model import WhiteboxModel
-
 
 def _get_pairs(lst):
     pairs = []
@@ -31,14 +29,3 @@ def _compute_Jaccard_score(lst):
 
 def compute_sim_score(answers, affinity, similarity_score):
     return _compute_Jaccard_score(answers)
-
-
-def tokenize_as_single_token(model: WhiteboxModel, text: str):
-    tokens = model.tokenizer([text])["input_ids"][0]
-    tokens = [
-        t
-        for t in tokens
-        if t != model.tokenizer.eos_token_id and t != model.tokenizer.bos_token_id
-    ]
-    assert len(tokens) == 1
-    return tokens[0]

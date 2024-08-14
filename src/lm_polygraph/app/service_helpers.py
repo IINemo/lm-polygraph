@@ -237,7 +237,7 @@ class Responder:
                     ue_method_name, model_path, self.cache_path
                 )
 
-        dataset = Dataset([text], [text], [""], batch_size=1)
+        dataset = Dataset([text], [""], batch_size=1)
         processor = ResultProcessor()
 
         tok_methods = [

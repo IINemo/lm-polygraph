@@ -3,7 +3,6 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
-from .common import tokenize_as_single_token
 
 
 class PTrue(Estimator):
@@ -23,7 +22,7 @@ class PTrue(Estimator):
     """
 
     def __init__(self):
-        super().__init__(["p_true_logits"], "sequence")
+        super().__init__(["p_true"], "sequence")
 
     def __str__(self):
         return "PTrue"
@@ -39,9 +38,5 @@ class PTrue(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        tok = tokenize_as_single_token(stats["model"], "True")
-
-        ptrue_logits = stats["p_true_logits"]
-        log_probs = ptrue_logits[:, -1, tok].cpu().numpy()
-
-        return -np.array(log_probs)
+        ptrue = stats["p_true"]
+        return -np.array(ptrue)
