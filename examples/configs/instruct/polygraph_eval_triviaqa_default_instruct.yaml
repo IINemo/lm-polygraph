@@ -10,6 +10,7 @@ cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
 task: qa
+instruct: true
 
 dataset: [trivia_qa, rc.nocontext]
 text_column: question

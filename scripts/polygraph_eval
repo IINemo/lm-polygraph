@@ -86,6 +86,7 @@ def main(args):
             n_shot=getattr(args, "n_shot", 5),
             few_shot_split=getattr(args, "few_shot_split", "train"),
             few_shot_prompt=getattr(args, "few_shot_prompt", None),
+            instruct=getattr(args, "instruct", None),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             **cache_kwargs
@@ -117,6 +118,7 @@ def main(args):
                     n_shot=getattr(args, "n_shot", 5),
                     few_shot_split=getattr(args, "few_shot_split", "train"),
                     few_shot_prompt=getattr(args, "few_shot_prompt", None),
+                    instruct=getattr(args, "instruct", None),
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
@@ -141,6 +143,7 @@ def main(args):
                     n_shot=getattr(args, "n_shot", 5),
                     few_shot_split=getattr(args, "few_shot_split", "train"),
                     few_shot_prompt=getattr(args, "few_shot_prompt", None),
+                    instruct=getattr(args, "instruct", None),
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,

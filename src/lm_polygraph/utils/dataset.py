@@ -164,6 +164,7 @@ class Dataset:
         n_shot: int = 0,
         few_shot_split: str = "train",
         few_shot_prompt: Optional[str] = None,
+        instruct: bool = False,
         split: str = "test",
         size: int = None,
         **kwargs,
@@ -320,32 +321,51 @@ class Dataset:
             x, y = [], []
 
             formatted_few_shot_prompt = description
-            if n_shot > 0 and few_shot_prompt is not None:
-                formatted_few_shot_prompt += (
-                    "\n\nHere are a few examples of questions and answers:\n\n"
-                )
+            if n_shot > 0:
                 few_shot_ids = np.random.choice(
                     len(few_shot_dataset), n_shot, replace=False
                 )
                 few_shot_data = few_shot_dataset.select(few_shot_ids)
-                for inst in few_shot_data:
+                if instruct:
+                    assert(
+                        few_shot_prompt is not None
+                    ), "separate few_shot_prompt must be provided for instruction mode."
                     formatted_few_shot_prompt += (
-                        few_shot_prompt.format(
-                            question=inst["question"].strip(),
-                            answer=inst["answer"]["normalized_value"],
-                        )
-                        + "\n\n"
+                        "\n\nHere are a few examples of questions and answers:\n\n"
                     )
-                formatted_few_shot_prompt += (
-                    "Now answer the following question in the same format:\n\n"
-                )
+                    for inst in few_shot_data:
+                        formatted_few_shot_prompt += (
+                            few_shot_prompt.format(
+                                question=inst["question"].strip(),
+                                answer=inst["answer"]["normalized_value"],
+                            )
+                            + "\n\n"
+                        )
+                    formatted_few_shot_prompt += (
+                        "Now answer the following question in the same format:\n\n"
+                    )
+                else:
+                    formatted_few_shot_prompt = ""
+                    for inst in few_shot_data:
+                        formatted_few_shot_prompt += (
+                            prompt.format(
+                                question=inst["question"].strip(),
+                                answer=inst["answer"]["normalized_value"],
+                            )
+                            + "\n\n"
+                        )
             else:
                 formatted_few_shot_prompt += "\n"
 
             for inst in dataset:
-                x.append(
-                    formatted_few_shot_prompt + prompt.format(question=inst["question"])
-                )
+                if instruct:
+                    x.append(
+                        formatted_few_shot_prompt + prompt.format(question=inst["question"])
+                    )
+                else:
+                    x.append(
+                        formatted_few_shot_prompt + prompt.format(question=inst["question"], answer="")
+                    )
                 y.append([alias for alias in inst["answer"]["aliases"]])
         elif "allenai/c4" in dataset_name.lower():
             x, y = [], []
