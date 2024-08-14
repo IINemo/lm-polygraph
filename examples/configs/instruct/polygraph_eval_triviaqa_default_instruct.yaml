@@ -41,7 +41,6 @@ use_density_based_ue: false
 use_seq_ue: false
 use_tok_ue: false
 use_ens_ue: false
-use_verb_ue: false
 generation_metrics: null
 ens_type: 
 

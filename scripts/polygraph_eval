@@ -123,11 +123,11 @@ def main(args):
                     **cache_kwargs
                 )
             elif args.train_test_split:
-                raw_X_train, raw_X_test, X_train, X_test, y_train, y_test = dataset.train_test_split(
+                X_train, X_test, y_train, y_test = dataset.train_test_split(
                     test_size=args.test_split_size, seed=seed, split=args.eval_split
                 )
                 train_dataset = Dataset(
-                    raw_x=raw_X_train, x=X_train, y=y_train, batch_size=args.batch_size
+                    x=X_train, y=y_train, batch_size=args.batch_size
                 )
             else:
                 train_dataset = Dataset.load(
@@ -290,16 +290,6 @@ def get_ue_methods(args, model):
             SentenceSAR(),
             RenyiNeg(),
             FisherRao(),
-        ]
-
-    if getattr(args, "use_verb_ue", False):
-        estimators += [
-            Verbalized1S(topk=1),
-            Verbalized1S(topk=5),
-            Verbalized2S(topk=1),
-            Verbalized2S(topk=5),
-            Verbalized2S(cot=True),
-            Linguistic1S(),
         ]
 
     if getattr(args, "use_ens_ue", False):

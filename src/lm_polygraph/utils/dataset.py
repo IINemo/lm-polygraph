@@ -13,14 +13,13 @@ class Dataset:
     Seq2seq dataset for calculating quality of uncertainty estimation method.
     """
 
-    def __init__(self, raw_x: List[str], x: List[str], y: List[str], batch_size: int):
+    def __init__(self, x: List[str], y: List[str], batch_size: int):
         """
         Parameters:
             x (List[str]): a list of input texts.
             y (List[str]): a list of output (target) texts. Must have the same length as `x`.
             batch_size (int): the size of the texts batch.
         """
-        self.raw_x = raw_x
         self.x = x
         self.y = y
         self.batch_size = batch_size
@@ -33,7 +32,6 @@ class Dataset:
         """
         for i in range(0, len(self.x), self.batch_size):
             yield (
-                self.raw_x[i : i + self.batch_size],
                 self.x[i : i + self.batch_size],
                 self.y[i : i + self.batch_size],
             )
@@ -52,7 +50,6 @@ class Dataset:
         Parameters:
             indices (List[int]): indices to left in the dataset.Must have the same length as input texts.
         """
-        self.raw_x = [self.raw_x[i] for i in indices]
         self.x = [self.x[i] for i in indices]
         self.y = [self.y[i] for i in indices]
         return self
@@ -71,8 +68,7 @@ class Dataset:
             Tuple[List[str], List[str], List[str], List[str]]: train input and target texts list,
                 test input and target texts list.
         """
-        raw_X_train, raw_X_test, X_train, X_test, y_train, y_test = train_test_split(
-            np.array(self.raw_x),
+        X_train, X_test, y_train, y_test = train_test_split(
             np.array(self.x),
             np.array(self.y),
             test_size=test_size,
@@ -80,17 +76,13 @@ class Dataset:
         )
 
         if split == "train":
-            self.raw_x = raw_X_train.tolist()
             self.x = X_train.tolist()
             self.y = y_train.tolist()
         else:
-            self.raw_x = raw_X_test.tolist()
             self.x = X_test.tolist()
             self.y = y_test.tolist()
 
         return (
-            raw_X_train.tolist(),
-            raw_X_test.tolist(),
             X_train.tolist(),
             X_test.tolist(),
             y_train.tolist(),
@@ -133,14 +125,13 @@ class Dataset:
             batch_size (int): the size of the texts batch.
         """
         csv = pd.read_csv(csv_path)
-        raw_x = csv[x_column].tolist()
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
 
         if len(prompt):
             x = [prompt.format(text=text) for text in x]
 
-        return Dataset(raw_x, x, y, batch_size)
+        return Dataset(x, y, batch_size)
 
     @staticmethod
     def load_hf_dataset(
@@ -201,7 +192,7 @@ class Dataset:
             dataset = dataset.select(range(size))
 
         if "translation" in dataset.column_names:
-            raw_x, x, y = [], [], []
+            x, y = [], []
             source_lang = (
                 "German"
                 if x_column == "de"
@@ -213,7 +204,6 @@ class Dataset:
                 else "French" if y_column == "fr" else "English"
             )
             for inst in dataset["translation"]:
-                raw_x.append(inst[x_column])
                 x.append(
                     prompt.format(
                         source_lang=source_lang,
@@ -223,19 +213,16 @@ class Dataset:
                 )
                 y.append(inst[y_column])
         elif ("xsum" in dataset_name.lower()) and len(prompt):
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for inst in dataset:
-                raw_x.append(inst[x_column])
                 x.append(prompt.format(text=inst[x_column]))
                 y.append(inst[y_column])
         elif ("wiki" in dataset_name.lower()) and len(prompt):
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for sample in dataset[x_column]:
-                raw_x.append(sample["context"].strip())
                 x.append(prompt.format(context=sample["context"].strip()))
                 y.append("")
         elif "person" in dataset_name.lower():
-            raw_x = dataset[x_column]
             x = dataset[x_column]
             if len(prompt):
                 for i in range(len(x)):
@@ -253,7 +240,7 @@ class Dataset:
                     doc_text += prompt.format(question=q, answer=a)
                 return doc_text
 
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for inst in dataset:
                 formatted_description = description.format(story=inst["story"])
                 for j, (question, answer) in enumerate(
@@ -267,11 +254,10 @@ class Dataset:
                             answer="",
                         )
                     )
-                    raw_x.append(inst[x_column])
                     x.append(formatted_prompt)
                     y.append(answer)
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for inst in dataset:
                 inst = inst["story"]
                 context = ""
@@ -279,14 +265,13 @@ class Dataset:
                     if answer == "":
                         context += text + " "
                     else:
-                        raw_x.append(context.strip())
                         x.append(prompt.format(context=context.strip(), question=text))
                         y.append(answer)
         elif ("mmlu" in dataset_name.lower()) and len(prompt):
             answers = ["A", "B", "C", "D"]
             subjects = np.array(dataset["subject"])
             few_shot_subjects = np.array(few_shot_dataset["subject"])
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for subject in np.unique(subjects):
                 formatted_description = description.format(
                     subject=subject.replace("_", " ")
@@ -320,7 +305,6 @@ class Dataset:
                         question=inst["question"].strip(),
                         answer="",
                     )
-                    raw_x.append(inst["question"].strip())
                     x.append(
                         formatted_description
                         + formatted_few_shot_prompt
@@ -328,13 +312,12 @@ class Dataset:
                     )
                     y.append(answers[inst[y_column]])
         elif ("gsm8k" in dataset_name.lower()) and len(prompt):
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for inst in dataset:
-                raw_x.append(inst[x_column])
                 x.append(prompt.format(question=inst[x_column]))
                 y.append(inst[y_column])
         elif ("trivia_qa" in dataset_name.lower()) and len(prompt):
-            raw_x, x, y = [], [], []
+            x, y = [], []
 
             formatted_few_shot_prompt = description
             if n_shot > 0 and few_shot_prompt is not None:
@@ -360,24 +343,21 @@ class Dataset:
                 formatted_few_shot_prompt += "\n"
 
             for inst in dataset:
-                raw_x.append(inst["question"])
                 x.append(
                     formatted_few_shot_prompt + prompt.format(question=inst["question"])
                 )
                 y.append([alias for alias in inst["answer"]["aliases"]])
         elif "allenai/c4" in dataset_name.lower():
-            raw_x, x, y = [], [], []
+            x, y = [], []
             for inst in dataset:
                 if len(inst[x_column]) <= 1024:
-                    raw_x.append(inst[x_column])
                     x.append(inst[x_column])
                     y.append(inst[y_column])
         else:
-            raw_x = dataset[x_column]
             x = dataset[x_column]
             y = dataset[y_column]
 
-        return Dataset(raw_x, x, y, batch_size)
+        return Dataset(x, y, batch_size)
 
     @staticmethod
     def load(path_or_path_and_files: Union[str, List[str]], *args, **kwargs):
