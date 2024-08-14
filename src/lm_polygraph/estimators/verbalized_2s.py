@@ -19,7 +19,7 @@ class Verbalized2S(Estimator):
         super().__init__(["input_texts", "greedy_texts"], "sequence")
 
     def __str__(self):
-        return f"Verbalized2S"
+        return "Verbalized2S"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         model = stats["model"]

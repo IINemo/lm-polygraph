@@ -1,5 +1,4 @@
 import numpy as np
-import re
 
 from typing import Dict
 
@@ -12,7 +11,7 @@ class Linguistic1S(Estimator):
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        return f"Linguistic1S"
+        return "Linguistic1S"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         ues = []

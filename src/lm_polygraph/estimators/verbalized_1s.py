@@ -12,7 +12,7 @@ class Verbalized1S(Estimator):
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        return f"Verbalized1S"
+        return "Verbalized1S"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         ues = []
