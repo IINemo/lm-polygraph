@@ -489,7 +489,9 @@ class UEManager:
 
         if self.ensemble_model is not None:
             iterable_data = tqdm(self.data) if self.verbose else self.data
-            for batch_i, (raw_texts, inp_texts, target_texts) in enumerate(iterable_data):
+            for batch_i, (raw_texts, inp_texts, target_texts) in enumerate(
+                iterable_data
+            ):
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
                     ("raw_texts", raw_texts),

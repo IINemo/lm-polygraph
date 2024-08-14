@@ -96,5 +96,4 @@ class PromptCalculator(StatCalculator):
         logits = torch.stack(out.scores, dim=1)
         texts = model.tokenizer.batch_decode(out.sequences, skip_special_tokens=True)
 
-        return {f"{self.method}_logits": logits,
-                f"{self.method}_texts": texts}
+        return {f"{self.method}_logits": logits, f"{self.method}_texts": texts}

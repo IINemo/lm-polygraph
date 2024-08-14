@@ -32,9 +32,11 @@ class Dataset:
                 returns list of input texts and list of corresponding output texts.
         """
         for i in range(0, len(self.x), self.batch_size):
-            yield (self.raw_x[i : i + self.batch_size],
-                   self.x[i : i + self.batch_size],
-                   self.y[i : i + self.batch_size])
+            yield (
+                self.raw_x[i : i + self.batch_size],
+                self.x[i : i + self.batch_size],
+                self.y[i : i + self.batch_size],
+            )
 
     def __len__(self) -> int:
         """
@@ -73,7 +75,8 @@ class Dataset:
             np.array(self.raw_x),
             np.array(self.x),
             np.array(self.y),
-            test_size=test_size, random_state=seed
+            test_size=test_size,
+            random_state=seed,
         )
 
         if split == "train":
@@ -86,9 +89,12 @@ class Dataset:
             self.y = y_test.tolist()
 
         return (
-            raw_X_train.tolist(), raw_X_test.tolist(),
-            X_train.tolist(), X_test.tolist(),
-            y_train.tolist(), y_test.tolist()
+            raw_X_train.tolist(),
+            raw_X_test.tolist(),
+            X_train.tolist(),
+            X_test.tolist(),
+            y_train.tolist(),
+            y_test.tolist(),
         )
 
     def subsample(self, size: int, seed: int):
@@ -332,7 +338,9 @@ class Dataset:
 
             formatted_few_shot_prompt = description
             if n_shot > 0 and few_shot_prompt is not None:
-                formatted_few_shot_prompt += "\n\nHere are a few examples of questions and answers:\n\n"
+                formatted_few_shot_prompt += (
+                    "\n\nHere are a few examples of questions and answers:\n\n"
+                )
                 few_shot_ids = np.random.choice(
                     len(few_shot_dataset), n_shot, replace=False
                 )
@@ -345,17 +353,16 @@ class Dataset:
                         )
                         + "\n\n"
                     )
-                formatted_few_shot_prompt += "Now answer the following question in the same format:\n\n"
+                formatted_few_shot_prompt += (
+                    "Now answer the following question in the same format:\n\n"
+                )
             else:
                 formatted_few_shot_prompt += "\n"
 
             for inst in dataset:
                 raw_x.append(inst["question"])
                 x.append(
-                    formatted_few_shot_prompt
-                    + prompt.format(
-                        question=inst["question"]
-                    )
+                    formatted_few_shot_prompt + prompt.format(question=inst["question"])
                 )
                 y.append([alias for alias in inst["answer"]["aliases"]])
         elif "allenai/c4" in dataset_name.lower():

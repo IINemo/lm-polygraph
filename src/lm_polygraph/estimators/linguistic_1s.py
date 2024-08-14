@@ -9,7 +9,7 @@ from .estimator import Estimator
 class Linguistic1S(Estimator):
     def __init__(self, expressions: Dict[str, float]):
         self.expressions = expressions
-        super().__init__(['greedy_texts'], "sequence")
+        super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
         return f"Linguistic1S"

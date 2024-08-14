@@ -7,7 +7,12 @@ from .estimator import Estimator
 
 
 class Verbalized2S(Estimator):
-    def __init__(self, confidence_prompt: str, confidence_regex: str = "", max_new_tokens: int = 10):
+    def __init__(
+        self,
+        confidence_prompt: str,
+        confidence_regex: str = "",
+        max_new_tokens: int = 10,
+    ):
         self.max_new_tokens = max_new_tokens
         self.confidence_prompt = confidence_prompt
         self.confidence_regex = confidence_regex
@@ -23,11 +28,13 @@ class Verbalized2S(Estimator):
         prompts = stats["input_texts"]
         guesses = stats["greedy_texts"]
         for prompt, guess in zip(prompts, guesses):
-            chats.append([
-                {'role': 'user', 'content': prompt},
-                {'role': 'assistant', 'content': guess},
-                {'role': 'user', 'content': self.confidence_prompt}
-            ])
+            chats.append(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": guess},
+                    {"role": "user", "content": self.confidence_prompt},
+                ]
+            )
 
         out = model.generate_texts(
             chats,

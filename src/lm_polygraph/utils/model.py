@@ -404,8 +404,8 @@ class WhiteboxModel(Model):
         texts = []
 
         decode_args = {}
-        if (self.tokenizer.chat_template is not None):
-            decode_args['skip_special_tokens'] = True
+        if self.tokenizer.chat_template is not None:
+            decode_args["skip_special_tokens"] = True
 
         for seq in sequences:
             if self.model_type == "CausalLM":
@@ -507,9 +507,9 @@ class WhiteboxModel(Model):
 
         return instance
 
-    def tokenize(self,
-                 texts: Union[List[str], List[List[Dict[str, str]]]]
-        ) -> Dict[str, torch.Tensor]:
+    def tokenize(
+        self, texts: Union[List[str], List[List[Dict[str, str]]]]
+    ) -> Dict[str, torch.Tensor]:
         """
         Tokenizes input texts batch into a dictionary using the model tokenizer.
 
@@ -523,11 +523,9 @@ class WhiteboxModel(Model):
             formatted_texts = []
             for chat in texts:
                 if isinstance(chat, str):
-                    chat = [{'role': 'user', 'content': chat}]
+                    chat = [{"role": "user", "content": chat}]
                 formatted_chat = self.tokenizer.apply_chat_template(
-                    chat,
-                    add_generation_prompt=True,
-                    tokenize=False
+                    chat, add_generation_prompt=True, tokenize=False
                 )
                 formatted_texts.append(formatted_chat)
             texts = formatted_texts
