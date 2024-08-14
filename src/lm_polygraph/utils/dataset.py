@@ -238,7 +238,7 @@ class Dataset:
                 # and a question qi, the task is to predict the answer ai
                 doc_text = ""
                 for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
-                    doc_text += prompt.format(question=q, answer=a)
+                    doc_text += "\n\n" + prompt.format(question=q, answer=a)
                 return doc_text
 
             x, y = [], []
@@ -247,9 +247,20 @@ class Dataset:
                 for j, (question, answer) in enumerate(
                     zip(inst[x_column], inst[y_column]["input_text"])
                 ):
+                    if instruct:
+                        assert(
+                            few_shot_prompt is not None
+                        ), "separate few_shot_prompt must be provided for instruction mode."
+                        few_shot_section = doc_to_text(inst, few_shot_prompt, j)
+                        if few_shot_section != "":
+                            few_shot_section = "\n\nHere are a few examples of questions and answers:" + few_shot_section + "\n\nNow answer the following question in the same format.\n\n"
+                        else:
+                            few_shot_section = "\n\n"
+                    else:
+                        few_shot_section = doc_to_text(inst, prompt, j) + "\n\n"
                     formatted_prompt = (
                         formatted_description
-                        + doc_to_text(inst, prompt, j)
+                        + few_shot_section
                         + prompt.format(
                             question=question,
                             answer="",
