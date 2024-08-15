@@ -1,0 +1,34 @@
+defaults:
+  - polygraph_eval_mmlu_default_instruct
+  - _self_
+
+expressions_of_confidence:
+  Almost Certain: 0.95
+  Highly Likely: 0.9
+  Very Good Chance: 0.8
+  We Beleive: 0.75
+  Probably: 0.7
+  Probable: 0.7
+  Likely: 0.7
+  Better than Even: 0.6
+  About Even: 0.5
+  Probably Not: 0.25
+  We Doubt: 0.2
+  Unlikely: 0.2
+  Little Chance: 0.1
+  Chances Are Slight: 0.1
+  Improbable: 0.1
+  Highly Unlikely: 0.05
+  Almost No Chance: 0.02
+
+description: "Provide your best guess for the following question about {subject} selecting one of the options, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>"
+few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nConfidence: <appropriate level of confidence in this guess>"
+prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
+max_new_tokens: 23
+output_ignore_regex: "(?s).*Guess: |\nConfidence:.*"
+
+additional_estimators: 
+  - module: lm_polygraph.estimators.linguistic_1s
+    class_name: Linguistic1S
+    kwargs:
+      expressions: ${expressions_of_confidence}

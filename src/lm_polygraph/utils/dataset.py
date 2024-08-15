@@ -296,13 +296,30 @@ class Dataset:
                         len(few_shot_subject), n_shot, replace=False
                     )
                     few_shot_data = few_shot_subject.select(few_shot_ids)
-                    formatted_few_shot_prompt = ""
-                    for inst in few_shot_data:
-                        formatted_few_shot_prompt += prompt.format(
-                            choices=inst["choices"],
-                            question=inst["question"].strip(),
-                            answer=answers[inst["answer"]],
+                    if instruct:
+                        assert(
+                            few_shot_prompt is not None
+                        ), "separate few_shot_prompt must be provided for instruction mode."
+                        formatted_few_shot_prompt = (
+                            "Here are a few examples of questions and answers:\n\n"
                         )
+                        for inst in few_shot_data:
+                            formatted_few_shot_prompt += few_shot_prompt.format(
+                                choices=inst["choices"],
+                                question=inst["question"].strip(),
+                                answer=answers[inst["answer"]],
+                            ) + "\n\n"
+                        formatted_few_shot_prompt += (
+                            "Now answer the following question in the same format:\n\n"
+                        )
+                    else:
+                        formatted_few_shot_prompt = ""
+                        for inst in few_shot_data:
+                            formatted_few_shot_prompt += prompt.format(
+                                choices=inst["choices"],
+                                question=inst["question"].strip(),
+                                answer=answers[inst["answer"]],
+                            ) + "\n"
 
                 subject_data = dataset.select(
                     np.argwhere(subjects == subject).flatten()
@@ -318,7 +335,7 @@ class Dataset:
                         answer="",
                     )
                     x.append(
-                        formatted_description
+                        formatted_description + "\n\n"
                         + formatted_few_shot_prompt
                         + formatted_prompt
                     )

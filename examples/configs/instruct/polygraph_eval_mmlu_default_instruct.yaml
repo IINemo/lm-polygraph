@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: mistral-7b-instruct-v0.2
@@ -12,13 +12,16 @@ save_path: '${hydra:run.dir}'
 task: qa
 instruct: true
 
-dataset: coqa
-text_column: questions
-label_column: answers
-train_split: train
-eval_split: validation
+dataset: [cais/mmlu, all]
+text_column: question
+label_column: answer
+few_shot_split: dev
+train_split: validation
+eval_split: test
+  #max_new_tokens: 3
 load_from_disk: false
-normalize: true
+n_shot: 5
+max_subject_size: 100
 generation_params: {}
 
 train_dataset: null
