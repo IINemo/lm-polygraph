@@ -1,6 +1,7 @@
 import numpy as np
 
 import itertools
+from collections import defaultdict
 from typing import Dict, List
 
 from .stat_calculator import StatCalculator
