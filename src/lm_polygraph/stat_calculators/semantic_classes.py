@@ -16,7 +16,7 @@ class SemanticClassesCalculator(StatCalculator):
             [
                 "semantic_classes_entail",
             ],
-            ["blackbox_sample_texts",
+            ["sample_texts",
              "semantic_matrix_entail",
              "semantic_matrix_classes",
              "entailment_id"],
@@ -30,7 +30,7 @@ class SemanticClassesCalculator(StatCalculator):
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
-        self.get_classes(dependencies["blackbox_sample_texts"])
+        self.get_classes(dependencies["sample_texts"])
 
         return {
             "semantic_classes_entail": {
