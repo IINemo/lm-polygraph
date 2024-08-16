@@ -30,7 +30,7 @@ class SemanticClassesCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
+        self._is_entailment = dependencies["semantic_matrix_classes"] == dependencies["entailment_id"]
         self.get_classes(dependencies["sample_texts"])
 
         return {
