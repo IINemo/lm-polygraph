@@ -19,7 +19,7 @@ class LabelProb(Estimator):
         ues = []
         for batch_i, class_to_sample in batch_class_to_sample.items():
             num_samples = len(batch_sample_to_class[batch_i])
-            largest_class_size = max(len(samples) for samples in class_to_sample))
+            largest_class_size = max([len(samples) for samples in class_to_sample])
             ues.append(1 - largest_class_size / num_samples)
 
         return np.array(ues)

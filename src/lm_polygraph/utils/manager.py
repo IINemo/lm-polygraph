@@ -437,6 +437,7 @@ class UEManager:
             for key, val in [
                 ("input_texts", inp_texts),
                 ("target_texts", target_texts),
+                ("model", self.model),
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
@@ -486,6 +487,7 @@ class UEManager:
                 for key, val in [
                     ("input_texts", inp_texts),
                     ("target_texts", target_texts),
+                    ("model", self.model),
                 ]:
                     batch_stats[key] = val
 
