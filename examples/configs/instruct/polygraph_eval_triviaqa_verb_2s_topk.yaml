@@ -4,7 +4,7 @@ defaults:
 
 experiment_name: triviaqa_verb_2s_topk
 
-topk: 5
+topk: 4
 description: "Provide your ${topk} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>"
 few_shot_prompt: "Question: {question}\nG1: {answer}\n...\nG${topk}: <other guess>"
 prompt: "Question: {question}\n"
