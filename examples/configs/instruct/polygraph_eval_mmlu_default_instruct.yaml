@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${experiment_name}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: mistral-7b-instruct-v0.2
@@ -11,6 +11,7 @@ save_path: '${hydra:run.dir}'
 
 task: qa
 instruct: true
+experiment_name:
 
 dataset: [cais/mmlu, all]
 text_column: question

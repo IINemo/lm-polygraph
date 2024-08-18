@@ -2,6 +2,8 @@ defaults:
   - polygraph_eval_mmlu_default_instruct
   - _self_
 
+experiment_name: mmlu_verb_2s_topk
+
 topk: 4
 description: "Provide your ${topk} best guesses for the following question about {subject} selecting one of the options. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>"
 few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\n...\nG${topk}: <other guess>"

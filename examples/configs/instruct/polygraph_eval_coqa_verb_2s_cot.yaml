@@ -2,6 +2,8 @@ defaults:
   - polygraph_eval_coqa_default_instruct
   - _self_
 
+experiment_name: coqa_verb_2s_cot
+
 description: "Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>"
 few_shot_prompt: "Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}"
 prompt: "Question: {question}\n"

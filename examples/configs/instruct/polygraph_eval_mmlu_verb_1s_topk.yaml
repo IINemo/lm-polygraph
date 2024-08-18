@@ -2,6 +2,8 @@ defaults:
   - polygraph_eval_mmlu_default_instruct
   - _self_
 
+experiment_name: mmlu_verb_1s_topk
+
 topk: 4
 description: "Provide your ${topk} best guesses for the following question about {subject} selecting one of the options and the probability that each guess is correct (0.0 to 1.0). Give ONLY the guesses and probabilities, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\nP${topk}: <the probability between 0.0 and 1.0 that G${topk} is correct, without any extra commentary whatsoever; just the probability!>"
 few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG${topk}: <other guess>\nP${topk}: <probability of this guess>"

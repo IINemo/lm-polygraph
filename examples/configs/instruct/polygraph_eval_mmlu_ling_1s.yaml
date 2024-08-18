@@ -2,6 +2,8 @@ defaults:
   - polygraph_eval_mmlu_default_instruct
   - _self_
 
+experiment_name: mmlu_ling_1s
+
 expressions_of_confidence:
   Almost Certain: 0.95
   Highly Likely: 0.9

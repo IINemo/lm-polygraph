@@ -2,6 +2,8 @@ defaults:
   - polygraph_eval_coqa_default_instruct
   - _self_
 
+experiment_name: coqa_ling_1s
+
 expressions_of_confidence:
   Almost Certain: 0.95
   Highly Likely: 0.9
