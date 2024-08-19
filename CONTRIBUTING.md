@@ -9,7 +9,7 @@
     ```bash
     flake8 --extend-ignore E501,F405,F403,E203 --per-file-ignores __init__.py:F401 .
     ```
-    Install flake8-black beforehand to check for black formatting as well.
+    Use this command locally to check if it will pass when PR is opened. Install flake8-black beforehand to check for black formatting as well.
 7. Run tests with `pytest` and make sure they pass
 8. Commit and push your changes
 9. Create a pull request to the main branch of the original repository
