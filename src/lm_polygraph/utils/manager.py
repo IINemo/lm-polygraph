@@ -6,7 +6,7 @@ import gc
 import os
 
 from collections import defaultdict
-from typing import List, Set, Dict, Tuple, Optional
+from typing import List, Set, Dict, Tuple, Optional, Union
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -108,10 +108,12 @@ class UncertaintyOutput:
         model_path (str): path to the model used in generation.
     """
 
-    uncertainty: float
+    uncertainty: Union[float, List[float]]
     input_text: str
     generation_text: str
+    generation_tokens: List[int]
     model_path: str
+    estimator: str
 
 
 def estimate_uncertainty(
@@ -168,7 +170,14 @@ def estimate_uncertainty(
     man()
     ue = man.estimations[estimator.level, str(estimator)]
     texts = man.stats.get("greedy_texts", man.stats.get("blackbox_greedy_texts", None))
-    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
+    tokens = man.stats.get("greedy_tokens", None)
+    if tokens is not None and len(tokens) > 0:
+        # Remove last token, which is the end of the sequence token
+        # since we don't include it's uncertainty in the estimator's output
+        tokens = tokens[0][:-1]
+    return UncertaintyOutput(
+        ue[0], input_text, texts[0], tokens, model.model_path, str(estimator)
+    )
 
 
 def _flatten_results(results, result_generator_class):
@@ -464,7 +473,7 @@ class UEManager:
                 )
                 if not isinstance(m, list):
                     m = m.tolist()
-                if generation_metric.level != "sequence":
+                if generation_metric.level == "claim":
                     m = _flatten_results(m, generation_metric)
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
@@ -591,9 +600,8 @@ class UEManager:
                 e = estimator(batch_stats)
                 if not isinstance(e, list):
                     e = e.tolist()
-                if estimator.level != "sequence":
+                if estimator.level == "claim":
                     e = _flatten_results(e, estimator)
-
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
             except Exception as e:
