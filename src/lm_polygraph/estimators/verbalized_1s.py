@@ -13,7 +13,6 @@ class Verbalized1S(Estimator):
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        breakpoint()
         return f"Verbalized1S{self.postfix}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
