@@ -18,3 +18,4 @@ additional_estimators:
       confidence_prompt: "Provide the probability that each of your guesses is correct. Give ONLY the probabilities, no other words or explanation.\n\nFor example:\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nP${topk}: <the probability between 0.0 and 1.0 that G${topk} is correct, without any extra commentary whatsoever; just the probability!>"
       confidence_regex: 'P1: (\d+\.\d+)'
       max_new_tokens: 50
+      name_postfix: "_topk"

@@ -7,12 +7,14 @@ from .estimator import Estimator
 
 
 class Verbalized1S(Estimator):
-    def __init__(self, confidence_regex=""):
+    def __init__(self, confidence_regex="", name_postfix=""):
         self.confidence_regex = confidence_regex
+        self.postfix = name_postfix
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        return "Verbalized1S"
+        breakpoint()
+        return f"Verbalized1S{self.postfix}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         ues = []

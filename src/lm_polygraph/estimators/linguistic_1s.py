@@ -6,12 +6,13 @@ from .estimator import Estimator
 
 
 class Linguistic1S(Estimator):
-    def __init__(self, expressions: Dict[str, float]):
+    def __init__(self, expressions: Dict[str, float], name_postfix=""):
         self.expressions = expressions
+        self.postfix = name_postfix
         super().__init__(["greedy_texts"], "sequence")
 
     def __str__(self):
-        return "Linguistic1S"
+        return f"Linguistic1S{self.postfix}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         ues = []

@@ -16,3 +16,4 @@ additional_estimators:
     class_name: Verbalized1S
     kwargs:
       confidence_regex: 'P1: (\d+\.\d+)'
+      name_postfix: "_topk"

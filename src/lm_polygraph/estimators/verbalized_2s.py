@@ -12,14 +12,16 @@ class Verbalized2S(Estimator):
         confidence_prompt: str,
         confidence_regex: str = "",
         max_new_tokens: int = 10,
+        name_postfix="",
     ):
         self.max_new_tokens = max_new_tokens
         self.confidence_prompt = confidence_prompt
         self.confidence_regex = confidence_regex
+        self.postfix = name_postfix
         super().__init__(["input_texts", "greedy_texts"], "sequence")
 
     def __str__(self):
-        return "Verbalized2S"
+        return f"Verbalized2S{self.postfix}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         model = stats["model"]
