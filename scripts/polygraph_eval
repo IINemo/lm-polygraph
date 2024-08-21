@@ -296,17 +296,23 @@ def get_ue_methods(args, model):
         ]
 
     if getattr(args, "use_ens_ue", False):
-        if not (model.model_type == "Seq2SeqLM"):
-            raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+        # Ensemble-based UE methods have been disabled due to dependency on old
+        # transformers code, which prevents bumping transformers version in 
+        # dependencies past 4.40.0. This is a temporary solution until the
+        # code is updated to work with the latest transformers version.
+        raise NotImplementedError('Ensemble UE methods are not working properly in this version. Consider downgrading to 0.3.0')
 
-        token_measures = all_token_estimators()
-        if args.model.ensembling_mode == 'pe':
-            sequence_measures = all_pe_estimators()
-        elif args.model.ensembling_mode == 'ep':
-            sequence_measures = all_ep_estimators()
-        else:
-            raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
-        estimators += (token_measures + sequence_measures)
+        #if not (model.model_type == "Seq2SeqLM"):
+        #    raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+
+        #token_measures = all_token_estimators()
+        #if args.model.ensembling_mode == 'pe':
+        #    sequence_measures = all_pe_estimators()
+        #elif args.model.ensembling_mode == 'ep':
+        #    sequence_measures = all_ep_estimators()
+        #else:
+        #    raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
+        #estimators += (token_measures + sequence_measures)
 
     if getattr(args, "use_tok_ue", False):
         estimators += [
