@@ -56,8 +56,8 @@ def test_all_seq_ue():
 
 
 # ================= PE ensembles ==================
-# 
-# 
+#
+#
 # def test_pe_ensembles_dont_fail():
 #     overrides = {
 #         "model.ensembling_mode": "pe",
@@ -66,34 +66,34 @@ def test_all_seq_ue():
 #     assert (
 #         exec_result.returncode == 0
 #     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
-# 
-# 
+#
+#
 # def test_pe_ensembles_has_all_ensemble_estimates():
 #     overrides = {
 #         "model.ensembling_mode": "pe",
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     expected_estimators = all_token_estimators() + all_pe_estimators()
 #     for estimator in expected_estimators:
 #         key = ("sequence", str(estimator))
 #         assert len(man.estimations[key]) > 0, f"result doesn't have {key}"
-# 
-# 
+#
+#
 # def test_pe_ensembles_no_nans():
 #     overrides = {
 #         "model.ensembling_mode": "pe",
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     expected_estimators = all_token_estimators() + all_pe_estimators()
 #     for estimator in expected_estimators:
 #         key = ("sequence", str(estimator))
 #         assert not (np.any(np.isnan(man.estimations[key]))), f"result has NaNs in {key}"
-# 
-# 
+#
+#
 # def test_pe_mi_not_zero():
 #     """
 #     If models are not the same, their output distributions should be different,
@@ -104,7 +104,7 @@ def test_all_seq_ue():
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     mi_estimators = ["PETmi", "EPTmi", "PESrmi"]
 #     for estimator in mi_estimators:
 #         key = ("sequence", estimator)
@@ -113,8 +113,8 @@ def test_all_seq_ue():
 #         assert not (
 #             np.allclose(estimations, np.zeros((shape,)), atol=1e-04)
 #         ), f"result has close to zero MI in {key}"
-# 
-# 
+#
+#
 # def test_pe_mi_zero_when_same():
 #     """
 #     If models are same, their output distributions should be identical,
@@ -125,9 +125,9 @@ def test_all_seq_ue():
 #         "model.mc_seeds": "[42, 42]",
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
-# 
+#
 #     man = load_test_manager()
-# 
+#
 #     mi_estimators = ["PETmi", "EPTmi", "PESrmi"]
 #     for estimator in mi_estimators:
 #         key = ("sequence", estimator)
@@ -136,11 +136,11 @@ def test_all_seq_ue():
 #         assert np.allclose(
 #             estimations, np.zeros((shape,)), atol=1e-04
 #         ), f"result has non-zero MI in {key} when models are identical"
-# 
-# 
+#
+#
 # # ================= EP ensembles ==================
-# 
-# 
+#
+#
 # def test_ep_ensembles_dont_fail():
 #     overrides = {
 #         "model.ensembling_mode": "ep",
@@ -149,34 +149,34 @@ def test_all_seq_ue():
 #     assert (
 #         exec_result.returncode == 0
 #     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
-# 
-# 
+#
+#
 # def test_ep_ensembles_has_all_ensemble_estimates():
 #     overrides = {
 #         "model.ensembling_mode": "ep",
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     expected_estimators = all_token_estimators() + all_ep_estimators()
 #     for estimator in expected_estimators:
 #         key = ("sequence", str(estimator))
 #         assert len(man.estimations[key]) > 0, f"result doesn't have {key}"
-# 
-# 
+#
+#
 # def test_ep_ensembles_no_nans():
 #     overrides = {
 #         "model.ensembling_mode": "ep",
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     expected_estimators = all_token_estimators() + all_ep_estimators()
 #     for estimator in expected_estimators:
 #         key = ("sequence", str(estimator))
 #         assert not (np.any(np.isnan(man.estimations[key]))), f"result has NaNs in {key}"
-# 
-# 
+#
+#
 # def test_ep_mi_not_zero():
 #     """
 #     If models are not the same, their output distributions should be different,
@@ -187,7 +187,7 @@ def test_all_seq_ue():
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     mi_estimators = ["PETmi", "EPTmi", "EPSrmi"]
 #     for estimator in mi_estimators:
 #         key = ("sequence", estimator)
@@ -196,8 +196,8 @@ def test_all_seq_ue():
 #         assert not (
 #             np.allclose(estimations, np.zeros((shape,)), atol=1e-04)
 #         ), f"result has close to zero MI in {key}"
-# 
-# 
+#
+#
 # def test_ep_mi_zero_when_same():
 #     """
 #     If models are same, their output distributions should be identical,
@@ -209,7 +209,7 @@ def test_all_seq_ue():
 #     }
 #     run_config_with_overrides("test_polygraph_eval_ensemble", **overrides)
 #     man = load_test_manager()
-# 
+#
 #     mi_estimators = ["PETmi", "EPTmi", "EPSrmi"]
 #     for estimator in mi_estimators:
 #         key = ("sequence", estimator)
