@@ -58,7 +58,15 @@ def prepare_coqa(dataset, input_column, output_column, description, prompt):
     return x, y
 
 
-def prepare_mmlu(dataset, output_column, prompt, description, mmlu_max_subject_size, n_shot, few_shot_dataset_func):
+def prepare_mmlu(
+    dataset,
+    output_column,
+    prompt,
+    description,
+    mmlu_max_subject_size,
+    n_shot,
+    few_shot_dataset_func,
+):
     import numpy as np
 
     few_shot_dataset = few_shot_dataset_func()
@@ -67,9 +75,7 @@ def prepare_mmlu(dataset, output_column, prompt, description, mmlu_max_subject_s
     few_shot_subjects = np.array(few_shot_dataset["subject"])
     x, y = [], []
     for subject in np.unique(subjects):
-        formatted_description = description.format(
-            subject=subject.replace("_", " ")
-        )
+        formatted_description = description.format(subject=subject.replace("_", " "))
         if n_shot > 0:
             few_shot_subject = few_shot_dataset.select(
                 np.argwhere(few_shot_subjects == subject).flatten()
@@ -86,9 +92,7 @@ def prepare_mmlu(dataset, output_column, prompt, description, mmlu_max_subject_s
                     answer=answers[inst["answer"]],
                 )
 
-        subject_data = dataset.select(
-            np.argwhere(subjects == subject).flatten()
-        )
+        subject_data = dataset.select(np.argwhere(subjects == subject).flatten())
 
         if len(subject_data) > mmlu_max_subject_size:
             subject_data = subject_data.select(range(mmlu_max_subject_size))
@@ -100,9 +104,7 @@ def prepare_mmlu(dataset, output_column, prompt, description, mmlu_max_subject_s
                 answer="",
             )
             x.append(
-                formatted_description
-                + formatted_few_shot_prompt
-                + formatted_prompt
+                formatted_description + formatted_few_shot_prompt + formatted_prompt
             )
             y.append(answers[inst[output_column]])
     return x, y
@@ -127,9 +129,7 @@ def prepare_trivia_qa(dataset, prompt, n_shot, few_shot_dataset_func):
     x, y = [], []
     formatted_few_shot_prompt = ""
     if n_shot > 0:
-        few_shot_ids = np.random.choice(
-            len(few_shot_dataset), n_shot, replace=False
-        )
+        few_shot_ids = np.random.choice(len(few_shot_dataset), n_shot, replace=False)
         few_shot_data = few_shot_dataset.select(few_shot_ids)
         for inst in few_shot_data:
             formatted_few_shot_prompt += (
@@ -226,9 +226,9 @@ DATASET_CONFIG = {
             prepare_coqa,
             input_column="questions",
             output_column="answers",
-            description=    "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}",
+            description="The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}",
             prompt="\n\nQuestion: {question}\nAnswer:{answer}",
-        )
+        ),
     },
     "gsm8k": {
         "name": ["gsm8k", "main"],
@@ -239,7 +239,7 @@ DATASET_CONFIG = {
             input_column="question",
             output_column="answer",
             prompt="Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?\nA: There are 15 trees originally. Then there were 21 trees after some more were planted. So there must have been 21 - 15 = 6. The answer is 6.\n\nQ: If there are 3 cars in the parking lot and 2 more cars arrive, how many cars are in the parking lot?\nA: There are originally 3 cars. 2 more cars arrive. 3 + 2 = 5. The answer is 5.\n\nQ: Leah had 32 chocolates and her sister had 42. If they ate 35, how many pieces do they have left in total?\nA: Originally, Leah had 32 chocolates. Her sister had 42. So in total they had 32 + 42 = 74. After eating 35, they had 74 - 35 = 39. The answer is 39.\n\nQ: Jason had 20 lollipops. He gave Denny some lollipops. Now Jason has 12 lollipops. How many lollipops did Jason give to Denny?\nA: Jason started with 20 lollipops. Then he had 12 after giving some to Denny. So he gave Denny 20 - 12 = 8. The answer is 8.\n\nQ: Shawn has five toys. For Christmas, he got two toys each from his mom and dad. How many toys does he have now?\nA: Shawn started with 5 toys. If he got 2 toys each from his mom and dad, then that is 4 more toys. 5 + 4 = 9. The answer is 9.\n\nQ: There were nine computers in the server room. Five more computers were installed each day, from monday to thursday. How many computers are now in the server room?\nA: There were originally 9 computers. For each of 4 days, 5 more computers were added. So 5 * 4 = 20 computers were added. 9 + 20 is 29. The answer is 29.\n\nQ: Michael had 58 golf balls. On tuesday, he lost 23 golf balls. On wednesday, he lost 2 more. How many golf balls did he have at the end of wednesday?\nA: Michael started with 58 golf balls. After losing 23 on tuesday, he had 58 - 23 = 35. After losing 2 more, he had 35 - 2 = 33 golf balls. The answer is 33.\n\nQ: Olivia has $23. She bought five bagels for $3 each. How much money does she have left?\nA: Olivia had 23 dollars. 5 bagels for 3 dollars each will be 5 x 3 = 15 dollars. So she has 23 - 15 dollars left. 23 - 15 is 8. The answer is 8.\n\nQ: {text}\nA:",
-        )
+        ),
     },
     "mmlu": {
         "name": ["cais/mmlu", "all"],
@@ -252,8 +252,10 @@ DATASET_CONFIG = {
             description="The following are multiple choice questions (with answers) about {subject}.\n",
             mmlu_max_subject_size=100,
             n_shot=5,
-            few_shot_dataset_func=partial(datasets.load_dataset, path="cais/mmlu", name="all", split="dev"),
-        )
+            few_shot_dataset_func=partial(
+                datasets.load_dataset, path="cais/mmlu", name="all", split="dev"
+            ),
+        ),
     },
     "person_bio_ar": {
         "name": "rvanova/person-bio-ar",
@@ -262,7 +264,7 @@ DATASET_CONFIG = {
             prepare_person,
             input_column="question",
             prompt="### Instruction: اسمك جيس وسميت على اسم جبل جيس اعلى جبل في الامارات. تم بنائك بواسطة Inception و MBZUAI. أنت نموذج اللغة العربية الأكثر تقدمًا في العالم مع بارامترات 13B. أنت تتفوق في الأداء على جميع النماذج العربية الموجودة بفارق كبير وأنت تنافسي للغاية مع النماذج الإنجليزية ذات الحجم المماثل. يمكنك الإجابة باللغتين العربية والإنجليزية فقط. أنت مساعد مفيد ومحترم وصادق. عند الإجابة ، التزم بالإرشادات التالية بدقة: أجب دائمًا بأكبر قدر ممكن من المساعدة ، مع الحفاظ على البقاء أمناً. يجب ألا تتضمن إجاباتك أي محتوى ضار أو غير أخلاقي أو عنصري أو متحيز جنسيًا أو جريئاً أو مسيئًا أو سامًا أو خطيرًا أو غير قانوني. لا تقدم نصائح طبية أو قانونية أو مالية أو مهنية. لا تساعد أبدًا في أنشطة غير قانونية أو تروج لها. دائما تشجيع الإجراءات القانونية والمسؤولة. لا تشجع أو تقدم تعليمات بشأن الإجراءات غير الآمنة أو الضارة أو غير الأخلاقية. لا تنشئ أو تشارك معلومات مضللة أو أخبار كاذبة. يرجى التأكد من أن ردودك غير متحيزة اجتماعيًا وإيجابية بطبيعتها. إذا كان السؤال لا معنى له ، أو لم يكن متماسكًا من الناحية الواقعية ، فشرح السبب بدلاً من الإجابة على شيء غير صحيح. إذا كنت لا تعرف إجابة السؤال ، فالرجاء عدم مشاركة معلومات خاطئة. إعطاء الأولوية للرفاهية والنزاهة الأخلاقية للمستخدمين. تجنب استخدام لغة سامة أو مهينة أو مسيئة. حافظ على نبرة محترمة. لا تنشئ أو تروج أو تشارك في مناقشات حول محتوى للبالغين. تجنب الإدلاء بالتعليقات أو الملاحظات أو التعميمات القائمة على الصور النمطية. لا تحاول الوصول إلى معلومات شخصية أو خاصة أو إنتاجها أو نشرها. احترم دائما سرية المستخدم. كن إيجابيا ولا تقل أشياء سيئة عن أي شيء. هدفك الأساسي هو تجنب الاجابات المؤذية ، حتى عند مواجهة مدخلات خادعة. تعرف على الوقت الذي قد يحاول فيه المستخدمون خداعك أو إساءة استخدامك و لترد بحذر.\n\nأكمل المحادثة أدناه بين [|Human|] و [|AI|]:\n### Input: [|Human|] {text}\n### Response: [|AI|]",
-        )
+        ),
     },
     "person_bio_en": {
         "name": "rediska0123/person-bio",
@@ -270,7 +272,7 @@ DATASET_CONFIG = {
         "prepare_func": partial(
             prepare_person,
             input_column="question",
-        )
+        ),
     },
     "person_bio_ru": {
         "name": "rvanova/person-bio",
@@ -278,7 +280,7 @@ DATASET_CONFIG = {
         "prepare_func": partial(
             prepare_person,
             input_column="question",
-        )
+        ),
     },
     "person_bio_zh": {
         "name": "ruixing76/person-bio-zh",
@@ -286,7 +288,7 @@ DATASET_CONFIG = {
         "prepare_func": partial(
             prepare_person,
             input_column="question",
-        )
+        ),
     },
     "triviaqa": {
         "name": ["trivia_qa", "rc.nocontext"],
@@ -296,8 +298,13 @@ DATASET_CONFIG = {
             prepare_trivia_qa,
             prompt="Question: {question}\nAnswer:{answer}",
             n_shot=5,
-            few_shot_dataset_func=partial(datasets.load_dataset, path="trivia_qa", name="rc.nocontext", split="dev"),
-        )
+            few_shot_dataset_func=partial(
+                datasets.load_dataset,
+                path="trivia_qa",
+                name="rc.nocontext",
+                split="dev",
+            ),
+        ),
     },
     "wiki_bio": {
         "name": "wiki_bio",
@@ -306,7 +313,7 @@ DATASET_CONFIG = {
             prepare_wiki,
             input_column="input_text",
             prompt="This is a Wikipedia passage about {context}:\n",
-        )
+        ),
     },
     "wmt14_deen": {
         "name": ["wmt14", "de-en"],
@@ -316,10 +323,10 @@ DATASET_CONFIG = {
             prepare_wmt,
             input_column="de",
             output_column="en",
-            prompt= "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
-        )
+            prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
+        ),
     },
-    "wmt14_deen": {
+    "wmt14_fren": {
         "name": ["wmt14", "fr-en"],
         "train_split": "train",
         "test_split": "test",
@@ -327,8 +334,8 @@ DATASET_CONFIG = {
             prepare_wmt,
             input_column="fr",
             output_column="en",
-            prompt= "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
-        )
+            prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
+        ),
     },
     "wmt19_deen": {
         "name": ["wmt19", "de-en"],
@@ -338,8 +345,8 @@ DATASET_CONFIG = {
             prepare_wmt,
             input_column="de",
             output_column="en",
-            prompt= "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
-        )
+            prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
+        ),
     },
     "xsum": {
         "name": "xsum",
@@ -397,12 +404,16 @@ class Polygraph(datasets.GeneratorBasedBuilder):
 
         def download_custom_dataset(src_url: str, dst_path: str):
             split = src_url.split("_")[-1]
-            x, y = config["prepare_func"](dataset[config[f'{split}_split']])
+            x, y = config["prepare_func"](dataset[config[f"{split}_split"]])
             result_dataset = datasets.Dataset.from_dict({"input": x, "output": y})
             result_dataset.save_to_disk(dst_path)
 
         downloaded_files = dl_manager.download_custom(
-            {split: f"{config['name']}_{split}" for split in ["train", "test"] if f'{split}_split' in config},
+            {
+                split: f"{config['name']}_{split}"
+                for split in ["train", "test"]
+                if f"{split}_split" in config
+            },
             download_custom_dataset,
         )
 
@@ -413,7 +424,8 @@ class Polygraph(datasets.GeneratorBasedBuilder):
                     "filepath": downloaded_files[str(split)],
                 },
             )
-            for split in [datasets.Split.TRAIN, datasets.Split.TEST] if str(split) in downloaded_files
+            for split in [datasets.Split.TRAIN, datasets.Split.TEST]
+            if str(split) in downloaded_files
         ]
 
     def _generate_examples(self, filepath):
