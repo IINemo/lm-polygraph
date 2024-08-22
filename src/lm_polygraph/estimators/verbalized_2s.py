@@ -7,6 +7,13 @@ from .estimator import Estimator
 
 
 class Verbalized2S(Estimator):
+    """
+    Asks model to output it's confidence in a provided follow-up prompt and
+    extracts the confidence estimate from the model's answer using a provided regex.
+    Only usabe for instruct-finetuned models with chat template support.
+    Adapted from the original implementation in the paper https://arxiv.org/abs/2305.14975
+    """
+
     def __init__(
         self,
         confidence_prompt: str,
