@@ -75,9 +75,14 @@ class SemanticEntropy(Estimator):
             if self.correct_estimation:
                 class_hyps = [np.array(hyps_list[i])[np.array(class_idx)]
                               for class_idx in self._class_to_sample[i]]
-                unique_hyps_ids = [np.unique(hyps, return_inverse=True)[1] for hyps in class_hyps]
-                breakpoint()
-                class_likelihoods = [likelihoods[ids] for ids, likelihoods in zip(unique_hyps_ids, class_likelihoods)]
+                unique_hyps_ids = [
+                    np.unique(np.unique(hyps, return_inverse=True)[1])
+                    for hyps in class_hyps
+                ]
+                class_likelihoods = [
+                    likelihoods[ids]
+                    for ids, likelihoods in zip(unique_hyps_ids, class_likelihoods)
+                ]
 
             class_lp = [
                 np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods

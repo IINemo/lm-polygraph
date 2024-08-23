@@ -41,20 +41,22 @@ subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
-use_density_based_ue: false
-use_seq_ue: false
+use_density_based_ue: true
+use_seq_ue: true
 use_tok_ue: false
 use_ens_ue: false
 generation_metrics: null
 ens_type: 
 
-additional_estimators:
-  - module: lm_polygraph.estimators.semantic_entropy
-    class_name: SemanticEntropy
-    kwargs: {}
-      #correct_estimation: true
-
-ignore_exceptions: false
+# Examples of providing additional UE methods:
+# additional_estimators: {
+#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
+#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
+# }
+# additional_estimators_kwargs: {
+#   'Perplexity': {},
+#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
+# }
 
 batch_size: 2
 deberta_batch_size: 10
