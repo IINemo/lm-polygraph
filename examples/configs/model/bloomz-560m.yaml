@@ -6,5 +6,5 @@ type: CausalLM
 path_to_load_script: model/default_causal.py
 
 load_model_args:
-  device_map: auto
+  device_map: cpu
 load_tokenizer_args: {}

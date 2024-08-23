@@ -17,7 +17,7 @@ class SemanticEntropy(Estimator):
     'samples_n' parameter.
     """
 
-    def __init__(self, verbose: bool = False):
+    def __init__(self, verbose: bool = False, correct_estimation: bool = True):
         super().__init__(
             [
                 "sample_log_probs",
@@ -27,6 +27,7 @@ class SemanticEntropy(Estimator):
             ],
             "sequence",
         )
+        self.correct_estimation = correct_estimation
         self.verbose = verbose
 
     def __str__(self):
@@ -46,15 +47,10 @@ class SemanticEntropy(Estimator):
                 Higher values indicate more uncertain samples.
         """
         loglikelihoods_list = stats["sample_log_probs"]
+        hyps_list = stats["sample_texts"]
 
         # entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"] # TODO: Why this is here??
         self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
-
-        # Concatenate hypos with input texts
-        hyps_list = [[] for _ in stats["input_texts"]]
-        for i, input_text in enumerate(stats["input_texts"]):
-            for hyp in stats["sample_texts"][i]:
-                hyps_list[i].append(" ".join([input_text, hyp]))
 
         return self.batched_call(hyps_list, loglikelihoods_list)
 
@@ -76,6 +72,13 @@ class SemanticEntropy(Estimator):
                 np.array(loglikelihoods_list[i])[np.array(class_idx)]
                 for class_idx in self._class_to_sample[i]
             ]
+            if self.correct_estimation:
+                class_hyps = [np.array(hyps_list[i])[np.array(class_idx)]
+                              for class_idx in self._class_to_sample[i]]
+                unique_hyps_ids = [np.unique(hyps, return_inverse=True)[1] for hyps in class_hyps]
+                breakpoint()
+                class_likelihoods = [likelihoods[ids] for ids, likelihoods in zip(unique_hyps_ids, class_likelihoods)]
+
             class_lp = [
                 np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
             ]
