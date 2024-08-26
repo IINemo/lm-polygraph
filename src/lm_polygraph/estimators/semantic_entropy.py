@@ -73,8 +73,10 @@ class SemanticEntropy(Estimator):
                 for class_idx in self._class_to_sample[i]
             ]
             if self.correct_estimation:
-                class_hyps = [np.array(hyps_list[i])[np.array(class_idx)]
-                              for class_idx in self._class_to_sample[i]]
+                class_hyps = [
+                    np.array(hyps_list[i])[np.array(class_idx)]
+                    for class_idx in self._class_to_sample[i]
+                ]
                 unique_hyps_ids = [
                     np.unique(np.unique(hyps, return_inverse=True)[1])
                     for hyps in class_hyps

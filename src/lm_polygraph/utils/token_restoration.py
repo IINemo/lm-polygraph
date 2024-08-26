@@ -86,9 +86,9 @@ def collect_sample_token_level_uncertainties(
                             model_logits = model_logits.reshape(
                                 batch_size, num_return_sequences, vocab_size
                             )
-                            models_sequence_scores[obs_id, i, seq_i, _iter] = (
-                                model_logits[obs_id, seq_i, token]
-                            )
+                            models_sequence_scores[
+                                obs_id, i, seq_i, _iter
+                            ] = model_logits[obs_id, seq_i, token]
 
                     entropies = {}
                     entropies["entropy"] = Categorical(posterior).entropy()
@@ -229,9 +229,9 @@ def collect_token_level_uncertainties(
                             model_logits = model_logits.reshape(
                                 batch_size, beam_size, vocab_size
                             )
-                            models_sequence_scores[obs_id, i, seq_i, _iter] = (
-                                model_logits[obs_id, beam_id, token]
-                            )
+                            models_sequence_scores[
+                                obs_id, i, seq_i, _iter
+                            ] = model_logits[obs_id, beam_id, token]
 
                     entropies = {}
                     entropies["entropy"] = Categorical(posterior).entropy()
@@ -256,9 +256,9 @@ def collect_token_level_uncertainties(
                             ue = output_uncertainties_reshaped[key][
                                 obs_id, beam_id, _iter
                             ]
-                        token_level_uncertainties[key][obs_id, seq_i, _iter] = (
-                            torch.tensor(ue)
-                        )
+                        token_level_uncertainties[key][
+                            obs_id, seq_i, _iter
+                        ] = torch.tensor(ue)
 
     for key in token_measures:
         token_level_uncertainties[key] = (
