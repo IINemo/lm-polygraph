@@ -58,6 +58,8 @@ ens_type:
 #   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
 # }
 
+ignore_exceptions: false
+
 batch_size: 2
 deberta_batch_size: 10
 
