@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+path: stabilityai/stablelm-2-1_6b-chat
+type: CausalLM
+path_to_load_script: model/default_causal.py
+
+load_model_args:
+  device_map: auto
+load_tokenizer_args: {}

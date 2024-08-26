@@ -85,6 +85,8 @@ def main(args):
             mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
             n_shot=getattr(args, "n_shot", 5),
             few_shot_split=getattr(args, "few_shot_split", "train"),
+            few_shot_prompt=getattr(args, "few_shot_prompt", None),
+            instruct=getattr(args, "instruct", None),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             **cache_kwargs
@@ -115,6 +117,8 @@ def main(args):
                     mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
                     n_shot=getattr(args, "n_shot", 5),
                     few_shot_split=getattr(args, "few_shot_split", "train"),
+                    few_shot_prompt=getattr(args, "few_shot_prompt", None),
+                    instruct=getattr(args, "instruct", None),
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
@@ -138,6 +142,8 @@ def main(args):
                     mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
                     n_shot=getattr(args, "n_shot", 5),
                     few_shot_split=getattr(args, "few_shot_split", "train"),
+                    few_shot_prompt=getattr(args, "few_shot_prompt", None),
+                    instruct=getattr(args, "instruct", None),
                     split=args.train_split,
                     size=10_000,
                     load_from_disk=args.load_from_disk,
@@ -214,7 +220,7 @@ def get_ue_metrics(args):
 
 def get_density_based_ue_methods(args, model_type):
     estimators = []
-    if args.use_density_based_ue:
+    if getattr(args, "use_density_based_ue", False):
         if getattr(args, 'parameters_path', False):
             parameters_path = args.parameters_path
         else:
@@ -255,7 +261,7 @@ def get_density_based_ue_methods(args, model_type):
 
 def get_ue_methods(args, model):
     estimators = []
-    if args.use_seq_ue:
+    if getattr(args, "use_seq_ue", False):
         estimators += [
             MaximumSequenceProbability(),
             Perplexity(),
@@ -289,20 +295,26 @@ def get_ue_methods(args, model):
             FisherRao(),
         ]
 
-    if args.use_ens_ue:
-        if not (model.model_type == "Seq2SeqLM"):
-            raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+    if getattr(args, "use_ens_ue", False):
+        # Ensemble-based UE methods have been disabled due to dependency on old
+        # transformers code, which prevents bumping transformers version in 
+        # dependencies past 4.40.0. This is a temporary solution until the
+        # code is updated to work with the latest transformers version.
+        raise NotImplementedError('Ensemble UE methods are not working properly in this version. Consider downgrading to 0.3.0')
 
-        token_measures = all_token_estimators()
-        if args.model.ensembling_mode == 'pe':
-            sequence_measures = all_pe_estimators()
-        elif args.model.ensembling_mode == 'ep':
-            sequence_measures = all_ep_estimators()
-        else:
-            raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
-        estimators += (token_measures + sequence_measures)
+        #if not (model.model_type == "Seq2SeqLM"):
+        #    raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
 
-    if args.use_tok_ue:
+        #token_measures = all_token_estimators()
+        #if args.model.ensembling_mode == 'pe':
+        #    sequence_measures = all_pe_estimators()
+        #elif args.model.ensembling_mode == 'ep':
+        #    sequence_measures = all_ep_estimators()
+        #else:
+        #    raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
+        #estimators += (token_measures + sequence_measures)
+
+    if getattr(args, "use_tok_ue", False):
         estimators += [
             MaximumTokenProbability(),
             TokenEntropy(),
@@ -325,15 +337,10 @@ def get_ue_methods(args, model):
     additional_estimators = getattr(args, "additional_estimators", {})
     additional_estimators_kwargs = getattr(args, "additional_estimators_kwargs", {})
 
-    for i, (module_name, estimator_classes) in enumerate(additional_estimators.items()):
-        module = importlib.import_module(module_name)
-        for j, estimator_class in enumerate(estimator_classes):
-            try:
-                estimator_kwargs = additional_estimators_kwargs[estimator_class]
-            except KeyError:
-                raise TypeError(f'Arguments for {estimator} were not passed')
-
-            estimators.append(getattr(module, estimator_class)(**estimator_kwargs))
+    for estimator_args in additional_estimators:
+        module = importlib.import_module(estimator_args.module)
+        estimator_class = getattr(module, estimator_args.class_name)
+        estimators.append(estimator_class(**estimator_args.kwargs))
 
     return estimators
 
@@ -363,12 +370,12 @@ def get_generation_metrics(args):
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]
-        if not getattr(args, "multiref", False):
-            # Currently, BartScoreSeqMetric does not support multiref
-            result.append(BartScoreSeqMetric('rh'))
-        else:
+        if getattr(args, "multiref", False):
             # Wrap each metric in AggregatedMetric
             result = [AggregatedMetric(base_metric=metric) for metric in result]
+        else:
+            # Currently, BartScoreSeqMetric can only be used with single reference
+            result.append(BartScoreSeqMetric('rh'))
     else:
         result = []
         for metric in generation_metrics:

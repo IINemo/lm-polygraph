@@ -6,7 +6,7 @@ import time
 import logging
 
 from dataclasses import asdict
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from abc import abstractmethod, ABC
 from transformers import (
     AutoTokenizer,
@@ -21,8 +21,6 @@ from transformers import (
 )
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
-from lm_polygraph.utils.prompt_templates.llama import LlamaPromptTemplate
-from lm_polygraph.utils.prompt_templates.vicuna import get_vicuna_prompt
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
@@ -404,11 +402,17 @@ class WhiteboxModel(Model):
         sequences = self.model.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
+
+        decode_args = {}
+        if self.tokenizer.chat_template is not None:
+            decode_args["skip_special_tokens"] = True
+
         for seq in sequences:
             if self.model_type == "CausalLM":
-                texts.append(self.tokenizer.decode(seq[input_len:]))
+                texts.append(self.tokenizer.decode(seq[input_len:], **decode_args))
             else:
-                texts.append(self.tokenizer.decode(seq[1:]))
+                texts.append(self.tokenizer.decode(seq[1:], **decode_args))
+
         return texts
 
     def __call__(self, **args):
@@ -503,7 +507,9 @@ class WhiteboxModel(Model):
 
         return instance
 
-    def tokenize(self, texts: List[str]) -> Dict[str, torch.Tensor]:
+    def tokenize(
+        self, texts: Union[List[str], List[List[Dict[str, str]]]]
+    ) -> Dict[str, torch.Tensor]:
         """
         Tokenizes input texts batch into a dictionary using the model tokenizer.
 
@@ -512,30 +518,19 @@ class WhiteboxModel(Model):
         Returns:
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
-        model_type = self.model.config._name_or_path.lower()
-        if "falcon" in model_type or "llama" in model_type or "vicuna" in model_type:
-            prompted_texts = []
-            for text in texts:
-                if "llama" in model_type:
-                    template = LlamaPromptTemplate()
-                    template.add_user_message(text)
-                    prompted_texts.append(template.build_prompt())
-                elif "vicuna" in model_type:
-                    prompted_text = get_vicuna_prompt(text)
-                    prompted_texts.append(prompted_text)
-                else:
-                    prompted_texts.append(text)
-            tokenized = self.tokenizer(
-                prompted_texts,
-                truncation=True,
-                padding=True,
-                return_tensors="pt",
-                return_token_type_ids=False,
-            )
-        else:
-            tokenized = self.tokenizer(texts, padding=True, return_tensors="pt")
+        # Apply chat template if tokenizer has it
+        if self.tokenizer.chat_template is not None:
+            formatted_texts = []
+            for chat in texts:
+                if isinstance(chat, str):
+                    chat = [{"role": "user", "content": chat}]
+                formatted_chat = self.tokenizer.apply_chat_template(
+                    chat, add_generation_prompt=True, tokenize=False
+                )
+                formatted_texts.append(formatted_chat)
+            texts = formatted_texts
 
-        return tokenized
+        return self.tokenizer(texts, padding=True, return_tensors="pt")
 
 
 def create_ensemble(

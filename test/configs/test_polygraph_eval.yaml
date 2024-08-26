@@ -36,12 +36,10 @@ generation_metrics:
     args: ["rh"]
   - name: AccuracyMetric
 
-additional_estimators: {
-  'lm_polygraph.estimators.perplexity': ['Perplexity'],
-}
-additional_estimators_kwargs: {
-  'Perplexity': {},
-}
+additional_estimators: 
+  - module: lm_polygraph.estimators.perplexity
+    class_name: Perplexity
+    kwargs: {}
 
 subsample_eval_dataset: 10
 batch_size: 2
