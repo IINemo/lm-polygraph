@@ -536,9 +536,9 @@ class UEManager:
                         oracle_score = ue_metric(-metric, metric)
                         random_score = get_random_scores(ue_metric, metric)
                         ue_metric_val = ue_metric(ue, metric)
-                        self.metrics[
-                            e_level, e_name, gen_name, str(ue_metric)
-                        ] = ue_metric_val
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
+                            ue_metric_val
+                        )
                         self.metrics[
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
