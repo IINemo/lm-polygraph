@@ -17,7 +17,7 @@ class SemanticEntropy(Estimator):
     'samples_n' parameter.
     """
 
-    def __init__(self, verbose: bool = False, correct_estimation: bool = True):
+    def __init__(self, verbose: bool = False, use_unique_responses: bool = True):
         super().__init__(
             [
                 "sample_log_probs",
@@ -27,7 +27,7 @@ class SemanticEntropy(Estimator):
             ],
             "sequence",
         )
-        self.correct_estimation = correct_estimation
+        self.use_unique_responses = use_unique_responses
         self.verbose = verbose
 
     def __str__(self):
@@ -72,7 +72,7 @@ class SemanticEntropy(Estimator):
                 np.array(loglikelihoods_list[i])[np.array(class_idx)]
                 for class_idx in self._class_to_sample[i]
             ]
-            if self.correct_estimation:
+            if self.use_unique_responses:
                 class_hyps = [
                     np.array(hyps_list[i])[np.array(class_idx)]
                     for class_idx in self._class_to_sample[i]
