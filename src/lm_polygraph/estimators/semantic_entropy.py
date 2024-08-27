@@ -17,19 +17,25 @@ class SemanticEntropy(Estimator):
     'samples_n' parameter.
     """
 
-    def __init__(self, verbose: bool = False):
-        super().__init__(
-            [
-                "sample_log_probs",
-                "sample_texts",
-                "semantic_classes_entail",
-            ],
-            "sequence",
-        )
+    def __init__(self, verbose: bool = False, class_probability_estimation: str = "sum"):
+        self.class_probability_estimation = class_probability_estimation
+        if self.class_probability_estimation == "sum":
+            deps = ["sample_log_probs", "sample_texts", "semantic_classes_entail"]
+        elif self.class_probability_estimation == "frequency":
+            deps = ["blackbox_sample_texts", "semantic_classes_entail"]
+        else:
+            raise ValueError(
+                f"Unknown class_probability_estimation: {self.class_probability_estimation}. Use 'sum' or 'frequency'."
+            )
+
+        super().__init__(deps, "sequence")
         self.verbose = verbose
 
     def __str__(self):
-        return "SemanticEntropy"
+        if self.class_probability_estimation == "sum":
+            return "SemanticEntropy"
+        elif self.class_probability_estimation == "frequency":
+            return "SemanticEntropyEmpirical"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -69,13 +75,18 @@ class SemanticEntropy(Estimator):
         semantic_logits = {}
         # Iteration over batch
         for i in range(len(hyps_list)):
-            class_likelihoods = [
-                np.array(loglikelihoods_list[i])[np.array(class_idx)]
-                for class_idx in self._class_to_sample[i]
-            ]
-            class_lp = [
-                np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
-            ]
+            if self.class_probability_estimation == "sum":
+                class_likelihoods = [
+                    np.array(loglikelihoods_list[i])[np.array(class_idx)]
+                    for class_idx in self._class_to_sample[i]
+                ]
+                class_lp = [
+                    np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
+                ]
+            elif self.class_probability_estimation == "frequency":
+                num_samples = len(hyps_list[i])
+                class_lp = np.log([len(class_idx)/num_samples for class_idx in self._class_to_sample[i]])
+
             if log_weights[i] is None:
                 log_weights[i] = [0 for _ in hyps_list[i]]
             semantic_logits[i] = -np.mean(
