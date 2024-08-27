@@ -30,24 +30,41 @@ def prepare_babi_qa(dataset, input_column, output_column, prompt):
     return x, y
 
 
-def prepare_coqa(dataset, input_column, output_column, description, prompt):
+def prepare_coqa(
+    dataset, input_column, output_column, description, prompt, few_shot_prompt, instruct
+):
     def doc_to_text(doc, prompt, i=0):
         # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
         # and a question qi, the task is to predict the answer ai
         doc_text = ""
         for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
-            doc_text += prompt.format(question=q, answer=a)
+            doc_text += "\n\n" + prompt.format(question=q, answer=a)
         return doc_text
 
     x, y = [], []
     for inst in dataset:
         formatted_description = description.format(story=inst["story"])
         for j, (question, answer) in enumerate(
-            zip(inst[input_column], inst[output_column]["input_text"])
+            zip(inst[x_column], inst[y_column]["input_text"])
         ):
+            if instruct:
+                assert (
+                    few_shot_prompt is not None
+                ), "separate few_shot_prompt must be provided for instruction mode."
+                few_shot_section = doc_to_text(inst, few_shot_prompt, j)
+                if few_shot_section != "":
+                    few_shot_section = (
+                        "\n\nHere are a few examples of questions and answers:"
+                        + few_shot_section
+                        + "\n\nNow answer the following question in the same format.\n\n"
+                    )
+                else:
+                    few_shot_section = "\n\n"
+            else:
+                few_shot_section = doc_to_text(inst, prompt, j) + "\n\n"
             formatted_prompt = (
                 formatted_description
-                + doc_to_text(inst, prompt, j)
+                + few_shot_section
                 + prompt.format(
                     question=question,
                     answer="",
@@ -66,10 +83,13 @@ def prepare_mmlu(
     mmlu_max_subject_size,
     n_shot,
     few_shot_dataset_func,
+    few_shot_prompt,
+    instruct,
 ):
     import numpy as np
 
     few_shot_dataset = few_shot_dataset_func()
+
     answers = ["A", "B", "C", "D"]
     subjects = np.array(dataset["subject"])
     few_shot_subjects = np.array(few_shot_dataset["subject"])
@@ -84,13 +104,36 @@ def prepare_mmlu(
                 len(few_shot_subject), n_shot, replace=False
             )
             few_shot_data = few_shot_subject.select(few_shot_ids)
-            formatted_few_shot_prompt = ""
-            for inst in few_shot_data:
-                formatted_few_shot_prompt += prompt.format(
-                    choices=inst["choices"],
-                    question=inst["question"].strip(),
-                    answer=answers[inst["answer"]],
+            if instruct:
+                assert (
+                    few_shot_prompt is not None
+                ), "separate few_shot_prompt must be provided for instruction mode."
+                formatted_few_shot_prompt = (
+                    "Here are a few examples of questions and answers:\n\n"
                 )
+                for inst in few_shot_data:
+                    formatted_few_shot_prompt += (
+                        few_shot_prompt.format(
+                            choices=inst["choices"],
+                            question=inst["question"].strip(),
+                            answer=answers[inst["answer"]],
+                        )
+                        + "\n\n"
+                    )
+                formatted_few_shot_prompt += (
+                    "Now answer the following question in the same format:\n\n"
+                )
+            else:
+                formatted_few_shot_prompt = ""
+                for inst in few_shot_data:
+                    formatted_few_shot_prompt += (
+                        prompt.format(
+                            choices=inst["choices"],
+                            question=inst["question"].strip(),
+                            answer=answers[inst["answer"]],
+                        )
+                        + "\n"
+                    )
 
         subject_data = dataset.select(np.argwhere(subjects == subject).flatten())
 
@@ -104,9 +147,12 @@ def prepare_mmlu(
                 answer="",
             )
             x.append(
-                formatted_description + formatted_few_shot_prompt + formatted_prompt
+                formatted_description
+                + "\n\n"
+                + formatted_few_shot_prompt
+                + formatted_prompt
             )
-            y.append(answers[inst[output_column]])
+            y.append(answers[inst[y_column]])
     return x, y
 
 
@@ -121,32 +167,65 @@ def prepare_person(dataset, input_column, prompt=""):
     return x, y
 
 
-def prepare_trivia_qa(dataset, prompt, n_shot, few_shot_dataset_func):
+def prepare_trivia_qa(
+    dataset,
+    prompt,
+    n_shot,
+    few_shot_dataset_func,
+    description,
+    few_shot_prompt,
+    instruct,
+):
     import numpy as np
 
     few_shot_dataset = few_shot_dataset_func()
 
     x, y = [], []
-    formatted_few_shot_prompt = ""
+    formatted_few_shot_prompt = description
     if n_shot > 0:
         few_shot_ids = np.random.choice(len(few_shot_dataset), n_shot, replace=False)
         few_shot_data = few_shot_dataset.select(few_shot_ids)
-        for inst in few_shot_data:
+        if instruct:
+            assert (
+                few_shot_prompt is not None
+            ), "separate few_shot_prompt must be provided for instruction mode."
             formatted_few_shot_prompt += (
-                prompt.format(
-                    question=inst["question"].strip(),
-                    answer=inst["answer"]["normalized_value"],
+                "\n\nHere are a few examples of questions and answers:\n\n"
+            )
+            for inst in few_shot_data:
+                formatted_few_shot_prompt += (
+                    few_shot_prompt.format(
+                        question=inst["question"].strip(),
+                        answer=inst["answer"]["normalized_value"],
+                    )
+                    + "\n\n"
                 )
-                + "\n"
+            formatted_few_shot_prompt += (
+                "Now answer the following question in the same format:\n\n"
             )
+        else:
+            formatted_few_shot_prompt = ""
+            for inst in few_shot_data:
+                formatted_few_shot_prompt += (
+                    prompt.format(
+                        question=inst["question"].strip(),
+                        answer=inst["answer"]["normalized_value"],
+                    )
+                    + "\n\n"
+                )
+    else:
+        formatted_few_shot_prompt += "\n"
+
     for inst in dataset:
-        x.append(
-            formatted_few_shot_prompt
-            + prompt.format(
-                question=inst["question"],
-                answer="",
+        if instruct:
+            x.append(
+                formatted_few_shot_prompt + prompt.format(question=inst["question"])
             )
-        )
+        else:
+            x.append(
+                formatted_few_shot_prompt
+                + prompt.format(question=inst["question"], answer="")
+            )
         y.append([alias for alias in inst["answer"]["aliases"]])
     return x, y
 
@@ -185,6 +264,66 @@ def prepare_allenai(dataset, input_column, output_column):
             x.append(inst[input_column])
             y.append(inst[output_column])
     return x, y
+
+
+def generate_coqa_instruct_config(description, few_shot_prompt):
+    return {
+        "name": "coqa",
+        "train_split": "train",
+        "test_split": "validation",
+        "prepare_func": partial(
+            prepare_coqa,
+            input_column="questions",
+            output_column="answers",
+            description=description,
+            prompt="Question: {question}\n",
+            few_shot_prompt=few_shot_prompt,
+            instruct=True,
+        ),
+    }
+
+
+def generate_mmlu_instruct_config(description, few_shot_prompt):
+    return {
+        "name": ["cais/mmlu", "all"],
+        "train_split": "validation",
+        "test_split": "test",
+        "prepare_func": partial(
+            prepare_mmlu,
+            output_column="answer",
+            prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
+            description=description,
+            mmlu_max_subject_size=100,
+            n_shot=5,
+            few_shot_dataset_func=partial(
+                datasets.load_dataset, path="cais/mmlu", name="all", split="dev"
+            ),
+            few_shot_prompt=few_shot_prompt,
+            instruct=True,
+        ),
+    }
+
+
+def generate_triviaqa_instruct_config(description, few_shot_prompt):
+    return {
+        "name": ["trivia_qa", "rc.nocontext"],
+        "train_split": "train",
+        "test_split": "validation",
+        "prepare_func": partial(
+            prepare_trivia_qa,
+            prompt="Question: {question}\n",
+            n_shot=5,
+            few_shot_dataset_func=partial(
+                datasets.load_dataset,
+                path="trivia_qa",
+                name="rc.nocontext",
+                split="dev",
+            ),
+            description=description,
+            few_shot_prompt=few_shot_prompt,
+            instruct=True,
+        ),
+    }
 
 
 DATASET_CONFIG = {
@@ -227,7 +366,9 @@ DATASET_CONFIG = {
             input_column="questions",
             output_column="answers",
             description="The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}",
-            prompt="\n\nQuestion: {question}\nAnswer:{answer}",
+            prompt="Question: {question}\nAnswer:{answer}",
+            few_shot_prompt=None,
+            instruct=False,
         ),
     },
     "gsm8k": {
@@ -248,13 +389,15 @@ DATASET_CONFIG = {
         "prepare_func": partial(
             prepare_mmlu,
             output_column="answer",
-            prompt="\nQ:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
+            prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
             description="The following are multiple choice questions (with answers) about {subject}.\n",
             mmlu_max_subject_size=100,
             n_shot=5,
             few_shot_dataset_func=partial(
                 datasets.load_dataset, path="cais/mmlu", name="all", split="dev"
             ),
+            few_shot_prompt=None,
+            instruct=False,
         ),
     },
     "person_bio_ar": {
@@ -304,6 +447,9 @@ DATASET_CONFIG = {
                 name="rc.nocontext",
                 split="dev",
             ),
+            description="",
+            few_shot_prompt=None,
+            instruct=False,
         ),
     },
     "wiki_bio": {
@@ -358,6 +504,79 @@ DATASET_CONFIG = {
             prompt="Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):\n",
         ),
     },
+    # instruct datasets
+    "coqa_ling_1s": generate_coqa_instruct_config(
+        description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question based on this story, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>",
+        few_shot_prompt="Question: {question}\nGuess: {answer}\nConfidence: <appropriate level of confidence in this guess>",
+    ),
+    "coqa_verb_1s_top1": generate_coqa_instruct_config(
+        description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess and the probability that it is correct (0.0 to 1.0) for the following question. Give ONLY the guess and probability, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>",
+        few_shot_prompt="Question: {question}\nGuess: {answer}\nProbability: <number between 0.0 and 1.0 reflecting confidence in the guess>",
+    ),
+    "coqa_verb_1s_topk": generate_coqa_instruct_config(
+        description="Here's a short story:\n\n{story} (End of story)\n\nProvide your ${topk} best guesses and the probability that each is correct (0.0 to 1.0) for the following question. Give ONLY the guesses and probabilities, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\nP${topk}: <the probability between 0.0 and 1.0 that G${topk} is correct, without any extra commentary whatsoever; just the probability!>",
+        few_shot_prompt="Question: {question}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG${topk}: <other guess>\nP${topk}: <probability of this guess>",
+    ),
+    "coqa_verb_2s_cot": generate_coqa_instruct_config(
+        description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}",
+    ),
+    "coqa_verb_2s_top1": generate_coqa_instruct_config(
+        description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Question: {question}\nGuess: {answer}",
+    ),
+    "coqa_verb_2s_topk": generate_coqa_instruct_config(
+        description="Here's a short story:\n\n{story} (End of story)\n\nProvide your ${topk} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Question: {question}\nG1: {answer}\n...\nG${topk}: <other guess>",
+    ),
+    "mmlu_ling_1s": generate_mmlu_instruct_config(
+        description="Provide your best guess for the following question about {subject} selecting one of the options, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nConfidence: <appropriate level of confidence in this guess>",
+    ),
+    "mmlu_verb_1s_top1": generate_mmlu_instruct_config(
+        description="Provide your best guess for the following question about {subject} selecting one of the options and the probability that it is correct (0.0 to 1.0). Give ONLY the guess and probability, no other words or explanation. For example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nProbability: <number between 0.0 and 1.0 reflecting confidence in the guess>",
+    ),
+    "mmlu_verb_1s_topk": generate_mmlu_instruct_config(
+        description="Provide your ${topk} best guesses for the following question about {subject} selecting one of the options and the probability that each guess is correct (0.0 to 1.0). Give ONLY the guesses and probabilities, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\nP${topk}: <the probability between 0.0 and 1.0 that G${topk} is correct, without any extra commentary whatsoever; just the probability!>",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG${topk}: <other guess>\nP${topk}: <probability of this guess>",
+    ),
+    "mmlu_verb_2s_cot": generate_mmlu_instruct_config(
+        description="Provide your best guess for the following question about {subject} selecting one of the options. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nExplanation: <step-by-step explanation of your thought process>\nGuess:{answer}",
+    ),
+    "mmlu_verb_2s_top1": generate_mmlu_instruct_config(
+        description="Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}",
+    ),
+    "mmlu_verb_2s_topk": generate_mmlu_instruct_config(
+        description="Provide your ${topk} best guesses for the following question about {subject} selecting one of the options. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\n...\nG${topk}: <other guess>",
+    ),
+    "triviaqa_ling_1s": generate_triviaqa_instruct_config(
+        description="Provide your best guess for the following question, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>",
+        few_shot_prompt="Question: {question}\nGuess: {answer}\nConfidence: <appropriate level of confidence in this guess>",
+    ),
+    "triviaqa_verb_1s_top1": generate_triviaqa_instruct_config(
+        description="Provide your best guess and the probability that it is correct (0.0 to 1.0) for the following question. Give ONLY the guess and probability, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>",
+        few_shot_prompt="Question: {question}\nGuess: {answer}\nProbability: <number between 0.0 and 1.0 reflecting confidence in the guess>",
+    ),
+    "triviaqa_verb_1s_topk": generate_triviaqa_instruct_config(
+        description="Provide your ${topk} best guesses and the probability that each is correct (0.0 to 1.0) for the following question. Give ONLY the guesses and probabilities, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\nP${topk}: <the probability between 0.0 and 1.0 that G${topk} is correct, without any extra commentary whatsoever; just the probability!>",
+        few_shot_prompt="Question: {question}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG${topk}: <other guess>\nP${topk}: <probability of this guess>",
+    ),
+    "triviaqa_verb_2s_cot": generate_triviaqa_instruct_config(
+        description="Provide your best guess for the following question. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}",
+    ),
+    "triviaqa_verb_2s_top1": generate_triviaqa_instruct_config(
+        description="Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Question: {question}\nGuess: {answer}",
+    ),
+    "triviaqa_verb_2s_topk": generate_triviaqa_instruct_config(
+        description="Provide your ${topk} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
+        few_shot_prompt="Question: {question}\nG1: {answer}\n...\nG${topk}: <other guess>",
+    ),
 }
 
 
