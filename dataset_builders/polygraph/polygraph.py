@@ -45,7 +45,7 @@ def prepare_coqa(
     for inst in dataset:
         formatted_description = description.format(story=inst["story"])
         for j, (question, answer) in enumerate(
-            zip(inst[x_column], inst[y_column]["input_text"])
+            zip(inst[input_column], inst[output_column]["input_text"])
         ):
             if instruct:
                 assert (
@@ -152,7 +152,7 @@ def prepare_mmlu(
                 + formatted_few_shot_prompt
                 + formatted_prompt
             )
-            y.append(answers[inst[y_column]])
+            y.append(answers[inst[output_column]])
     return x, y
 
 
@@ -601,8 +601,6 @@ class Polygraph(datasets.GeneratorBasedBuilder):
     BUILDER_CONFIG_CLASS = PolygraphConfig
     BUILDER_CONFIGS = [create_builder_config(name) for name in DATASET_CONFIG]
 
-    # CoQA, TriviaQA, MMLU, GSM8K, XSum, WMT14, WMT19, claim-level bench
-
     def _info(self):
         return datasets.DatasetInfo(
             description="lm-polygraph wrapper for datasets",
@@ -623,13 +621,13 @@ class Polygraph(datasets.GeneratorBasedBuilder):
 
         def download_custom_dataset(src_url: str, dst_path: str):
             split = src_url.split("_")[-1]
-            x, y = config["prepare_func"](dataset[config[f"{split}_split"]])
+            x, y = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
             result_dataset = datasets.Dataset.from_dict({"input": x, "output": y})
             result_dataset.save_to_disk(dst_path)
 
         downloaded_files = dl_manager.download_custom(
             {
-                split: f"{config['name']}_{split}"
+                split: f"{self.config.name}_{split}"
                 for split in ["train", "test"]
                 if f"{split}_split" in config
             },
