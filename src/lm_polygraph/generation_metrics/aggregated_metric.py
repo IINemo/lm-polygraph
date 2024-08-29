@@ -40,13 +40,17 @@ class AggregatedMetric(GenerationMetric):
         ):
             # truncate stats to only process one sample at a time
             truncated_stats = {
-                k: [v[i]] for k, v in stats.items() if k in self.stats_dependencies + ['greedy_texts']
+                k: [v[i]]
+                for k, v in stats.items()
+                if k in self.stats_dependencies + ["greedy_texts"]
             }
 
             sample_metric_values = []
             for j, target in enumerate(targets):
                 if target_tokens:
-                    value = self.base_metric(truncated_stats, [target], target_tokens[i][j])
+                    value = self.base_metric(
+                        truncated_stats, [target], target_tokens[i][j]
+                    )
                 else:
                     value = self.base_metric(truncated_stats, [target], None)
                 sample_metric_values.append(value)
