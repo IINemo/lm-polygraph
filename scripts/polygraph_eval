@@ -420,17 +420,18 @@ def get_generation_metrics(args):
 
 
 def get_model(args, cache_kwargs={}):
-    if args.model.type == "Blackbox":
+    if getattr(args.model, "type", "Whitebox") == "Blackbox":
         return get_blackbox_model(args)
     else:
         return get_whitebox_model(args, cache_kwargs)
 
 
 def get_blackbox_model(args):
-    if args.model.provider is None or args.model.provider.strip() == "":
+    provider = getattr(args.model, "provider", "") 
+    if provider is None or provider.strip() == "":
         raise ValueError("Blackbox model provider cannot be empty or None. Please specify a valid provider.")
 
-    if args.model.provider == "openai":
+    if provider == "openai":
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key is None:
             raise ValueError("OpenAI API key is not set in the environment variables.")
@@ -438,7 +439,7 @@ def get_blackbox_model(args):
             openai_api_key=openai_api_key,
             model_path=args.model.path
         )
-    elif args.model.provider == "huggingface":
+    elif provider == "huggingface":
         hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
         if hf_api_key is None:
             raise ValueError("HuggingFace API key is not set in the environment variables.")
@@ -447,7 +448,8 @@ def get_blackbox_model(args):
             hf_model_id=args.model.path
         )
     else:
-        raise ValueError(f"Unsupported black-box model provider: {args.model.provider}")
+        raise ValueError(f"Unsupported black-box model provider: {provider}")
+
 
 def get_whitebox_model(args, cache_kwargs={}):
     if not "path_to_load_script" in args.model:

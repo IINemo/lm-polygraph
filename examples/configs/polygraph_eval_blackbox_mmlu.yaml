@@ -1,0 +1,67 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: gpt-4o-mini
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+
+dataset: [cais/mmlu, all]
+text_column: question
+label_column: answer
+description: "The following are multiple choice questions (with answers) about {subject}."
+prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}"
+few_shot_split: dev
+train_split: validation
+eval_split: test
+max_new_tokens: 3
+load_from_disk: false
+n_shot: 5
+max_subject_size: 100
+generation_params:
+  generate_until:
+    - "\n"
+
+train_dataset: null
+train_test_split: false
+test_split_size: 1
+
+background_train_dataset: allenai/c4
+background_train_dataset_text_column: text
+background_train_dataset_label_column: url
+background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+background_load_from_disk: false
+
+subsample_background_train_dataset: 1000
+subsample_train_dataset: 1000
+subsample_eval_dataset: -1
+
+use_density_based_ue: false
+use_seq_ue: true
+use_tok_ue: false
+use_ens_ue: false
+generation_metrics: null
+ens_type: 
+
+# Examples of providing additional UE methods:
+# additional_estimators: {
+#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
+#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
+# }
+# additional_estimators_kwargs: {
+#   'Perplexity': {},
+#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
+# }
+
+ignore_exceptions: false
+
+batch_size: 1
+deberta_batch_size: 10
+
+seed:
+    - 1
