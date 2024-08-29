@@ -49,6 +49,7 @@ def register_stat_calculators(
             stat_calculators[stat] = calculator_class
             stat_dependencies[stat] = calculator_class.stat_dependencies
 
+    _register(InputTextDependencyCalculator())
     _register(GreedyProbsCalculator())
     _register(BlackboxGreedyTextsCalculator())
     _register(EntropyCalculator())

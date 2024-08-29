@@ -57,7 +57,6 @@ class GreedyProbsCalculator(StatCalculator):
     def __init__(self, n_alternatives: int = 10):
         super().__init__(
             [
-                "input_texts",
                 "input_tokens",
                 "greedy_log_probs",
                 "greedy_tokens",
@@ -88,7 +87,6 @@ class GreedyProbsCalculator(StatCalculator):
             max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
         Returns:
             Dict[str, np.ndarray]: dictionary with the following items:
-                - 'input_texts' (List[str]): input texts batch,
                 - 'input_tokens' (List[List[int]]): tokenized input texts,
                 - 'greedy_log_probs' (List[List[np.array]]): logarithms of autoregressive
                         probability distributions at each token,
@@ -178,7 +176,6 @@ class GreedyProbsCalculator(StatCalculator):
             raise NotImplementedError
 
         result_dict = {
-            "input_texts": texts,
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
             "greedy_tokens": cut_sequences,

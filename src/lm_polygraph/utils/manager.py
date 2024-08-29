@@ -467,11 +467,19 @@ class UEManager:
                 self.estimators.remove(bad_estimator)
                 self.total_bad_estimators[bad_estimator] = batch_i
 
+            if isinstance(self.model, BlackboxModel):
+                batch_stats["greedy_texts"] = batch_stats["blackbox_greedy_texts"]
+
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
-                m = generation_metric(
-                    batch_stats, target_texts=target_texts, target_tokens=target_tokens
-                )
+                if(self.model.model_type=="Blackbox"):
+                    m = generation_metric(
+                        batch_stats, target_texts=target_texts, target_tokens=None
+                    )
+                else:
+                    m = generation_metric(
+                        batch_stats, target_texts=target_texts, target_tokens=target_tokens
+                    )
                 if not isinstance(m, list):
                     m = m.tolist()
                 if generation_metric.level == "claim":

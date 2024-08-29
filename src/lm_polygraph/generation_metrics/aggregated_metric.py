@@ -40,16 +40,19 @@ class AggregatedMetric(GenerationMetric):
         ):
             # truncate stats to only process one sample at a time
             truncated_stats = {
-                k: [v[i]] for k, v in stats.items() if k in self.stats_dependencies
+                k: [v[i]] for k, v in stats.items() if k in self.stats_dependencies + ['greedy_texts']
             }
 
             sample_metric_values = []
             for j, target in enumerate(targets):
-                value = self.base_metric(truncated_stats, [target], target_tokens[i][j])
+                if target_tokens:
+                    value = self.base_metric(truncated_stats, [target], target_tokens[i][j])
+                else:
+                    value = self.base_metric(truncated_stats, [target], None)
                 sample_metric_values.append(value)
 
             if self.aggregation == "max":
-                metric_values.append(np.max(sample_metric_values))
+                metric_values.append(np.nanmax(sample_metric_values))
             else:
                 raise ValueError(f"Unknown aggregation type: {self.aggregation}")
 

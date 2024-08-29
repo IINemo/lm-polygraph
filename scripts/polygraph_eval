@@ -15,7 +15,7 @@ log = logging.getLogger('lm_polygraph')
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import WhiteboxModel, create_ensemble
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, create_ensemble
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
@@ -261,78 +261,103 @@ def get_density_based_ue_methods(args, model_type):
 
 def get_ue_methods(args, model):
     estimators = []
-    if getattr(args, "use_seq_ue", False):
-        estimators += [
-            MaximumSequenceProbability(),
-            Perplexity(),
-            MeanTokenEntropy(),
-            MeanPointwiseMutualInformation(),
-            MeanConditionalPointwiseMutualInformation(),
-            ClaimConditionedProbability(),
-            PTrue(),
-            PTrueSampling(),
-            MonteCarloSequenceEntropy(),
-            MonteCarloNormalizedSequenceEntropy(),
-            LexicalSimilarity(metric="rouge1"),
-            LexicalSimilarity(metric="rouge2"),
-            LexicalSimilarity(metric="rougeL"),
-            LexicalSimilarity(metric="BLEU"),
-            NumSemSets(),
-            EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-            EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-            EigValLaplacian(similarity_score="Jaccard_score"),
-            DegMat(similarity_score="NLI_score", affinity="entail"),
-            DegMat(similarity_score="NLI_score", affinity="contra"),
-            DegMat(similarity_score="Jaccard_score"),
-            Eccentricity(similarity_score="NLI_score", affinity="entail"),
-            Eccentricity(similarity_score="NLI_score", affinity="contra"),
-            Eccentricity(similarity_score="Jaccard_score"),
-            SemanticEntropy(),
-            SAR(),
-            TokenSAR(),
-            SentenceSAR(),
-            RenyiNeg(),
-            FisherRao(),
-        ]
+    if args.model.type == "Blackbox":
+        if getattr(args, "use_seq_ue", False):
+            estimators += [
+                LexicalSimilarity(metric="rouge1"),
+                LexicalSimilarity(metric="rouge2"),
+                LexicalSimilarity(metric="rougeL"),
+                LexicalSimilarity(metric="BLEU"),
+                NumSemSets(),
+                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
+                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
+                EigValLaplacian(similarity_score="Jaccard_score"),
+                DegMat(similarity_score="NLI_score", affinity="entail"),
+                DegMat(similarity_score="NLI_score", affinity="contra"),
+                DegMat(similarity_score="Jaccard_score"),
+            ]
 
-    if getattr(args, "use_ens_ue", False):
-        # Ensemble-based UE methods have been disabled due to dependency on old
-        # transformers code, which prevents bumping transformers version in 
-        # dependencies past 4.40.0. This is a temporary solution until the
-        # code is updated to work with the latest transformers version.
-        raise NotImplementedError('Ensemble UE methods are not working properly in this version. Consider downgrading to 0.3.0')
+        if getattr(args, "use_ens_ue", False):
+            raise NotImplementedError('Ensemble UE methods not applicable for blackbox models')
 
-        #if not (model.model_type == "Seq2SeqLM"):
-        #    raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+        if getattr(args, "use_tok_ue", False):
+            raise NotImplementedError('Token UE methods not applicable for blackbox models')
 
-        #token_measures = all_token_estimators()
-        #if args.model.ensembling_mode == 'pe':
-        #    sequence_measures = all_pe_estimators()
-        #elif args.model.ensembling_mode == 'ep':
-        #    sequence_measures = all_ep_estimators()
-        #else:
-        #    raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
-        #estimators += (token_measures + sequence_measures)
+        if getattr(args, "use_claim_ue", False):
+            raise NotImplementedError('Claim UE methods not applicable for blackbox models')
+    else:
+        if getattr(args, "use_seq_ue", False):
+            estimators += [
+                MaximumSequenceProbability(),
+                Perplexity(),
+                MeanTokenEntropy(),
+                MeanPointwiseMutualInformation(),
+                MeanConditionalPointwiseMutualInformation(),
+                ClaimConditionedProbability(),
+                PTrue(),
+                PTrueSampling(),
+                MonteCarloSequenceEntropy(),
+                MonteCarloNormalizedSequenceEntropy(),
+                LexicalSimilarity(metric="rouge1"),
+                LexicalSimilarity(metric="rouge2"),
+                LexicalSimilarity(metric="rougeL"),
+                LexicalSimilarity(metric="BLEU"),
+                NumSemSets(),
+                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
+                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
+                EigValLaplacian(similarity_score="Jaccard_score"),
+                DegMat(similarity_score="NLI_score", affinity="entail"),
+                DegMat(similarity_score="NLI_score", affinity="contra"),
+                DegMat(similarity_score="Jaccard_score"),
+                Eccentricity(similarity_score="NLI_score", affinity="entail"),
+                Eccentricity(similarity_score="NLI_score", affinity="contra"),
+                Eccentricity(similarity_score="Jaccard_score"),
+                SemanticEntropy(),
+                SAR(),
+                TokenSAR(),
+                SentenceSAR(),
+                RenyiNeg(),
+                FisherRao(),
+            ]
 
-    if getattr(args, "use_tok_ue", False):
-        estimators += [
-            MaximumTokenProbability(),
-            TokenEntropy(),
-            PointwiseMutualInformation(),
-            ConditionalPointwiseMutualInformation(),
-            SemanticEntropyToken(model.model_path, args.cache_path),
-        ]
+        if getattr(args, "use_ens_ue", False):
+            # Ensemble-based UE methods have been disabled due to dependency on old
+            # transformers code, which prevents bumping transformers version in 
+            # dependencies past 4.40.0. This is a temporary solution until the
+            # code is updated to work with the latest transformers version.
+            raise NotImplementedError('Ensemble UE methods are not working properly in this version. Consider downgrading to 0.3.0')
 
-    if getattr(args, "use_claim_ue", False):
-        estimators += [
-            MaximumClaimProbability(),
-            PerplexityClaim(),
-            MaxTokenEntropyClaim(),
-            PointwiseMutualInformationClaim(),
-            PTrueClaim(),
-            ClaimConditionedProbabilityClaim(nli_context="no_context"),
-            ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
-        ]
+            #if not (model.model_type == "Seq2SeqLM"):
+            #    raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
+
+            #token_measures = all_token_estimators()
+            #if args.model.ensembling_mode == 'pe':
+            #    sequence_measures = all_pe_estimators()
+            #elif args.model.ensembling_mode == 'ep':
+            #    sequence_measures = all_ep_estimators()
+            #else:
+            #    raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
+            #estimators += (token_measures + sequence_measures)
+
+        if getattr(args, "use_tok_ue", False):
+            estimators += [
+                MaximumTokenProbability(),
+                TokenEntropy(),
+                PointwiseMutualInformation(),
+                ConditionalPointwiseMutualInformation(),
+                SemanticEntropyToken(model.model_path, args.cache_path),
+            ]
+
+        if getattr(args, "use_claim_ue", False):
+            estimators += [
+                MaximumClaimProbability(),
+                PerplexityClaim(),
+                MaxTokenEntropyClaim(),
+                PointwiseMutualInformationClaim(),
+                PTrueClaim(),
+                ClaimConditionedProbabilityClaim(nli_context="no_context"),
+                ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
+            ]
 
     additional_estimators = getattr(args, "additional_estimators", {})
     additional_estimators_kwargs = getattr(args, "additional_estimators_kwargs", {})
@@ -365,17 +390,21 @@ def get_generation_metrics(args):
             ),
             AlignScore(),
         ]
-        if getattr(args, "use_claim_ue", False):
-            result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
+        if getattr(args.model, "type", "Whitebox") != "Blackbox":
+            if getattr(args, "use_claim_ue", False):
+                result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]
+        if getattr(args.model, "type", "Whitebox") == "Blackbox":
+            for metric in result:
+                if "greedy_texts" in metric.stats_dependencies:
+                    metric.stats_dependencies.remove("greedy_texts")
+                    metric.stats_dependencies.append("blackbox_greedy_texts")
+
         if getattr(args, "multiref", False):
             # Wrap each metric in AggregatedMetric
             result = [AggregatedMetric(base_metric=metric) for metric in result]
-        else:
-            # Currently, BartScoreSeqMetric can only be used with single reference
-            result.append(BartScoreSeqMetric('rh'))
     else:
         result = []
         for metric in generation_metrics:
@@ -384,13 +413,43 @@ def get_generation_metrics(args):
                 raise ValueError("BartScoreSeqMetric does not support multiref")
             metric_class = globals()[metric_name]
             result.append(metric_class(*metric.get("args", [])))
-
+    
     log.info("Done with initializing generation metrics.")
 
     return result
 
 
 def get_model(args, cache_kwargs={}):
+    if args.model.type == "Blackbox":
+        return get_blackbox_model(args)
+    else:
+        return get_whitebox_model(args, cache_kwargs)
+
+
+def get_blackbox_model(args):
+    if args.model.provider is None or args.model.provider.strip() == "":
+        raise ValueError("Blackbox model provider cannot be empty or None. Please specify a valid provider.")
+
+    if args.model.provider == "openai":
+        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        if openai_api_key is None:
+            raise ValueError("OpenAI API key is not set in the environment variables.")
+        return BlackboxModel.from_openai(
+            openai_api_key=openai_api_key,
+            model_path=args.model.path
+        )
+    elif args.model.provider == "huggingface":
+        hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
+        if hf_api_key is None:
+            raise ValueError("HuggingFace API key is not set in the environment variables.")
+        return BlackboxModel.from_huggingface(
+            hf_api_token=hf_api_key,
+            hf_model_id=args.model.path
+        )
+    else:
+        raise ValueError(f"Unsupported black-box model provider: {args.model.provider}")
+
+def get_whitebox_model(args, cache_kwargs={}):
     if not "path_to_load_script" in args.model:
         log.warning(
             "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."

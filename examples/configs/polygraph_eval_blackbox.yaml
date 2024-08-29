@@ -1,0 +1,62 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: gpt-4o-mini
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: blackbox-test
+
+dataset: [trivia_qa, rc.nocontext]
+text_column: question
+label_column: answer
+prompt: "Question: {question}\nAnswer:{answer}"
+few_shot_split: train
+train_split: train
+eval_split: validation
+max_new_tokens: 100
+load_from_disk: false
+n_shot: 2
+multiref: true
+normalize: true
+generation_params:
+  generate_until:
+    - "\n"
+
+train_dataset: null
+train_test_split: false
+test_split_size: 1
+
+subsample_eval_dataset: 5
+
+use_density_based_ue: false
+use_seq_ue: true
+use_tok_ue: false
+use_ens_ue: false
+use_claim_ue: false
+# generation_metrics: [{
+#   'name': 'RougeMetric'
+# }]
+ens_type:
+
+# Examples of providing additional UE methods:
+# additional_estimators: {
+#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
+#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
+# }
+# additional_estimators_kwargs: {
+#   'Perplexity': {},
+#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
+# }
+
+ignore_exceptions: false
+
+batch_size: 1
+deberta_batch_size: 1
+
+seed:
+    - 1
