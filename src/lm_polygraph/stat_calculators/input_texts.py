@@ -4,6 +4,7 @@ import numpy as np
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import Model
 
+
 class InputTextDependencyCalculator(StatCalculator):
     """
     Preprocesses input texts by passing them through unchanged.

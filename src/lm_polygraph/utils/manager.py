@@ -472,7 +472,7 @@ class UEManager:
 
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
-                if(self.model.model_type=="Blackbox"):
+                if (self.model.model_type == "Blackbox"):
                     m = generation_metric(
                         batch_stats, target_texts=target_texts, target_tokens=None
                     )
