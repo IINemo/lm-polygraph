@@ -23,7 +23,7 @@ class PTrueEmpirical(Estimator):
             input = f"Question:\n\n{prompt}\n\nProposed Answer: {guess}\n\nIs the proposed answer:\n\tTrue or\n\tFalse?\nThe proposed answer is: "
 
             out = model.generate_texts(
-                tokens,
+                [input],
                 min_new_tokens=1,
                 max_new_tokens=1,
                 num_return_sequences=self.num_samples,

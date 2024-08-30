@@ -50,23 +50,22 @@ class SemanticEntropy(Estimator):
             np.ndarray: float semantic entropy for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        loglikelihoods_list = stats["sample_log_probs"]
+        if self.class_probability_estimation == "sum":
+            loglikelihoods_list = stats["sample_log_probs"]
+            hyps_list = stats["sample_texts"]
+        elif self.class_probability_estimation == "frequency":
+            loglikelihoods_list = None
+            hyps_list = stats["blackbox_sample_texts"]
 
         self._class_to_sample = stats["semantic_classes_entail"]["class_to_sample"]
         self._sample_to_class = stats["semantic_classes_entail"]["sample_to_class"]
-
-        # Concatenate hypos with input texts
-        hyps_list = [[] for _ in stats["input_texts"]]
-        for i, input_text in enumerate(stats["input_texts"]):
-            for hyp in stats["sample_texts"][i]:
-                hyps_list[i].append(" ".join([input_text, hyp]))
 
         return self.batched_call(hyps_list, loglikelihoods_list)
 
     def batched_call(
         self,
         hyps_list: List[List[str]],
-        loglikelihoods_list: List[List[float]],
+        loglikelihoods_list: Optional[List[List[float]]],
         log_weights: Optional[List[List[float]]] = None,
     ) -> np.array:
         if log_weights is None:
