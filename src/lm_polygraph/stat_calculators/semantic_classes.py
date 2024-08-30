@@ -1,6 +1,5 @@
 import numpy as np
 
-import itertools
 from collections import defaultdict
 from typing import Dict, List
 
@@ -18,10 +17,12 @@ class SemanticClassesCalculator(StatCalculator):
             [
                 "semantic_classes_entail",
             ],
-            ["sample_texts",
-             "semantic_matrix_entail",
-             "semantic_matrix_classes",
-             "entailment_id"],
+            [
+                "sample_texts",
+                "semantic_matrix_entail",
+                "semantic_matrix_classes",
+                "entailment_id"
+            ],
         )
 
     def __call__(
@@ -31,7 +32,9 @@ class SemanticClassesCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        self._is_entailment = dependencies["semantic_matrix_classes"] == dependencies["entailment_id"]
+        self._is_entailment = (
+            dependencies["semantic_matrix_classes"] == dependencies["entailment_id"]
+        )
         self.get_classes(dependencies["sample_texts"])
 
         return {

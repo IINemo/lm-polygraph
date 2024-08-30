@@ -1,6 +1,5 @@
 import numpy as np
 
-from collections import defaultdict
 from typing import List, Dict, Optional
 
 from .estimator import Estimator
@@ -17,7 +16,9 @@ class SemanticEntropy(Estimator):
     'samples_n' parameter.
     """
 
-    def __init__(self, verbose: bool = False, class_probability_estimation: str = "sum"):
+    def __init__(
+        self, verbose: bool = False, class_probability_estimation: str = "sum"
+    ):
         self.class_probability_estimation = class_probability_estimation
         if self.class_probability_estimation == "sum":
             deps = ["sample_log_probs", "sample_texts", "semantic_classes_entail"]
@@ -80,11 +81,17 @@ class SemanticEntropy(Estimator):
                     for class_idx in self._class_to_sample[i]
                 ]
                 class_lp = [
-                    np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
+                    np.logaddexp.reduce(likelihoods)
+                    for likelihoods in class_likelihoods
                 ]
             elif self.class_probability_estimation == "frequency":
                 num_samples = len(hyps_list[i])
-                class_lp = np.log([len(class_idx)/num_samples for class_idx in self._class_to_sample[i]])
+                class_lp = np.log(
+                    [
+                        len(class_idx) / num_samples
+                        for class_idx in self._class_to_sample[i]
+                    ]
+                )
 
             if log_weights[i] is None:
                 log_weights[i] = [0 for _ in hyps_list[i]]
