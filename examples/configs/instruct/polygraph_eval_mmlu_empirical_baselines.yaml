@@ -10,6 +10,8 @@ prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {ch
 max_new_tokens: 13
 output_ignore_regex: "(?s).*Guess:"
 
+use_seq_ue: true
+include_whitebox_ue: false
 additional_estimators: 
   - module: lm_polygraph.estimators.semantic_entropy
     class_name: SemanticEntropy
