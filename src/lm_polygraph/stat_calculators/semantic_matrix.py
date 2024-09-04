@@ -24,7 +24,7 @@ class SemanticMatrixCalculator(StatCalculator):
                 "semantic_matrix_classes",
                 "entailment_id",
             ],
-            ["blackbox_sample_texts"],
+            ["sample_texts"],
         )
         self.is_deberta_setup = False
         self.nli_model = nli_model
@@ -41,7 +41,7 @@ class SemanticMatrixCalculator(StatCalculator):
 
         Parameters:
             dependencies (Dict[str, np.ndarray]): input statistics, containing:
-                - 'blackbox_sample_texts' (List[List[str]]): several sampling generations
+                - 'sample_texts' (List[List[str]]): several sampling generations
                     for each input text in the batch.
             texts (List[str]): Input texts batch used for model generation.
             model (Model): Model used for generation.
@@ -58,7 +58,7 @@ class SemanticMatrixCalculator(StatCalculator):
 
         deberta = self.nli_model
         deberta_batch_size = deberta.batch_size
-        batch_texts = dependencies["blackbox_sample_texts"]
+        batch_texts = dependencies["sample_texts"]
 
         batch_pairs = []
         batch_invs = []

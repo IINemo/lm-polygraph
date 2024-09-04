@@ -169,7 +169,7 @@ def estimate_uncertainty(
     )
     man()
     ue = man.estimations[estimator.level, str(estimator)]
-    texts = man.stats.get("greedy_texts", man.stats.get("blackbox_greedy_texts", None))
+    texts = man.stats.get("greedy_texts", man.stats.get("greedy_texts", None))
     tokens = man.stats.get("greedy_tokens", None)
     if tokens is not None and len(tokens) > 0:
         # Remove last token, which is the end of the sequence token
@@ -284,6 +284,7 @@ class UEManager:
             deberta_device=deberta_device,
             language=language,
             cache_path=cache_path,
+            model=model,
         )
 
         self.stat_calculators_dict = stat_calculators_dict
@@ -301,7 +302,7 @@ class UEManager:
         _check_unique_names(ue_metrics)
 
         if isinstance(model, BlackboxModel):
-            greedy = ["blackbox_greedy_texts"]
+            greedy = ["greedy_texts"]
         else:
             greedy = ["greedy_tokens", "greedy_texts"]
 
@@ -467,9 +468,6 @@ class UEManager:
                 self.estimators.remove(bad_estimator)
                 self.total_bad_estimators[bad_estimator] = batch_i
 
-            if isinstance(self.model, BlackboxModel):
-                batch_stats["greedy_texts"] = batch_stats["blackbox_greedy_texts"]
-
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
                 if self.model.model_type == "Blackbox":
@@ -489,7 +487,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["blackbox_greedy_texts", "greedy_texts", "greedy_tokens"]:
+            for key in ["greedy_texts", "greedy_tokens"]:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:

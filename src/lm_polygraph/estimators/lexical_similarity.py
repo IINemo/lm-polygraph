@@ -34,7 +34,7 @@ class LexicalSimilarity(Estimator):
         self.metric = metric
         if self.metric.startswith("rouge"):
             self.scorer = rouge_scorer.RougeScorer([self.metric], use_stemmer=True)
-        super().__init__(["blackbox_sample_texts"], "sequence")
+        super().__init__(["sample_texts"], "sequence")
 
     def __str__(self):
         return f"LexicalSimilarity_{self.metric}"
@@ -63,12 +63,12 @@ class LexicalSimilarity(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * several sampled texts in 'blackbox_sample_texts'
+                * several sampled texts in 'sample_texts'
         Returns:
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        batch_texts = stats["blackbox_sample_texts"]
+        batch_texts = stats["sample_texts"]
         res = []
         for texts in batch_texts:
             sims = []

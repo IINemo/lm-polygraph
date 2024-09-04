@@ -396,11 +396,6 @@ def get_generation_metrics(args):
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex = ignore_regex)]
-        if getattr(args.model, "type", "Whitebox") == "Blackbox":
-            for metric in result:
-                if "greedy_texts" in metric.stats_dependencies:
-                    metric.stats_dependencies.remove("greedy_texts")
-                    metric.stats_dependencies.append("blackbox_greedy_texts")
 
         if getattr(args, "multiref", False):
             # Wrap each metric in AggregatedMetric
