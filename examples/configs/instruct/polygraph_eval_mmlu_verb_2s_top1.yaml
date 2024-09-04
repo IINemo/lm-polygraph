@@ -1,5 +1,6 @@
 defaults:
   - polygraph_eval_mmlu_default_instruct
+  - top1_processing
   - _self_
 
 experiment_name: mmlu_verb_2s_top1
@@ -8,7 +9,6 @@ description: "Provide your best guess for the following question about {subject}
 few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}"
 prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
 max_new_tokens: 13
-output_ignore_regex: "(?s).*Guess:"
 
 additional_estimators: 
   - module: lm_polygraph.estimators.verbalized_2s

@@ -1,5 +1,6 @@
 defaults:
   - polygraph_eval_coqa_default_instruct
+  - top1_processing
   - _self_
 
 experiment_name: coqa_ling_1s
@@ -27,7 +28,7 @@ description: "Here's a short story:\n\n{story} (End of story)\n\nProvide your be
 few_shot_prompt: "Question: {question}\nGuess: {answer}\nConfidence: <appropriate level of confidence in this guess>"
 prompt: "Question: {question}\n"
 max_new_tokens: 40
-output_ignore_regex: "(?s).*Guess: |\nConfidence:.*"
+
 
 additional_estimators: 
   - module: lm_polygraph.estimators.linguistic_1s

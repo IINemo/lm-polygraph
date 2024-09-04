@@ -22,7 +22,6 @@ eval_split: validation
 load_from_disk: false
 n_shot: 5
 multiref: true
-normalize: true
 generation_params: {}
 
 train_dataset: null
