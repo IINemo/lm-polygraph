@@ -18,12 +18,12 @@ class BartScoreSeqMetric(GenerationMetric):
     """
 
     def __init__(
-            self,
-            score_type: str = "rh",
-            device=None,
-            max_length=256,
-            checkpoint="facebook/bart-large-cnn",
-        ):
+        self,
+        score_type: str = "rh",
+        device=None,
+        max_length=256,
+        checkpoint="facebook/bart-large-cnn",
+    ):
         assert score_type in SCORE_TYPES
         self.score_type = score_type
         self.model = None

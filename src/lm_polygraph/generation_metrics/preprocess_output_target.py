@@ -10,12 +10,7 @@ class PreprocessOutputTarget(GenerationMetric):
     Preprocesses output and target texts before passing them to the base metric.
     """
 
-    def __init__(
-        self,
-        base_metric,
-        process_output_fn,
-        process_target_fn
-    ):
+    def __init__(self, base_metric, process_output_fn, process_target_fn):
         self.base_metric = getattr(base_metric, "base_metric", base_metric)
         self.level = base_metric.level
         self.stats_dependencies = base_metric.stats_dependencies
@@ -41,8 +36,12 @@ class PreprocessOutputTarget(GenerationMetric):
         Returns:
             np.ndarray: list of base metric values for each sample in input.
         """
-        processed_target_texts = [self.process_target_fn(target) for target in target_texts]
+        processed_target_texts = [
+            self.process_target_fn(target) for target in target_texts
+        ]
         stats = deepcopy(stats)
-        stats["greedy_texts"] = [self.process_output_fn(output) for output in stats["greedy_texts"]]
+        stats["greedy_texts"] = [
+            self.process_output_fn(output) for output in stats["greedy_texts"]
+        ]
 
-        return self.base_metric(stats, processed_target_texts, target_tokens) 
+        return self.base_metric(stats, processed_target_texts, target_tokens)

@@ -6,7 +6,8 @@ import logging
 from typing import List, Dict
 from .generation_metric import GenerationMetric
 
-log = logging.getLogger('lm_polygraph')
+log = logging.getLogger("lm_polygraph")
+
 
 class AccuracyMetric(GenerationMetric):
     """
@@ -25,10 +26,11 @@ class AccuracyMetric(GenerationMetric):
             re.compile(output_ignore_regex) if output_ignore_regex else None
         )
         self.normalize = normalize
-        
+
         if self.target_ignore_regex or self.output_ignore_regex or self.normalize:
             log.warning(
-                "Specifying ignore_regex or normalize in AccuracyMetric is deprecated. Use output and target processing scripts instead.")
+                "Specifying ignore_regex or normalize in AccuracyMetric is deprecated. Use output and target processing scripts instead."
+            )
 
     def __str__(self):
         return "Accuracy"
