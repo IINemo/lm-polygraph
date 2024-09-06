@@ -1,6 +1,6 @@
 defaults:
   - polygraph_eval_mmlu_default_instruct
-  - top1_processing
+  - cot_processing
   - _self_
 
 experiment_name: mmlu_verb_2s_cot
