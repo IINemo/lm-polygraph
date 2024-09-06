@@ -53,6 +53,9 @@ def register_stat_calculators(
             stat_calculators[stat] = calculator_class
             stat_dependencies[stat] = calculator_class.stat_dependencies
 
+    _register(InputTextDependencyCalculator())
+    _register(SemanticMatrixCalculator(nli_model=nli_model))
+
     if model.model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator())
         _register(BlackboxSamplingGenerationCalculator())
@@ -70,37 +73,34 @@ def register_stat_calculators(
         _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
         _register(GreedyAlternativesFactPrefNLICalculator(nli_model=nli_model))
         _register(ClaimsExtractor(openai_chat=openai_chat, language=language))
-
-    _register(InputTextDependencyCalculator())
-    _register(
-        PromptCalculator(
-            "Question: {q}\n Possible answer:{a}\n "
-            "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
-            "True",
-            "p_true",
-            sample_text_dependency=None,  # Not calculate T text samples for P(True)
+        _register(
+            PromptCalculator(
+                "Question: {q}\n Possible answer:{a}\n "
+                "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+                "True",
+                "p_true",
+                sample_text_dependency=None,  # Not calculate T text samples for P(True)
+            )
         )
-    )
-    _register(
-        PromptCalculator(
-            "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n "
-            "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
-            "True",
-            "p_true_sampling",
+        _register(
+            PromptCalculator(
+                "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n "
+                "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+                "True",
+                "p_true_sampling",
+            )
         )
-    )
-    _register(
-        PromptCalculator(
-            "Question: {q}\n Possible answer:{a}\n "
-            "Is the possible answer True or False? The possible answer is: ",
-            "True",
-            "p_true_claim",
-            input_text_dependency="claim_input_texts_concatenated",
-            sample_text_dependency=None,
-            generation_text_dependency="claim_texts_concatenated",
+        _register(
+            PromptCalculator(
+                "Question: {q}\n Possible answer:{a}\n "
+                "Is the possible answer True or False? The possible answer is: ",
+                "True",
+                "p_true_claim",
+                input_text_dependency="claim_input_texts_concatenated",
+                sample_text_dependency=None,
+                generation_text_dependency="claim_texts_concatenated",
+            )
         )
-    )
-    _register(SemanticMatrixCalculator(nli_model=nli_model))
 
     log.info("Done intitializing stat calculators...")
 
