@@ -170,6 +170,9 @@ class BlackboxModel(Model):
                 args[replace_key] = args[key]
                 args.pop(key)
         texts = []
+        
+        if "min_new_tokens" in args.keys():
+                args.pop("min_new_tokens")
 
         if self.openai_api_key is not None:
             for prompt in input_texts:

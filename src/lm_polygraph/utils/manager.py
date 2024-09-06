@@ -442,12 +442,12 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
 
+            batch_stats["model"] = self.model
             if isinstance(self.model, WhiteboxModel):
                 target_tokens = self._tokenize_target_texts(target_texts)
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
-                batch_stats["model"] = self.model
-
+            
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:
                 batch_stats[stat] = train_stats.pop(stat)
