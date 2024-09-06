@@ -447,7 +447,7 @@ class UEManager:
                 target_tokens = self._tokenize_target_texts(target_texts)
                 self.stats["target_tokens"] += target_tokens
                 batch_stats["target_tokens"] = target_tokens
-            
+
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:
                 batch_stats[stat] = train_stats.pop(stat)
