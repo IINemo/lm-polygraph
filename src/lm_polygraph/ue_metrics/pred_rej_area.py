@@ -10,12 +10,19 @@ class PredictionRejectionArea(UEMetric):
     Calculates area under Prediction-Rejection curve.
     """
 
+    def __init__(self, max_rejection: float = 1.0):
+        """
+        Parameters:
+            max_rejection (float): a maximum proportion of instances that will be rejected.
+                1.0 indicates entire set, 0.5 - half of the set
+        """
+        super().__init__()
+        self.max_rejection = max_rejection
+
     def __str__(self):
         return "prr"
 
-    def __call__(
-        self, estimator: List[float], target: List[float], max_rejection: float = 1.0
-    ) -> float:
+    def __call__(self, estimator: List[float], target: List[float]) -> float:
         """
         Measures the area under the Prediction-Rejection curve between `estimator` and `target`.
 
@@ -24,8 +31,6 @@ class PredictionRejectionArea(UEMetric):
                 Higher values indicate more uncertainty.
             target (List[int]): a batch of ground-truth uncertainty estimations.
                 Higher values indicate less uncertainty.
-            max_rejection (float): a maximum proportion of instances that will be rejected.
-                1.0 indicates entire set, 0.5 - half of the set
         Returns:
             float: area under the Prediction-Rejection curve.
                 Higher values indicate better uncertainty estimations.
@@ -34,7 +39,7 @@ class PredictionRejectionArea(UEMetric):
         # ue: greater is more uncertain
         ue = np.array(estimator)
         num_obs = len(ue)
-        num_rej = int(max_rejection * num_obs)
+        num_rej = int(self.max_rejection * num_obs)
         # Sort in ascending order: the least uncertain come first
         ue_argsort = np.argsort(ue)
         # want sorted_metrics to be increasing => smaller scores is better
