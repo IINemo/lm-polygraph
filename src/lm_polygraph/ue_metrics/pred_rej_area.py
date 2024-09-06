@@ -13,7 +13,9 @@ class PredictionRejectionArea(UEMetric):
     def __str__(self):
         return "prr"
 
-    def __call__(self, estimator: List[float], target: List[float], max_rejection: float = 1.0) -> float:
+    def __call__(
+        self, estimator: List[float], target: List[float], max_rejection: float = 1.0
+    ) -> float:
         """
         Measures the area under the Prediction-Rejection curve between `estimator` and `target`.
 
@@ -23,7 +25,7 @@ class PredictionRejectionArea(UEMetric):
             target (List[int]): a batch of ground-truth uncertainty estimations.
                 Higher values indicate less uncertainty.
             max_rejection (float): a maximum proportion of instances that will be rejected.
-                1.0 indicates entire set, 0.5 - half of the set 
+                1.0 indicates entire set, 0.5 - half of the set
         Returns:
             float: area under the Prediction-Rejection curve.
                 Higher values indicate better uncertainty estimations.
