@@ -22,7 +22,6 @@ class AggregatedMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates aggregated metric between stats['greedy_texts'] and target_texts.
@@ -30,7 +29,6 @@ class AggregatedMetric(GenerationMetric):
         Parameters:
             stats (Dict[str, np.ndarray]): calculated stats
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of aggregated metric values for each sample in input.
         """
@@ -46,13 +44,8 @@ class AggregatedMetric(GenerationMetric):
             }
 
             sample_metric_values = []
-            for j, target in enumerate(targets):
-                if target_tokens:
-                    value = self.base_metric(
-                        truncated_stats, [target], target_tokens[i][j]
-                    )
-                else:
-                    value = self.base_metric(truncated_stats, [target], None)
+            for target in targets:
+                value = self.base_metric(truncated_stats, [target])
                 sample_metric_values.append(value)
 
             if self.aggregation == "max":

@@ -22,7 +22,6 @@ class BertScoreMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates BERTScore(https://arxiv.org/abs/1904.09675) between
@@ -32,7 +31,6 @@ class BertScoreMetric(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * model-generated texts in 'greedy_texts'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of BERT Scores for each sample in input.
         """
@@ -56,7 +54,7 @@ if __name__ == "__main__":
     }
     target_texts = ["Apple", "Apple", "Apple", "Octoberfest", "Octoberfest"]
 
-    scores = metric(stats, target_texts, None)
+    scores = metric(stats, target_texts)
     print(scores)
 
     assert scores.shape == (5,)

@@ -41,7 +41,6 @@ class RougeMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates Rouge score between stats['greedy_texts'] and target_texts.
@@ -50,7 +49,6 @@ class RougeMetric(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * model-generated texts in 'greedy_texts'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of Rouge Scores for each sample in input.
         """

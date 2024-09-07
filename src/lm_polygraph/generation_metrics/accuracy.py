@@ -47,7 +47,6 @@ class AccuracyMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates accuracy between stats['greedy_texts'] and target_texts.
@@ -56,7 +55,6 @@ class AccuracyMetric(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * model-generated texts in 'greedy_texts'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """

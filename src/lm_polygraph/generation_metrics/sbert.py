@@ -20,7 +20,6 @@ class SbertMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         embeddings = self.sbert.encode(stats["greedy_texts"])
         references = self.sbert.encode(target_texts)
@@ -43,7 +42,7 @@ if __name__ == "__main__":
     }
     target_texts = ["Apple", "Apple", "Apple", "Octoberfest", "Octoberfest"]
 
-    scores = metric(stats, target_texts, None)
+    scores = metric(stats, target_texts)
     print(scores)
 
     assert scores.shape == (5,)
