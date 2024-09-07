@@ -4,7 +4,7 @@ import logging
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.deberta import Deberta, MultilingualDeberta
 from lm_polygraph.utils.openai_chat import OpenAIChat
-from lm_polygraph.utils.model import Model
+from lm_polygraph.utils.model import Model, BlackboxModel
 
 from typing import Dict, List, Optional, Tuple
 
@@ -56,11 +56,10 @@ def register_stat_calculators(
     _register(InputTextDependencyCalculator())
     _register(SemanticMatrixCalculator(nli_model=nli_model))
 
-    if model.model_type == "Blackbox":
+    if isinstance(model, BlackboxModel):
         _register(BlackboxGreedyTextsCalculator())
         _register(BlackboxSamplingGenerationCalculator())
     else:
-        _register(GreedyProbsCalculator())
         _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
         _register(EntropyCalculator())
         _register(GreedyLMProbsCalculator())
