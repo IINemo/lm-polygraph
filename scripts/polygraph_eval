@@ -174,8 +174,7 @@ def main(args):
             background_train_dataset = None
 
         if args.subsample_eval_dataset != -1:
-            dataset.subsample(args.s
-ubsample_eval_dataset, seed=seed)
+            dataset.subsample(args.subsample_eval_dataset, seed=seed)
 
         generation_metrics = get_generation_metrics(args)
 
