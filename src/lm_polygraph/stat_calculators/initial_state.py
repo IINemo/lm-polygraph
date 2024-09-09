@@ -5,7 +5,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import Model
 
 
-class InputTextDependencyCalculator(StatCalculator):
+class InitialStateCalculator(StatCalculator):
     """
     Preprocesses input texts by passing them through unchanged.
     This calculator ensures that the 'input_texts' dependency is always satisfied.

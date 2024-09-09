@@ -1,5 +1,5 @@
 from .stat_calculator import StatCalculator
-from .input_texts import InputTextDependencyCalculator
+from .initial_state import InitialStateCalculator
 from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .prompt import PromptCalculator

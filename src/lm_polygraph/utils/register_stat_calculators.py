@@ -53,7 +53,7 @@ def register_stat_calculators(
             stat_calculators[stat] = calculator_class
             stat_dependencies[stat] = calculator_class.stat_dependencies
 
-    _register(InputTextDependencyCalculator())
+    _register(InitialStateCalculator())
     _register(SemanticMatrixCalculator(nli_model=nli_model))
 
     if isinstance(model, BlackboxModel):
