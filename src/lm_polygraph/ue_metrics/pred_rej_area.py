@@ -20,7 +20,9 @@ class PredictionRejectionArea(UEMetric):
         self.max_rejection = max_rejection
 
     def __str__(self):
-        return "prr"
+        if self.max_rejection == 1:
+            return "prr"
+        return f"prr_{self.max_rejection}"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
         """
