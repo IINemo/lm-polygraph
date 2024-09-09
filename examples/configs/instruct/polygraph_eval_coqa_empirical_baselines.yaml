@@ -9,6 +9,9 @@ description: "Here's a short story:\n\n{story} (End of story)\n\nProvide your be
 few_shot_prompt: "Question: {question}\nGuess: {answer}"
 prompt: "Question: {question}\n"
 max_new_tokens: 30
+generation_params:
+  generate_until:
+    - "\n"
 
 use_seq_ue: true
 include_whitebox_ue: false

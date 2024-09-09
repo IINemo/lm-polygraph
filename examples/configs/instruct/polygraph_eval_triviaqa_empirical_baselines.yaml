@@ -9,6 +9,9 @@ description: "Provide your best guess for the following question. Give ONLY the 
 few_shot_prompt: "Question: {question}\nGuess: {answer}"
 prompt: "Question: {question}\n"
 max_new_tokens: 30
+generation_params:
+  generate_until:
+    - "\n"
 
 use_seq_ue: true
 include_whitebox_ue: false
