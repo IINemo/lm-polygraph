@@ -363,7 +363,7 @@ def get_generation_metrics(args):
                 output_ignore_regex = getattr(args, "output_ignore_regex", None),
                 normalize = getattr(args, "normalize", False),
             ),
-            AlignScore(),
+            AlignScore(target_is_claims=False if args.task == "ats" else True),
         ]
         if getattr(args, "use_claim_ue", False):
             result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
