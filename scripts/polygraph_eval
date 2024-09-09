@@ -174,7 +174,8 @@ def main(args):
             background_train_dataset = None
 
         if args.subsample_eval_dataset != -1:
-            dataset.subsample(args.subsample_eval_dataset, seed=seed)
+            dataset.subsample(args.s
+ubsample_eval_dataset, seed=seed)
 
         generation_metrics = get_generation_metrics(args)
 
@@ -208,6 +209,7 @@ def get_ue_metrics(args):
     ue_metrics = [
         ReversedPairsProportion(),
         PredictionRejectionArea(),
+        PredictionRejectionArea(max_rejection=0.5),
         RiskCoverageCurveAUC(),
     ]
     if getattr(args, "use_claim_ue", False):
