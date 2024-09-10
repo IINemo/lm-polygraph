@@ -7,8 +7,7 @@ from .estimator import Estimator
 
 
 class SemanticEntropy(Estimator):
-    """
-    Estimates the sequence-level uncertainty of a language model following the method of
+    """ Estimates the sequence-level uncertainty of a language model following the method of
     "Semantic entropy" as provided in the paper https://arxiv.org/abs/2302.09664.
     Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
 
@@ -17,21 +16,43 @@ class SemanticEntropy(Estimator):
     'samples_n' parameter.
     """
 
-    def __init__(self, verbose: bool = False, use_unique_responses: bool = True):
-        super().__init__(
-            [
-                "sample_log_probs",
-                "sample_texts",
-                "semantic_matrix_entail",
-                "entailment_id",
-            ],
-            "sequence",
-        )
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_unique_responses: bool = True,
+        mode: str = "output"
+    ):
+        if mode == 'output':
+            super().__init__(
+                [
+                    "sample_log_probs",
+                    "sample_texts",
+                    "semantic_matrix_entail",
+                    "entailment_id",
+                ],
+                "sequence",
+            )
+        elif mode == 'input_output':
+            super().__init__(
+                [
+                    "sample_log_probs",
+                    "sample_texts",
+                    "concat_semantic_matrix_entail",
+                    "entailment_id",
+                ],
+                "sequence",
+            )
+        self.mode = mode
         self.use_unique_responses = use_unique_responses
         self.verbose = verbose
 
     def __str__(self):
-        return "SemanticEntropy"
+        base = "SemanticEntropy"
+        if self.mode == 'input_output':
+            base += "Concat"
+        if self.use_unique_responses:
+            base += "Unique"
+        return base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -50,7 +71,10 @@ class SemanticEntropy(Estimator):
         hyps_list = stats["sample_texts"]
 
         # entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"] # TODO: Why this is here??
-        self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
+        if self.mode == 'output':
+            self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
+        elif self.mode == 'input_output':
+            self._is_entailment = stats["concat_semantic_matrix_classes"] == stats["entailment_id"]
 
         return self.batched_call(hyps_list, loglikelihoods_list)
 
