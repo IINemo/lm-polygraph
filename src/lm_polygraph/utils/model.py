@@ -159,7 +159,13 @@ class BlackboxModel(Model):
         ):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in ["do_sample", "min_length", "top_k", "repetition_penalty"]:
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+        ]:
             args.pop(delete_key, None)
         for key, replace_key in [
             ("num_return_sequences", "n"),
@@ -170,9 +176,6 @@ class BlackboxModel(Model):
                 args[replace_key] = args[key]
                 args.pop(key)
         texts = []
-
-        if "min_new_tokens" in args.keys():
-            args.pop("min_new_tokens")
 
         if self.openai_api_key is not None:
             for prompt in input_texts:
