@@ -152,5 +152,5 @@ class SemanticMatrixCalculator(StatCalculator):
             "concat_semantic_matrix_entail": E_concat,
             "concat_semantic_matrix_contra": C_concat,
             "concat_semantic_matrix_classes": P_concat,
-            "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
+            "entailment_id": self.nli_model.deberta.config.label2id["ENTAILMENT"],
         }
