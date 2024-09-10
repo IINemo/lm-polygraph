@@ -21,6 +21,7 @@ train_split: train
 eval_split: test
 max_new_tokens: 56
 load_from_disk: false
+trust_remote_code: true
 generation_params:
   generate_until:
     - "\n"
