@@ -19,7 +19,7 @@ class SemanticEntropy(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        use_unique_responses: bool = False
+        use_unique_responses: bool = False,
         mode: str = "output"
     ):
         if mode == 'output':
