@@ -405,7 +405,7 @@ def get_generation_metrics(args):
         for metric in generation_metrics:
             metric_name = metric["name"]
             metric_class = globals()[metric_name]
-            metric_args = metric.get("args", {})
+            metric_args = metric.get("args", [])
             result.append(metric_class(*metric_args))
 
     process_output_fn = getattr(args, "process_output_fn", None)
