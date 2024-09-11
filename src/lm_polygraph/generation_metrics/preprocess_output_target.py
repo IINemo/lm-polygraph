@@ -24,7 +24,6 @@ class PreprocessOutputTarget(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Applies preprocess functions to stats['greedy_texts'] and target_texts before passing them to the base metric.
