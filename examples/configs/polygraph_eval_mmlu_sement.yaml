@@ -11,18 +11,18 @@ save_path: '${hydra:run.dir}'
 
 task: sement_tests
 
-dataset: [trivia_qa, rc.nocontext]
+dataset: [cais/mmlu, all]
 text_column: question
 label_column: answer
-prompt: "Question: {question}\nAnswer:{answer}"
-few_shot_split: train
-train_split: train
-eval_split: validation
-max_new_tokens: 20
+description: "The following are multiple choice questions (with answers) about {subject}."
+prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}"
+few_shot_split: dev
+train_split: validation
+eval_split: test
+max_new_tokens: 3
 load_from_disk: false
 n_shot: 5
-multiref: true
-normalize: true
+max_subject_size: 100
 generation_params:
   generate_until:
     - "\n"
@@ -65,7 +65,6 @@ additional_estimators:
     class_name: SemanticEntropy
     kwargs:
       mode: "input_output"
-
 
 ignore_exceptions: false
 

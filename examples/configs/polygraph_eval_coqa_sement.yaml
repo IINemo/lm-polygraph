@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -11,17 +11,15 @@ save_path: '${hydra:run.dir}'
 
 task: sement_tests
 
-dataset: [trivia_qa, rc.nocontext]
-text_column: question
-label_column: answer
+dataset: coqa
+text_column: questions
+label_column: answers
+description: "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}"
 prompt: "Question: {question}\nAnswer:{answer}"
-few_shot_split: train
 train_split: train
 eval_split: validation
 max_new_tokens: 20
 load_from_disk: false
-n_shot: 5
-multiref: true
 normalize: true
 generation_params:
   generate_until:
@@ -65,7 +63,6 @@ additional_estimators:
     class_name: SemanticEntropy
     kwargs:
       mode: "input_output"
-
 
 ignore_exceptions: false
 

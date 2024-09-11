@@ -102,7 +102,7 @@ class SemanticEntropy(Estimator):
                     for class_idx in self._class_to_sample[i]
                 ]
                 unique_hyps_ids = [
-                    np.unique(np.unique(hyps, return_inverse=True)[1])
+                    np.unique(hyps, return_index=True)[1]
                     for hyps in class_hyps
                 ]
                 class_likelihoods = [
