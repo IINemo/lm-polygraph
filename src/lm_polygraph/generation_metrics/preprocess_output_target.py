@@ -43,4 +43,4 @@ class PreprocessOutputTarget(GenerationMetric):
             self.process_output_fn(output) for output in stats["greedy_texts"]
         ]
 
-        return self.base_metric(stats, processed_target_texts, target_tokens)
+        return self.base_metric(stats, processed_target_texts)
