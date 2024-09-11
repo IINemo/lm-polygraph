@@ -1,9 +1,9 @@
 import re
 import string
 
-TOP1_OUTPUT_IGNORE_REGEX = re.compile("(?s)[Gg]uess:|[\n\.\(\,].*")
-TOPK_OUTPUT_IGNORE_REGEX = re.compile("(?s)G1:|[\n\.\(\,].*")
-CoT_OUTPUT_IGNORE_REGEX = re.compile("(?s).*[Gg]uess:|[\n\.\(\,].*")
+TOP1_OUTPUT_IGNORE_REGEX = re.compile(r"(?s)[Gg]uess:|[\n\.\(\,].*")
+TOPK_OUTPUT_IGNORE_REGEX = re.compile(r"(?s)G1:|[\n\.\(\,].*")
+CoT_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*[Gg]uess:|[\n\.\(\,].*")
 
 
 def normalize_text(text: str) -> str:
