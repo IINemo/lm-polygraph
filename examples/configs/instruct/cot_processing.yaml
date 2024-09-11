@@ -1,6 +1,6 @@
 process_output_fn:
-  - path: output_processing_scripts/default.py
-    fn_name: process_output_cot
+  path: output_processing_scripts/default.py
+  fn_name: process_output_cot
 process_target_fn:
-  - path: output_processing_scripts/default.py
-    fn_name: process_target
+  path: output_processing_scripts/default.py
+  fn_name: process_target
