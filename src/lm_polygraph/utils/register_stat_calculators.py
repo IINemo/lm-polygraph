@@ -56,7 +56,6 @@ def register_stat_calculators(
     _register(InitialStateCalculator())
     _register(SemanticMatrixCalculator(nli_model=nli_model))
     _register(SemanticClassesCalculator())
-<<<<<<< HEAD
 
     if isinstance(model, BlackboxModel):
         _register(BlackboxGreedyTextsCalculator())

@@ -21,7 +21,7 @@ class SemanticClassesCalculator(StatCalculator):
                 "sample_texts",
                 "semantic_matrix_entail",
                 "semantic_matrix_classes",
-                "entailment_id"
+                "entailment_id",
             ],
         )
 
