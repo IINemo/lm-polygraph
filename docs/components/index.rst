@@ -5,14 +5,14 @@ The main components of LM-Polygraph are:
 
 - :doc:`UEManager <ue_manager>`
 - :doc:`Stat Calculators <stat_calculators>`
-- :doc:`Estimators <estimators>`
+- :doc:`Estimators <estimators/index>`
 - :doc:`Generation Metrics <gen_metrics>`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :hidden:
 
    ue_manager
    stat_calculators
-   estimators
+   estimators/index
    gen_metrics

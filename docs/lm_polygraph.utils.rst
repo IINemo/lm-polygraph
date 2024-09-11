@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    lm_polygraph.utils.ensemble_utils
-   lm_polygraph.utils.prompt_templates
 
 Submodules
 ----------

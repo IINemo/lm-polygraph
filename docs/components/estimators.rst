@@ -1,6 +1,0 @@
-.. _Estimators:
-
-Estimators
-==========
-
-WiP
