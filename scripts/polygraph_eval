@@ -373,9 +373,9 @@ def get_generation_metrics(args):
         if getattr(args, "multiref", False):
             # Wrap each metric in AggregatedMetric
             result = [AggregatedMetric(base_metric=metric) for metric in result]
-        else:
-            # Currently, BartScoreSeqMetric can only be used with single reference
-            result.append(BartScoreSeqMetric('rh'))
+        #else:
+        #    # Currently, BartScoreSeqMetric can only be used with single reference
+        #    result.append(BartScoreSeqMetric('rh'))
     else:
         result = []
         for metric in generation_metrics:

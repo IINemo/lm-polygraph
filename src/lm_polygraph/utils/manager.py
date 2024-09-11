@@ -250,7 +250,7 @@ class UEManager:
         ignore_exceptions: bool = True,
         ensemble_model: Optional[WhiteboxModel] = None,
         deberta_batch_size: int = 10,
-        deberta_device: Optional[str] = None,
+        deberta_device: Optional[str] = 'auto',
         language: str = "en",
         verbose: bool = True,
         max_new_tokens: int = 100,
