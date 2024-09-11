@@ -159,7 +159,13 @@ class BlackboxModel(Model):
         ):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in ["do_sample", "min_length", "top_k", "repetition_penalty"]:
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+        ]:
             args.pop(delete_key, None)
         for key, replace_key in [
             ("num_return_sequences", "n"),
@@ -173,9 +179,22 @@ class BlackboxModel(Model):
 
         if self.openai_api_key is not None:
             for prompt in input_texts:
+                if isinstance(prompt, str):
+                    # If prompt is a string, create a single message with "user" role
+                    messages = [{"role": "user", "content": prompt}]
+                elif isinstance(prompt, list) and all(
+                    isinstance(item, dict) for item in prompt
+                ):
+                    # If prompt is a list of dictionaries, assume it's already structured as chat
+                    messages = prompt
+                else:
+                    raise ValueError(
+                        "Invalid prompt format. Must be either a string or a list of dictionaries."
+                    )
+
                 response = openai.ChatCompletion.create(
                     model=self.model_path,
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=messages,
                     **args,
                 )
                 if args["n"] == 1:

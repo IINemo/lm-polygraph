@@ -21,7 +21,6 @@ class ModelScoreTokenwiseMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates token-level ModelScore between stats['greedy_texts'] and target_texts.
@@ -30,7 +29,6 @@ class ModelScoreTokenwiseMetric(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * log-probabilities of generation on prompt 'Paraphrase "{target text}"', in 'model_rh'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: concatenated float Model Scores for each token in each input sample.
         """
@@ -54,7 +52,6 @@ class ModelScoreSeqMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates sequence-level ModelScore between stats['greedy_texts'] and target_texts.
@@ -63,7 +60,6 @@ class ModelScoreSeqMetric(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * log-probabilities of generation on prompt 'Paraphrase "{target text}"', in 'model_rh'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: float Model Scores for each input sample.
         """

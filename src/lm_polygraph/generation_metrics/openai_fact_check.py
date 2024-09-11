@@ -52,7 +52,6 @@ class OpenAIFactCheck(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         For each claim in stats['claims'], asks OpenAI model whether this fact is correct or not.
@@ -61,7 +60,6 @@ class OpenAIFactCheck(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * for each generation, list of lm_polygraph.stat_calculators.extract_claims.Claim in 'claims'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of labels, 1 if the fact is false and 0 if it is true.
         """

@@ -41,7 +41,6 @@ class GenerationMetric(ABC):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Abstract method. Measures ground-truth uncertainty by comparing model-generated
@@ -51,7 +50,6 @@ class GenerationMetric(ABC):
             stats (Dict[str, np.ndarray]): input statistics, which includes values from
                 statistics calculators for each self.stat_dependencies,
             target_texts (List[str]): ground-truth texts,
-            target_tokens (List[List[int]]): corresponding token splits for each target text.
         Returns:
             np.ndarray: list of float ground-truth uncertainties calculated by comparing input
                 statistics with ground truth texts.
