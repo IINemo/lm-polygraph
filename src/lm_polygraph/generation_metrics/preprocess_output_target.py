@@ -38,9 +38,14 @@ class PreprocessOutputTarget(GenerationMetric):
         processed_target_texts = [
             self.process_target_fn(target) for target in target_texts
         ]
-        stats = deepcopy(stats)
-        stats["greedy_texts"] = [
-            self.process_output_fn(output) for output in stats["greedy_texts"]
+
+        # Select and copy only the stats that are needed for the base metric
+        # before mutating greedy_texts with process_output_fn
+        stats_copy = {k: v for k, v in stats.items() if k in self.stats_dependencies}
+        stats_copy = deepcopy(stats_copy)
+
+        stats_copy["greedy_texts"] = [
+            self.process_output_fn(output) for output in stats_copy["greedy_texts"]
         ]
 
-        return self.base_metric(stats, processed_target_texts)
+        return self.base_metric(stats_copy, processed_target_texts)
