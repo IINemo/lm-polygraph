@@ -16,7 +16,7 @@ To install latest from main brach, clone the repo and conduct installation using
 
 ```console
 git clone https://github.com/IINemo/lm-polygraph.git
-python3 -m venv env
+python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
 cd lm-polygraph
 pip install .
@@ -27,7 +27,7 @@ Installation from GitHub is recommended if you want to explore notebooks with ex
 ```console
 git clone https://github.com/IINemo/lm-polygraph.git
 git checkout tags/v0.3.0
-python3 -m venv env
+python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
 cd lm-polygraph
 pip install .
@@ -37,7 +37,7 @@ pip install .
 To install the latest stable version from PyPI, run:
 
 ```console
-python3 -m venv env
+python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
 pip install lm-polygraph
 ```
@@ -45,7 +45,7 @@ pip install lm-polygraph
 To install a specific version, run:
 
 ```console
-python3 -m venv env
+python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
 pip install lm-polygraph==0.3.0
 ```
