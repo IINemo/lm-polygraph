@@ -52,19 +52,15 @@ class AlignScore(GenerationMetric):
         """
         greedy_texts = stats["greedy_texts"]
 
-        filtered_targets = [
-            x if len(x.strip()) else "(empty)" for x in target_texts
-        ]
-        filtered_outputs = [
-            x if len(x.strip()) else "(empty)" for x in greedy_texts
-        ]
+        filtered_targets = [x if len(x.strip()) else "(empty)" for x in target_texts]
+        filtered_outputs = [x if len(x.strip()) else "(empty)" for x in greedy_texts]
 
         if self.target_is_claims:
-            claims=filtered_targets
-            contexts=filtered_outputs
+            claims = filtered_targets
+            contexts = filtered_outputs
         else:
-            claims=filtered_outputs
-            contexts=filtered_targets
+            claims = filtered_outputs
+            contexts = filtered_targets
 
         scores = np.array(
             self.scorer.score(
