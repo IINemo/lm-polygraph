@@ -29,7 +29,14 @@ class ClaimsExtractor(StatCalculator):
         sent_separators: str = ".?!。？！\n",
         language: str = "en",
     ):
-        super().__init__(
+        super().__init__()
+        self.language = language
+        self.openai_chat = openai_chat
+        self.sent_separators = sent_separators
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        return (
             [
                 "claims",
                 "claim_texts_concatenated",
@@ -38,11 +45,8 @@ class ClaimsExtractor(StatCalculator):
             [
                 "greedy_texts",
                 "greedy_tokens",
-            ],
+            ]
         )
-        self.language = language
-        self.openai_chat = openai_chat
-        self.sent_separators = sent_separators
 
     def __call__(
         self,

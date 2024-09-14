@@ -26,6 +26,15 @@ from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module
 from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.defaults.register_default_stat_calculators import (
+    register_default_stat_calculators,
+)
+from lm_polygraph.utils.builder_enviroment_stat_calculator import (
+    BuilderEnvironmentStatCalculator,
+    StatCalculatorContainer
+)
+from lm_polygraph.utils.builder_stat_calculators import BuilderStatCalculators
+
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -184,6 +193,15 @@ def main(args):
 
         ue_metrics = get_ue_metrics(args)
 
+        available_stat_calculators = get_stat_calculator_names(args)
+        builder_env_sc = BuilderEnvironmentStatCalculator(model=model)
+        builder_stat_calculators = BuilderStatCalculators(
+            builder_env_sc,
+            available_stat_calculators[0],
+            available_stat_calculators[1],
+        )
+        stat_calculators = builder_stat_calculators.get_stat_calculators()
+
         man = UEManager(
             dataset,
             model,
@@ -221,6 +239,43 @@ def get_ue_metrics(args):
             PRAUC(),
         ]
     return ue_metrics
+
+
+def get_stat_calculator_names(config):
+    result_stat_calculators = dict()
+    result_stat_dependencies = dict()
+
+    for stat_calculator in config.stat_calculators:
+        if stat_calculator == "auto":
+            sc, sd = register_default_stat_calculators()
+            sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
+            result_stat_calculators.update(sc)
+            result_stat_dependencies.update(sd)
+        else:
+            result_stat_calculators.update(
+                {
+                    s: StatCalculatorContainer(
+                        name=stat_calculator.name,
+                        cfg=stat_calculator.cfg,
+                        stats=stat_calculator.stats,
+                        dependencies=stat_calculator.dependencies,
+                        builder=stat_calculator.builder,
+                    )
+                    for s in stat_calculator.stats
+                }
+            )
+            result_stat_dependencies.update(
+                {
+                    s: (
+                        stat_calculator.dependencies
+                        if stat_calculator.dependencies is not None
+                        else []
+                    )
+                    for s in stat_calculator.stats
+                }
+            )
+
+    return result_stat_calculators, result_stat_dependencies
 
 
 def get_density_based_ue_methods(args, model_type):

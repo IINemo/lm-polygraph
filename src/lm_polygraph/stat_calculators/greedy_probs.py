@@ -81,19 +81,7 @@ class GreedyProbsCalculator(StatCalculator):
         ], []
 
     def __init__(self, n_alternatives: int = 10):
-        super().__init__(
-            [
-                "input_tokens",
-                "greedy_log_probs",
-                "greedy_tokens",
-                "greedy_tokens_alternatives",
-                "greedy_texts",
-                "greedy_log_likelihoods",
-                "train_greedy_log_likelihoods",
-                "embeddings",
-            ],
-            [],
-        )
+        super().__init__()
         self.n_alternatives = n_alternatives
 
     def __call__(
