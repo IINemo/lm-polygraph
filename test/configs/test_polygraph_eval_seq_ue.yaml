@@ -30,7 +30,6 @@ generation_metrics:
 ens_type:
 
 additional_estimators: {}
-additional_estimators_kwargs: {}
 
 subsample_eval_dataset: 10
 batch_size: 2

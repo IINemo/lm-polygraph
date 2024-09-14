@@ -1,0 +1,20 @@
+defaults:
+  - polygraph_eval_triviaqa_default_instruct
+  - _self_
+
+experiment_name: triviaqa_verb_2s_cot
+
+description: "Provide your best guess for the following question. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>"
+few_shot_prompt: "Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}"
+prompt: "Question: {question}\n"
+max_new_tokens: 200
+output_ignore_regex: "(?s).*Guess:"
+
+additional_estimators: 
+  - module: lm_polygraph.estimators.verbalized_2s
+    class_name: Verbalized2S
+    kwargs:
+      confidence_prompt: "Provide the probability that your guess is correct. Give ONLY the probability, no other words or explanation.\n\nFor example:\n\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>"
+      confidence_regex: 'Probability: (\d+\.\d+)'
+      max_new_tokens: 10 
+      name_postfix: "_cot"

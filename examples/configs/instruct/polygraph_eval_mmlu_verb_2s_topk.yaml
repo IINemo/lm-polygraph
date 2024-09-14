@@ -1,0 +1,21 @@
+defaults:
+  - polygraph_eval_mmlu_default_instruct
+  - _self_
+
+experiment_name: mmlu_verb_2s_topk
+
+topk: 4
+description: "Provide your ${topk} best guesses for the following question about {subject} selecting one of the options. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\n...\nG${topk}: <${topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>"
+few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\n...\nG${topk}: <other guess>"
+prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
+max_new_tokens: 65
+output_ignore_regex: "(?s).*G1:|G2:.*"
+
+additional_estimators: 
+  - module: lm_polygraph.estimators.verbalized_2s
+    class_name: Verbalized2S
+    kwargs:
+      confidence_prompt: "Provide the probability that each of your guesses is correct. Give ONLY the probabilities, no other words or explanation.\n\nFor example:\n\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nP${topk}: <the probability between 0.0 and 1.0 that G${topk} is correct, without any extra commentary whatsoever; just the probability!>"
+      confidence_regex: 'P1: (\d+\.\d+)'
+      max_new_tokens: 50
+      name_postfix: "_topk"

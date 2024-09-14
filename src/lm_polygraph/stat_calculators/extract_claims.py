@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.utils.model import WhiteboxModel
+from .claim_level_prompts import CLAIM_EXTRACTION_PROMPTS, MATCHING_PROMPTS
 
 
 @dataclass
@@ -17,51 +18,29 @@ class Claim:
     aligned_token_ids: List[int]
 
 
-CLAIM_EXTRACTION_PROMPT = """Please breakdown the sentence into independent claims.
-
-Example:
-Sentence: \"He was born in London and raised by his mother and father until 11 years old.\"
-Claims:
-- He was born in London.
-- He was raised by his mother and father.
-- He was raised by his mother and father until 11 years old.
-
-Sentence: \"{sent}\"
-Claims:"""
-
-MATCHING_PROMPT = (
-    "Given the fact, identify the corresponding words "
-    "in the original sentence that help derive this fact. "
-    "Please list all words that are related to the fact, "
-    "in the order they appear in the original sentence, "
-    "each word separated by comma.\nFact: {claim}\n"
-    "Sentence: {sent}\nWords from sentence that helps to "
-    "derive the fact, separated by comma: "
-)
-
-
 class ClaimsExtractor(StatCalculator):
     """
     Extracts claims from the text of the model generation.
     """
 
-    @staticmethod
-    def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the SamplingPromptCalculator.
-        """
-
-        return [
-            "claims",
-            "claim_texts_concatenated",
-            "claim_input_texts_concatenated",
-        ], [
-            "greedy_texts",
-            "greedy_tokens",
-        ]
-
-    def __init__(self, openai_chat: OpenAIChat, sent_separators: str = ".?!\n"):
-        super().__init__()
+    def __init__(
+        self,
+        openai_chat: OpenAIChat,
+        sent_separators: str = ".?!。？！\n",
+        language: str = "en",
+    ):
+        super().__init__(
+            [
+                "claims",
+                "claim_texts_concatenated",
+                "claim_input_texts_concatenated",
+            ],
+            [
+                "greedy_texts",
+                "greedy_tokens",
+            ],
+        )
+        self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
 
@@ -100,11 +79,7 @@ class ClaimsExtractor(StatCalculator):
             texts,
         ):
             claims.append(
-                self.claims_from_text(
-                    greedy_text,
-                    greedy_tok,
-                    model.tokenizer,
-                )
+                self.claims_from_text(greedy_text, greedy_tok, model.tokenizer)
             )
             # Iterate over newly added claims to concatenate into list
             for c in claims[-1]:
@@ -117,12 +92,7 @@ class ClaimsExtractor(StatCalculator):
             "claim_input_texts_concatenated": claim_input_texts_concatenated,
         }
 
-    def claims_from_text(
-        self,
-        text: str,
-        tokens: List[int],
-        tokenizer,
-    ) -> List[Claim]:
+    def claims_from_text(self, text: str, tokens: List[int], tokenizer) -> List[Claim]:
         sentences = []
         for s in re.split(f"[{self.sent_separators}]", text):
             if len(s) > 0:
@@ -152,9 +122,7 @@ class ClaimsExtractor(StatCalculator):
 
             # Extract claims from current sentence
             for c in self._claims_from_sentence(
-                s,
-                tokens[sent_start_token_idx:sent_end_token_idx],
-                tokenizer,
+                s, tokens[sent_start_token_idx:sent_end_token_idx], tokenizer
             ):
                 # Correct aligned tokens positions from sentence-level to generation-level
                 for i in range(len(c.aligned_token_ids)):
@@ -170,7 +138,7 @@ class ClaimsExtractor(StatCalculator):
     ) -> List[Claim]:
         # Extract claims with specific prompt
         extracted_claims = self.openai_chat.ask(
-            CLAIM_EXTRACTION_PROMPT.format(sent=sent)
+            CLAIM_EXTRACTION_PROMPTS[self.language].format(sent=sent)
         )
         claims = []
         for claim_text in extracted_claims.split("\n"):
@@ -183,17 +151,27 @@ class ClaimsExtractor(StatCalculator):
             # remove '- ' in the beginning
             claim_text = claim_text[2:].strip()
             # Get words which matches the claim using specific prompt
-            chat_ask = MATCHING_PROMPT.format(sent=sent, claim=claim_text)
             # Example:
             # sent = 'Lanny Flaherty is an American actor born on December 18, 1949, in Pensacola, Florida.'
             # claim = 'Lanny Flaherty was born on December 18, 1949.'
             # GPT response: 'Lanny, Flaherty, born, on, December, 18, 1949'
             # match_words = ['Lanny', 'Flaherty', 'born', 'on', 'December', '18', '1949']
+            chat_ask = MATCHING_PROMPTS[self.language].format(
+                sent=sent,
+                claim=claim_text,
+            )
             match_words = self.openai_chat.ask(chat_ask)
-            match_words = match_words.strip().split(",")
+            # comma has a different form in Chinese and space works better
+            if self.language == "zh":
+                match_words = match_words.strip().split(" ")
+            else:
+                match_words = match_words.strip().split(",")
             match_words = list(map(lambda x: x.strip(), match_words))
             # Try to highlight matched symbols in sent
-            match_string = self._match_string(sent, match_words)
+            if self.language == "zh":
+                match_string = self._match_string_zh(sent, match_words)
+            else:
+                match_string = self._match_string(sent, match_words)
             if match_string is None:
                 continue
             # Get token positions which intersect with highlighted regions, that is, correspond to the claim
@@ -258,6 +236,40 @@ class ClaimsExtractor(StatCalculator):
             # Didn't match all words to the sentence.
             # Possibly because the match words are in the wrong order or are not present in sentence.
             return None
+
+        return match_str
+
+    def _match_string_zh(self, sent: str, match_words: List[str]) -> Optional[str]:
+        # Greedily matching characters from `match_words` to `sent` for Chinese.
+        # Returns None if matching failed, e.g. due to characters in match_words, which are not present
+        # in sent, or if the characters are not in the same order they appear in the sentence.
+        #
+        # Example:
+        # sent = '爱因斯坦也是一位和平主义者。'
+        # match_words = ['爱因斯坦', '是', '和平', '主义者']
+        # return '^^^^ ^  ^^^^'
+
+        last = 0  # pointer to the sentence
+        last_match = 0  # pointer to the match_words list
+        match_str = ""
+
+        # Iterate through each character in the input Chinese text
+        for char in sent:
+            # Check if the current character matches the next character in match_words[last_match]
+            if last_match < len(match_words) and char == match_words[last_match][last]:
+                # Match found, update pointers and match_str
+                match_str += "^"
+                last += 1
+                if last == len(match_words[last_match]):
+                    last = 0
+                    last_match += 1
+            else:
+                # No match, append a space to match_str
+                match_str += " "
+
+        # Check if all characters in match_words have been matched
+        if last_match < len(match_words):
+            return None  # Didn't match all characters to the sentence
 
         return match_str
 

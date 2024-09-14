@@ -37,15 +37,11 @@ class Eccentricity(Estimator):
         """
         if similarity_score == "NLI_score":
             if affinity == "entail":
-                super().__init__(
-                    ["semantic_matrix_entail", "blackbox_sample_texts"], "sequence"
-                )
+                super().__init__(["semantic_matrix_entail", "sample_texts"], "sequence")
             else:
-                super().__init__(
-                    ["semantic_matrix_contra", "blackbox_sample_texts"], "sequence"
-                )
+                super().__init__(["semantic_matrix_contra", "sample_texts"], "sequence")
         else:
-            super().__init__(["blackbox_sample_texts"], "sequence")
+            super().__init__(["sample_texts"], "sequence")
 
         self.similarity_score = similarity_score
         self.affinity = affinity
@@ -58,7 +54,7 @@ class Eccentricity(Estimator):
         return f"Eccentricity_{self.similarity_score}"
 
     def U_Eccentricity(self, i, stats):
-        answers = stats["blackbox_sample_texts"][i]
+        answers = stats["sample_texts"][i]
 
         if self.similarity_score == "NLI_score":
             if self.affinity == "entail":
@@ -103,14 +99,14 @@ class Eccentricity(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * generated samples in 'blackbox_sample_texts',
+                * generated samples in 'sample_texts',
                 * matrix with semantic similarities in 'semantic_matrix_entail'/'semantic_matrix_contra'
         Returns:
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
         res = []
-        for i, answers in enumerate(stats["blackbox_sample_texts"]):
+        for i, answers in enumerate(stats["sample_texts"]):
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_Eccentricity(i, stats)[0])

@@ -30,6 +30,14 @@ class EnsembleTokenLevelDataCalculator(StatCalculator):
         model: PreTrainedModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
+        # Ensemble-based UE methods have been disabled due to dependency on old
+        # transformers code, which prevents bumping transformers version in
+        # dependencies past 4.40.0. This is a temporary solution until the
+        # code is updated to work with the latest transformers version.
+        raise NotImplementedError(
+            "Ensemble UE methods are not working properly in this version. Consider downgrading to 0.3.0"
+        )
+
         ensemble_model = dependencies["ensemble_model"]
 
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)

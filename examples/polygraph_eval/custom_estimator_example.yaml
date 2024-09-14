@@ -1,9 +1,0 @@
-defaults:
-  - default
-
-# This is an example of how to write config that adds custom estimators
-additional_estimators:  # Estimators that will be added to UEManager
-  # Write config in the following format:
-  # module to import: class names of estimators that will be added to UEManager
-  polygraph_eval_configs.custom_estimator_example:
-    - CustomEstimatorExample

@@ -37,7 +37,6 @@ class Comet(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates COMET (https://aclanthology.org/2020.emnlp-main.213/) between
@@ -48,7 +47,6 @@ class Comet(GenerationMetric):
                 * model-generated texts in 'greedy_texts'
             target_texts (List[str]): ground-truth texts
             input_texts (List[str]): input texts before translation
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of COMET Scores for each sample in input.
         """

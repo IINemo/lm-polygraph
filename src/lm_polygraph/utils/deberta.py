@@ -1,6 +1,11 @@
 import torch
 
-from transformers import DebertaForSequenceClassification, DebertaTokenizer
+from transformers import (
+    DebertaForSequenceClassification,
+    DebertaTokenizer,
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+)
 
 from singleton_decorator import singleton
 
@@ -72,3 +77,52 @@ class Deberta:
 class SingletonDeberta(Deberta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class MultilingualDeberta(Deberta):
+    """
+    Allows for the implementation of a singleton multilingual DeBERTa model which can be shared across
+    different uncertainty estimation methods in the code.
+    """
+
+    def __init__(
+        self,
+        deberta_path: str = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
+        batch_size: int = 10,
+        device=None,
+    ):
+        """
+        Parameters
+        ----------
+        deberta_path : str
+            huggingface path of the pretrained DeBERTa (default
+            'MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7')
+        device : str
+            device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
+        """
+        self.deberta_path = deberta_path
+        self.batch_size = batch_size
+        self._deberta = None
+        self._deberta_tokenizer = None
+        if device is None:
+            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        else:
+            self.device = device
+        self.setup()
+
+    def setup(self):
+        """
+        Loads and prepares the DeBERTa model from the specified path.
+        """
+        if self._deberta is not None:
+            return
+        self._deberta_tokenizer = AutoTokenizer.from_pretrained(self.deberta_path)
+        self._deberta = AutoModelForSequenceClassification.from_pretrained(
+            self.deberta_path
+        )
+        self._deberta.to(self.device)
+        self._deberta.eval()
+        # Make label2id classes uppercase to match implementation of microsoft/deberta-large-mnli
+        self._deberta.deberta.config.label2id = {
+            k.upper(): v for k, v in self._deberta.deberta.config.label2id.items()
+        }

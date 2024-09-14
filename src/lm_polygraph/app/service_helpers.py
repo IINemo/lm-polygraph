@@ -275,9 +275,7 @@ class Responder:
                 f"Internal: expected {len(tok_methods) + len(seq_methods)} estimations, "
                 f"got: {processor.ue_estimations.keys()}",
             )
-        greedy_text = processor.stats.get(
-            "greedy_texts", processor.stats.get("blackbox_greedy_texts", None)
-        )[0]
+        greedy_text = processor.stats.get("greedy_texts", [None])[0]
         print(" Generation: {}".format(greedy_text))
 
         tok_conf, tok_norm = self._get_confidence(

@@ -23,6 +23,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
     def __init__(self, samples_n: int = 10):
         super().__init__()
         self.samples_n = samples_n
+        super().__init__(["sample_texts"], [])
 
     def __call__(
         self,
@@ -40,7 +41,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             model (Model): Model used for generation.
             max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
         Returns:
-            Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'blackbox_sample_texts' key.
+            Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'sample_texts' key.
         """
 
         if isinstance(model, BlackboxModel):
@@ -64,7 +65,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                     samples[i].append(out[i * self.samples_n + j])
 
         return {
-            "blackbox_sample_texts": samples,
+            "sample_texts": samples,
         }
 
 

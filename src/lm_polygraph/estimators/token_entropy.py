@@ -58,4 +58,4 @@ class TokenEntropy(Estimator):
                 Higher values indicate more uncertain samples.
         """
         entropy = stats["entropy"]
-        return np.concatenate([np.array(e[:-1]) for e in entropy])
+        return [np.array(e[:-1]) for e in entropy]

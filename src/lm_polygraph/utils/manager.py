@@ -6,7 +6,7 @@ import gc
 import os
 
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional, Set
+from typing import List, Set, Dict, Tuple, Optional, Union
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -112,10 +112,12 @@ class UncertaintyOutput:
         model_path (str): path to the model used in generation.
     """
 
-    uncertainty: float
+    uncertainty: Union[float, List[float]]
     input_text: str
     generation_text: str
+    generation_tokens: List[int]
     model_path: str
+    estimator: str
 
 
 def estimate_uncertainty(
@@ -171,8 +173,15 @@ def estimate_uncertainty(
     )
     man()
     ue = man.estimations[estimator.level, str(estimator)]
-    texts = man.stats.get("greedy_texts", man.stats.get("blackbox_greedy_texts", None))
-    return UncertaintyOutput(ue[0], input_text, texts[0], model.model_path)
+    texts = man.stats.get("greedy_texts", None)
+    tokens = man.stats.get("greedy_tokens", None)
+    if tokens is not None and len(tokens) > 0:
+        # Remove last token, which is the end of the sequence token
+        # since we don't include it's uncertainty in the estimator's output
+        tokens = tokens[0][:-1]
+    return UncertaintyOutput(
+        ue[0], input_text, texts[0], tokens, model.model_path, str(estimator)
+    )
 
 
 def _flatten_results(results, result_generator_class):
@@ -246,6 +255,9 @@ class UEManager:
         background_train_data: Dataset = None,
         ignore_exceptions: bool = True,
         ensemble_model: Optional[WhiteboxModel] = None,
+        deberta_batch_size: int = 10,
+        deberta_device: Optional[str] = None,
+        language: str = "en",
         verbose: bool = True,
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
@@ -268,6 +280,7 @@ class UEManager:
             deberta_batch_size (int): Batch size for DeBERTa model used in some estimators. Default: 10.
             deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
                 'cpu' otherwise. Default: None.
+            language (str): Language to test in claim-level benchmark, one of 'en', 'zh', 'ar', 'ru'. Default: 'en'.
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
@@ -277,8 +290,18 @@ class UEManager:
         #     nli_model_device=deberta_device,
         #     cache_path=cache_path,
         # )
+        
+        # stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
+        #     deberta_batch_size=deberta_batch_size,
+        #     deberta_device=deberta_device,
+        #     language=language,
+        #     cache_path=cache_path,
+        #     model=model,
+        # )
 
-        self.model: WhiteboxModel = model
+        # self.stat_calculators_dict = stat_calculators_dict
+
+        self.model: Model = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
@@ -318,10 +341,14 @@ class UEManager:
 
         #self.stat_calculators_dict = stat_calculators_dict
 
-        if isinstance(self.model, BlackboxModel):
-            greedy = ["blackbox_greedy_texts"]
-        else:
-            greedy = ["greedy_tokens", "greedy_texts"]
+        # if isinstance(self.model, BlackboxModel):
+        #     greedy = ["blackbox_greedy_texts"]
+        # else:
+        #     greedy = ["greedy_tokens", "greedy_texts"]
+        
+        greedy = ["greedy_texts"]
+        if not isinstance(self.model, BlackboxModel):
+            greedy += ["greedy_tokens"]
 
         stats = (
             [s for e in self.estimators for s in e.stats_dependencies]
@@ -444,7 +471,7 @@ class UEManager:
         * Saving uncertainty estimations, ground-truth uncertainties and ue_metrics values for further usage.
 
         Returns:
-            Dict[Tuple[str, str, str, str], float]: dictionary with metrics results. Dictionary keys consist of
+            [Tuple[str, str, str, str], float]: dictionary with metrics results. Dictionary keys consist of
                 - uncertainty estimation level: 'sequence' or 'token',
                 - estimator name,
                 - generation metrics name,
@@ -464,10 +491,7 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
 
-            if isinstance(self.model, WhiteboxModel):
-                target_tokens = self._tokenize_target_texts(target_texts)
-                self.stats["target_tokens"] += target_tokens
-                batch_stats["target_tokens"] = target_tokens
+            batch_stats["model"] = self.model
 
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:
@@ -491,17 +515,15 @@ class UEManager:
 
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
-                m = generation_metric(
-                    batch_stats, target_texts=target_texts, target_tokens=target_tokens
-                )
+                m = generation_metric(batch_stats, target_texts=target_texts)
                 if not isinstance(m, list):
                     m = m.tolist()
-                if generation_metric.level != "sequence":
+                if generation_metric.level == "claim":
                     m = _flatten_results(m, generation_metric)
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["blackbox_greedy_texts", "greedy_texts", "greedy_tokens"]:
+            for key in ["greedy_texts", "greedy_tokens"]:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
@@ -516,8 +538,6 @@ class UEManager:
                     ("target_texts", target_texts),
                 ]:
                     batch_stats[key] = val
-
-                batch_stats["target_tokens"] = self._tokenize_target_texts(target_texts)
 
                 batch_stats["ensemble_generation_params"] = {}
                 batch_stats["ensemble_model"] = self.ensemble_model
@@ -623,9 +643,8 @@ class UEManager:
                 e = estimator(batch_stats)
                 if not isinstance(e, list):
                     e = e.tolist()
-                if estimator.level != "sequence":
+                if estimator.level == "claim":
                     e = _flatten_results(e, estimator)
-
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
             except Exception as e:
@@ -657,13 +676,10 @@ class UEManager:
             max_new_tokens = self.max_new_tokens
         if len(stat_calculators) and (data is not None):
             for inp_texts, target_texts in tqdm(data):
-                target_tokens = self._tokenize_target_texts(target_texts)
-
                 batch_stats: Dict[str, np.ndarray] = {}
                 for key, val in [
                     ("input_texts", inp_texts),
                     ("target_texts", target_texts),
-                    ("target_tokens", target_tokens),
                 ]:
                     batch_stats[key] = val
 
@@ -681,7 +697,6 @@ class UEManager:
                         "input_tokens",
                         "input_texts",
                         "target_texts",
-                        "target_tokens",
                     ]:
                         continue
                     if stat in train_stats.keys():
@@ -706,19 +721,6 @@ class UEManager:
                     )
 
         return result_train_stat
-
-    def _tokenize_target_texts(self, target_texts: List[str]) -> List[List[int]]:
-        if isinstance(target_texts[0], list):
-            target_tokens = [
-                [self.model.tokenizer([text])["input_ids"][0] for text in target_text]
-                for target_text in target_texts
-            ]
-        else:
-            target_tokens = [
-                self.model.tokenizer([text])["input_ids"][0] for text in target_texts
-            ]
-
-        return target_tokens
 
     def save(self, save_path: str):
         """
