@@ -26,7 +26,8 @@ def load_simple_estimators(name, config):
         MaxTokenEntropyClaim,
         PointwiseMutualInformationClaim,
         PTrueClaim,
-        ClaimConditionedProbabilityClaim
+        ClaimConditionedProbabilityClaim,
+        RandomBaselineClaim
     ]
 
     try:

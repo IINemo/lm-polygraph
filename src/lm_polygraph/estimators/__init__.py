@@ -69,3 +69,4 @@ from .fisher_rao import FisherRao
 from .verbalized_1s import Verbalized1S
 from .verbalized_2s import Verbalized2S
 from .linguistic_1s import Linguistic1S
+from .claim.random_baseline import RandomBaselineClaim
