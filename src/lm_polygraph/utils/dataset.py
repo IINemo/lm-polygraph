@@ -213,19 +213,6 @@ class Dataset:
                     )
                 )
                 y.append(inst[y_column])
-        elif ("wiki" in dataset_name.lower()) and len(prompt):
-            x, y = [], []
-            for sample in dataset[x_column]:
-                x.append(prompt.format(context=sample["context".strip()]))
-                y.append("")
-        elif "person" in dataset_name.lower() or "bio" in dataset_name.lower():
-            x = dataset[x_column]
-            if len(prompt):
-                for i in range(len(x)):
-                    x[i] = prompt.format(text=x[i])
-            y = []
-            for _ in x:
-                y.append("")
         elif ("xsum" in dataset_name.lower()) and len(prompt):
             x, y = [], []
             for inst in dataset:
@@ -236,7 +223,7 @@ class Dataset:
             for sample in dataset[x_column]:
                 x.append(prompt.format(context=sample["context"].strip()))
                 y.append("")
-        elif "person" in dataset_name.lower():
+        elif any(x in dataset_name.lower() for x in ("person", "explain", "solve", "Aktsvigun")):
             x = dataset[x_column]
             if len(prompt):
                 for i in range(len(x)):
