@@ -368,7 +368,6 @@ def get_ue_methods(args, model):
             ]
 
     additional_estimators = getattr(args, "additional_estimators", {})
-    additional_estimators_kwargs = getattr(args, "additional_estimators_kwargs", {})
 
     for estimator_args in additional_estimators:
         module = importlib.import_module(estimator_args.module)
