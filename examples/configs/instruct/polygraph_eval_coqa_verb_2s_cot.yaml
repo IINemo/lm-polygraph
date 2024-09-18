@@ -1,5 +1,6 @@
 defaults:
   - polygraph_eval_coqa_default_instruct
+  - cot_processing
   - _self_
 
 experiment_name: coqa_verb_2s_cot
@@ -8,7 +9,6 @@ description: "Here's a short story:\n\n{story} (End of story)\n\nProvide your be
 few_shot_prompt: "Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}"
 prompt: "Question: {question}\n"
 max_new_tokens: 130
-output_ignore_regex: "(?s).*Guess:"
 
 additional_estimators: 
   - module: lm_polygraph.estimators.verbalized_2s

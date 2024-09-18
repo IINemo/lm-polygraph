@@ -19,7 +19,6 @@ label_column: answers
 train_split: train
 eval_split: validation
 load_from_disk: false
-normalize: true
 generation_params: {}
 
 train_dataset: null

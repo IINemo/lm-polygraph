@@ -16,7 +16,8 @@ class AggregatedMetric(GenerationMetric):
         self.aggregation = aggregation
 
     def __str__(self):
-        return str(self.base_metric)
+        # Check if base_metric is a wrapper, else return base_metric
+        return str(getattr(self.base_metric, "base_metric", self.base_metric))
 
     def __call__(
         self,

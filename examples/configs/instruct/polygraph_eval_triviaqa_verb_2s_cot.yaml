@@ -1,5 +1,6 @@
 defaults:
   - polygraph_eval_triviaqa_default_instruct
+  - cot_processing
   - _self_
 
 experiment_name: triviaqa_verb_2s_cot
@@ -8,7 +9,6 @@ description: "Provide your best guess for the following question. Before giving 
 few_shot_prompt: "Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}"
 prompt: "Question: {question}\n"
 max_new_tokens: 200
-output_ignore_regex: "(?s).*Guess:"
 
 additional_estimators: 
   - module: lm_polygraph.estimators.verbalized_2s

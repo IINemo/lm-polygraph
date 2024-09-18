@@ -1,0 +1,28 @@
+defaults:
+  - polygraph_eval_coqa_default_instruct
+  - top1_processing
+  - _self_
+
+experiment_name: coqa_empirical_baselines
+
+description: "Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>"
+few_shot_prompt: "Question: {question}\nGuess: {answer}"
+prompt: "Question: {question}\n"
+max_new_tokens: 30
+generation_params:
+  generate_until:
+    - "\n"
+
+use_seq_ue: true
+include_whitebox_ue: false
+additional_estimators: 
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
+    kwargs:
+      class_probability_estimation: frequency
+  - module: lm_polygraph.estimators.p_true_empirical
+    class_name: PTrueEmpirical
+    kwargs: {}
+  - module: lm_polygraph.estimators.label_prob
+    class_name: LabelProb
+    kwargs: {}

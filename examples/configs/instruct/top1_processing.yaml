@@ -1,0 +1,6 @@
+process_output_fn:
+  path: output_processing_scripts/default.py
+  fn_name: process_output_top1
+process_target_fn:
+  path: output_processing_scripts/default.py
+  fn_name: process_target
