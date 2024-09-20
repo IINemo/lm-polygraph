@@ -11,7 +11,28 @@ import torch
 softmax = nn.Softmax(dim=1)
 
 
-class SemanticMatrixCalculator(StatCalculator):
+class InputOutputSemanticMatrixCalculator(StatCalculator):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model
+    concatenated with input texts.
+    """
+
+    def __init__(self, nli_model):
+        super().__init__(
+            [
+                "input_output_semantic_matrix_entail",
+                "input_output_semantic_matrix_contra",
+                "input_output_semantic_matrix_classes",
+                "entailment_id",
+            ],
+            ["blackbox_sample_texts", "input_texts"],
+        )
+        self.concat_input_output = True
+        self.is_deberta_setup = False
+        self.nli_model = nli_model
+
+
+class OutputSemanticMatrixCalculator(SemanticStatCalculator):
     """
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
@@ -22,16 +43,16 @@ class SemanticMatrixCalculator(StatCalculator):
                 "semantic_matrix_entail",
                 "semantic_matrix_contra",
                 "semantic_matrix_classes",
-                "concat_semantic_matrix_entail",
-                "concat_semantic_matrix_contra",
-                "concat_semantic_matrix_classes",
                 "entailment_id",
             ],
             ["blackbox_sample_texts", "input_texts"],
         )
+        self.concat_input_output = False
         self.is_deberta_setup = False
         self.nli_model = nli_model
 
+
+class SemanticMatrixCalculator(StatCalculator):
     def _calculate_matrices(
         self,
         batch_pairs,
@@ -120,16 +141,15 @@ class SemanticMatrixCalculator(StatCalculator):
         batch_inputs = dependencies["input_texts"]
 
         batch_pairs = []
-        batch_pairs_concat = []
         batch_invs = []
         batch_counts = []
         for input_text, texts in zip(batch_inputs, batch_texts):
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
             unique_texts, inv = np.unique(texts, return_inverse=True)
-            concat_unique_texts = [input_text + text for text in unique_texts]
+            if self.concat_input_output:
+                unique_texts = [input_text + text for text in unique_texts]
             batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
-            batch_pairs_concat.append(list(itertools.product(concat_unique_texts, concat_unique_texts)))
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
 
@@ -139,18 +159,15 @@ class SemanticMatrixCalculator(StatCalculator):
             batch_counts
         )
 
-        E_concat, C_concat, P_concat = self._calculate_matrices(
-            batch_pairs_concat,
-            batch_invs,
-            batch_counts
-        )
+        if self.concat_input_output:
+            res["input_output_semantic_matrix_entail"] = E
+            res["input_output_semantic_matrix_contra"] = C
+            res["input_output_semantic_matrix_classes"] = P
+        else:
+            res["semantic_matrix_entail"] = E
+            res["semantic_matrix_contra"] = C
+            res["semantic_matrix_classes"] = P
 
-        return {
-            "semantic_matrix_entail": E,
-            "semantic_matrix_contra": C,
-            "semantic_matrix_classes": P,
-            "concat_semantic_matrix_entail": E_concat,
-            "concat_semantic_matrix_contra": C_concat,
-            "concat_semantic_matrix_classes": P_concat,
-            "entailment_id": self.nli_model.deberta.config.label2id["ENTAILMENT"],
-        }
+        res["entailment_id"] = self.nli_model.deberta.config.label2id["ENTAILMENT"],
+
+        return res
