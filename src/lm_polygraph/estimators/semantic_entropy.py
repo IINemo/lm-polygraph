@@ -22,26 +22,16 @@ class SemanticEntropy(Estimator):
         use_unique_responses: bool = False,
         mode: str = "output"
     ):
+        deps = ["sample_log_probs",
+                "sample_texts",
+                "entailment_id"]
         if mode == 'output':
-            super().__init__(
-                [
-                    "sample_log_probs",
-                    "sample_texts",
-                    "semantic_matrix_entail",
-                    "entailment_id",
-                ],
-                "sequence",
-            )
+            deps.append("semantic_matrix_classes")
         elif mode == 'input_output':
-            super().__init__(
-                [
-                    "sample_log_probs",
-                    "sample_texts",
-                    "concat_semantic_matrix_entail",
-                    "entailment_id",
-                ],
-                "sequence",
-            )
+            deps.append("concat_semantic_matrix_classes")
+
+        super().__init__(deps,"sequence")
+
         self.mode = mode
         self.use_unique_responses = use_unique_responses
         self.verbose = verbose
@@ -70,7 +60,6 @@ class SemanticEntropy(Estimator):
         loglikelihoods_list = stats["sample_log_probs"]
         hyps_list = stats["sample_texts"]
 
-        # entailment_id = stats["deberta"].deberta.config.label2id["ENTAILMENT"] # TODO: Why this is here??
         if self.mode == 'output':
             self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
         elif self.mode == 'input_output':
