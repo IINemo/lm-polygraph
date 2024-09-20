@@ -28,7 +28,7 @@ class SemanticEntropy(Estimator):
         if mode == 'output':
             deps.append("semantic_matrix_classes")
         elif mode == 'input_output':
-            deps.append("concat_semantic_matrix_classes")
+            deps.append("input_output_semantic_matrix_classes")
 
         super().__init__(deps,"sequence")
 
@@ -61,9 +61,11 @@ class SemanticEntropy(Estimator):
         hyps_list = stats["sample_texts"]
 
         if self.mode == 'output':
-            self._is_entailment = stats["semantic_matrix_classes"] == stats["entailment_id"]
+            classes_dep_name = "semantic_matrix_classes"
         elif self.mode == 'input_output':
-            self._is_entailment = stats["concat_semantic_matrix_classes"] == stats["entailment_id"]
+            classes_dep_name = "input_output_semantic_matrix_classes"
+
+        self._is_entailment = stats[classes_dep_name] == stats["entailment_id"]
 
         return self.batched_call(hyps_list, loglikelihoods_list)
 
