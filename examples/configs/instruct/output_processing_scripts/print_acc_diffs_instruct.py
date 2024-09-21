@@ -8,6 +8,7 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from pathlib import Path
 import numpy as np
+import time
 
 from coqa import process_output_top1, process_output_topk, process_output_cot, process_target
 from triviaqa import (process_output_top1 as process_output_top1_triviaqa, process_output_topk as process_output_topk_triviaqa, process_output_cot as process_output_cot_triviaqa, process_target as process_target_triviaqa)
@@ -16,6 +17,10 @@ from triviaqa import (process_output_top1 as process_output_top1_triviaqa, proce
 def calculate_metrics(man):
     for (e_level, e_name), estimator_values in man.estimations.items():
         for (gen_level, gen_name), generation_metric in man.gen_metrics.items():
+            del man.metrics[(e_level, e_name, gen_name, 'rpp')]
+            del man.metrics[(e_level, e_name, gen_name, 'rpp_normalized')]
+            del man.metrics[(e_level, e_name, gen_name, 'rcc-auc')]
+            del man.metrics[(e_level, e_name, gen_name, 'rcc-auc_normalized')]
             for ue_metric in man.ue_metrics:
                 if gen_level != e_level:
                     continue
@@ -31,7 +36,10 @@ def calculate_metrics(man):
                     man.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                 else:
                     oracle_score = ue_metric(-metric, metric)
+                    bef = time.time()
                     random_score = get_random_scores(ue_metric, metric)
+                    af = time.time()
+                    print(ue_metric, ': ', af - bef)
                     ue_metric_val = ue_metric(ue, metric)
                     man.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                         ue_metric_val
@@ -64,9 +72,9 @@ def new_ems_trivia(man):
             t = process_target_triviaqa(t)
             local_ems.append(out == t)
             stats = {'greedy_texts': [out]}
-            local_align.append(aligns(stats, [t]))
+            #local_align.append(aligns(stats, [t]))
         ems.append(any(local_ems))
-        align.append(max(local_align))
+        #align.append(max(local_align))
 
     ems = np.array(ems).astype(int)
     align = np.array(align)
@@ -92,10 +100,10 @@ def new_ems_coqa(man):
             out = process_output_cot(out)
         ems.append(out == target)
         stats = {'greedy_texts': [out]}
-        align.append(aligns(stats, [target]))
+        #align.append(aligns(stats, [target]))
 
     ems = np.array(ems).astype(int)
-    align = np.array(align)
+#    align = np.array(align)
 
     return old_ems, ems, old_align, align
 
@@ -129,15 +137,15 @@ for model in models:
                 print(f'Old Align: {np.mean(old_align)}')
                 print(f'New Align: {np.mean(align)}')
 
-                #man.gen_metrics[('sequence', 'Accuracy')] = ems
-                #man.ue_metrics = [
-                #    ReversedPairsProportion(),
-                #    PredictionRejectionArea(),
-                #    PredictionRejectionArea(max_rejection=0.5),
-                #    RiskCoverageCurveAUC(),
-                #]
-                #calculate_metrics(man)
-                #man.save(Path(base_path) / f'{model}_{dataset}_verb_{ue_type}_{prompt_type}_official_em.man')
+                man.gen_metrics[('sequence', 'Accuracy')] = ems
+                man.ue_metrics = [
+                    #ReversedPairsProportion(),
+                    PredictionRejectionArea(),
+                    PredictionRejectionArea(max_rejection=0.5),
+                    #RiskCoverageCurveAUC(),
+                ]
+                calculate_metrics(man)
+                man.save(Path(base_path) / f'{model}_{dataset}_verb_{ue_type}_{prompt_type}_official_em.man')
 
 
         man_name = f'{model}_{dataset}_ling_1s.man'
@@ -156,15 +164,15 @@ for model in models:
         print(f'Old Align: {np.mean(old_align)}')
         print(f'New Align: {np.mean(align)}')
 
-        #man.gen_metrics[('sequence', 'Accuracy')] = ems
-        #man.ue_metrics = [
-        #    ReversedPairsProportion(),
-        #    PredictionRejectionArea(),
-        #    PredictionRejectionArea(max_rejection=0.5),
-        #    RiskCoverageCurveAUC(),
-        #]
-        #calculate_metrics(man)
-        #man.save(Path(base_path) / f'{model}_{dataset}_ling_1s_official_em.man')
+        man.gen_metrics[('sequence', 'Accuracy')] = ems
+        man.ue_metrics = [
+            #ReversedPairsProportion(),
+            PredictionRejectionArea(),
+            PredictionRejectionArea(max_rejection=0.5),
+            #RiskCoverageCurveAUC(),
+        ]
+        calculate_metrics(man)
+        man.save(Path(base_path) / f'{model}_{dataset}_ling_1s_official_em.man')
 
         man_name = f'{model}_{dataset}_empirical_baselines.man'
         man_path = Path(base_path) / man_name
@@ -182,12 +190,12 @@ for model in models:
         print(f'Old Align: {np.mean(old_align)}')
         print(f'New Align: {np.mean(align)}')
 
-        #man.gen_metrics[('sequence', 'Accuracy')] = ems
-        #man.ue_metrics = [
-        #    ReversedPairsProportion(),
-        #    PredictionRejectionArea(),
-        #    PredictionRejectionArea(max_rejection=0.5),
-        #    RiskCoverageCurveAUC(),
-        #]
-        #calculate_metrics(man)
-        #man.save(Path(base_path) / f'{model}_{dataset}_ling_1s_official_em.man')
+        man.gen_metrics[('sequence', 'Accuracy')] = ems
+        man.ue_metrics = [
+            #ReversedPairsProportion(),
+            PredictionRejectionArea(),
+            PredictionRejectionArea(max_rejection=0.5),
+            #RiskCoverageCurveAUC(),
+        ]
+        calculate_metrics(man)
+        man.save(Path(base_path) / f'{model}_{dataset}_empirical_baselines_official_em.man')
