@@ -100,7 +100,7 @@ def new_ems_coqa(man):
     return old_ems, ems, old_align, align
 
 
-base_path = '/Users/romanvashurin/workspace/tacl_results_polygraph/instruct'
+base_path = '/workspace/mans'
 
 models = ['stable', 'mistral', 'gpt-4o-mini']
 datasets = ['coqa', 'triviaqa']
@@ -151,6 +151,32 @@ for model in models:
 
         print('-' * 50)
         print(f'Model: {model}, Dataset: {dataset}, Prompt Type: Ling 1S')
+        print(f'Old Accuracy: {np.mean(old_ems)}')
+        print(f'New Accuracy: {np.mean(ems)}')
+        print(f'Old Align: {np.mean(old_align)}')
+        print(f'New Align: {np.mean(align)}')
+
+        #man.gen_metrics[('sequence', 'Accuracy')] = ems
+        #man.ue_metrics = [
+        #    ReversedPairsProportion(),
+        #    PredictionRejectionArea(),
+        #    PredictionRejectionArea(max_rejection=0.5),
+        #    RiskCoverageCurveAUC(),
+        #]
+        #calculate_metrics(man)
+        #man.save(Path(base_path) / f'{model}_{dataset}_ling_1s_official_em.man')
+
+        man_name = f'{model}_{dataset}_empirical_baselines.man'
+        man_path = Path(base_path) / man_name
+        man = UEManager.load(man_path)
+
+        if dataset == 'coqa':
+            old_ems, ems, old_align, align = new_ems_coqa(man)
+        elif dataset == 'triviaqa':
+            old_ems, ems, old_align, align = new_ems_trivia(man)
+
+        print('-' * 50)
+        print(f'Model: {model}, Dataset: {dataset}, Prompt Type: Baseline')
         print(f'Old Accuracy: {np.mean(old_ems)}')
         print(f'New Accuracy: {np.mean(ems)}')
         print(f'Old Align: {np.mean(old_align)}')
