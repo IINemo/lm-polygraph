@@ -18,10 +18,12 @@ class OpenAIFactCheck(GenerationMetric):
         openai_model: str = "gpt-4o",
         cache_path: str = os.path.expanduser("~") + "/.cache",
         language: str = "en",
+        progress_bar: bool = False,
     ):
         super().__init__(["input_texts"], "claim")
         self.openai_chat = OpenAIChat(openai_model=openai_model, cache_path=cache_path)
         self.language = language
+        self.progress_bar = progress_bar
 
     def __str__(self):
         return "OpenAIFactCheck"
@@ -63,8 +65,14 @@ class OpenAIFactCheck(GenerationMetric):
         Returns:
             np.ndarray: list of labels, 1 if the fact is false and 0 if it is true.
         """
+        if self.progress_bar:
+            from tqdm import tqdm
+            input_texts = tqdm(stats["input_texts"])
+        else:
+            input_texts = stats["input_texts"]
+
         labels = []
-        for inp_text, sample_claims in zip(stats["input_texts"], stats["claims"]):
+        for inp_text, sample_claims in zip(input_texts, stats["claims"]):
             labels.append([])
             for claim in sample_claims:
                 labels[-1].append(

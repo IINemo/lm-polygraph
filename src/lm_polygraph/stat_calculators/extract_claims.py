@@ -28,11 +28,13 @@ class ClaimsExtractor(StatCalculator):
         openai_chat: OpenAIChat,
         sent_separators: str = ".?!。？！\n",
         language: str = "en",
+        progress_bar: bool = False
     ):
         super().__init__()
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
+        self.progress_bar = progress_bar
 
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
@@ -77,6 +79,11 @@ class ClaimsExtractor(StatCalculator):
         claim_texts_concatenated: List[str] = []
         claim_input_texts_concatenated: List[str] = []
 
+        if self.progress_bar:
+            from tqdm import tqdm
+
+            greedy_texts = tqdm(greedy_texts, desc="Extracting claims")
+            
         for greedy_text, greedy_tok, inp_text in zip(
             greedy_texts,
             greedy_tokens,
