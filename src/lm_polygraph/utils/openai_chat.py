@@ -35,10 +35,12 @@ class OpenAIChat:
 
         self.cache_path = os.path.join(cache_path, "openai_chat_cache.json")
         self.cache_lock = FileLock(self.cache_path + ".lock")
-        with self.cache_lock:
-            if not os.path.exists(self.cache_path):
-                if not os.path.exists(cache_path):
-                    os.makedirs(cache_path)
+        
+        if not os.path.exists(self.cache_path):
+            if not os.path.exists(cache_path):
+                os.makedirs(cache_path)
+                
+            with self.cache_lock:
                 with open(self.cache_path, "w") as f:
                     json.dump({}, f)
 
