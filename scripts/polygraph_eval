@@ -297,10 +297,15 @@ def get_ue_methods(args, model):
         if getattr(args, "use_seq_ue", False):
             estimators += [
                 MaximumSequenceProbability(),
+                MaximumSequenceProbabilitySample(),
                 Perplexity(),
+                PerplexitySample(),
                 MeanTokenEntropy(),
+                MeanTokenEntropySample(),
                 MeanPointwiseMutualInformation(),
+                MeanPointwiseMutualInformationSample(),
                 MeanConditionalPointwiseMutualInformation(),
+                MeanConditionalPointwiseMutualInformationSample(),
                 ClaimConditionedProbability(),
                 PTrue(),
                 PTrueSampling(),
@@ -323,6 +328,7 @@ def get_ue_methods(args, model):
                 SemanticEntropy(),
                 SAR(),
                 TokenSAR(),
+                TokenSARSample(),
                 SentenceSAR(),
                 RenyiNeg(),
                 FisherRao(),

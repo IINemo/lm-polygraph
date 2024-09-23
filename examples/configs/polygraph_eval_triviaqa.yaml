@@ -42,49 +42,49 @@ subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
 use_density_based_ue: false
-use_seq_ue: false
+use_seq_ue: true
 use_tok_ue: false
 use_ens_ue: false
 generation_metrics: null
 ens_type: 
 
-additional_estimators:
-  - module: lm_polygraph.estimators.max_probability
-    class_name: MaximumSequenceProbability
-    kwargs: {}
-  - module: lm_polygraph.estimators.max_probability
-    class_name: MaximumSequenceProbabilitySample
-    kwargs: {}
-  - module: lm_polygraph.estimators.perplexity
-    class_name: Perplexity
-    kwargs: {}
-  - module: lm_polygraph.estimators.perplexity
-    class_name: PerplexitySample
-    kwargs: {}
-  - module: lm_polygraph.estimators.token_entropy
-    class_name: MeanTokenEntropy
-    kwargs: {}
-  - module: lm_polygraph.estimators.token_entropy
-    class_name: MeanTokenEntropySample
-    kwargs: {}
-  - module: lm_polygraph.estimators.pointwise_mutual_information
-    class_name: MeanPointwiseMutualInformation
-    kwargs: {}
-  - module: lm_polygraph.estimators.pointwise_mutual_information
-    class_name: MeanPointwiseMutualInformationSample
-    kwargs: {}
-  - module: lm_polygraph.estimators.conditional_pointwise_mutual_information
-    class_name: MeanConditionalPointwiseMutualInformation
-    kwargs: {}
-  - module: lm_polygraph.estimators.conditional_pointwise_mutual_information
-    class_name: MeanConditionalPointwiseMutualInformationSample
-    kwargs: {}
-  - module: lm_polygraph.estimators.token_sar
-    class_name: TokenSAR
-    kwargs: {}
-  - module: lm_polygraph.estimators.token_sar
-    class_name: TokenSARSample
-    kwargs: {}
+  #additional_estimators:
+  #  - module: lm_polygraph.estimators.max_probability
+  #    class_name: MaximumSequenceProbability
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.max_probability
+  #    class_name: MaximumSequenceProbabilitySample
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.perplexity
+  #    class_name: Perplexity
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.perplexity
+  #    class_name: PerplexitySample
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.token_entropy
+  #    class_name: MeanTokenEntropy
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.token_entropy
+  #    class_name: MeanTokenEntropySample
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.pointwise_mutual_information
+  #    class_name: MeanPointwiseMutualInformation
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.pointwise_mutual_information
+  #    class_name: MeanPointwiseMutualInformationSample
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.conditional_pointwise_mutual_information
+  #    class_name: MeanConditionalPointwiseMutualInformation
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.conditional_pointwise_mutual_information
+  #    class_name: MeanConditionalPointwiseMutualInformationSample
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.token_sar
+  #    class_name: TokenSAR
+  #    kwargs: {}
+  #  - module: lm_polygraph.estimators.token_sar
+  #    class_name: TokenSARSample
+  #    kwargs: {}
 
 ignore_exceptions: false
 

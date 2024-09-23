@@ -107,7 +107,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                 "sample_sentence_similarity",
                 "sample_token_similarity",
             ],
-            ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"],
+            ["input_texts", "sample_tokens", "sample_texts"],
         )
 
         self.crossencoder_setup = False
@@ -138,7 +138,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             self.nli_model.batch_size
         )  # TODO: Why we use parameters of nli_model for the cross-encoder model???
         batch_input_texts = dependencies["input_texts"]
-        batch_greedy_tokens = dependencies["greedy_tokens"]
 
         special_tokens = list(model.tokenizer.added_tokens_decoder.keys())
 
@@ -152,35 +151,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
-
-        batch_token_scores = []
-        for input_texts, tokens in zip(batch_input_texts, batch_greedy_tokens):
-            if len(tokens) > 1:
-                is_special_tokens = np.isin(tokens, special_tokens)
-                cropped_tokens = list(itertools.combinations(tokens, len(tokens) - 1))[
-                    ::-1
-                ]
-                raw_text = (
-                    input_texts
-                    + " "
-                    + tokenizer.decode(tokens, skip_special_tokens=True)
-                )
-                batches = [
-                    (
-                        raw_text,
-                        input_texts
-                        + " "
-                        + tokenizer.decode(list(t), skip_special_tokens=True),
-                    )
-                    for t in cropped_tokens
-                ]
-                token_scores = self.crossencoder.predict(
-                    batches, batch_size=deberta_batch_size
-                )
-                token_scores[is_special_tokens] = 1
-            else:
-                token_scores = np.array([0.5] * len(tokens))
-            batch_token_scores.append(token_scores)
 
         sim_matrices = []
         for i, pairs in enumerate(batch_pairs):
@@ -230,5 +200,4 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         return {
             "sample_sentence_similarity": sim_matrices,
             "sample_token_similarity": batch_samples_token_scores,
-            "token_similarity": batch_token_scores,
         }
