@@ -529,7 +529,11 @@ class UEManager:
                     else:
                         oracle_score = ue_metric(-metric, metric)
                         random_score = get_random_scores(ue_metric, metric)
-                        ue_metric_val = ue_metric(ue, metric)
+                        # For prr metric only - option to generate PRR curve
+                        if str(ue_metric) == 'prr':
+                            ue_metric_val = ue_metric(ue, metric, True, e_level, e_name, gen_name, str(ue_metric))
+                        else:
+                            ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
@@ -537,10 +541,12 @@ class UEManager:
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
+
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)
 
         return self.metrics
+
 
     def calculate(self, batch_stats: dict, calculators: list, inp_texts: list) -> dict:
         """
