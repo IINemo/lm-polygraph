@@ -19,6 +19,7 @@ from lm_polygraph.ue_metrics.ue_metric import (
     UEMetric,
     get_random_scores,
     normalize_metric,
+    generate_prr_curve
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
@@ -511,6 +512,7 @@ class UEManager:
             torch.cuda.empty_cache()
             gc.collect()
 
+
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
@@ -527,13 +529,17 @@ class UEManager:
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        oracle_score = ue_metric(-metric, metric)
-                        random_score = get_random_scores(ue_metric, metric)
-                        # For prr metric only - option to generate PRR curve
+                        # For prr, generate plot
                         if str(ue_metric) == 'prr':
-                            ue_metric_val = ue_metric(ue, metric, True, e_level, e_name, gen_name, str(ue_metric))
+                            oracle_score, oracle_scores = ue_metric(-metric, metric, True)
+                            random_score, random_scores = get_random_scores(ue_metric, metric, True)
+                            ue_metric_val , ue_scores = ue_metric(ue, metric, True)
+                            generate_prr_curve(ue_scores, oracle_scores, random_scores, e_level, e_name, gen_name)
                         else:
+                            oracle_score= ue_metric(-metric, metric)
+                            random_score = get_random_scores(ue_metric, metric)
                             ue_metric_val = ue_metric(ue, metric)
+
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
@@ -541,12 +547,10 @@ class UEManager:
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
-
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)
 
         return self.metrics
-
 
     def calculate(self, batch_stats: dict, calculators: list, inp_texts: list) -> dict:
         """
