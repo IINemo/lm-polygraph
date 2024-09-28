@@ -44,8 +44,9 @@ class OpenAIChat:
         cache_settings["eviction_policy"] = "none"
         openai_responses = dc.Cache(self.cache_path + ".diskcache", **cache_settings)
 
-        if message in openai_responses.get(self.openai_model, {}).keys():
-            reply = openai_responses[self.openai_model][message]
+        if (self.openai_model, message) in openai_responses:
+            reply = openai_responses[(self.openai_model, message)]
+        
         else:
             # Ask openai
             if openai.api_key is None:
@@ -61,9 +62,11 @@ class OpenAIChat:
 
             reply = chat.choices[0].message.content
 
-            if self.openai_model not in openai_responses:
-                openai_responses[self.openai_model] = dict()
-            openai_responses[self.openai_model][message] = reply
+            # if self.openai_model not in openai_responses:
+            #     openai_responses[self.openai_model] = dict()
+            openai_responses[(self.openai_model, message)] = reply
+
+        openai_responses.close()
 
         if "please provide" in reply.lower():
             return ""
