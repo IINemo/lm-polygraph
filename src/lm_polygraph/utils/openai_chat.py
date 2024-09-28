@@ -1,10 +1,10 @@
 import openai
-import json
 import os
 import time
 import logging
 
 from filelock import FileLock
+import diskcache as dc
 
 from singleton_decorator import singleton
 
@@ -19,7 +19,7 @@ class OpenAIChat:
 
     def __init__(
         self,
-        openai_model: str = "gpt-4",
+        openai_model: str = "gpt-4o",
         cache_path: str = os.path.expanduser("~") + "/.cache",
     ):
         """
@@ -33,22 +33,16 @@ class OpenAIChat:
             openai.api_key = api_key
         self.openai_model = openai_model
 
-        self.cache_path = os.path.join(cache_path, "openai_chat_cache.json")
-        self.cache_lock = FileLock(self.cache_path + ".lock")
-        
+        self.cache_path = os.path.join(cache_path, "openai_chat_cache.json") 
         if not os.path.exists(self.cache_path):
             if not os.path.exists(cache_path):
                 os.makedirs(cache_path)
                 
-            with self.cache_lock:
-                with open(self.cache_path, "w") as f:
-                    json.dump({}, f)
 
     def ask(self, message: str) -> str:
-        # check if the message is cached
-        with self.cache_lock:
-            with open(self.cache_path, "r") as f:
-                openai_responses = json.load(f)
+        cache_settings = dc.DEFAULT_SETTINGS.copy()
+        cache_settings["eviction_policy"] = "none"
+        openai_responses = dc.Cache(self.cache_path + ".diskcache", **cache_settings)
 
         if message in openai_responses.get(self.openai_model, {}).keys():
             reply = openai_responses[self.openai_model][message]
@@ -67,15 +61,9 @@ class OpenAIChat:
 
             reply = chat.choices[0].message.content
 
-            # add reply to cache
-            with self.cache_lock:
-                with open(self.cache_path, "r") as f:
-                    openai_responses = json.load(f)
-                if self.openai_model not in openai_responses.keys():
-                    openai_responses[self.openai_model] = {}
-                openai_responses[self.openai_model][message] = reply
-                with open(self.cache_path, "w") as f:
-                    json.dump(openai_responses, f)
+            if self.openai_model not in openai_responses:
+                openai_responses[self.openai_model] = dict()
+            openai_responses[self.openai_model][message] = reply
 
         if "please provide" in reply.lower():
             return ""
