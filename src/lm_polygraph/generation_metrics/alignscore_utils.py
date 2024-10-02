@@ -63,6 +63,7 @@ class AlignScorer:
             verbose=verbose,
         )
         nltk.download("punkt")
+        nltk.download("punkt_tab")
         self.model.nlg_eval_mode = evaluation_mode
 
     def score(self, contexts: List[str], claims: List[str]) -> List[float]:
