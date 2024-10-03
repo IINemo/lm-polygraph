@@ -9,7 +9,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 from .claim_level_prompts import CLAIM_EXTRACTION_PROMPTS, MATCHING_PROMPTS
 
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 @dataclass
@@ -32,16 +32,16 @@ class ClaimsExtractor(StatCalculator):
         sent_separators: str = ".?!。？！\n",
         language: str = "en",
         progress_bar: bool = False,
-        extraction_prompts: Dict[str, str] = None,
-        matching_prompts: Dict[str, str] = None,
+        extraction_prompts: Dict[str, str] = CLAIM_EXTRACTION_PROMPTS,
+        matching_prompts: Dict[str, str] = MATCHING_PROMPTS,
     ):
         super().__init__()
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
         self.progress_bar = progress_bar
-        self.extraction_prompts = extraction_prompts if extraction_prompts is not None else CLAIM_EXTRACTION_PROMPTS
-        self.matching_prompts = matching_prompts if matching_prompts is not None else MATCHING_PROMPTS
+        self.extraction_prompts = extraction_prompts 
+        self.matching_prompts = matching_prompts 
 
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:

@@ -6,7 +6,7 @@ from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
 from lm_polygraph.stat_calculators.claim_level_prompts import *
 
-from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 class OpenAIFactCheck(GenerationMetric):
