@@ -8,6 +8,9 @@ from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.utils.model import WhiteboxModel
 from .claim_level_prompts import CLAIM_EXTRACTION_PROMPTS, MATCHING_PROMPTS
 
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+
 
 @dataclass
 class Claim:
@@ -28,13 +31,17 @@ class ClaimsExtractor(StatCalculator):
         openai_chat: OpenAIChat,
         sent_separators: str = ".?!。？！\n",
         language: str = "en",
-        progress_bar: bool = False
+        progress_bar: bool = False,
+        extraction_prompts: Dict[str, str] = None,
+        matching_prompts: Dict[str, str] = None,
     ):
         super().__init__()
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
         self.progress_bar = progress_bar
+        self.extraction_prompts = extraction_prompts if extraction_prompts is not None else CLAIM_EXTRACTION_PROMPTS
+        self.matching_prompts = matching_prompts if matching_prompts is not None else MATCHING_PROMPTS
 
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
@@ -79,23 +86,31 @@ class ClaimsExtractor(StatCalculator):
         claim_texts_concatenated: List[str] = []
         claim_input_texts_concatenated: List[str] = []
 
-        if self.progress_bar:
-            from tqdm import tqdm
-
-            greedy_texts = tqdm(greedy_texts, desc="Extracting claims")
-            
-        for greedy_text, greedy_tok, inp_text in zip(
-            greedy_texts,
-            greedy_tokens,
-            texts,
-        ):
-            claims.append(
-                self.claims_from_text(greedy_text, greedy_tok, model.tokenizer)
-            )
-            # Iterate over newly added claims to concatenate into list
-            for c in claims[-1]:
-                claim_texts_concatenated.append(c.claim_text)
-                claim_input_texts_concatenated.append(inp_text)
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [
+                executor.submit(self.claims_from_text, text, token, model.tokenizer)
+                for text, token in zip(greedy_texts, greedy_tokens)
+            ]
+            for future in tqdm(futures, total=len(futures), desc="Extracting claims"):
+                result = future.result()
+                claims.append(result)
+        
+        for c in claims:
+            for claim in c:
+                claim_texts_concatenated.append(claim.claim_text)
+                claim_input_texts_concatenated.append(texts[0])
+        # for greedy_text, greedy_tok, inp_text in zip(
+        #     greedy_texts,
+        #     greedy_tokens,
+        #     texts,
+        # ):
+        #     claims.append(
+        #         self.claims_from_text(greedy_text, greedy_tok, model.tokenizer)
+        #     )
+        #     # Iterate over newly added claims to concatenate into list
+        #     for c in claims[-1]:
+        #         claim_texts_concatenated.append(c.claim_text)
+        #         claim_input_texts_concatenated.append(inp_text)
 
         return {
             "claims": claims,
@@ -149,7 +164,7 @@ class ClaimsExtractor(StatCalculator):
     ) -> List[Claim]:
         # Extract claims with specific prompt
         extracted_claims = self.openai_chat.ask(
-            CLAIM_EXTRACTION_PROMPTS[self.language].format(sent=sent)
+            self.extraction_prompts[self.language].format(sent=sent)
         )
         claims = []
         for claim_text in extracted_claims.split("\n"):
@@ -167,7 +182,7 @@ class ClaimsExtractor(StatCalculator):
             # claim = 'Lanny Flaherty was born on December 18, 1949.'
             # GPT response: 'Lanny, Flaherty, born, on, December, 18, 1949'
             # match_words = ['Lanny', 'Flaherty', 'born', 'on', 'December', '18', '1949']
-            chat_ask = MATCHING_PROMPTS[self.language].format(
+            chat_ask = self.matching_prompts[self.language].format(
                 sent=sent,
                 claim=claim_text,
             )

@@ -35,3 +35,4 @@ nltk>=3.7,<4
 evaluate
 spacy>=3.4.0,<4
 fastchat
+diskcache>=5.6.3

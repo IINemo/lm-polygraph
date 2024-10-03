@@ -6,6 +6,8 @@ from lm_polygraph.utils.openai_chat import OpenAIChat
 from .generation_metric import GenerationMetric
 from lm_polygraph.stat_calculators.claim_level_prompts import *
 
+from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+
 
 class OpenAIFactCheck(GenerationMetric):
     """
@@ -19,24 +21,28 @@ class OpenAIFactCheck(GenerationMetric):
         cache_path: str = os.path.expanduser("~") + "/.cache",
         language: str = "en",
         progress_bar: bool = False,
+        fact_check_prompts: Dict[str, str] = OPENAI_FACT_CHECK_PROMPTS,
+        fact_check_summarize_prompt: Dict[str, str] = OPENAI_FACT_CHECK_SUMMARIZE_PROMPT
     ):
         super().__init__(["input_texts"], "claim")
         self.openai_chat = OpenAIChat(openai_model=openai_model, cache_path=cache_path)
         self.language = language
         self.progress_bar = progress_bar
+        self.fact_check_prompts = fact_check_prompts
+        self.fact_check_summarize_prompt = fact_check_summarize_prompt
 
     def __str__(self):
         return "OpenAIFactCheck"
 
     def _score_single(self, claim: str, input: str, openai_chat) -> int:
         reply = openai_chat.ask(
-            OPENAI_FACT_CHECK_PROMPTS[self.language].format(
+            self.fact_check_prompts[self.language].format(
                 claim=claim,
                 input=input,
             )
         )
         reply = openai_chat.ask(
-            OPENAI_FACT_CHECK_SUMMARIZE_PROMPT[self.language].format(
+            self.fact_check_summarize_prompt[self.language].format(
                 claim=claim,
                 input=input,
                 reply=reply,
@@ -49,6 +55,21 @@ class OpenAIFactCheck(GenerationMetric):
             return 1
         else:
             return np.nan
+
+    def process_instance(self, inp_text, sample_claims):
+        inst_labels = []
+        
+        for claim in sample_claims:
+            inst_labels.append(
+                self._score_single(
+                    claim.claim_text,
+                    inp_text,
+                    self.openai_chat,
+                )
+            )
+
+        return inst_labels
+
 
     def __call__(
         self,
@@ -65,21 +86,29 @@ class OpenAIFactCheck(GenerationMetric):
         Returns:
             np.ndarray: list of labels, 1 if the fact is false and 0 if it is true.
         """
-        if self.progress_bar:
-            from tqdm import tqdm
-            input_texts = tqdm(stats["input_texts"])
-        else:
-            input_texts = stats["input_texts"]
-
+        input_texts = stats["input_texts"]
+        from tqdm import tqdm
+        
         labels = []
-        for inp_text, sample_claims in zip(input_texts, stats["claims"]):
-            labels.append([])
-            for claim in sample_claims:
-                labels[-1].append(
-                    self._score_single(
-                        claim.claim_text,
-                        inp_text,
-                        self.openai_chat,
-                    )
-                )
+        with ThreadPoolExecutor(max_workers=32) as executor:
+            futures = [
+                executor.submit(self.process_instance, inp_text, sample_claims)
+                for inp_text, sample_claims in zip(input_texts, stats["claims"])
+            ]
+            for future in tqdm(futures, total=len(futures), desc="Verifying claims"):
+                result = future.result()
+                labels.append(result)
+
+
+        # labels = []
+        # for inp_text, sample_claims in zip(input_texts, stats["claims"]):
+        #     labels.append([])
+        #     for claim in sample_claims:
+        #         labels[-1].append(
+        #             self._score_single(
+        #                 claim.claim_text,
+        #                 inp_text,
+        #                 self.openai_chat,
+        #             )
+        #         )
         return labels
