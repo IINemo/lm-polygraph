@@ -34,9 +34,8 @@ class OpenAIChat:
         self.openai_model = openai_model
 
         self.cache_path = os.path.join(cache_path, "openai_chat_cache.diskcache")
-        if not os.path.exists(self.cache_path):
-            if not os.path.exists(cache_path):
-                os.makedirs(cache_path)
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
 
     def ask(self, message: str) -> str:
         cache_settings = dc.DEFAULT_SETTINGS.copy()
