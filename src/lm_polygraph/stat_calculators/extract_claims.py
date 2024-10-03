@@ -34,6 +34,7 @@ class ClaimsExtractor(StatCalculator):
         progress_bar: bool = False,
         extraction_prompts: Dict[str, str] = CLAIM_EXTRACTION_PROMPTS,
         matching_prompts: Dict[str, str] = MATCHING_PROMPTS,
+        n_threads: int = 1,
     ):
         super().__init__()
         self.language = language
@@ -42,6 +43,7 @@ class ClaimsExtractor(StatCalculator):
         self.progress_bar = progress_bar
         self.extraction_prompts = extraction_prompts 
         self.matching_prompts = matching_prompts 
+        self.n_threads = n_threads
 
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
@@ -86,7 +88,7 @@ class ClaimsExtractor(StatCalculator):
         claim_texts_concatenated: List[str] = []
         claim_input_texts_concatenated: List[str] = []
 
-        with ThreadPoolExecutor(max_workers=3) as executor:
+        with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
             futures = [
                 executor.submit(self.claims_from_text, text, token, model.tokenizer)
                 for text, token in zip(greedy_texts, greedy_tokens)

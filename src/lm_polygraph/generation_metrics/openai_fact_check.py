@@ -22,7 +22,8 @@ class OpenAIFactCheck(GenerationMetric):
         language: str = "en",
         progress_bar: bool = False,
         fact_check_prompts: Dict[str, str] = OPENAI_FACT_CHECK_PROMPTS,
-        fact_check_summarize_prompt: Dict[str, str] = OPENAI_FACT_CHECK_SUMMARIZE_PROMPT
+        fact_check_summarize_prompt: Dict[str, str] = OPENAI_FACT_CHECK_SUMMARIZE_PROMPT,
+        n_threads: int = 1
     ):
         super().__init__(["input_texts"], "claim")
         self.openai_chat = OpenAIChat(openai_model=openai_model, cache_path=cache_path)
@@ -30,6 +31,7 @@ class OpenAIFactCheck(GenerationMetric):
         self.progress_bar = progress_bar
         self.fact_check_prompts = fact_check_prompts
         self.fact_check_summarize_prompt = fact_check_summarize_prompt
+        self.n_threads = n_threads
 
     def __str__(self):
         return "OpenAIFactCheck"
@@ -90,7 +92,7 @@ class OpenAIFactCheck(GenerationMetric):
         from tqdm import tqdm
         
         labels = []
-        with ThreadPoolExecutor(max_workers=32) as executor:
+        with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
             futures = [
                 executor.submit(self.process_instance, inp_text, sample_claims)
                 for inp_text, sample_claims in zip(input_texts, stats["claims"])
