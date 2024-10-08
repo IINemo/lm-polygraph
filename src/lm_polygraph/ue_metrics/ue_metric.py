@@ -104,7 +104,9 @@ def normalize_metric(target_score, oracle_score, random_score):
 
 
 
-def generate_prr_curve(ue_rejected_accuracy, oracle_rejected_accuracy, random_rejected_accuracy, e_level: str, e_name: str, gen_name: str):
+
+
+def generate_prr_curve(ue_rejected_accuracy, oracle_rejected_accuracy, random_rejected_accuracy, e_level: str, e_name: str, gen_name: str, path: str):
     """
     Generates and saves a PRR curve plot using only matplotlib.
 
@@ -120,8 +122,9 @@ def generate_prr_curve(ue_rejected_accuracy, oracle_rejected_accuracy, random_re
         str: The path where the plot is saved.
     """
     # Directory to save plots
-    plots_dir = './plots'
-    os.makedirs(plots_dir, exist_ok=True)
+    
+    plots_dir = path
+    # os.makedirs(plots_dir, exist_ok=True)
 
     # Number of examples
     N_EXAMPLES = len(ue_rejected_accuracy)

@@ -257,6 +257,8 @@ class UEManager:
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
         cache_path=os.path.expanduser("~") + "/.cache",
+        output_prr_curves=False,
+        save_path = ''
     ):
         """
         Parameters:
@@ -276,8 +278,42 @@ class UEManager:
             deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
                 'cpu' otherwise. Default: None.
             language (str): Language to test in claim-level benchmark, one of 'en', 'zh', 'ar', 'ru'. Default: 'en'.
-            verbose (bool): If set, will print useful info during batch processing. Default: True.
+            verbose for (e_level, e_name), estimator_values in self.estimations.items():
+            for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
+                for ue_metric in self.ue_metrics:
+                    if gen_level != e_level:
+                        continue
+                    if len(estimator_values) != len(generation_metric):
+                        raise Exception(
+                            f"Got different number of metrics for {e_name} and {gen_name}: "
+                            f"{len(estimator_values)} and {len(generation_metric)}"
+                        )
+                    # TODO: Report how many nans!
+                    # This is important to know for a user
+                    ue, metric = _delete_nans(estimator_values, generation_metric)
+                    if len(ue) == 0:
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
+                    else:
+                        # For prr, generate plot
+                        if str(ue_metric) == 'prr':
+                            oracle_score, oracle_scores = ue_metric(-metric, metric, True)
+                            random_score, random_scores = get_random_scores(ue_metric, metric, True)
+                            ue_metric_val , ue_scores = ue_metric(ue, metric, True)
+                            generate_prr_curve(ue_scores, oracle_scores, random_scores, e_level, e_name, gen_name)
+                        else:
+                            oracle_score= ue_metric(-metric, metric)
+                            random_score = get_random_scores(ue_metric, metric)
+                            ue_metric_val = ue_metric(ue, metric)
+
+                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
+                            ue_metric_val
+                        )
+                        self.metrics[
+                            e_level, e_name, gen_name, str(ue_metric) + "_normalized"
+                        ] = normalize_metric(ue_metric_val, oracle_score, random_score) (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
+            output_prr_curves: Flag for generating PRR curves in the save_path directory
+            save_path: save_path from config
         """
 
         stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
@@ -285,12 +321,11 @@ class UEManager:
             deberta_device=deberta_device,
             language=language,
             cache_path=cache_path,
-            model=model,
         )
 
         self.stat_calculators_dict = stat_calculators_dict
-
-        self.model: Model = model
+        self.save_path = save_path
+        self.model: WhiteboxModel = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
@@ -298,13 +333,15 @@ class UEManager:
         self.estimators: List[Estimator] = estimators
         self.generation_metrics: List[GenerationMetric] = generation_metrics
         self.ue_metrics: List[UEMetric] = ue_metrics
+        self.output_prr_curves = output_prr_curves
         _check_unique_names(generation_metrics)
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
 
-        greedy = ["greedy_texts"]
-        if not isinstance(self.model, BlackboxModel):
-            greedy += ["greedy_tokens"]
+        if isinstance(model, BlackboxModel):
+            greedy = ["blackbox_greedy_texts"]
+        else:
+            greedy = ["greedy_tokens", "greedy_texts"]
 
         stats = (
             [s for e in self.estimators for s in e.stats_dependencies]
@@ -384,7 +421,7 @@ class UEManager:
         ensemble_stats = [
             s
             for e in self.ensemble_estimators
-            for s in e.stats_dependencies
+            for s in e.stats_dependenciesgenerate_prr_curve
             if s.startswith("ensemble")
         ]
         ensemble_stats, _ = _order_calculators(
@@ -530,13 +567,13 @@ class UEManager:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
                         # For prr, generate plot
-                        if str(ue_metric) == 'prr':
+                        if str(ue_metric) == 'prr' and self.output_prr_curves:
                             oracle_score, oracle_scores = ue_metric(-metric, metric, True)
                             random_score, random_scores = get_random_scores(ue_metric, metric, True)
                             ue_metric_val , ue_scores = ue_metric(ue, metric, True)
-                            generate_prr_curve(ue_scores, oracle_scores, random_scores, e_level, e_name, gen_name)
+                            generate_prr_curve(ue_scores, oracle_scores, random_scores, e_level, e_name, gen_name, self.save_path)
                         else:
-                            oracle_score= ue_metric(-metric, metric)
+                            oracle_score = ue_metric(-metric, metric)
                             random_score = get_random_scores(ue_metric, metric)
                             ue_metric_val = ue_metric(ue, metric)
 

@@ -40,6 +40,7 @@ def main(args):
     os.chdir(hydra.utils.get_original_cwd())
 
     save_path = args.save_path if "save_path" in args else save_path
+    output_prr_curves = getattr(args, "output_prr_curves", False)
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -201,7 +202,10 @@ def main(args):
             ensemble_model=ensemble_model,
             cache_path=args.cache_path,
             language=getattr(args, 'language', 'en'),
+            output_prr_curves = output_prr_curves,
+            save_path= save_path
         )
+
 
         man()
 
