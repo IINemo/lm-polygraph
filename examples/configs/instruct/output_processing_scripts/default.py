@@ -12,11 +12,6 @@ def normalize_text(text: str) -> str:
     return text
 
 
-def process_target(target: str) -> str:
-    target = normalize_text(target)
-    return target
-
-
 def process_output_top1(output: str) -> str:
     output = TOP1_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_text(output)

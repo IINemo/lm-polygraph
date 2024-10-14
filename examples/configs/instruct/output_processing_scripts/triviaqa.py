@@ -26,11 +26,6 @@ def normalize_em_triviaqa(s: str) -> str:
     return white_space_fix(remove_articles(handle_punc(lower(replace_underscore(s))))).strip()
 
 
-def process_target_triviaqa(target: str) -> str:
-    target = normalize_em_triviaqa(target)
-    return target
-
-
 def process_output_top1_triviaqa(output: str) -> str:
     output = TOP1_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_triviaqa(output)
