@@ -210,7 +210,7 @@ class PPLSentenceSAR(Estimator):
             sent_relevance = R_s.sum(-1) / self.t
             sample_probs = np.exp(np.array(sample_log_likelihoods))
             # Compute SentenceSAR (Uncertainty Estimation) using PPL
-            E_s = -np.log(sent_relevance + sample_probs)
+            E_s = -np.log(sent_relevance + ppl)
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
