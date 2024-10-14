@@ -188,11 +188,14 @@ class PPLSentenceSAR(Estimator):
             batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
             # Calculate the number of tokens (length of the sample in tokens)
-            num_tokens = len(sample_log_likelihoods)
 
-            # Calculate average log-likelihood for the sample
-            avg_log_likelihood = np.mean(sample_log_likelihoods)
+            token_log_likelihoods = [np.mean(token_ll) for token_ll in sample_log_likelihoods]
+            
+            # Calculate the number of tokens (length of the sample in tokens)
+            num_tokens = len(token_log_likelihoods)
 
+            # Calculate the mean log-likelihood across tokens
+            avg_log_likelihood = np.sum(token_log_likelihoods) / num_tokens
             # Perplexity is exp(-avg_log_likelihood)
             ppl = np.exp(-avg_log_likelihood)
 
@@ -205,9 +208,9 @@ class PPLSentenceSAR(Estimator):
 
             # Compute sentence relevance
             sent_relevance = R_s.sum(-1) / self.t
-
+            sample_probs = np.exp(np.array(sample_log_likelihoods))
             # Compute SentenceSAR (Uncertainty Estimation) using PPL
-            E_s = -np.log(sent_relevance + ppl)
+            E_s = -np.log(sent_relevance + sample_probs)
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
