@@ -62,7 +62,12 @@ from .ensemble_sequence_measures import (
     PESrmiabs,
 )
 from .token_sar import TokenSAR
-from .sentence_sar import SentenceSAR
+from .sentence_sar import (
+    SentenceSAR,
+    OtherSentenceSAR,
+    ReweightedSentenceSAR,
+    PPLSentenceSAR
+)
 from .sar import SAR
 from .renyi_neg import RenyiNeg
 from .fisher_rao import FisherRao

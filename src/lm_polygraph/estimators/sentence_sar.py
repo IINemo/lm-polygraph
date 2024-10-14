@@ -52,3 +52,70 @@ class SentenceSAR(Estimator):
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
+
+
+class OtherSentenceSAR(Estimator):
+    """
+    Like SAR, but only looks at other samples for each sample in the output.
+    """
+
+    def __init__(self, verbose: bool = False):
+        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        self.verbose = verbose
+        self.t = 0.001
+
+    def __str__(self):
+        return "OtherSentenceSAR"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_log_probs = stats["sample_log_probs"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+        for sample_log_probs, sample_sentence_similarity in zip(
+            batch_sample_log_probs, batch_sample_sentence_similarity
+        ):
+            sample_probs = np.exp(np.array(sample_log_probs))
+            R_s = (
+                sample_probs
+                * sample_sentence_similarity
+                * (1 - np.eye(sample_sentence_similarity.shape[0]))
+            )
+            sent_relevance = R_s.sum(-1) / self.t
+            E_s = -np.log(sent_relevance)
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
+
+class ReweightedSentenceSAR(Estimator):
+    """
+    Like SAR, but normalizes similarity-based scores at each iteration
+    alpha_ij = g(s_i, s_j) / (\sum_k^(K - 1) g(s_i, s_k))
+    K - number of samples in output minus one
+    """
+
+    def __str__(self):
+        return "ReweightedSentenceSAR"
+
+
+class PPLSentenceSAR(Estimator):
+    """
+    Like SAR, but uses log probs normalized on sample length in tokens 
+    Look at perplexity.py for an example
+    Tokenwise log-likelihoods are available in stats['sample_log_likelihoods'] i think
+    """
+
+    def __str__(self):
+        return "PPLSentenceSAR"
