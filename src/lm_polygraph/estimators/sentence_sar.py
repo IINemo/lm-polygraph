@@ -105,17 +105,94 @@ class ReweightedSentenceSAR(Estimator):
     alpha_ij = g(s_i, s_j) / (\sum_k^(K - 1) g(s_i, s_k))
     K - number of samples in output minus one
     """
+    def __init__(self, verbose: bool = False):
+        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        self.verbose = verbose
+        self.t = 0.001
 
     def __str__(self):
         return "ReweightedSentenceSAR"
+    
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        batch_sample_log_probs = stats["sample_log_probs"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+
+        for sample_log_probs, sample_sentence_similarity in zip(
+            batch_sample_log_probs, batch_sample_sentence_similarity
+        ):
+            # Compute probabilities from log probabilities
+            sample_probs = np.exp(np.array(sample_log_probs))
+            
+            # Initialize alpha_ij (reweighted sentence similarities)
+            alpha_ij = np.zeros_like(sample_sentence_similarity)
+
+            # Normalize similarity-based scores at each iteration 
+            for i in range(sample_sentence_similarity.shape[0]):
+                similarity_row = sample_sentence_similarity[i]
+                # Exclude self-similarity g(s_i, s_i)
+                similarity_row_without_self = similarity_row * (1 - np.eye(len(similarity_row)))[i]
+                sum_similarity = np.sum(similarity_row_without_self)
+                
+                if sum_similarity > 0:
+                    alpha_ij[i] = similarity_row_without_self / sum_similarity
+                else:
+                    alpha_ij[i] = similarity_row_without_self  # If the normalization factor is 0, leave the row unchanged
+
+            # Compute sentence relevance using normalized alpha_ij
+            R_s = sample_probs * alpha_ij
+            sent_relevance = R_s.sum(-1) / self.t
+
+            # Compute SentenceSAR (Uncertainty Estimation)
+            E_s = -np.log(sent_relevance + sample_probs)
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
 
 
 class PPLSentenceSAR(Estimator):
     """
-    Like SAR, but uses log probs normalized on sample length in tokens 
-    Look at perplexity.py for an example
-    Tokenwise log-likelihoods are available in stats['sample_log_likelihoods'] i think
+    Like SAR, but uses log probs normalized by sample length in tokens to calculate PPL (Perplexity).
+    Tokenwise log-likelihoods are available in stats['sample_log_likelihoods'].
     """
+    def __init__(self, verbose: bool = False):
+        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        self.verbose = verbose
+        self.t = 0.001
 
     def __str__(self):
         return "PPLSentenceSAR"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the PPL-based sentence-level uncertainty using token-wise log-likelihoods.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): Input statistics, including:
+                * 'sample_log_likelihoods': token-wise log-likelihoods for each sample.
+        
+        Returns:
+            np.ndarray: float PPL values for each sample.
+                Lower values indicate less uncertainty (better predictions), higher values indicate more uncertainty.
+        """
+        # Extract token-wise log-likelihoods from the stats
+        batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
+
+        perplexities = []
+
+        # Loop over each sample's token-wise log-likelihoods
+        for sample_log_likelihoods in batch_sample_log_likelihoods:
+            # Calculate the number of tokens (length of the sample in tokens)
+            num_tokens = len(sample_log_likelihoods)
+
+            # Calculate average log-likelihood for the sample
+            avg_log_likelihood = np.mean(sample_log_likelihoods)
+
+            # Perplexity is exp(-avg_log_likelihood)
+            ppl = np.exp(-avg_log_likelihood)
+
+            perplexities.append(ppl)
+
+        return np.array(perplexities)
