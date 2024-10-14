@@ -1,22 +1,24 @@
 import re
 import string
 
-from default import (TOP1_OUTPUT_IGNORE_REGEX,
-                     TOPK_OUTPUT_IGNORE_REGEX,
-                     CoT_OUTPUT_IGNORE_REGEX)
+from default import (
+    TOP1_OUTPUT_IGNORE_REGEX,
+    TOPK_OUTPUT_IGNORE_REGEX,
+    CoT_OUTPUT_IGNORE_REGEX,
+)
 
 
 def normalize_em_coqa(s: str) -> str:
     def remove_articles(text):
-        regex = re.compile(r'\b(a|an|the)\b', re.UNICODE)
-        return re.sub(regex, ' ', text)
+        regex = re.compile(r"\b(a|an|the)\b", re.UNICODE)
+        return re.sub(regex, " ", text)
 
     def white_space_fix(text):
-        return ' '.join(text.split())
+        return " ".join(text.split())
 
     def remove_punc(text):
         exclude = set(string.punctuation)
-        return ''.join(ch for ch in text if ch not in exclude)
+        return "".join(ch for ch in text if ch not in exclude)
 
     def lower(text):
         return text.lower()
