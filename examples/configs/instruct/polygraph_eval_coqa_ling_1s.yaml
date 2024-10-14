@@ -1,6 +1,6 @@
 defaults:
   - polygraph_eval_coqa_default_instruct
-  - top1_processing
+  - top1_processing_coqa
   - _self_
 
 experiment_name: coqa_ling_1s

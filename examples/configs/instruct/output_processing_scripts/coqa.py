@@ -24,24 +24,24 @@ def normalize_em_coqa(s: str) -> str:
     return white_space_fix(remove_articles(remove_punc(lower(s))))
 
 
-def process_target(target: str) -> str:
+def process_target_coqa(target: str) -> str:
     target = normalize_em_coqa(target)
     return target
 
 
-def process_output_top1(output: str) -> str:
+def process_output_top1_coqa(output: str) -> str:
     output = TOP1_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_coqa(output)
     return output
 
 
-def process_output_topk(output: str) -> str:
+def process_output_topk_coqa(output: str) -> str:
     output = TOPK_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_coqa(output)
     return output
 
 
-def process_output_cot(output: str) -> str:
+def process_output_cot_coqa(output: str) -> str:
     output = CoT_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_coqa(output)
     return output

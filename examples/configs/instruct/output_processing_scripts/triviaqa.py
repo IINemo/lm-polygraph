@@ -26,24 +26,24 @@ def normalize_em_triviaqa(s: str) -> str:
     return white_space_fix(remove_articles(handle_punc(lower(replace_underscore(s))))).strip()
 
 
-def process_target(target: str) -> str:
+def process_target_triviaqa(target: str) -> str:
     target = normalize_em_triviaqa(target)
     return target
 
 
-def process_output_top1(output: str) -> str:
+def process_output_top1_triviaqa(output: str) -> str:
     output = TOP1_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_triviaqa(output)
     return output
 
 
-def process_output_topk(output: str) -> str:
+def process_output_topk_triviaqa(output: str) -> str:
     output = TOPK_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_triviaqa(output)
     return output
 
 
-def process_output_cot(output: str) -> str:
+def process_output_cot_triviaqa(output: str) -> str:
     output = CoT_OUTPUT_IGNORE_REGEX.sub("", output)
     output = normalize_em_triviaqa(output)
     return output

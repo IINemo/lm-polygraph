@@ -1,6 +1,6 @@
 defaults:
   - polygraph_eval_coqa_default_instruct
-  - cot_processing
+  - cot_processing_coqa
   - _self_
 
 experiment_name: coqa_verb_2s_cot
