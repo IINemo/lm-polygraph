@@ -189,15 +189,7 @@ class PPLSentenceSAR(Estimator):
         ):
             # Calculate the number of tokens (length of the sample in tokens)
 
-            token_log_likelihoods = [np.mean(token_ll) for token_ll in sample_log_likelihoods]
-            
-            # Calculate the number of tokens (length of the sample in tokens)
-            num_tokens = len(token_log_likelihoods)
-
-            # Calculate the mean log-likelihood across tokens
-            avg_log_likelihood = np.sum(token_log_likelihoods) / num_tokens
-            # Perplexity is exp(-avg_log_likelihood)
-            ppl = np.exp(-avg_log_likelihood)
+            token_log_likelihoods = np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
 
             # Initialize the sentence relevance (R_s) using PPL
             R_s = (
