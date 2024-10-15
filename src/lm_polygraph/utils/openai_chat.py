@@ -28,7 +28,7 @@ class OpenAIChat:
         openai_model: str
             the model to use in OpenAI to chat.
         """
-        api_key = os.environ.get("OPENAI_KEY", None)
+        api_key = os.environ.get("OPENAI_API_KEY", None)
         if api_key is not None:
             openai.api_key = api_key
         self.openai_model = openai_model
@@ -52,7 +52,7 @@ class OpenAIChat:
             if openai.api_key is None:
                 raise Exception(
                     "Cant ask openAI without token. "
-                    "Please specify OPENAI_KEY in environment parameters."
+                    "Please specify OPENAI_API_KEY in environment parameters."
                 )
             messages = [
                 {"role": "system", "content": "You are an intelligent assistant."},
@@ -77,7 +77,7 @@ class OpenAIChat:
         sleep_time_values = (5, 10, 30, 60, 120)
         for i in range(len(sleep_time_values)):
             try:
-                return openai.ChatCompletion.create(
+                return openai.OpenAI().chat.completions.create(
                     model=self.openai_model, messages=messages
                 )
             except Exception as e:
@@ -87,7 +87,7 @@ class OpenAIChat:
                 )
                 time.sleep(sleep_time)
 
-        return openai.ChatCompletion.create(model=self.openai_model, messages=messages)
+        return openai.OpenAI().chat.completions.create(model=self.openai_model, messages=messages)
 
 
 @singleton
