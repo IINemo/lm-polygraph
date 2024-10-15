@@ -7,7 +7,7 @@ from .estimator import Estimator
 
 
 class SemanticEntropy(Estimator):
-    """ Estimates the sequence-level uncertainty of a language model following the method of
+    """Estimates the sequence-level uncertainty of a language model following the method of
     "Semantic entropy" as provided in the paper https://arxiv.org/abs/2302.09664.
     Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
 
@@ -21,23 +21,23 @@ class SemanticEntropy(Estimator):
         verbose: bool = False,
         class_probability_estimation: str = "sum",
         use_unique_responses: bool = False,
-        mode: str = "output"
+        mode: str = "output",
     ):
-        assert(
+        assert (
             class_probability_estimation in ("sum", "frequency"),
-            f"Unknown class_probability_estimation: {class_probability_estimation}. Use 'sum' or 'frequency'."
+            f"Unknown class_probability_estimation: {class_probability_estimation}. Use 'sum' or 'frequency'.",
         )
 
         deps = ["sample_texts"]
-        if class_probability_estimation == 'sum':
-            deps.append('sample_log_probs')
+        if class_probability_estimation == "sum":
+            deps.append("sample_log_probs")
 
-        if mode == 'output':
+        if mode == "output":
             deps.append("semantic_classes_entail")
-        elif mode == 'input_output':
+        elif mode == "input_output":
             deps.append("input_output_semantic_classes_entail")
 
-        super().__init__(deps,"sequence")
+        super().__init__(deps, "sequence")
 
         self.class_probability_estimation = class_probability_estimation
         self.mode = mode
@@ -47,7 +47,7 @@ class SemanticEntropy(Estimator):
     def __str__(self):
         base = "SemanticEntropy"
 
-        if self.mode == 'input_output':
+        if self.mode == "input_output":
             base += "Concat"
         if self.use_unique_responses:
             base += "Unique"
@@ -72,9 +72,9 @@ class SemanticEntropy(Estimator):
         loglikelihoods_list = stats["sample_log_probs"]
         hyps_list = stats["sample_texts"]
 
-        if self.mode == 'output':
+        if self.mode == "output":
             classes_dep_name = "semantic_classes_entail"
-        elif self.mode == 'input_output':
+        elif self.mode == "input_output":
             classes_dep_name = "input_output_semantic_classes_entail"
 
         self._class_to_sample = stats[classes_dep_name]["class_to_sample"]
@@ -108,7 +108,8 @@ class SemanticEntropy(Estimator):
                     ]
 
                 class_lp = [
-                    np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
+                    np.logaddexp.reduce(likelihoods)
+                    for likelihoods in class_likelihoods
                 ]
             elif self.class_probability_estimation == "frequency":
                 num_samples = len(hyps_list[i])
@@ -118,10 +119,7 @@ class SemanticEntropy(Estimator):
                     total_unique_hyps = np.sum([len(ids) for ids in unique_hyps_ids])
 
                     class_lp = np.log(
-                        [
-                            len(ids) / total_unique_hyps
-                            for ids in unique_hyps_ids
-                        ]
+                        [len(ids) / total_unique_hyps for ids in unique_hyps_ids]
                     )
                 else:
                     class_lp = np.log(
@@ -148,9 +146,6 @@ class SemanticEntropy(Estimator):
             np.array(hyps_list[batch_i])[np.array(class_idx)]
             for class_idx in self._class_to_sample[batch_i]
         ]
-        unique_hyps_ids = [
-            np.unique(hyps, return_index=True)[1]
-            for hyps in class_hyps
-        ]
+        unique_hyps_ids = [np.unique(hyps, return_index=True)[1] for hyps in class_hyps]
 
         return unique_hyps_ids

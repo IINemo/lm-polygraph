@@ -12,12 +12,7 @@ softmax = nn.Softmax(dim=1)
 
 
 class SemanticMatrixCalculator(StatCalculator):
-    def _calculate_matrices(
-        self,
-        batch_pairs,
-        batch_invs,
-        batch_counts
-    ):
+    def _calculate_matrices(self, batch_pairs, batch_invs, batch_counts):
         deberta = self.nli_model
         deberta_batch_size = deberta.batch_size
 
@@ -68,7 +63,6 @@ class SemanticMatrixCalculator(StatCalculator):
 
         return E, C, P
 
-
     def __call__(
         self,
         dependencies: Dict[str, np.array],
@@ -112,11 +106,7 @@ class SemanticMatrixCalculator(StatCalculator):
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
 
-        E, C, P = self._calculate_matrices(
-            batch_pairs,
-            batch_invs,
-            batch_counts
-        )
+        E, C, P = self._calculate_matrices(batch_pairs, batch_invs, batch_counts)
 
         res = {}
 
@@ -129,7 +119,7 @@ class SemanticMatrixCalculator(StatCalculator):
             res["semantic_matrix_contra"] = C
             res["semantic_matrix_classes"] = P
 
-        res["entailment_id"] = self.nli_model.deberta.config.label2id["ENTAILMENT"],
+        res["entailment_id"] = (self.nli_model.deberta.config.label2id["ENTAILMENT"],)
 
         return res
 

@@ -6,6 +6,7 @@ from typing import Dict, List
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 
+
 class SemanticClassesCalculator(StatCalculator):
     """
     Paritions samples into semantic classes based on semantic matrix.
@@ -68,6 +69,7 @@ class SemanticClassesCalculator(StatCalculator):
 
         return new_class_id
 
+
 class InputOutputSemanticClassesCalculator(SemanticClassesCalculator):
     def __init__(self):
         self.classes_key = "input_output_semantic_matrix_classes"
@@ -83,6 +85,7 @@ class InputOutputSemanticClassesCalculator(SemanticClassesCalculator):
                 "entailment_id",
             ],
         )
+
 
 class OutputSemanticClassesCalculator(SemanticClassesCalculator):
     def __init__(self):

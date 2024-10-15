@@ -19,11 +19,11 @@ from .embeddings import EmbeddingsCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import (
     InputOutputSemanticMatrixCalculator,
-    OutputSemanticMatrixCalculator
+    OutputSemanticMatrixCalculator,
 )
 from .semantic_classes import (
     InputOutputSemanticClassesCalculator,
-    OutputSemanticClassesCalculator
+    OutputSemanticClassesCalculator,
 )
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
