@@ -19,29 +19,41 @@ class SemanticEntropy(Estimator):
     def __init__(
         self,
         verbose: bool = False,
+        class_probability_estimation: str = "sum",
         use_unique_responses: bool = False,
         mode: str = "output"
     ):
-        deps = ["sample_log_probs",
-                "sample_texts",
-                "entailment_id"]
+        assert(
+            class_probability_estimation in ("sum", "frequency"),
+            f"Unknown class_probability_estimation: {self.class_probability_estimation}. Use 'sum' or 'frequency'."
+        )
+
+        deps = ["sample_texts"]
+        if class_probability_estimation == 'sum':
+            deps.append('sample_log_probs')
+
         if mode == 'output':
-            deps.append("semantic_matrix_classes")
+            deps.append("semantic_classes_entail")
         elif mode == 'input_output':
-            deps.append("input_output_semantic_matrix_classes")
+            deps.append("input_output_semantic_classes_entail")
 
         super().__init__(deps,"sequence")
 
+        self.class_probability_estimation = class_probability_estimation
         self.mode = mode
         self.use_unique_responses = use_unique_responses
         self.verbose = verbose
 
     def __str__(self):
         base = "SemanticEntropy"
+
         if self.mode == 'input_output':
             base += "Concat"
         if self.use_unique_responses:
             base += "Unique"
+        if self.class_probability_estimation == "frequency":
+            base += "Empirical"
+
         return base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
@@ -61,11 +73,12 @@ class SemanticEntropy(Estimator):
         hyps_list = stats["sample_texts"]
 
         if self.mode == 'output':
-            classes_dep_name = "semantic_matrix_classes"
+            classes_dep_name = "semantic_classes_entail"
         elif self.mode == 'input_output':
-            classes_dep_name = "input_output_semantic_matrix_classes"
+            classes_dep_name = "input_output_semantic_classes_entail"
 
-        self._is_entailment = stats[classes_dep_name] == stats["entailment_id"]
+        self._class_to_sample = stats[classes_dep_name]["class_to_sample"]
+        self._sample_to_class = stats[classes_dep_name]["sample_to_class"]
 
         return self.batched_call(hyps_list, loglikelihoods_list)
 
@@ -78,76 +91,66 @@ class SemanticEntropy(Estimator):
         if log_weights is None:
             log_weights = [None for _ in hyps_list]
 
-        self.get_classes(hyps_list)
-
         semantic_logits = {}
         # Iteration over batch
         for i in range(len(hyps_list)):
-            class_likelihoods = [
-                np.array(loglikelihoods_list[i])[np.array(class_idx)]
-                for class_idx in self._class_to_sample[i]
-            ]
-            if self.use_unique_responses:
-                class_hyps = [
-                    np.array(hyps_list[i])[np.array(class_idx)]
+            if self.class_probability_estimation == "sum":
+                class_likelihoods = [
+                    np.array(loglikelihoods_list[i])[np.array(class_idx)]
                     for class_idx in self._class_to_sample[i]
                 ]
-                unique_hyps_ids = [
-                    np.unique(hyps, return_index=True)[1]
-                    for hyps in class_hyps
-                ]
-                class_likelihoods = [
-                    likelihoods[ids]
-                    for ids, likelihoods in zip(unique_hyps_ids, class_likelihoods)
-                ]
+                if self.use_unique_responses:
+                    unique_hyps_ids = get_unique_hypos_by_class()
 
-            class_lp = [
-                np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
-            ]
+                    class_likelihoods = [
+                        likelihoods[ids]
+                        for ids, likelihoods in zip(unique_hyps_ids, class_likelihoods)
+                    ]
+
+                class_lp = [
+                    np.logaddexp.reduce(likelihoods) for likelihoods in class_likelihoods
+                ]
+            elif self.class_probability_estimation == "frequency":
+                num_samples = len(hyps_list[i])
+
+                if self.use_unique_responses:
+                    unique_hyps_ids = get_unique_hypos_by_class()
+                    total_unique_hyps = np.sum([len(ids) for ids in unique_hyps_ids])
+
+                    class_lp = np.log(
+                        [
+                            len ids / total_unique_hyps
+                            for ids in unique_hyps_ids
+                        ]
+                    )
+                else:
+                    class_lp = np.log(
+                        [
+                            len(class_idx) / num_samples
+                            for class_idx in self._class_to_sample[i]
+                        ]
+                    )
+
             if log_weights[i] is None:
                 log_weights[i] = [0 for _ in hyps_list[i]]
+
             semantic_logits[i] = -np.mean(
                 [
                     class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
                     for j in range(len(hyps_list[i]))
                 ]
             )
+
         return np.array([semantic_logits[i] for i in range(len(hyps_list))])
 
-    def get_classes(self, hyps_list: List[List[str]]):
-        self._sample_to_class = {}
-        self._class_to_sample: Dict[int, List] = defaultdict(list)
-
-        [
-            self._determine_class(idx, i)
-            for idx, hyp in enumerate(hyps_list)
-            for i in range(len(hyp))
+    def get_unique_hypos_by_class():
+        class_hyps = [
+            np.array(hyps_list[i])[np.array(class_idx)]
+            for class_idx in self._class_to_sample[i]
+        ]
+        unique_hyps_ids = [
+            np.unique(hyps, return_index=True)[1]
+            for hyps in class_hyps
         ]
 
-        return self._sample_to_class, self._class_to_sample
-
-    def _determine_class(self, idx: int, i: int):
-        # For first hypo just create a zeroth class
-        if i == 0:
-            self._class_to_sample[idx] = [[0]]
-            self._sample_to_class[idx] = {0: 0}
-
-            return 0
-
-        # Iterate over existing classes and return if hypo belongs to one of them
-        for class_id in range(len(self._class_to_sample[idx])):
-            class_text_id = self._class_to_sample[idx][class_id][0]
-            forward_entailment = self._is_entailment[idx, class_text_id, i]
-            backward_entailment = self._is_entailment[idx, i, class_text_id]
-            if forward_entailment and backward_entailment:
-                self._class_to_sample[idx][class_id].append(i)
-                self._sample_to_class[idx][i] = class_id
-
-                return class_id
-
-        # If none of the existing classes satisfy - create new one
-        new_class_id = len(self._class_to_sample[idx])
-        self._sample_to_class[idx][i] = new_class_id
-        self._class_to_sample[idx].append([i])
-
-        return new_class_id
+        return unique_hyps_ids
