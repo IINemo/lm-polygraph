@@ -11,47 +11,6 @@ import torch
 softmax = nn.Softmax(dim=1)
 
 
-class InputOutputSemanticMatrixCalculator(StatCalculator):
-    """
-    Calculates the NLI semantic matrix for generation samples using DeBERTa model
-    concatenated with input texts.
-    """
-
-    def __init__(self, nli_model):
-        super().__init__(
-            [
-                "input_output_semantic_matrix_entail",
-                "input_output_semantic_matrix_contra",
-                "input_output_semantic_matrix_classes",
-                "entailment_id",
-            ],
-            ["blackbox_sample_texts", "input_texts"],
-        )
-        self.concat_input_output = True
-        self.is_deberta_setup = False
-        self.nli_model = nli_model
-
-
-class OutputSemanticMatrixCalculator(SemanticStatCalculator):
-    """
-    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
-    """
-
-    def __init__(self, nli_model):
-        super().__init__(
-            [
-                "semantic_matrix_entail",
-                "semantic_matrix_contra",
-                "semantic_matrix_classes",
-                "entailment_id",
-            ],
-            ["blackbox_sample_texts", "input_texts"],
-        )
-        self.concat_input_output = False
-        self.is_deberta_setup = False
-        self.nli_model = nli_model
-
-
 class SemanticMatrixCalculator(StatCalculator):
     def _calculate_matrices(
         self,
@@ -159,6 +118,8 @@ class SemanticMatrixCalculator(StatCalculator):
             batch_counts
         )
 
+        res = {}
+
         if self.concat_input_output:
             res["input_output_semantic_matrix_entail"] = E
             res["input_output_semantic_matrix_contra"] = C
@@ -171,3 +132,44 @@ class SemanticMatrixCalculator(StatCalculator):
         res["entailment_id"] = self.nli_model.deberta.config.label2id["ENTAILMENT"],
 
         return res
+
+
+class InputOutputSemanticMatrixCalculator(SemanticMatrixCalculator):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model
+    concatenated with input texts.
+    """
+
+    def __init__(self, nli_model):
+        super().__init__(
+            [
+                "input_output_semantic_matrix_entail",
+                "input_output_semantic_matrix_contra",
+                "input_output_semantic_matrix_classes",
+                "entailment_id",
+            ],
+            ["blackbox_sample_texts", "input_texts"],
+        )
+        self.concat_input_output = True
+        self.is_deberta_setup = False
+        self.nli_model = nli_model
+
+
+class OutputSemanticMatrixCalculator(SemanticMatrixCalculator):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    """
+
+    def __init__(self, nli_model):
+        super().__init__(
+            [
+                "semantic_matrix_entail",
+                "semantic_matrix_contra",
+                "semantic_matrix_classes",
+                "entailment_id",
+            ],
+            ["blackbox_sample_texts", "input_texts"],
+        )
+        self.concat_input_output = False
+        self.is_deberta_setup = False
+        self.nli_model = nli_model

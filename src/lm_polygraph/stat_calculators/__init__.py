@@ -17,6 +17,13 @@ from .bart_score import BartScoreCalculator
 from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
-from .semantic_matrix import SemanticMatrixCalculator
+from .semantic_matrix import (
+    InputOutputSemanticMatrixCalculator,
+    OutputSemanticMatrixCalculator
+)
+from .semantic_classes import (
+    InputOutputSemanticClassesCalculator,
+    OutputSemanticClassesCalculator
+)
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor

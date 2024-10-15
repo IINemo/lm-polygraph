@@ -25,7 +25,7 @@ class SemanticEntropy(Estimator):
     ):
         assert(
             class_probability_estimation in ("sum", "frequency"),
-            f"Unknown class_probability_estimation: {self.class_probability_estimation}. Use 'sum' or 'frequency'."
+            f"Unknown class_probability_estimation: {class_probability_estimation}. Use 'sum' or 'frequency'."
         )
 
         deps = ["sample_texts"]
@@ -100,7 +100,7 @@ class SemanticEntropy(Estimator):
                     for class_idx in self._class_to_sample[i]
                 ]
                 if self.use_unique_responses:
-                    unique_hyps_ids = get_unique_hypos_by_class()
+                    unique_hyps_ids = self.get_unique_hypos_by_class(i, hyps_list)
 
                     class_likelihoods = [
                         likelihoods[ids]
@@ -114,12 +114,12 @@ class SemanticEntropy(Estimator):
                 num_samples = len(hyps_list[i])
 
                 if self.use_unique_responses:
-                    unique_hyps_ids = get_unique_hypos_by_class()
+                    unique_hyps_ids = self.get_unique_hypos_by_class(i, hyps_list)
                     total_unique_hyps = np.sum([len(ids) for ids in unique_hyps_ids])
 
                     class_lp = np.log(
                         [
-                            len ids / total_unique_hyps
+                            len(ids) / total_unique_hyps
                             for ids in unique_hyps_ids
                         ]
                     )
@@ -143,10 +143,10 @@ class SemanticEntropy(Estimator):
 
         return np.array([semantic_logits[i] for i in range(len(hyps_list))])
 
-    def get_unique_hypos_by_class():
+    def get_unique_hypos_by_class(self, batch_i, hyps_list):
         class_hyps = [
-            np.array(hyps_list[i])[np.array(class_idx)]
-            for class_idx in self._class_to_sample[i]
+            np.array(hyps_list[batch_i])[np.array(class_idx)]
+            for class_idx in self._class_to_sample[batch_i]
         ]
         unique_hyps_ids = [
             np.unique(hyps, return_index=True)[1]
