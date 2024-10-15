@@ -49,31 +49,31 @@ use_tok_ue: false
 additional_estimators:
   - module: lm_polygraph.estimators.max_probability
     class_name: MaximumSequenceProbability
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.perplexity
     class_name: Perplexity
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.token_sar
     class_name: TokenSAR
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.sar
     class_name: SAR
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimatorts.semantic_entropy
     class_name: SemanticEntropy
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: SentenceSAR
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: OtherSentenceSAR
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: ReweightedSentenceSAR
-    kwargs:
+    kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: PPLSentenceSAR
-    kwargs:
+    kwargs: {}
 
 ignore_exceptions: false
 
