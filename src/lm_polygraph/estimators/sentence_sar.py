@@ -187,9 +187,7 @@ class PPLSentenceSAR(Estimator):
         for sample_log_likelihoods, sample_sentence_similarity in zip(
             batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
-            # Calculate the number of tokens (length of the sample in tokens)
-
-            token_log_likelihoods = np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
+            ppl = np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
 
             # Initialize the sentence relevance (R_s) using PPL
             R_s = (

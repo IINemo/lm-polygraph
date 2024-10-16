@@ -59,7 +59,7 @@ additional_estimators:
   - module: lm_polygraph.estimators.sar
     class_name: SAR
     kwargs: {}
-  - module: lm_polygraph.estimatorts.semantic_entropy
+  - module: lm_polygraph.estimators.semantic_entropy
     class_name: SemanticEntropy
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
