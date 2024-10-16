@@ -90,7 +90,7 @@ additional_estimators:
 ignore_exceptions: false
 
 batch_size: 1
-deberta_batch_size: 5
+deberta_batch_size: 1
 
 seed:
     - 1

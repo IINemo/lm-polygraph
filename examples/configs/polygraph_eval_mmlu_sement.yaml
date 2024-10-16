@@ -65,11 +65,31 @@ additional_estimators:
     class_name: SemanticEntropy
     kwargs:
       mode: "input_output"
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
+    kwargs:
+      class_probability_estimation: "frequency"
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
+    kwargs:
+      use_unique_responses: true
+      class_probability_estimation: "frequency"
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
+    kwargs:
+      use_unique_responses: true
+      mode: "input_output"
+      class_probability_estimation: "frequency"
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
+    kwargs:
+      mode: "input_output"
+      class_probability_estimation: "frequency"
 
 ignore_exceptions: false
 
 batch_size: 1
-deberta_batch_size: 5
+deberta_batch_size: 1
 
 seed:
     - 1
