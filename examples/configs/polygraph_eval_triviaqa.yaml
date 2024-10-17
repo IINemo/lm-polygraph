@@ -4,6 +4,7 @@ hydra:
 
 defaults:
   - model: bloomz-560m
+  - base_processing_triviaqa
   - _self_
 
 cache_path: ./workdir/output
@@ -22,7 +23,6 @@ max_new_tokens: 20
 load_from_disk: false
 n_shot: 5
 multiref: true
-normalize: true
 generation_params:
   generate_until:
     - "\n"

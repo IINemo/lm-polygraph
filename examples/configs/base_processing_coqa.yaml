@@ -1,0 +1,6 @@
+process_output_fn:
+  path: instruct/output_processing_scripts/coqa.py
+  fn_name: normalize_em_coqa
+process_target_fn:
+  path: instruct/output_processing_scripts/coqa.py
+  fn_name: normalize_em_coqa

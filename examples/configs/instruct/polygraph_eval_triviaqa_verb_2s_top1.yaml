@@ -1,6 +1,6 @@
 defaults:
   - polygraph_eval_triviaqa_default_instruct
-  - top1_processing
+  - top1_processing_triviaqa
   - _self_
 
 experiment_name: triviaqa_verb_2s_top1
