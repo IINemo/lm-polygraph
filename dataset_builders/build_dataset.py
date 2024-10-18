@@ -84,6 +84,7 @@ def prepare_mmlu(
     instruct,
 ):
     import numpy as np
+    np.random.seed(1)
 
     few_shot_dataset = few_shot_dataset_func()
 
@@ -174,6 +175,7 @@ def prepare_trivia_qa(
     instruct,
 ):
     import numpy as np
+    np.random.seed(1)
 
     few_shot_dataset = few_shot_dataset_func()
 
