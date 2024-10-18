@@ -11,6 +11,8 @@ test.man_seed*
 app/.env
 app/uploads/*
 
+dataset_builders/*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
