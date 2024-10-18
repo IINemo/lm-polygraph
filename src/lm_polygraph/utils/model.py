@@ -159,7 +159,13 @@ class BlackboxModel(Model):
         ):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in ["do_sample", "min_length", "top_k", "repetition_penalty"]:
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+        ]:
             args.pop(delete_key, None)
         for key, replace_key in [
             ("num_return_sequences", "n"),
@@ -173,11 +179,35 @@ class BlackboxModel(Model):
 
         if self.openai_api_key is not None:
             for prompt in input_texts:
-                response = openai.ChatCompletion.create(
-                    model=self.model_path,
-                    messages=[{"role": "user", "content": prompt}],
-                    **args,
-                )
+                if isinstance(prompt, str):
+                    # If prompt is a string, create a single message with "user" role
+                    messages = [{"role": "user", "content": prompt}]
+                elif isinstance(prompt, list) and all(
+                    isinstance(item, dict) for item in prompt
+                ):
+                    # If prompt is a list of dictionaries, assume it's already structured as chat
+                    messages = prompt
+                else:
+                    raise ValueError(
+                        "Invalid prompt format. Must be either a string or a list of dictionaries."
+                    )
+
+                retries = 0
+                while True:
+                    try:
+                        response = openai.ChatCompletion.create(
+                            model=self.model_path,
+                            messages=messages,
+                            **args,
+                        )
+                        break
+                    except Exception as e:
+                        if retries > 4:
+                            raise Exception from e
+                        else:
+                            retries += 1
+                            continue
+
                 if args["n"] == 1:
                     texts.append(response.choices[0].message.content)
                 else:
@@ -399,7 +429,7 @@ class WhiteboxModel(Model):
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
-        sequences = self.model.generate(**batch, **args).sequences.cpu()
+        sequences = self.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
 

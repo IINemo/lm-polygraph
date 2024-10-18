@@ -16,13 +16,13 @@ class AggregatedMetric(GenerationMetric):
         self.aggregation = aggregation
 
     def __str__(self):
-        return str(self.base_metric)
+        # Check if base_metric is a wrapper, else return base_metric
+        return str(getattr(self.base_metric, "base_metric", self.base_metric))
 
     def __call__(
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates aggregated metric between stats['greedy_texts'] and target_texts.
@@ -30,7 +30,6 @@ class AggregatedMetric(GenerationMetric):
         Parameters:
             stats (Dict[str, np.ndarray]): calculated stats
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of aggregated metric values for each sample in input.
         """
@@ -40,16 +39,18 @@ class AggregatedMetric(GenerationMetric):
         ):
             # truncate stats to only process one sample at a time
             truncated_stats = {
-                k: [v[i]] for k, v in stats.items() if k in self.stats_dependencies
+                k: [v[i]]
+                for k, v in stats.items()
+                if k in self.stats_dependencies + ["greedy_texts"]
             }
 
             sample_metric_values = []
-            for j, target in enumerate(targets):
-                value = self.base_metric(truncated_stats, [target], target_tokens[i][j])
+            for target in targets:
+                value = self.base_metric(truncated_stats, [target])
                 sample_metric_values.append(value)
 
             if self.aggregation == "max":
-                metric_values.append(np.max(sample_metric_values))
+                metric_values.append(np.nanmax(sample_metric_values))
             else:
                 raise ValueError(f"Unknown aggregation type: {self.aggregation}")
 

@@ -19,7 +19,6 @@ label_column: answer
 few_shot_split: dev
 train_split: validation
 eval_split: test
-  #max_new_tokens: 3
 load_from_disk: false
 n_shot: 5
 max_subject_size: 100

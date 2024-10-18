@@ -24,7 +24,7 @@ class NumSemSets(Estimator):
             [
                 "semantic_matrix_entail",
                 "semantic_matrix_contra",
-                "blackbox_sample_texts",
+                "sample_texts",
             ],
             "sequence",
         )
@@ -98,7 +98,7 @@ class NumSemSets(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * generated samples in 'blackbox_sample_texts',
+                * generated samples in 'sample_texts',
                 * matrix with corresponding semantic similarities in
                   'semantic_matrix_entail' and 'semantic_matrix_contra'
         Returns:
@@ -106,7 +106,7 @@ class NumSemSets(Estimator):
                 Higher values indicate more uncertain samples.
         """
         res = []
-        for i, answers in enumerate(stats["blackbox_sample_texts"]):
+        for i, answers in enumerate(stats["sample_texts"]):
             if self.verbose:
                 print(f"generated answers: {answers}")
             res.append(self.U_NumSemSets(i, stats))

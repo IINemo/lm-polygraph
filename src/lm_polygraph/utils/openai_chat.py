@@ -1,10 +1,8 @@
 import openai
-import json
 import os
 import time
 import logging
-
-from filelock import FileLock
+import diskcache as dc
 
 
 log = logging.getLogger()
@@ -17,7 +15,7 @@ class OpenAIChat:
 
     def __init__(
         self,
-        openai_model: str = "gpt-4",
+        openai_model: str = "gpt-4o",
         cache_path: str = os.path.expanduser("~") + "/.cache",
     ):
         """
@@ -31,22 +29,20 @@ class OpenAIChat:
             openai.api_key = api_key
         self.openai_model = openai_model
 
-        self.cache_path = os.path.join(cache_path, "openai_chat_cache.json")
-        self.cache_lock = FileLock(self.cache_path + ".lock")
-        with self.cache_lock:
-            if not os.path.exists(self.cache_path):
-                if not os.path.exists(cache_path):
-                    os.makedirs(cache_path)
-                with open(self.cache_path, "w") as f:
-                    json.dump({}, f)
+        self.cache_path = os.path.join(cache_path, "openai_chat_cache.diskcache")
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
 
     def ask(self, message: str) -> str:
-        # check if the message is cached
-        with open(self.cache_path, "r") as f:
-            openai_responses = json.load(f)
+        cache_settings = dc.DEFAULT_SETTINGS.copy()
+        cache_settings["eviction_policy"] = "none"
+        cache_settings["size_limit"] = int(1e12)
+        cache_settings["cull_limit"] = 0
+        openai_responses = dc.Cache(self.cache_path, **cache_settings)
 
-        if message in openai_responses.get(self.openai_model, {}).keys():
-            reply = openai_responses[self.openai_model][message]
+        if (self.openai_model, message) in openai_responses:
+            reply = openai_responses[(self.openai_model, message)]
+
         else:
             # Ask openai
             if openai.api_key is None:
@@ -59,18 +55,10 @@ class OpenAIChat:
                 {"role": "user", "content": message},
             ]
             chat = self._send_request(messages)
-
             reply = chat.choices[0].message.content
 
-            # add reply to cache
-            with self.cache_lock:
-                with open(self.cache_path, "r") as f:
-                    openai_responses = json.load(f)
-                if self.openai_model not in openai_responses.keys():
-                    openai_responses[self.openai_model] = {}
-                openai_responses[self.openai_model][message] = reply
-                with open(self.cache_path, "w") as f:
-                    json.dump(openai_responses, f)
+            openai_responses[(self.openai_model, message)] = reply
+            openai_responses.close()
 
         if "please provide" in reply.lower():
             return ""

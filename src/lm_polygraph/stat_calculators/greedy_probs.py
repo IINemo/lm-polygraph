@@ -14,7 +14,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
     """
 
     def __init__(self):
-        super().__init__(["blackbox_greedy_texts"], [])
+        super().__init__(["greedy_texts"], [])
 
     def __call__(
         self,
@@ -32,7 +32,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
             model (Model): Model used for generation.
             max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
         Returns:
-            Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'blackbox_greedy_texts' key.
+            Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'greedy_texts' key.
         """
         with torch.no_grad():
             sequences = model.generate_texts(
@@ -41,7 +41,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 n=1,
             )
 
-        return {"blackbox_greedy_texts": sequences}
+        return {"greedy_texts": sequences}
 
 
 class GreedyProbsCalculator(StatCalculator):
@@ -57,7 +57,6 @@ class GreedyProbsCalculator(StatCalculator):
     def __init__(self, n_alternatives: int = 10):
         super().__init__(
             [
-                "input_texts",
                 "input_tokens",
                 "greedy_log_probs",
                 "greedy_tokens",
@@ -88,7 +87,6 @@ class GreedyProbsCalculator(StatCalculator):
             max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
         Returns:
             Dict[str, np.ndarray]: dictionary with the following items:
-                - 'input_texts' (List[str]): input texts batch,
                 - 'input_tokens' (List[List[int]]): tokenized input texts,
                 - 'greedy_log_probs' (List[List[np.array]]): logarithms of autoregressive
                         probability distributions at each token,
@@ -178,7 +176,6 @@ class GreedyProbsCalculator(StatCalculator):
             raise NotImplementedError
 
         result_dict = {
-            "input_texts": texts,
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
             "greedy_tokens": cut_sequences,

@@ -1,0 +1,28 @@
+defaults:
+  - polygraph_eval_mmlu_default_instruct
+  - top1_processing
+  - _self_
+
+experiment_name: mmlu_empirical_baselines
+
+description: "Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>"
+few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}"
+prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
+max_new_tokens: 13
+generation_params:
+  generate_until:
+    - "\n"
+
+use_seq_ue: true
+include_whitebox_ue: false
+additional_estimators: 
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
+    kwargs:
+      class_probability_estimation: frequency
+  - module: lm_polygraph.estimators.p_true_empirical
+    class_name: PTrueEmpirical
+    kwargs: {}
+  - module: lm_polygraph.estimators.label_prob
+    class_name: LabelProb
+    kwargs: {}

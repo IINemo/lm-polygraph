@@ -1,9 +1,12 @@
 import re
 import string
 import numpy as np
+import logging
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+
+log = logging.getLogger("lm_polygraph")
 
 
 class AccuracyMetric(GenerationMetric):
@@ -23,6 +26,11 @@ class AccuracyMetric(GenerationMetric):
             re.compile(output_ignore_regex) if output_ignore_regex else None
         )
         self.normalize = normalize
+
+        if self.target_ignore_regex or self.output_ignore_regex or self.normalize:
+            log.warning(
+                "Specifying ignore_regex or normalize in AccuracyMetric is deprecated. Use output and target processing scripts instead."
+            )
 
     def __str__(self):
         return "Accuracy"
@@ -47,7 +55,6 @@ class AccuracyMetric(GenerationMetric):
         self,
         stats: Dict[str, np.ndarray],
         target_texts: List[str],
-        target_tokens: List[List[int]],
     ) -> np.ndarray:
         """
         Calculates accuracy between stats['greedy_texts'] and target_texts.
@@ -56,7 +63,6 @@ class AccuracyMetric(GenerationMetric):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * model-generated texts in 'greedy_texts'
             target_texts (List[str]): ground-truth texts
-            target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """

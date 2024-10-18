@@ -1,5 +1,6 @@
 defaults:
   - polygraph_eval_triviaqa_default_instruct
+  - top1_processing_triviaqa
   - _self_
 
 experiment_name: triviaqa_ling_1s
@@ -27,7 +28,6 @@ description: "Provide your best guess for the following question, and describe h
 few_shot_prompt: "Question: {question}\nGuess: {answer}\nConfidence: <appropriate level of confidence in this guess>"
 prompt: "Question: {question}\n"
 max_new_tokens: 40
-output_ignore_regex: "(?s).*Guess: |\nConfidence:.*"
 
 additional_estimators: 
   - module: lm_polygraph.estimators.linguistic_1s

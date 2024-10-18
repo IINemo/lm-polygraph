@@ -1,4 +1,5 @@
 from .stat_calculator import StatCalculator
+from .initial_state import InitialStateCalculator
 from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .prompt import PromptCalculator
@@ -20,3 +21,4 @@ from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
+from .semantic_classes import SemanticClassesCalculator

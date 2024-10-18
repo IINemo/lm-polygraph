@@ -9,3 +9,4 @@ from .openai_fact_check import OpenAIFactCheck
 from .bert_score import BertScoreMetric
 from .sbert import SbertMetric
 from .aggregated_metric import AggregatedMetric
+from .preprocess_output_target import PreprocessOutputTarget
