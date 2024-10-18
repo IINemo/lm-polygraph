@@ -340,7 +340,8 @@ DATASET_CONFIG = {
             prepare_base,
             input_column="email_body",
             output_column="subject_line",
-            prompt="Write a short subject line for the email. Output only the subject line itself.\n\nEmail:\n{text}\n\nSubject line:\n",
+            # prompt is set but not used in LM-Polygraph for this dataset (bug)
+            # prompt="Write a short subject line for the email. Output only the subject line itself.\n\nEmail:\n{text}\n\nSubject line:\n",
         ),
     },
     "babi_qa": {

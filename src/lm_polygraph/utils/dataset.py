@@ -145,10 +145,10 @@ class Dataset:
             dataset = hf_dataset.load_from_disk(path)
         elif isinstance(path, str):
             dataset_name = path
-            dataset = load_dataset(path, split=split, trust_remote_code=True, **kwargs)
+            dataset = load_dataset(path, split=split, **kwargs)
         else:
             dataset_name = path[0]
-            dataset = load_dataset(*path, split=split, trust_remote_code=True, **kwargs)
+            dataset = load_dataset(*path, split=split, **kwargs)
 
         return dataset_name, dataset
 
@@ -414,11 +414,6 @@ class Dataset:
                 if len(inst[x_column]) <= 1024:
                     x.append(inst[x_column])
                     y.append(inst[y_column])
-        elif "aeslc" in dataset_name.lower():
-            x, y = [], []
-            for inst in dataset:
-                x.append(prompt.format(text=inst[x_column]))
-                y.append(inst[y_column])
         else:
             x = dataset[x_column]
             y = dataset[y_column]

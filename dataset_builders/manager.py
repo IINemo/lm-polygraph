@@ -31,7 +31,5 @@ def main():
         # dataset.push_to_hub(f'{args.namespace}/polygraph', args.dataset, token=os.environ["HF_TOKEN"])
 
 
-
-
 if __name__ == '__main__':
     main()
