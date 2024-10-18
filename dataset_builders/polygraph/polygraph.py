@@ -496,7 +496,8 @@ DATASET_CONFIG = {
     },
     "xsum": {
         "name": "xsum",
-        "splits": ["train", "validation", "test"],
+        "train_split": "train",
+        "test_split": "validation",
         "prepare_func": partial(
             prepare_base,
             input_column="document",
