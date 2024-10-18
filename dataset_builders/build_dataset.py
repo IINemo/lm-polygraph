@@ -1,9 +1,6 @@
-import datasets
-
 from functools import partial
 
-
-VERSION = datasets.Version("0.0.1")
+import datasets
 
 
 def prepare_base(
@@ -581,72 +578,19 @@ DATASET_CONFIG = {
 }
 
 
-def create_builder_config(name):
-    return datasets.BuilderConfig(
-        name=name,
-        version=VERSION,
-        description=f"Dataset {DATASET_CONFIG[name]['name']}, processed by lm-polygraph",
-    )
+def build_dataset(dataset_name):
+    config = DATASET_CONFIG[dataset_name]
+    if isinstance(config["name"], list):
+        dataset = datasets.load_dataset(*config["name"], trust_remote_code=True)
+    else:
+        dataset = datasets.load_dataset(config["name"], trust_remote_code=True)
 
+    def prepare_dataset(split):
+        x, y = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
+        result_dataset = datasets.Dataset.from_dict({"input": x, "output": y})
+        return result_dataset
 
-class PolygraphConfig(datasets.BuilderConfig):
-    """BuilderConfig for xsum"""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-
-class Polygraph(datasets.GeneratorBasedBuilder):
-    """lm-polygraph wrapper for xsum dataset"""
-
-    BUILDER_CONFIG_CLASS = PolygraphConfig
-    BUILDER_CONFIGS = [create_builder_config(name) for name in DATASET_CONFIG]
-
-    def _info(self):
-        return datasets.DatasetInfo(
-            description="lm-polygraph wrapper for datasets",
-            features=datasets.Features(
-                {
-                    "input": datasets.Value("string"),
-                    "output": datasets.Value("string"),
-                }
-            ),
-        )
-
-    def _split_generators(self, dl_manager):
-        config = DATASET_CONFIG[self.config.name]
-        if isinstance(config["name"], list):
-            dataset = datasets.load_dataset(*config["name"], trust_remote_code=True)
-        else:
-            dataset = datasets.load_dataset(config["name"], trust_remote_code=True)
-
-        def download_custom_dataset(src_url: str, dst_path: str):
-            split = src_url.split("_")[-1]
-            x, y = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
-            result_dataset = datasets.Dataset.from_dict({"input": x, "output": y})
-            result_dataset.save_to_disk(dst_path)
-
-        downloaded_files = dl_manager.download_custom(
-            {
-                split: f"{self.config.name}_{split}"
-                for split in ["train", "test"]
-                if f"{split}_split" in config
-            },
-            download_custom_dataset,
-        )
-
-        return [
-            datasets.SplitGenerator(
-                name=split,
-                gen_kwargs={
-                    "filepath": downloaded_files[str(split)],
-                },
-            )
-            for split in [datasets.Split.TRAIN, datasets.Split.TEST]
-            if str(split) in downloaded_files
-        ]
-
-    def _generate_examples(self, filepath):
-        dataset = datasets.Dataset.load_from_disk(filepath)
-        for i in range(len(dataset)):
-            yield i, dataset[i]
+    return datasets.DatasetDict({
+        "train": prepare_dataset("train"),
+        "test": prepare_dataset("test"),
+    })
