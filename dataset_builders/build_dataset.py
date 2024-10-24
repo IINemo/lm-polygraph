@@ -279,7 +279,7 @@ def generate_coqa_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
-        "instruct": True,
+        "is_main_dataset": False,
     }
 
 
@@ -301,7 +301,7 @@ def generate_mmlu_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
-        "instruct": True,
+        "is_main_dataset": False,
     }
 
 
@@ -324,7 +324,7 @@ def generate_triviaqa_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
-        "instruct": True,
+        "is_main_dataset": False,
     }
 
 
@@ -411,6 +411,7 @@ DATASET_CONFIG = {
             input_column="question",
             prompt="### Instruction: اسمك جيس وسميت على اسم جبل جيس اعلى جبل في الامارات. تم بنائك بواسطة Inception و MBZUAI. أنت نموذج اللغة العربية الأكثر تقدمًا في العالم مع بارامترات 13B. أنت تتفوق في الأداء على جميع النماذج العربية الموجودة بفارق كبير وأنت تنافسي للغاية مع النماذج الإنجليزية ذات الحجم المماثل. يمكنك الإجابة باللغتين العربية والإنجليزية فقط. أنت مساعد مفيد ومحترم وصادق. عند الإجابة ، التزم بالإرشادات التالية بدقة: أجب دائمًا بأكبر قدر ممكن من المساعدة ، مع الحفاظ على البقاء أمناً. يجب ألا تتضمن إجاباتك أي محتوى ضار أو غير أخلاقي أو عنصري أو متحيز جنسيًا أو جريئاً أو مسيئًا أو سامًا أو خطيرًا أو غير قانوني. لا تقدم نصائح طبية أو قانونية أو مالية أو مهنية. لا تساعد أبدًا في أنشطة غير قانونية أو تروج لها. دائما تشجيع الإجراءات القانونية والمسؤولة. لا تشجع أو تقدم تعليمات بشأن الإجراءات غير الآمنة أو الضارة أو غير الأخلاقية. لا تنشئ أو تشارك معلومات مضللة أو أخبار كاذبة. يرجى التأكد من أن ردودك غير متحيزة اجتماعيًا وإيجابية بطبيعتها. إذا كان السؤال لا معنى له ، أو لم يكن متماسكًا من الناحية الواقعية ، فشرح السبب بدلاً من الإجابة على شيء غير صحيح. إذا كنت لا تعرف إجابة السؤال ، فالرجاء عدم مشاركة معلومات خاطئة. إعطاء الأولوية للرفاهية والنزاهة الأخلاقية للمستخدمين. تجنب استخدام لغة سامة أو مهينة أو مسيئة. حافظ على نبرة محترمة. لا تنشئ أو تروج أو تشارك في مناقشات حول محتوى للبالغين. تجنب الإدلاء بالتعليقات أو الملاحظات أو التعميمات القائمة على الصور النمطية. لا تحاول الوصول إلى معلومات شخصية أو خاصة أو إنتاجها أو نشرها. احترم دائما سرية المستخدم. كن إيجابيا ولا تقل أشياء سيئة عن أي شيء. هدفك الأساسي هو تجنب الاجابات المؤذية ، حتى عند مواجهة مدخلات خادعة. تعرف على الوقت الذي قد يحاول فيه المستخدمون خداعك أو إساءة استخدامك و لترد بحذر.\n\nأكمل المحادثة أدناه بين [|Human|] و [|AI|]:\n### Input: [|Human|] {text}\n### Response: [|AI|]",
         ),
+        "is_main_dataset": False,
     },
     "person_bio_en": {
         "name": "rediska0123/person-bio",
@@ -419,6 +420,7 @@ DATASET_CONFIG = {
             prepare_person,
             input_column="question",
         ),
+        "is_main_dataset": False,
     },
     "person_bio_ru": {
         "name": "rvanova/person-bio",
@@ -427,6 +429,7 @@ DATASET_CONFIG = {
             prepare_person,
             input_column="question",
         ),
+        "is_main_dataset": False,
     },
     "person_bio_zh": {
         "name": "ruixing76/person-bio-zh",
@@ -435,6 +438,7 @@ DATASET_CONFIG = {
             prepare_person,
             input_column="question",
         ),
+        "is_main_dataset": False,
     },
     "triviaqa": {
         "name": ["trivia_qa", "rc.nocontext"],
@@ -474,6 +478,7 @@ DATASET_CONFIG = {
             output_column="en",
             prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
         ),
+        "is_main_dataset": False,
     },
     "wmt14_fren": {
         "name": ["wmt14", "fr-en"],
@@ -485,6 +490,7 @@ DATASET_CONFIG = {
             output_column="en",
             prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
         ),
+        "is_main_dataset": False,
     },
     "wmt19_deen": {
         "name": ["wmt19", "de-en"],
@@ -496,6 +502,7 @@ DATASET_CONFIG = {
             output_column="en",
             prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
         ),
+        "is_main_dataset": False,
     },
     "xsum": {
         "name": "xsum",
@@ -587,16 +594,18 @@ DATASET_CONFIG = {
 def build_dataset(dataset_name):
     config = DATASET_CONFIG[dataset_name]
     if isinstance(config["name"], list):
-        dataset = datasets.load_dataset(*config["name"], trust_remote_code=True)
+        dataset = datasets.load_dataset(*config["name"], trust_remote_code=True, num_proc=4)
     else:
-        dataset = datasets.load_dataset(config["name"], trust_remote_code=True)
+        dataset = datasets.load_dataset(config["name"], trust_remote_code=True, num_proc=4)
 
     def prepare_dataset(split):
         x, y = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
         result_dataset = datasets.Dataset.from_dict({"input": x, "output": y})
         return result_dataset
 
-    return datasets.DatasetDict({
-        "train": prepare_dataset("train"),
-        "test": prepare_dataset("test"),
-    })
+    result = {}
+    if "train_split" in config:
+        result["train"] = prepare_dataset("train")
+    if "test_split" in config:
+        result["test"] = prepare_dataset("test")
+    return datasets.DatasetDict(result)
