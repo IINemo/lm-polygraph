@@ -56,6 +56,7 @@ def register_default_stat_calculators() -> (
     _register(SemanticMatrixCalculator)
     _register(CrossEncoderSimilarityMatrixCalculator)
     _register(GreedyProbsCalculator)
+    #_register(SemanticClassesCalculator)
     _register(
         GreedyAlternativesNLICalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",

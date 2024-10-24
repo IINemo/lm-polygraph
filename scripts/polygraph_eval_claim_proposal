@@ -27,6 +27,7 @@ from lm_polygraph.utils.factory_estimator import FactoryEstimator
 import logging
 
 log = logging.getLogger("lm_polygraph")
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -100,9 +101,6 @@ def main(args):
         estimators += get_ue_methods(args)
         log.info("Done loading UE estimators")
 
-        train_dataset = None
-        background_train_dataset = None
-
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
 
@@ -124,12 +122,9 @@ def main(args):
             [
                 Logger(),
             ],
-            train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
-            background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
-            ensemble_model=ensemble_model,
-            cache_path=args.cache_path,
+            ensemble_model=ensemble_model
         )
 
         man()
@@ -169,7 +164,7 @@ def get_stat_calculator_names(config):
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":
             sc, sd = register_default_stat_calculators()
-            sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
+            #sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
             result_stat_calculators.update(sc)
             result_stat_dependencies.update(sd)
         else:

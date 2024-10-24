@@ -2,8 +2,10 @@ hydra:
   run:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
-defaults:
-  - model: mistral-instruct-v2
+model:
+  path: mistralai/Mistral-7B-Instruct-v0.2
+  device_map: cuda
+  ensemble: false
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -46,16 +48,14 @@ ens_type:
 
 estimators:
   - name: MaximumClaimProbability
-  - name: luq.builder_luq_claim_estimator
-    cfg: 
-      reduce_type: "mean"
+  - name: MeanTokenEntropy
 
 stat_calculators:
   - auto
   - name: ClaimExtractor
     builder: lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor
     cfg:
-      openai_model: "gpt-4"
+      openai_model: "gpt-4o"
       cache_path: "/home/artemshelmanov/.cache"
     stats: 
       - "claims"

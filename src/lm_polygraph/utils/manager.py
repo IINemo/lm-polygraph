@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, Model
 from lm_polygraph.utils.processor import Processor
-
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
 from lm_polygraph.ue_metrics.ue_metric import (
     UEMetric,
@@ -49,22 +48,22 @@ def _delete_nans(ue, metric):
     return np.array(new_ue), np.array(new_metric)
 
 
-def _recombine_data(ue, gen_metric, inputs):
-    ue = np.array(ue)
-    gen_metric = np.array(gen_metric)
+# def _recombine_data(ue, gen_metric, inputs):
+#     ue = np.array(ue)
+#     gen_metric = np.array(gen_metric)
 
-    # np.unique() with return_counts=True?
-    recombined_inputs = defaultdict(list)
-    for i, input_text in enumerate(inputs):
-        recombined_inputs[input_text].append(i)
+#     # np.unique() with return_counts=True?
+#     recombined_inputs = defaultdict(list)
+#     for i, input_text in enumerate(inputs):
+#         recombined_inputs[input_text].append(i)
 
-    recombined_ue, recombined_gen_metric = [], []
-    for input_text, ids in recombined_inputs.items():
-        recombined_ue.append(ue[ids].mean())
-        # Assumes that metric is bigger for better generations!
-        recombined_gen_metric.append(gen_metric[ids].max())
+#     recombined_ue, recombined_gen_metric = [], []
+#     for input_text, ids in recombined_inputs.items():
+#         recombined_ue.append(ue[ids].mean())
+#         # Assumes that metric is bigger for better generations!
+#         recombined_gen_metric.append(gen_metric[ids].max())
 
-    return recombined_ue, recombined_gen_metric
+#     return recombined_ue, recombined_gen_metric
 
 
 def order_stats(
@@ -251,17 +250,10 @@ class UEManager:
         generation_metrics: List[GenerationMetric],
         ue_metrics: List[UEMetric],
         processors: List[Processor],
-        train_data: Dataset = None,
-        background_train_data: Dataset = None,
         ignore_exceptions: bool = True,
         ensemble_model: Optional[WhiteboxModel] = None,
-        deberta_batch_size: int = 10,
-        deberta_device: Optional[str] = None,
-        language: str = "en",
         verbose: bool = True,
-        max_new_tokens: int = 100,
-        background_train_dataset_max_new_tokens: int = 100,
-        cache_path=os.path.expanduser("~") + "/.cache"
+        max_new_tokens: int = 100
     ):
         """
         Parameters:
@@ -302,8 +294,6 @@ class UEManager:
         # self.stat_calculators_dict = stat_calculators_dict
 
         self.model: Model = model
-        self.train_data: Dataset = train_data
-        self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
         self.data: Dataset = data
         self.estimators: List[Estimator] = estimators
@@ -323,9 +313,6 @@ class UEManager:
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
         self.max_new_tokens = max_new_tokens
-        self.background_train_dataset_max_new_tokens = (
-            background_train_dataset_max_new_tokens
-        )
 
         self.stat_calculators_dict = available_stat_calculators[0]
         self.stat_dependencies_dict = available_stat_calculators[1]
@@ -396,49 +383,6 @@ class UEManager:
                 single_estimators.append(e)
         self.estimators = single_estimators
 
-        train_stats = [
-            s
-            for e in self.estimators
-            for s in e.stats_dependencies
-            if s.startswith("train")
-        ]
-        train_stats += (
-            ["greedy_tokens", "greedy_texts"]
-            if "train_greedy_log_likelihoods" in train_stats
-            else []
-        )
-        train_stats, _ = order_stats(
-            train_stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-        # self.train_stat_calculators: List[StatCalculator] = (
-        #     self.stat_resolver.init_calculators(
-        #         [stat_calculators_dict[c] for c in train_stats]
-        #     )
-        # )
-        self.train_stat_calculators = self.builder_stat_calculators(train_stats)
-
-        background_train_stats = [
-            s
-            for e in self.estimators
-            for s in e.stats_dependencies
-            if s.startswith("background_train")
-        ]
-        background_train_stats, _ = order_stats(
-            background_train_stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-
-        self.background_train_stat_calculators = self.builder_stat_calculators(background_train_stats)
-
-        # self.background_train_stat_calculators: List[StatCalculator] = (
-        #     self.stat_resolver.init_calculators(
-        #         [stat_calculators_dict[c] for c in background_train_stats]
-        #     )
-        # )
-
         ensemble_stats = [
             s
             for e in self.ensemble_estimators
@@ -478,8 +422,6 @@ class UEManager:
                 - `ue_metrics` name which was used to calculate quality.
         """
         self._resolve_stat_calculators()
-        train_stats = self._extract_train_embeddings()
-        background_train_stats = self._extract_train_embeddings(background=True)
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
         for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
@@ -491,16 +433,6 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
             batch_stats["model"] = self.model
-
-            batch_stats["model"] = self.model
-
-            train_stats_keys = list(train_stats.keys())
-            for stat in train_stats_keys:
-                batch_stats[stat] = train_stats.pop(stat)
-
-            background_train_stats_keys = list(background_train_stats.keys())
-            for stat in background_train_stats_keys:
-                batch_stats[stat] = background_train_stats.pop(stat)
 
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
 
@@ -662,67 +594,6 @@ class UEManager:
                     raise e
 
         return batch_estimations, bad_estimators
-
-    def _extract_train_embeddings(
-        self, background: bool = False
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
-        train_stats = {}
-        result_train_stat = {}
-        if background:
-            data = self.background_train_data
-            stat_calculators = self.background_train_stat_calculators
-            max_new_tokens = self.background_train_dataset_max_new_tokens
-        else:
-            data = self.train_data
-            stat_calculators = self.train_stat_calculators
-            max_new_tokens = self.max_new_tokens
-        if len(stat_calculators) and (data is not None):
-            for inp_texts, target_texts in tqdm(data):
-                batch_stats: Dict[str, np.ndarray] = {}
-                for key, val in [
-                    ("input_texts", inp_texts),
-                    ("target_texts", target_texts),
-                ]:
-                    batch_stats[key] = val
-
-                for stat_calculator in stat_calculators:
-                    new_stats = stat_calculator(
-                        batch_stats, inp_texts, self.model, max_new_tokens
-                    )
-                    for stat, stat_value in new_stats.items():
-                        if stat in batch_stats.keys():
-                            continue
-                        batch_stats[stat] = stat_value
-
-                for stat in batch_stats.keys():
-                    if stat in [
-                        "input_tokens",
-                        "input_texts",
-                        "target_texts",
-                    ]:
-                        continue
-                    if stat in train_stats.keys():
-                        train_stats[stat].append(batch_stats[stat])
-                    else:
-                        train_stats[stat] = [batch_stats[stat]]
-
-                torch.cuda.empty_cache()
-                gc.collect()
-
-            key_prefix = "background_train_" if background else "train_"
-            for stat in train_stats.keys():
-                if any(s is None for s in train_stats[stat]):
-                    continue
-                if isinstance(train_stats[stat][0], list):
-                    result_train_stat[key_prefix + stat] = [
-                        item for sublist in train_stats[stat] for item in sublist
-                    ]
-                else:
-                    result_train_stat[key_prefix + stat] = np.concatenate(
-                        train_stats[stat]
-                    )
-
-        return result_train_stat
 
     def save(self, save_path: str):
         """
