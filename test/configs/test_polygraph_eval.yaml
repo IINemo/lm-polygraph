@@ -11,7 +11,7 @@ save_path: '${hydra:run.dir}'
 
 task: qa
 
-dataset: ["SpeedOfMagic/polygraph", "trivia_qa_tiny"]
+dataset: LM-Polygraph/trivia_qa_tiny
 train_split: train
 eval_split: test
 text_column: input

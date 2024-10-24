@@ -87,6 +87,7 @@ def prepare_mmlu(
     instruct,
 ):
     import numpy as np
+
     np.random.seed(1)
 
     few_shot_dataset = few_shot_dataset_func()
@@ -96,7 +97,9 @@ def prepare_mmlu(
     few_shot_subjects = np.array(few_shot_dataset["subject"])
     x, y = [], []
     for subject in np.unique(subjects):
-        formatted_description = description.format(subject=subject.replace("_", " "), topk=TOP_K)
+        formatted_description = description.format(
+            subject=subject.replace("_", " "), topk=TOP_K
+        )
         if n_shot > 0:
             few_shot_subject = few_shot_dataset.select(
                 np.argwhere(few_shot_subjects == subject).flatten()
@@ -179,6 +182,7 @@ def prepare_trivia_qa(
     instruct,
 ):
     import numpy as np
+
     np.random.seed(1)
 
     few_shot_dataset = few_shot_dataset_func()
@@ -599,9 +603,13 @@ DATASET_CONFIG = {
 def build_dataset(dataset_name):
     config = DATASET_CONFIG[dataset_name]
     if isinstance(config["name"], list):
-        dataset = datasets.load_dataset(*config["name"], trust_remote_code=True, num_proc=4)
+        dataset = datasets.load_dataset(
+            *config["name"], trust_remote_code=True, num_proc=4
+        )
     else:
-        dataset = datasets.load_dataset(config["name"], trust_remote_code=True, num_proc=4)
+        dataset = datasets.load_dataset(
+            config["name"], trust_remote_code=True, num_proc=4
+        )
 
     def prepare_dataset(split):
         x, y = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
