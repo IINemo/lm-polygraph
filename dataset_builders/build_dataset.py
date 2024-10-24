@@ -3,6 +3,9 @@ from functools import partial
 import datasets
 
 
+TOP_K = 4
+
+
 def prepare_base(
     dataset, input_column, output_column, prompt=None
 ) -> tuple[list[str], list[str], dict[str, list[str]]]:
@@ -35,12 +38,12 @@ def prepare_coqa(
         # and a question qi, the task is to predict the answer ai
         doc_text = ""
         for q, a in zip(doc["questions"][:i], doc["answers"]["input_text"][:i]):
-            doc_text += "\n\n" + prompt.format(question=q, answer=a)
+            doc_text += "\n\n" + prompt.format(question=q, answer=a, topk=TOP_K)
         return doc_text
 
     x, y = [], []
     for inst in dataset:
-        formatted_description = description.format(story=inst["story"])
+        formatted_description = description.format(story=inst["story"], topk=TOP_K)
         for j, (question, answer) in enumerate(
             zip(inst[input_column], inst[output_column]["input_text"])
         ):
@@ -93,7 +96,7 @@ def prepare_mmlu(
     few_shot_subjects = np.array(few_shot_dataset["subject"])
     x, y = [], []
     for subject in np.unique(subjects):
-        formatted_description = description.format(subject=subject.replace("_", " "))
+        formatted_description = description.format(subject=subject.replace("_", " "), topk=TOP_K)
         if n_shot > 0:
             few_shot_subject = few_shot_dataset.select(
                 np.argwhere(few_shot_subjects == subject).flatten()
@@ -115,6 +118,7 @@ def prepare_mmlu(
                             choices=inst["choices"],
                             question=inst["question"].strip(),
                             answer=answers[inst["answer"]],
+                            topk=TOP_K,
                         )
                         + "\n\n"
                     )
@@ -180,7 +184,7 @@ def prepare_trivia_qa(
     few_shot_dataset = few_shot_dataset_func()
 
     x, y = [], []
-    formatted_few_shot_prompt = description
+    formatted_few_shot_prompt = description.format(topk=TOP_K)
     if n_shot > 0:
         few_shot_ids = np.random.choice(len(few_shot_dataset), n_shot, replace=False)
         few_shot_data = few_shot_dataset.select(few_shot_ids)
@@ -196,6 +200,7 @@ def prepare_trivia_qa(
                     few_shot_prompt.format(
                         question=inst["question"].strip(),
                         answer=inst["answer"]["normalized_value"],
+                        topk=TOP_K,
                     )
                     + "\n\n"
                 )
@@ -244,7 +249,7 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
         "en": "English",
     }
     x, y = [], []
-    for inst in dataset["translation"]:
+    for inst in tqdm(dataset["translation"]):
         x.append(
             prompt.format(
                 source_lang=column_lang[input_column],
