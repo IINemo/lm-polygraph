@@ -279,6 +279,7 @@ def generate_coqa_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
+        "instruct": True,
     }
 
 
@@ -300,6 +301,7 @@ def generate_mmlu_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
+        "instruct": True,
     }
 
 
@@ -322,6 +324,7 @@ def generate_triviaqa_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
+        "instruct": True,
     }
 
 
