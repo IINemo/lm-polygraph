@@ -2,11 +2,8 @@ import openai
 import os
 import time
 import logging
-
-from filelock import FileLock
-import diskcache as dc
-
 from singleton_decorator import singleton
+import diskcache as dc
 
 
 log = logging.getLogger()

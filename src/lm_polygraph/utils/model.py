@@ -192,11 +192,22 @@ class BlackboxModel(Model):
                         "Invalid prompt format. Must be either a string or a list of dictionaries."
                     )
 
-                response = openai.ChatCompletion.create(
-                    model=self.model_path,
-                    messages=messages,
-                    **args,
-                )
+                retries = 0
+                while True:
+                    try:
+                        response = openai.ChatCompletion.create(
+                            model=self.model_path,
+                            messages=messages,
+                            **args,
+                        )
+                        break
+                    except Exception as e:
+                        if retries > 4:
+                            raise Exception from e
+                        else:
+                            retries += 1
+                            continue
+
                 if args["n"] == 1:
                     texts.append(response.choices[0].message.content)
                 else:
@@ -418,7 +429,7 @@ class WhiteboxModel(Model):
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
-        sequences = self.model.generate(**batch, **args).sequences.cpu()
+        sequences = self.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
 

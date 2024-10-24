@@ -1,0 +1,6 @@
+process_output_fn:
+  path: output_processing_scripts/triviaqa.py
+  fn_name: process_output_top1_triviaqa
+process_target_fn:
+  path: output_processing_scripts/triviaqa.py
+  fn_name: normalize_em_triviaqa

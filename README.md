@@ -14,7 +14,7 @@ The framework also introduces an extendable benchmark for consistent evaluation 
 ### From GitHub
 To install latest from main brach, clone the repo and conduct installation using pip, it is recommended to use virtual environment. Code example is presented below:
 
-```console
+```shell
 git clone https://github.com/IINemo/lm-polygraph.git
 python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
@@ -24,7 +24,7 @@ pip install .
 
 Installation from GitHub is recommended if you want to explore notebooks with examples or use default benchmarking configurations, as they are included in the repository but not in the PyPI package. However code from the main branch may be unstable, so it is recommended to checkout to the latest stable release before installation:
 
-```console
+```shell
 git clone https://github.com/IINemo/lm-polygraph.git
 git checkout tags/v0.3.0
 python3 -m venv env # Substitute this with your virtual environment creation command
@@ -36,7 +36,7 @@ pip install .
 ### From PyPI
 To install the latest stable version from PyPI, run:
 
-```console
+```shell
 python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
 pip install lm-polygraph
@@ -44,7 +44,7 @@ pip install lm-polygraph
 
 To install a specific version, run:
 
-```console
+```shell
 python3 -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
 pip install lm-polygraph==0.3.0

@@ -3,18 +3,26 @@ defaults:
   - top1_processing
   - _self_
 
-experiment_name: mmlu_verb_2s_top1
+experiment_name: mmlu_empirical_baselines
 
 description: "Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>"
 few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}"
 prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
 max_new_tokens: 13
+generation_params:
+  generate_until:
+    - "\n"
 
+use_seq_ue: true
+include_whitebox_ue: false
 additional_estimators: 
-  - module: lm_polygraph.estimators.verbalized_2s
-    class_name: Verbalized2S
+  - module: lm_polygraph.estimators.semantic_entropy
+    class_name: SemanticEntropy
     kwargs:
-      confidence_prompt: "Provide the probability that your guess is correct. Give ONLY the probability, no other words or explanation.\n\nFor example:\n\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>"
-      confidence_regex: 'Probability: (\d+\.\d+)'
-      max_new_tokens: 10 
-      name_postfix: "_top1"
+      class_probability_estimation: frequency
+  - module: lm_polygraph.estimators.p_true_empirical
+    class_name: PTrueEmpirical
+    kwargs: {}
+  - module: lm_polygraph.estimators.label_prob
+    class_name: LabelProb
+    kwargs: {}

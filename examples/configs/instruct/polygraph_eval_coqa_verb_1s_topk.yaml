@@ -1,5 +1,6 @@
 defaults:
   - polygraph_eval_coqa_default_instruct
+  - topk_processing_coqa
   - _self_
 
 experiment_name: coqa_verb_1s_topk
@@ -9,7 +10,6 @@ description: "Here's a short story:\n\n{story} (End of story)\n\nProvide your ${
 few_shot_prompt: "Question: {question}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG${topk}: <other guess>\nP${topk}: <probability of this guess>"
 prompt: "Question: {question}\n"
 max_new_tokens: 150
-output_ignore_regex: "(?s).*G1: |\nP1.*"
 
 additional_estimators: 
   - module: lm_polygraph.estimators.verbalized_1s
