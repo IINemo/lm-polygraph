@@ -256,6 +256,7 @@ class UEManager:
         max_new_tokens: int = 100,
         background_train_dataset_max_new_tokens: int = 100,
         cache_path=os.path.expanduser("~") + "/.cache",
+        save_stats: List[str] = []
     ):
         """
         Parameters:
@@ -400,6 +401,7 @@ class UEManager:
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
         self.total_bad_estimators: Dict[Estimator, float] = {}
         self.stats: Dict[str, List] = defaultdict(list)
+        self.save_stats = list(set(['greedy_texts', 'greedy_tokens']) + set(save_stats))
 
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
@@ -474,7 +476,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
+            for key in self.save_stats:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
