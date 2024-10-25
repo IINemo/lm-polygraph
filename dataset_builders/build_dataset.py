@@ -253,7 +253,7 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
         "en": "English",
     }
     x, y = [], []
-    for inst in tqdm(dataset["translation"]):
+    for inst in dataset["translation"]:
         x.append(
             prompt.format(
                 source_lang=column_lang[input_column],
