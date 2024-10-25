@@ -1,11 +1,9 @@
 import re
 import string
 
-from default import (
-    TOP1_OUTPUT_IGNORE_REGEX,
-    TOPK_OUTPUT_IGNORE_REGEX,
-    CoT_OUTPUT_IGNORE_REGEX,
-)
+TOP1_OUTPUT_IGNORE_REGEX = re.compile(r"(?s)[Gg]uess:|[\n\.\(\,].*")
+TOPK_OUTPUT_IGNORE_REGEX = re.compile(r"(?s)G1:|[\n\.\(\,].*")
+CoT_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*[Gg]uess:|[\n\.\(\,].*")
 
 
 def normalize_em_coqa(s: str) -> str:
