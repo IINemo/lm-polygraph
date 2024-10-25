@@ -45,7 +45,7 @@ class BuilderStatCalculators:
     def __init__(self, available_stat_calculators, builder_environment):
         self._builder_environment = builder_environment
         self._available_stat_calculators = available_stat_calculators
-        
+
     def _resolve_stat_calculators(self):
         log.info("=" * 100)
         log.info("Initializing stat calculators...")
@@ -53,13 +53,13 @@ class BuilderStatCalculators:
         stat_calculators_dict = self.stat_calculators_dict
         stat_dependencies_dict = self.stat_dependencies_dict
 
-        #self.stat_calculators_dict = stat_calculators_dict
+        # self.stat_calculators_dict = stat_calculators_dict
 
         # if isinstance(self.model, BlackboxModel):
         #     greedy = ["blackbox_greedy_texts"]
         # else:
         #     greedy = ["greedy_tokens", "greedy_texts"]
-        
+
         greedy = ["greedy_texts"]
         if not isinstance(self.model, BlackboxModel):
             greedy += ["greedy_tokens"]
@@ -89,8 +89,10 @@ class BuilderStatCalculators:
             )
         ]  # below in calculate() we copy X in blackbox_X
 
-        self.stat_calculators = self._builder_environment([stat_calculators_dict[c] for c in stats])
-        
+        self.stat_calculators = self._builder_environment(
+            [stat_calculators_dict[c] for c in stats]
+        )
+
         # : List[StatCalculator] = (
         #     self.stat_resolver.init_calculators(
         #         [stat_calculators_dict[c] for c in stats]
@@ -145,7 +147,9 @@ class BuilderStatCalculators:
             stat_dependencies_dict,
         )
 
-        self.background_train_stat_calculators = self.builder_stat_calculators(background_train_stats)
+        self.background_train_stat_calculators = self.builder_stat_calculators(
+            background_train_stats
+        )
 
         # self.background_train_stat_calculators: List[StatCalculator] = (
         #     self.stat_resolver.init_calculators(

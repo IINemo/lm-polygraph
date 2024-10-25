@@ -21,20 +21,24 @@ def load_simple_estimators(name, config):
         SentenceSAR,
         RenyiNeg,
         FisherRao,
+        MahalanobisDistanceSeq,
+        RelativeMahalanobisDistanceSeq,
+        RDESeq,
+        PPLMDSeq,
         MaximumClaimProbability,
         PerplexityClaim,
         MaxTokenEntropyClaim,
         PointwiseMutualInformationClaim,
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
-        RandomBaselineClaim
+        RandomBaselineClaim,
     ]
 
     try:
         simple_estimators = {e.__name__: e for e in SIMPLE_ESTIMATORS}
         est = simple_estimators[name](**config)
         return est
-    
+
     except KeyError:
         return None
 
@@ -44,6 +48,6 @@ class FactoryEstimator:
         est = load_simple_estimators(name, config)
         if est is not None:
             return est
-        
+
         module = import_module(name)
         return module.load_estimator(config)

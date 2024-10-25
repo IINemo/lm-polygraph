@@ -21,9 +21,12 @@ from lm_polygraph.ue_metrics.ue_metric import (
 )
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.utils.builder_enviroment_stat_calculator import BuilderEnvironmentStatCalculator
+from lm_polygraph.utils.builder_enviroment_stat_calculator import (
+    BuilderEnvironmentStatCalculator,
+)
 
 import logging
+
 log = logging.getLogger("lm_polygraph")
 
 
@@ -253,7 +256,7 @@ class UEManager:
         ignore_exceptions: bool = True,
         ensemble_model: Optional[WhiteboxModel] = None,
         verbose: bool = True,
-        max_new_tokens: int = 100
+        max_new_tokens: int = 100,
     ):
         """
         Parameters:
@@ -282,7 +285,7 @@ class UEManager:
         #     nli_model_device=deberta_device,
         #     cache_path=cache_path,
         # )
-        
+
         # stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
         #     deberta_batch_size=deberta_batch_size,
         #     deberta_device=deberta_device,
@@ -326,13 +329,13 @@ class UEManager:
         stat_calculators_dict = self.stat_calculators_dict
         stat_dependencies_dict = self.stat_dependencies_dict
 
-        #self.stat_calculators_dict = stat_calculators_dict
+        # self.stat_calculators_dict = stat_calculators_dict
 
         # if isinstance(self.model, BlackboxModel):
         #     greedy = ["blackbox_greedy_texts"]
         # else:
         #     greedy = ["greedy_tokens", "greedy_texts"]
-        
+
         greedy = ["greedy_texts"]
         if not isinstance(self.model, BlackboxModel):
             greedy += ["greedy_tokens"]
@@ -362,8 +365,10 @@ class UEManager:
             )
         ]  # below in calculate() we copy X in blackbox_X
 
-        self.stat_calculators = self.builder_stat_calculators([stat_calculators_dict[c] for c in stats])
-        
+        self.stat_calculators = self.builder_stat_calculators(
+            [stat_calculators_dict[c] for c in stats]
+        )
+
         # : List[StatCalculator] = (
         #     self.stat_resolver.init_calculators(
         #         [stat_calculators_dict[c] for c in stats]

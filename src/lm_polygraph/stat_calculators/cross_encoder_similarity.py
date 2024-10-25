@@ -25,16 +25,16 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             "token_similarity",
         ], ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"]
 
-    def __init__(self, nli_model, cross_encoder_name: str = "cross-encoder/stsb-roberta-large"):
+    def __init__(
+        self, nli_model, cross_encoder_name: str = "cross-encoder/stsb-roberta-large"
+    ):
         super().__init__()
         self.crossencoder_setup = False
         self.nli_model = nli_model
         self.cross_encoder_name = cross_encoder_name
 
     def _setup(self, device="cuda"):
-        self.crossencoder = CrossEncoder(
-            self.cross_encoder_name, device=device
-        )
+        self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
 
     def __call__(
         self,

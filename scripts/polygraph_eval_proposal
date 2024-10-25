@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+
+import hydra
+import importlib
+import os
+import torch
+import transformers
+import argparse
+from pathlib import Path
+import json
+
+import logging
+
+log = logging.getLogger('lm_polygraph')
+
+from lm_polygraph.utils.manager import UEManager
+from lm_polygraph.utils.dataset import Dataset
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, create_ensemble
+from lm_polygraph.utils.processor import Logger
+from lm_polygraph.generation_metrics import *
+from lm_polygraph.estimators import *
+from lm_polygraph.utils.openai_chat import OpenAIChat
+from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
+from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
+from lm_polygraph.estimators.ensemble_token_measures import *
+from lm_polygraph.ue_metrics import *
+from lm_polygraph.utils.common import load_external_module
+from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.defaults.register_default_stat_calculators import (
+    register_default_stat_calculators,
+)
+from lm_polygraph.utils.builder_enviroment_stat_calculator import (
+    BuilderEnvironmentStatCalculator,
+    StatCalculatorContainer
+)
+from lm_polygraph.utils.builder_stat_calculators import BuilderStatCalculators
+from lm_polygraph.utils.factory_estimator import FactoryEstimator
+
+
+hydra_config = Path(os.environ["HYDRA_CONFIG"])
+
+@hydra.main(
+    version_base=None,
+    config_path=str(hydra_config.parent),
+    config_name=str(hydra_config.name),
+)
+def main(args):
+    save_path = os.getcwd()
+    log.info(f"Main directory: {save_path}")
+    os.chdir(hydra.utils.get_original_cwd())
+
+    save_path = args.save_path if "save_path" in args else save_path
+
+    if args.seed is None or len(args.seed) == 0:
+        args.seed = [1]
+
+    cache_kwargs = {}
+    if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
+        cache_kwargs = {'cache_dir': args.cache_path}
+
+    for seed in args.seed:
+        log.info("=" * 100)
+        log.info(f"SEED: {seed}")
+
+        log.info(f"Loading model {args.model.path}...")
+        transformers.set_seed(seed)
+        
+        model = get_model(args)
+
+        if args.model.ensemble:
+            # Only MC-ensembles for now
+            log.info(f"Creating ensemble...")
+            base_model = get_model(args)
+            ensemble_model = create_ensemble(models=[base_model],
+                                             mc=True,
+                                             seed=args.seed[0],
+                                             ensembling_mode=args.model.ensembling_mode,
+                                             mc_seeds=args.model.mc_seeds,
+                                             dropout_rate=float(args.model.dropout_rate),
+                                             **cache_kwargs
+                                             )
+        else:
+            ensemble_model = None
+
+        log.info("Done with loading model.")
+
+        log.info(f"Loading dataset {args.dataset}...")
+        dataset = Dataset.load(
+            args.dataset,
+            args.text_column,
+            getattr(args, "label_column", None),
+            batch_size=args.batch_size,
+            prompt=getattr(args, "prompt", ""),
+            description=getattr(args, "description", ""),
+            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
+            n_shot=getattr(args, "n_shot", 5),
+            few_shot_split=getattr(args, "few_shot_split", "train"),
+            few_shot_prompt=getattr(args, "few_shot_prompt", None),
+            instruct=getattr(args, "instruct", None),
+            split=args.eval_split,
+            load_from_disk=args.load_from_disk,
+            trust_remote_code=getattr(args, "trust_remote_code", False),
+            **cache_kwargs
+        )
+        log.info("Done with loading eval data.")
+
+        log.info("="*100)
+        log.info("Initializing UE estimators...")
+        estimators = []
+        estimators += get_ue_methods(args, model)
+        log.info("Done loading UE estimators")
+
+        if args.subsample_eval_dataset != -1:
+            dataset.subsample(args.subsample_eval_dataset, seed=seed)
+
+        generation_metrics = get_generation_metrics(args)
+
+        ue_metrics = get_ue_metrics(args)
+        
+        builder_stat_calculators = BuilderEnvironmentStatCalculator(model=model)
+        available_stat_calculators = get_stat_calculator_names(args)
+
+        man = UEManager(
+            dataset,
+            model,
+            estimators,
+            builder_stat_calculators,
+            available_stat_calculators,
+            generation_metrics,
+            ue_metrics,
+            [
+                Logger(),
+            ],
+            ignore_exceptions=args.ignore_exceptions,
+            max_new_tokens=args.max_new_tokens,
+            ensemble_model=ensemble_model,
+        )
+
+        man()
+
+        man.save(save_path + f"/ue_manager_seed{seed}")
+
+
+def get_ue_metrics(args):
+    ue_metrics = [
+        ReversedPairsProportion(),
+        PredictionRejectionArea(),
+        PredictionRejectionArea(max_rejection=0.5),
+        RiskCoverageCurveAUC(),
+    ]
+    if getattr(args, "use_claim_ue", False):
+        ue_metrics += [
+            ROCAUC(),
+            PRAUC(),
+        ]
+    return ue_metrics
+
+
+def get_stat_calculator_names(config):
+    result_stat_calculators = dict()
+    result_stat_dependencies = dict()
+
+    for stat_calculator in config.stat_calculators:
+        if stat_calculator == "auto":
+            sc, sd = register_default_stat_calculators(config)
+            # sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
+            result_stat_calculators.update(sc)
+            result_stat_dependencies.update(sd)
+        else:
+            result_stat_calculators.update(
+                {
+                    s: StatCalculatorContainer(
+                        name=stat_calculator.name,
+                        cfg=stat_calculator.cfg,
+                        stats=stat_calculator.stats,
+                        dependencies=stat_calculator.dependencies,
+                        builder=stat_calculator.builder,
+                    )
+                    for s in stat_calculator.stats
+                }
+            )
+            result_stat_dependencies.update(
+                {
+                    s: (
+                        stat_calculator.dependencies
+                        if stat_calculator.dependencies is not None
+                        else []
+                    )
+                    for s in stat_calculator.stats
+                }
+            )
+
+    return result_stat_calculators, result_stat_dependencies
+
+def get_ue_methods(config, model):
+    result_estimators = []
+    factory = FactoryEstimator()
+    for estimator in config.estimators:
+        result_estimators.append(
+            factory(estimator.name, estimator.cfg if "cfg" in estimator else dict())
+        )
+    return result_estimators
+
+def get_generation_metrics(args):
+    log.info("="*100)
+    log.info("Initializing generation metrics...")
+
+    generation_metrics = getattr(args, "generation_metrics", None)
+    if not generation_metrics:
+        result = [
+            RougeMetric("rouge1"),
+            RougeMetric("rouge2"),
+            RougeMetric("rougeL"),
+            BLEUMetric(),
+            BertScoreMetric('rh'),
+            SbertMetric(),
+            AccuracyMetric(
+                target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                normalize = getattr(args, "normalize", False),
+            ),
+            AlignScore(target_is_claims=False if args.task == "ats" else True),
+        ]
+        if getattr(args.model, "type", "Whitebox") != "Blackbox":
+            if getattr(args, "use_claim_ue", False):
+                result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
+        if args.task == "nmt":
+            ignore_regex = getattr(args, "source_ignore_regex", None)
+            result += [Comet(source_ignore_regex = ignore_regex)]
+    else:
+        result = []
+        for metric in generation_metrics:
+            metric_name = metric["name"]
+            metric_class = globals()[metric_name]
+            metric_args = metric.get("args", [])
+            result.append(metric_class(*metric_args))
+
+    process_output_fn = getattr(args, "process_output_fn", None)
+    process_target_fn = getattr(args, "process_target_fn", None)
+    if process_target_fn or process_output_fn:
+        if (getattr(args, "target_ignore_regex", None) or 
+            getattr(args, "output_ignore_regex", None) or
+            getattr(args, "normalize", False)):
+            raise ValueError("Specifying ignore_regex or normalize simultaneously with process scripts is not allowed.")
+
+        def load_process_fn(fn_config):
+            if not fn_config:
+                return None
+            path = get_abs_path_from_hydra_config(fn_config.path)
+            module = load_external_module(path)
+            return getattr(module, fn_config.fn_name)
+
+        process_output_fn = load_process_fn(process_output_fn)
+        process_target_fn = load_process_fn(process_target_fn)
+
+        result = [PreprocessOutputTarget(metric, process_output_fn, process_target_fn) for metric in result]
+
+    if getattr(args, "multiref", False):
+        # Wrap each metric in AggregatedMetric
+        result = [AggregatedMetric(base_metric=metric) for metric in result]
+
+    log.info("Done with initializing generation metrics.")
+
+    return result
+
+
+def get_model(args, cache_kwargs={}):
+    if getattr(args.model, "type", "Whitebox") == "Blackbox":
+        return get_blackbox_model(args)
+    else:
+        return get_whitebox_model(args, cache_kwargs)
+
+
+def get_blackbox_model(args):
+    provider = getattr(args.model, "provider", "") 
+    if provider is None or provider.strip() == "":
+        raise ValueError("Blackbox model provider cannot be empty or None. Please specify a valid provider.")
+
+    if provider == "openai":
+        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        if openai_api_key is None:
+            raise ValueError("OpenAI API key is not set in the environment variables.")
+        return BlackboxModel.from_openai(
+            openai_api_key=openai_api_key,
+            model_path=args.model.path
+        )
+    elif provider == "huggingface":
+        hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
+        if hf_api_key is None:
+            raise ValueError("HuggingFace API key is not set in the environment variables.")
+        return BlackboxModel.from_huggingface(
+            hf_api_token=hf_api_key,
+            hf_model_id=args.model.path
+        )
+    else:
+        raise ValueError(f"Unsupported black-box model provider: {provider}")
+
+
+def get_whitebox_model(args, cache_kwargs={}):
+    if not "path_to_load_script" in args.model:
+        log.warning(
+            "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
+        )
+        return WhiteboxModel.from_pretrained(
+            args.model.path,
+            getattr(args, "generation_params", {}),
+            device_map=args.model.device_map,
+            add_bos_token=getattr(args.model, "add_bos_token", True),
+            **cache_kwargs
+        )
+
+    path_to_load_script = get_abs_path_from_hydra_config(
+            args.model.path_to_load_script
+        )
+    load_module = load_external_module(path_to_load_script)
+
+    load_model_args = {'model_path': args.model.path}
+    load_model_args.update(args.model.load_model_args)
+    base_model = load_module.load_model(**load_model_args)
+
+    load_tok_args = {'model_path': args.model.path}
+    load_tok_args.update(args.model.load_tokenizer_args)
+    tokenizer = load_module.load_tokenizer(**load_tok_args)
+
+    generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
+
+    model = WhiteboxModel(base_model,
+                          tokenizer,
+                          args.model.path,
+                          args.model.type,
+                          generation_params)
+
+    return model
+
+
+def get_abs_path_from_hydra_config(path: str) -> Path:
+    path = Path(path)
+    if not os.path.isabs(path):
+        path = hydra_config.parent / path
+
+    return path
+
+
+if __name__ == "__main__":
+    main()

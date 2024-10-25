@@ -1,5 +1,7 @@
 from lm_polygraph.utils.deberta import SingletonDeberta
-from lm_polygraph.stat_calculators.greedy_alternatives_nli import GreedyAlternativesFactPrefNLICalculator
+from lm_polygraph.stat_calculators.greedy_alternatives_nli import (
+    GreedyAlternativesFactPrefNLICalculator,
+)
 
 
 def load_stat_calculator(config, builder):

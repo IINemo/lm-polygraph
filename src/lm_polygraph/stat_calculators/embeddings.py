@@ -167,9 +167,9 @@ class EmbeddingsCalculator(StatCalculator):
 
         return ["train_embeddings", "background_train_embeddings"], []
 
-    def __init__(self):
+    def __init__(self, hidden_layer: int = -1):
         super().__init__()
-        self.hidden_layer = -1
+        self.hidden_layer = hidden_layer
 
     def __call__(
         self,

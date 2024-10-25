@@ -9,9 +9,9 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 
 
-def register_default_stat_calculators() -> (
-    Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]
-):
+def register_default_stat_calculators(
+    args,
+) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
     """
     Registers all available statistic calculators to be seen by UEManager
     for properly organizing the calculations order.
@@ -51,12 +51,13 @@ def register_default_stat_calculators() -> (
     _register(BlackboxSamplingGenerationCalculator)
     _register(BartScoreCalculator)
     _register(ModelScoreCalculator)
-    _register(EmbeddingsCalculator)
+    # _register(EmbeddingsCalculator)
+    # _register(EmbeddingsExtractionCalculator)
     _register(EnsembleTokenLevelDataCalculator)
     _register(SemanticMatrixCalculator)
     _register(CrossEncoderSimilarityMatrixCalculator)
     _register(GreedyProbsCalculator)
-    #_register(SemanticClassesCalculator)
+    # _register(SemanticClassesCalculator)
     _register(
         GreedyAlternativesNLICalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
@@ -78,6 +79,12 @@ def register_default_stat_calculators() -> (
                 "device": "cuda",
             }
         },
+    )
+
+    _register(
+        TrainingStatisticExtractionCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_TrainingStatisticExtractionCalculator",
+        {"args": args},
     )
     _register(ClaimsExtractor)
 

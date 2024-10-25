@@ -20,4 +20,4 @@ class WhiteBoxModelBasic(Model):
     def generate_texts(self, input_texts: List[str], **args):
         encoded = self.tokenize(input_texts)
         out = self.generate(encoded, args.pop("args_generate"))
-        return self.tokenizer.batch_decode(out['greedy_tokens'])
+        return self.tokenizer.batch_decode(out["greedy_tokens"])

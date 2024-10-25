@@ -223,7 +223,10 @@ class Dataset:
             for sample in dataset[x_column]:
                 x.append(prompt.format(context=sample["context"].strip()))
                 y.append("")
-        elif any(x in dataset_name.lower() for x in ("person", "explain", "solve", "aktsvigun")):
+        elif any(
+            x in dataset_name.lower()
+            for x in ("person", "explain", "solve", "aktsvigun")
+        ):
             x = dataset[x_column]
             if len(prompt):
                 for i in range(len(x)):

@@ -84,7 +84,9 @@ class OpenAIChat:
                 )
                 time.sleep(sleep_time)
 
-        return openai.OpenAI().chat.completions.create(model=self.openai_model, messages=messages)
+        return openai.OpenAI().chat.completions.create(
+            model=self.openai_model, messages=messages
+        )
 
 
 @singleton
