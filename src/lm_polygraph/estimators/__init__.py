@@ -66,7 +66,9 @@ from .sentence_sar import (
     SentenceSAR,
     OtherSentenceSAR,
     ReweightedSentenceSAR,
-    PPLSentenceSAR
+    PPLSentenceSAR,
+    DistilSentenceSAR,
+    DistilOneSentenceSAR,
 )
 from .sar import SAR
 from .renyi_neg import RenyiNeg

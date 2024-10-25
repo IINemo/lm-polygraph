@@ -71,11 +71,53 @@ additional_estimators:
     class_name: OtherSentenceSAR
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs:
+      t: 1.0
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs:
+      t: 1.0
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs:
+      t: 1.0
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
     class_name: ReweightedSentenceSAR
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: PPLSentenceSAR
     kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSentenceSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSentenceSAR
+    kwargs:
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSentenceSAR
+    kwargs:
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilOneSentenceSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilOneSentenceSAR
+    kwargs:
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilOneSentenceSAR
+    kwargs:
+      use_log: false
+      reverse: false
 
 ignore_exceptions: false
 
