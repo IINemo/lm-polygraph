@@ -88,14 +88,6 @@ class ClaimsExtractor(StatCalculator):
         claim_texts_concatenated: List[str] = []
         claim_input_texts_concatenated: List[str] = []
 
-        # with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
-        #     futures = [
-        #         executor.submit(self.claims_from_text, text, token, model.tokenizer)
-        #         for text, token in zip(greedy_texts, greedy_tokens)
-        #     ]
-        #     for future in tqdm(futures, total=len(futures), desc="Extracting claims"):
-        #         result = future.result()
-        #         claims.append(result)
         with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
             claims = list(
                 tqdm(
