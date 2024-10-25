@@ -41,8 +41,8 @@ class ClaimsExtractor(StatCalculator):
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
         self.progress_bar = progress_bar
-        self.extraction_prompts = extraction_prompts 
-        self.matching_prompts = matching_prompts 
+        self.extraction_prompts = extraction_prompts
+        self.matching_prompts = matching_prompts
         self.n_threads = n_threads
 
     @staticmethod
@@ -56,7 +56,7 @@ class ClaimsExtractor(StatCalculator):
             [
                 "greedy_texts",
                 "greedy_tokens",
-            ]
+            ],
         )
 
     def __call__(
@@ -88,31 +88,33 @@ class ClaimsExtractor(StatCalculator):
         claim_texts_concatenated: List[str] = []
         claim_input_texts_concatenated: List[str] = []
 
+        # with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
+        #     futures = [
+        #         executor.submit(self.claims_from_text, text, token, model.tokenizer)
+        #         for text, token in zip(greedy_texts, greedy_tokens)
+        #     ]
+        #     for future in tqdm(futures, total=len(futures), desc="Extracting claims"):
+        #         result = future.result()
+        #         claims.append(result)
         with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
-            futures = [
-                executor.submit(self.claims_from_text, text, token, model.tokenizer)
-                for text, token in zip(greedy_texts, greedy_tokens)
-            ]
-            for future in tqdm(futures, total=len(futures), desc="Extracting claims"):
-                result = future.result()
-                claims.append(result)
-        
+            claims = list(
+                tqdm(
+                    executor.map(
+                        self.claims_from_text,
+                        greedy_texts,
+                        greedy_tokens,
+                        [model.tokenizer] * len(greedy_texts),
+                    ),
+                    total=len(greedy_texts),
+                    desc="Extracting claims",
+                    disable=not self.progress_bar,
+                )
+            )
+
         for c in claims:
             for claim in c:
                 claim_texts_concatenated.append(claim.claim_text)
                 claim_input_texts_concatenated.append(texts[0])
-        # for greedy_text, greedy_tok, inp_text in zip(
-        #     greedy_texts,
-        #     greedy_tokens,
-        #     texts,
-        # ):
-        #     claims.append(
-        #         self.claims_from_text(greedy_text, greedy_tok, model.tokenizer)
-        #     )
-        #     # Iterate over newly added claims to concatenate into list
-        #     for c in claims[-1]:
-        #         claim_texts_concatenated.append(c.claim_text)
-        #         claim_input_texts_concatenated.append(inp_text)
 
         return {
             "claims": claims,
