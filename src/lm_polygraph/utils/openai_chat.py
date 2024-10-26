@@ -2,7 +2,6 @@ import openai
 import os
 import time
 import logging
-from singleton_decorator import singleton
 import diskcache as dc
 
 
@@ -87,9 +86,3 @@ class OpenAIChat:
         return openai.OpenAI().chat.completions.create(
             model=self.openai_model, messages=messages
         )
-
-
-@singleton
-class SingletonOpenAIChat(OpenAIChat):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
