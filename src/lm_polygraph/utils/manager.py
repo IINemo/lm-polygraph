@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import sys
 import gc
-import os
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple, Optional, Union
@@ -24,6 +23,7 @@ from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 from lm_polygraph.utils.builder_enviroment_stat_calculator import (
     BuilderEnvironmentStatCalculator,
 )
+from lm_polygraph.utils.factory_stat_calculator import FactoryStatCalculator
 
 import logging
 
@@ -230,7 +230,7 @@ class UEManager:
         data: Dataset,
         model: Model,
         estimators: List[Estimator],
-        builder_stat_calculators: BuilderEnvironmentStatCalculator,
+        builder_env_stat_calc: BuilderEnvironmentStatCalculator,
         available_stat_calculators,
         generation_metrics: List[GenerationMetric],
         ue_metrics: List[UEMetric],
@@ -286,21 +286,16 @@ class UEManager:
         self.stat_calculators_dict = available_stat_calculators[0]
         self.stat_dependencies_dict = available_stat_calculators[1]
 
-        self.builder_stat_calculators = builder_stat_calculators
+        self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
 
-    def _resolve_stat_calculators(self):
+        self.init()
+
+    def init(self):
         log.info("=" * 100)
         log.info("Initializing stat calculators...")
 
         stat_calculators_dict = self.stat_calculators_dict
         stat_dependencies_dict = self.stat_dependencies_dict
-
-        # self.stat_calculators_dict = stat_calculators_dict
-
-        # if isinstance(self.model, BlackboxModel):
-        #     greedy = ["blackbox_greedy_texts"]
-        # else:
-        #     greedy = ["greedy_tokens", "greedy_texts"]
 
         greedy = ["greedy_texts"]
         if not isinstance(self.model, BlackboxModel):
@@ -331,17 +326,12 @@ class UEManager:
             )
         ]  # below in calculate() we copy X in blackbox_X
 
-        self.stat_calculators = self.builder_stat_calculators(
+        self.stat_calculators = self.factory_stat_calc(
             [stat_calculators_dict[c] for c in stats]
         )
 
-        # : List[StatCalculator] = (
-        #     self.stat_resolver.init_calculators(
-        #         [stat_calculators_dict[c] for c in stats]
-        #     )
-        # )
         if self.verbose:
-            print("Stat calculators:", self.stat_calculators)
+            log.info(f"Stat calculators: {str(self.stat_calculators)}")
 
         self.ensemble_estimators = []
         single_estimators = []
@@ -352,25 +342,8 @@ class UEManager:
                     break
             if e not in self.ensemble_estimators:
                 single_estimators.append(e)
-        self.estimators = single_estimators
 
-        ensemble_stats = [
-            s
-            for e in self.ensemble_estimators
-            for s in e.stats_dependencies
-            if s.startswith("ensemble")
-        ]
-        ensemble_stats, _ = order_stats(
-            ensemble_stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-        self.ensemble_stat_calculators = self.builder_stat_calculators(ensemble_stats)
-        # self.ensemble_stat_calculators: List[StatCalculator] = (
-        #     self.stat_resolver.init_calculators(
-        #         [stat_calculators_dict[c] for c in ensemble_stats]
-        #     )
-        # )
+        self.estimators = single_estimators
 
         log.info("Done intitializing stat calculators...")
 
@@ -392,7 +365,6 @@ class UEManager:
                 - generation metrics name,
                 - `ue_metrics` name which was used to calculate quality.
         """
-        self._resolve_stat_calculators()
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
         for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):

@@ -26,10 +26,10 @@ from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
 from lm_polygraph.utils.builder_enviroment_stat_calculator import (
-    BuilderEnvironmentStatCalculator,
-    StatCalculatorContainer
+    BuilderEnvironmentStatCalculator
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
+from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
 
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
@@ -158,7 +158,6 @@ def get_stat_calculator_names(config):
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":
             sc, sd = register_default_stat_calculators(config)
-            # sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
             result_stat_calculators.update(sc)
             result_stat_dependencies.update(sd)
         else:

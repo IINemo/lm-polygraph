@@ -27,7 +27,7 @@ class StatCalculator(ABC):
         Placeholder method to return the list of statistics and dependencies for the calculator.
         """
 
-        raise NotImplementedError("Implement stats_and_dependencies method")
+        raise NotImplementedError(f"Implement static meta_info() method {__class__.__name__}")
 
     @polygraph_module_init
     def __init__(self):

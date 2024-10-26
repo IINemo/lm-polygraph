@@ -2,9 +2,7 @@ from typing import Dict, List, Tuple
 from omegaconf import OmegaConf
 
 from lm_polygraph.stat_calculators import *
-
-# from lm_polygraph.utils.factory_stat_calculator import load_simple_stat_calculator
-from lm_polygraph.utils.builder_enviroment_stat_calculator import (
+from lm_polygraph.utils.factory_stat_calculator import (
     StatCalculatorContainer,
 )
 
@@ -45,8 +43,6 @@ def register_default_stat_calculators(
     _register(EntropyCalculator)
     _register(GreedyLMProbsCalculator)
     _register(PromptCalculator)
-    _register(SamplingPromptCalculator)
-    _register(ClaimPromptCalculator)
     _register(SamplingGenerationCalculator)
     _register(BlackboxSamplingGenerationCalculator)
     _register(BartScoreCalculator)
