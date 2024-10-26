@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 import hydra
-import importlib
 import os
-import torch
 import transformers
-import argparse
 from pathlib import Path
-import json
 
 import logging
 
 log = logging.getLogger('lm_polygraph')
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -19,7 +16,6 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, create_ensemb
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
-from lm_polygraph.utils.openai_chat import OpenAIChat
 from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
 from lm_polygraph.estimators.ensemble_token_measures import *
@@ -33,10 +29,10 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
     BuilderEnvironmentStatCalculator,
     StatCalculatorContainer
 )
-from lm_polygraph.utils.builder_stat_calculators import BuilderStatCalculators
+from lm_polygraph.utils.factory_estimator import FactoryEstimator
 
 
-hydra_config = Path(os.environ["HYDRA_CONFIG"])
+hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
 @hydra.main(
     version_base=None,
@@ -107,84 +103,7 @@ def main(args):
         log.info("Initializing UE estimators...")
         estimators = []
         estimators += get_ue_methods(args, model)
-        density_based_ue_methods = get_density_based_ue_methods(args, model.model_type)
-        estimators += density_based_ue_methods
         log.info("Done loading UE estimators")
-
-        if any([not getattr(method, "is_fitted", False) for method in density_based_ue_methods]):
-            log.info("="*100)
-            log.info(f"Loading train dataset...")
-            if (args.train_dataset is not None) and (
-                    args.train_dataset != args.dataset
-            ):
-                train_dataset = Dataset.load(
-                    args.train_dataset,
-                    args.text_column,
-                    getattr(args, "label_column", None),
-                    batch_size=args.batch_size,
-                    prompt=getattr(args, "prompt", ""),
-                    description=getattr(args, "description", ""),
-                    mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
-                    n_shot=getattr(args, "n_shot", 5),
-                    few_shot_split=getattr(args, "few_shot_split", "train"),
-                    few_shot_prompt=getattr(args, "few_shot_prompt", None),
-                    instruct=getattr(args, "instruct", None),
-                    split=args.train_split,
-                    size=10_000,
-                    load_from_disk=args.load_from_disk,
-                    trust_remote_code=getattr(args, "trust_remote_code", False),
-                    **cache_kwargs
-                )
-            elif args.train_test_split:
-                X_train, X_test, y_train, y_test = dataset.train_test_split(
-                    test_size=args.test_split_size, seed=seed, split=args.eval_split
-                )
-                train_dataset = Dataset(
-                    x=X_train, y=y_train, batch_size=args.batch_size
-                )
-            else:
-                train_dataset = Dataset.load(
-                    args.dataset,
-                    args.text_column,
-                    getattr(args, "label_column", None),
-                    batch_size=args.batch_size,
-                    prompt=getattr(args, "prompt", ""),
-                    description=getattr(args, "description", ""),
-                    mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100),
-                    n_shot=getattr(args, "n_shot", 5),
-                    few_shot_split=getattr(args, "few_shot_split", "train"),
-                    few_shot_prompt=getattr(args, "few_shot_prompt", None),
-                    instruct=getattr(args, "instruct", None),
-                    split=args.train_split,
-                    size=10_000,
-                    load_from_disk=args.load_from_disk,
-                    trust_remote_code=getattr(args, "trust_remote_code", False),
-                    **cache_kwargs
-                )
-
-            background_train_dataset = Dataset.load(
-                args.background_train_dataset,
-                args.background_train_dataset_text_column,
-                args.background_train_dataset_label_column,
-                batch_size=args.batch_size,
-                data_files=args.background_train_dataset_data_files,
-                split="train",
-                size=100_000,
-                load_from_disk=args.background_load_from_disk,
-                trust_remote_code=getattr(args, "trust_remote_code", False),
-                **cache_kwargs
-            )
-
-            if args.subsample_train_dataset != -1:
-                train_dataset.subsample(args.subsample_train_dataset, seed=seed)
-            if args.subsample_background_train_dataset != -1:
-                background_train_dataset.subsample(
-                    args.subsample_background_train_dataset, seed=seed
-                )
-            log.info(f"Done loading train data.")
-        else:
-            train_dataset = None
-            background_train_dataset = None
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
@@ -192,33 +111,24 @@ def main(args):
         generation_metrics = get_generation_metrics(args)
 
         ue_metrics = get_ue_metrics(args)
-
+        
+        builder_stat_calculators = BuilderEnvironmentStatCalculator(model=model)
         available_stat_calculators = get_stat_calculator_names(args)
-        builder_env_sc = BuilderEnvironmentStatCalculator(model=model)
-        builder_stat_calculators = BuilderStatCalculators(
-            builder_env_sc,
-            available_stat_calculators[0],
-            available_stat_calculators[1],
-        )
-        stat_calculators = builder_stat_calculators.get_stat_calculators()
 
         man = UEManager(
             dataset,
             model,
             estimators,
+            builder_stat_calculators,
+            available_stat_calculators,
             generation_metrics,
             ue_metrics,
             [
                 Logger(),
             ],
-            deberta_batch_size=getattr(args, 'deberta_batch_size', 10),
-            train_data=train_dataset,
             ignore_exceptions=args.ignore_exceptions,
-            background_train_data=background_train_dataset,
             max_new_tokens=args.max_new_tokens,
             ensemble_model=ensemble_model,
-            cache_path=args.cache_path,
-            language=getattr(args, 'language', 'en'),
         )
 
         man()
@@ -247,8 +157,8 @@ def get_stat_calculator_names(config):
 
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":
-            sc, sd = register_default_stat_calculators()
-            sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
+            sc, sd = register_default_stat_calculators(config)
+            # sc = {k: StatCalculatorContainer(obj=v) for k, v in sc.items()}
             result_stat_calculators.update(sc)
             result_stat_dependencies.update(sd)
         else:
@@ -277,153 +187,14 @@ def get_stat_calculator_names(config):
 
     return result_stat_calculators, result_stat_dependencies
 
-
-def get_density_based_ue_methods(args, model_type):
-    estimators = []
-    if getattr(args, "use_density_based_ue", False):
-        if getattr(args, 'parameters_path', False):
-            parameters_path = args.parameters_path
-        else:
-            dataset_name = args.dataset if isinstance(args.dataset, str) else '_'.join(args.dataset)
-            dataset_name = dataset_name.split("/")[-1].split(".")[0]
-            model_name = args.model.path.split("/")[-1]
-            parameters_path = f"{args.cache_path}/density_stats/{dataset_name}/{model_name}"
-        
-        if model_type == "Seq2SeqLM":
-            estimators += [
-                MahalanobisDistanceSeq("encoder", parameters_path=parameters_path),
-                RelativeMahalanobisDistanceSeq(
-                    "encoder", parameters_path=parameters_path
-                ),
-                RDESeq("encoder", parameters_path=parameters_path),
-                PPLMDSeq("encoder", md_type="MD", parameters_path=parameters_path),
-                PPLMDSeq("encoder", md_type="RMD", parameters_path=parameters_path),
-            ]
-
-        estimators += [
-            MahalanobisDistanceSeq("decoder", parameters_path=parameters_path),
-            RelativeMahalanobisDistanceSeq(
-                "decoder", parameters_path=parameters_path
-            ),
-            RDESeq("decoder", parameters_path=parameters_path),
-            PPLMDSeq("decoder", md_type="MD", parameters_path=parameters_path),
-            PPLMDSeq("decoder", md_type="RMD", parameters_path=parameters_path),
-        ]
-    return estimators
-
-
-def get_ue_methods(args, model):
-    estimators = []
-    if getattr(args.model, "type", "Whitebox") == "Blackbox":
-        if getattr(args, "use_seq_ue", False):
-            estimators += [
-                LexicalSimilarity(metric="rouge1"),
-                LexicalSimilarity(metric="rouge2"),
-                LexicalSimilarity(metric="rougeL"),
-                LexicalSimilarity(metric="BLEU"),
-                NumSemSets(),
-                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-                EigValLaplacian(similarity_score="Jaccard_score"),
-                DegMat(similarity_score="NLI_score", affinity="entail"),
-                DegMat(similarity_score="NLI_score", affinity="contra"),
-                DegMat(similarity_score="Jaccard_score"),
-                Eccentricity(similarity_score="NLI_score", affinity="entail"),
-                Eccentricity(similarity_score="NLI_score", affinity="contra"),
-                Eccentricity(similarity_score="Jaccard_score"),
-            ]
-
-        if getattr(args, "use_ens_ue", False):
-            raise NotImplementedError('Ensemble UE methods not applicable for blackbox models')
-
-        if getattr(args, "use_tok_ue", False):
-            raise NotImplementedError('Token UE methods not applicable for blackbox models')
-
-        if getattr(args, "use_claim_ue", False):
-            raise NotImplementedError('Claim UE methods not applicable for blackbox models')
-    else:
-        if getattr(args, "use_seq_ue", False):
-            estimators += [
-                MaximumSequenceProbability(),
-                Perplexity(),
-                MeanTokenEntropy(),
-                MeanPointwiseMutualInformation(),
-                MeanConditionalPointwiseMutualInformation(),
-                ClaimConditionedProbability(),
-                PTrue(),
-                PTrueSampling(),
-                MonteCarloSequenceEntropy(),
-                MonteCarloNormalizedSequenceEntropy(),
-                LexicalSimilarity(metric="rouge1"),
-                LexicalSimilarity(metric="rouge2"),
-                LexicalSimilarity(metric="rougeL"),
-                LexicalSimilarity(metric="BLEU"),
-                NumSemSets(),
-                EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-                EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-                EigValLaplacian(similarity_score="Jaccard_score"),
-                DegMat(similarity_score="NLI_score", affinity="entail"),
-                DegMat(similarity_score="NLI_score", affinity="contra"),
-                DegMat(similarity_score="Jaccard_score"),
-                Eccentricity(similarity_score="NLI_score", affinity="entail"),
-                Eccentricity(similarity_score="NLI_score", affinity="contra"),
-                Eccentricity(similarity_score="Jaccard_score"),
-                SemanticEntropy(),
-                SAR(),
-                TokenSAR(),
-                SentenceSAR(),
-                RenyiNeg(),
-                FisherRao(),
-            ]
-
-        if getattr(args, "use_ens_ue", False):
-            # Ensemble-based UE methods have been disabled due to dependency on old
-            # transformers code, which prevents bumping transformers version in 
-            # dependencies past 4.40.0. This is a temporary solution until the
-            # code is updated to work with the latest transformers version.
-            raise NotImplementedError('Ensemble UE methods are not working properly in this version. Consider downgrading to 0.3.0')
-
-            #if not (model.model_type == "Seq2SeqLM"):
-            #    raise NotImplementedError('Only Encoder-Decoder models can be ensembled at this time')
-
-            #token_measures = all_token_estimators()
-            #if args.model.ensembling_mode == 'pe':
-            #    sequence_measures = all_pe_estimators()
-            #elif args.model.ensembling_mode == 'ep':
-            #    sequence_measures = all_ep_estimators()
-            #else:
-            #    raise ValueError(f'Ensemble type should be one of: "pe", "ep", but is {args.ens_type} instead')
-            #estimators += (token_measures + sequence_measures)
-
-        if getattr(args, "use_tok_ue", False):
-            estimators += [
-                MaximumTokenProbability(),
-                TokenEntropy(),
-                PointwiseMutualInformation(),
-                ConditionalPointwiseMutualInformation(),
-                SemanticEntropyToken(model.model_path, args.cache_path),
-            ]
-
-        if getattr(args, "use_claim_ue", False):
-            estimators += [
-                MaximumClaimProbability(),
-                PerplexityClaim(),
-                MaxTokenEntropyClaim(),
-                PointwiseMutualInformationClaim(),
-                PTrueClaim(),
-                ClaimConditionedProbabilityClaim(nli_context="no_context"),
-                ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
-            ]
-
-    additional_estimators = getattr(args, "additional_estimators", {})
-
-    for estimator_args in additional_estimators:
-        module = importlib.import_module(estimator_args.module)
-        estimator_class = getattr(module, estimator_args.class_name)
-        estimators.append(estimator_class(**estimator_args.kwargs))
-
-    return estimators
-
+def get_ue_methods(config, model):
+    result_estimators = []
+    factory = FactoryEstimator()
+    for estimator in config.estimators:
+        result_estimators.append(
+            factory(estimator.name, estimator.cfg if "cfg" in estimator else dict())
+        )
+    return result_estimators
 
 def get_generation_metrics(args):
     log.info("="*100)
