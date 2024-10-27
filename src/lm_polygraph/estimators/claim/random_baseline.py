@@ -7,7 +7,7 @@ from lm_polygraph.estimators.estimator import Estimator
 
 class RandomBaselineClaim(Estimator):
     """
-    Estimates the claim-level maximum token entropy.
+    Provides the claim-level random score. Useful for reporting metrics such as F1 or PR-AUC due to class inbalance.
     """
 
     def __init__(self):
@@ -22,12 +22,10 @@ class RandomBaselineClaim(Estimator):
 
         Parameters:
             stats (Dict[str, object]): input statistics, which for multiple samples includes:
-                * log p(y_i | y_<i, x) in 'greedy_log_likelihoods',
                 * list of extracted claims of type lm_polygraph.stat_calculators.extract_claims.Claim
                   in 'claims'.
         Returns:
-            List[List[float]]: concatenated minus log probabilities for each claim.
-                Higher values indicate more uncertain samples.
+            List[List[float]]: concatenated random variables.
         """
         claims = stats["claims"]
         claim_ue = []
