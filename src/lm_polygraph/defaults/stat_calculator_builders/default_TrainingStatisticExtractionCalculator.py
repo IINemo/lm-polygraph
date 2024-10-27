@@ -17,6 +17,7 @@ def load_dataset(args):
             dataset_name = args.train_dataset
         else:
             dataset_name = args.dataset
+        
         train_dataset = Dataset.load(
             dataset_name,
             args.text_column,
@@ -34,6 +35,7 @@ def load_dataset(args):
             load_from_disk=args.load_from_disk,
             trust_remote_code=getattr(args, "trust_remote_code", False),
         )
+        
     background_train_dataset = Dataset.load(
         args.background_train_dataset,
         args.background_train_dataset_text_column,

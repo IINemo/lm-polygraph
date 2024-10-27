@@ -12,13 +12,13 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, create_ensemble
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
-from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
-from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
-from lm_polygraph.estimators.ensemble_token_measures import *
+# from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
+# from lm_polygraph.estimators.ensemble_sequence_measures import all_ep_estimators, all_pe_estimators
+# from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module
 from lm_polygraph.utils.generation_parameters import GenerationParameters
@@ -61,21 +61,6 @@ def main(args):
         transformers.set_seed(seed)
         
         model = get_model(args)
-
-        if args.model.ensemble:
-            # Only MC-ensembles for now
-            log.info(f"Creating ensemble...")
-            base_model = get_model(args)
-            ensemble_model = create_ensemble(models=[base_model],
-                                             mc=True,
-                                             seed=args.seed[0],
-                                             ensembling_mode=args.model.ensembling_mode,
-                                             mc_seeds=args.model.mc_seeds,
-                                             dropout_rate=float(args.model.dropout_rate),
-                                             **cache_kwargs
-                                             )
-        else:
-            ensemble_model = None
 
         log.info("Done with loading model.")
 
@@ -127,8 +112,7 @@ def main(args):
                 Logger(),
             ],
             ignore_exceptions=args.ignore_exceptions,
-            max_new_tokens=args.max_new_tokens,
-            ensemble_model=ensemble_model,
+            max_new_tokens=args.max_new_tokens
         )
 
         man()
