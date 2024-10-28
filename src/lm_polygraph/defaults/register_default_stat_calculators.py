@@ -7,36 +7,46 @@ from lm_polygraph.utils.factory_stat_calculator import (
 )
 
 
-def register_default_stat_calculators(
-    args,
-) -> Tuple[Dict[str, "StatCalculator"], Dict[str, List[str]]]:
+def register_default_stat_calculators() -> List[StatCalculatorContainer]:
     """
     Registers all available statistic calculators to be seen by UEManager
     for properly organizing the calculations order.
     """
-    stat_calculators: Dict[str, "StatCalculator"] = {}
-    stat_dependencies: Dict[str, List[str]] = {}
+    all_stat_calculators = []
 
     def _register(
         calculator_class: StatCalculator,
         builder="lm_polygraph.utils.builder_stat_calculator_simple",
         default_config=dict(),
     ):
-        stats, dependencies = calculator_class.meta_info()
-        for stat in stats:
-            if stat in stat_calculators.keys():
-                continue
+        cfg = dict()
+        cfg.update(default_config)
+        cfg["obj"] = calculator_class.__name__
 
-            dct = dict()
-            dct.update(default_config)
-            dct.update({"obj": calculator_class.__name__})
-            dct = OmegaConf.create(dct)
-            stat_calculators[stat] = StatCalculatorContainer(
-                obj=calculator_class,
-                builder=builder,
-                cfg=dct,
-            )
-            stat_dependencies[stat] = dependencies
+        sc = StatCalculatorContainer(
+            name=calculator_class.__name__,
+            obj=calculator_class,
+            builder=builder,
+            cfg=OmegaConf.create(cfg),
+            dependencies=calculator_class.meta_info()[1],
+            stats=calculator_class.meta_info()[0],
+        )
+        all_stat_calculators.append(sc)
+        # stats, dependencies = calculator_class.meta_info()
+        # for stat in stats:
+        #     if stat in stat_calculators.keys():
+        #         continue
+
+        #     dct = dict()
+        #     dct.update(default_config)
+        #     dct.update({"obj": calculator_class.__name__})
+        #     dct = OmegaConf.create(dct)
+        #     stat_calculators[stat] = StatCalculatorContainer(
+        #         obj=calculator_class,
+        #         builder=builder,
+        #         cfg=dct,
+        #     )
+        #     stat_dependencies[stat] = dependencies
 
     _register(GreedyProbsCalculator)
     _register(BlackboxGreedyTextsCalculator)
@@ -76,12 +86,7 @@ def register_default_stat_calculators(
             }
         },
     )
-
-    _register(
-        TrainingStatisticExtractionCalculator,
-        "lm_polygraph.defaults.stat_calculator_builders.default_TrainingStatisticExtractionCalculator",
-        {"args": args},
-    )
     _register(ClaimsExtractor)
 
-    return stat_calculators, stat_dependencies
+    return all_stat_calculators
+    # return stat_calculators, stat_dependencies

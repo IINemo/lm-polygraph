@@ -19,7 +19,10 @@ from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 from lm_polygraph.utils.builder_enviroment_stat_calculator import (
     BuilderEnvironmentStatCalculator,
 )
-from lm_polygraph.utils.factory_stat_calculator import FactoryStatCalculator
+from lm_polygraph.utils.factory_stat_calculator import (
+    FactoryStatCalculator,
+    StatCalculatorContainer,
+)
 from lm_polygraph.utils.common import flatten_results
 from lm_polygraph.utils.uq_pipeline import UQPipeline
 
@@ -58,6 +61,7 @@ def order_calculators(
     have_stats: Set[str] = set()
     while len(stats) > 0:
         stat = stats[0]
+        print(stats)
         if stat in have_stats:
             stats = stats[1:]
             continue
@@ -119,7 +123,7 @@ class UEManager(UQPipeline):
         model: Model,
         estimators: List[Estimator],
         builder_env_stat_calc: BuilderEnvironmentStatCalculator,
-        available_stat_calculators,
+        available_stat_calculators: List[StatCalculatorContainer],
         generation_metrics: List[GenerationMetric],
         ue_metrics: List[UEMetric],
         processors: List[Processor],
@@ -169,9 +173,7 @@ class UEManager(UQPipeline):
         self.verbose = verbose
         self.max_new_tokens = max_new_tokens
 
-        self.stat_calculators_dict = available_stat_calculators[0]
-        self.stat_dependencies_dict = available_stat_calculators[1]
-
+        self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
 
         self.init()
@@ -180,8 +182,16 @@ class UEManager(UQPipeline):
         log.info("=" * 100)
         log.info("Initializing stat calculators...")
 
-        stat_calculators_dict = self.stat_calculators_dict
-        stat_dependencies_dict = self.stat_dependencies_dict
+        self.stat_calculators_dict = dict()
+        for sc in self.stat_calculator_descr:
+            for stat in sc.stats:
+                self.stat_calculators_dict[stat] = sc
+            
+        #stat_calculators_dict = {sc.name: sc for sc in self.stat_calculator_descr}
+        stat_dependencies_dict = dict()
+        for sc in self.stat_calculator_descr:
+            for stat in sc.stats:
+                stat_dependencies_dict[stat] = sc.dependencies
 
         greedy = ["greedy_texts"]
         if not isinstance(self.model, BlackboxModel):
@@ -195,7 +205,7 @@ class UEManager(UQPipeline):
 
         stats, have_stats = order_calculators(
             stats,
-            stat_calculators_dict,
+            self.stat_calculators_dict,
             stat_dependencies_dict,
         )
 
@@ -213,7 +223,7 @@ class UEManager(UQPipeline):
         ]  # below in calculate() we copy X in blackbox_X
 
         self.stat_calculators = self.factory_stat_calc(
-            [stat_calculators_dict[c] for c in stats]
+            [self.stat_calculators_dict[c] for c in stats]
         )
 
         if self.verbose:
@@ -253,7 +263,9 @@ class UEManager(UQPipeline):
         """
         iterable_data = tqdm(self.data) if self.verbose else self.data
 
-        def fn_on_batch_callback(batch_i, target_texts, batch_stats, batch_estimations, bad_estimators):
+        def fn_on_batch_callback(
+            batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
+        ):
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
                 self.estimations.pop(key, None)
