@@ -12,7 +12,8 @@ from builders.wiki import CONFIG as wiki_config
 from builders.wmt import CONFIG as wmt_config
 
 
-DATASET_CONFIG = (base_config
+DATASET_CONFIG = (
+    base_config
     | babi_qa_config
     | coqa_config
     | mmlu_config
@@ -21,6 +22,7 @@ DATASET_CONFIG = (base_config
     | wiki_config
     | wmt_config
 )
+
 
 def build_dataset(dataset_name):
     config = DATASET_CONFIG[dataset_name]

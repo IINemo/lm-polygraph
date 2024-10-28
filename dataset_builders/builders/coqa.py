@@ -1,4 +1,4 @@
-from .constants import TOP_K, SEED
+from .constants import TOP_K
 from functools import partial
 
 
