@@ -1,6 +1,7 @@
 import argparse
-import tempfile
 import os
+import pathlib
+import tempfile
 
 
 import huggingface_hub
@@ -112,7 +113,7 @@ def main():
 
     dataset = build_dataset(args.dataset)
     if args.save_to_disk:
-        dataset.save_to_disk(args.dataset)
+        dataset.save_to_disk(pathlib.Path("result") / args.dataset)
 
     if args.publish:
         create_repo_if_not_exists(args.dataset, args.namespace)
