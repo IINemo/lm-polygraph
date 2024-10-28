@@ -41,11 +41,9 @@ def check_result(exec_result):
 
     man = UEManager.load(f"{pwd()}/ue_manager_seed1")
 
-    assert (
-        len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 2
-    )
+    assert len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 2
 
-    os.remove(f"{pwd()}/ue_manager_seed1") 
+    os.remove(f"{pwd()}/ue_manager_seed1")
 
 
 # ================= TEST CASES ==================
@@ -55,25 +53,31 @@ def test_coqa():
     exec_result = run_eval("coqa")
     check_result(exec_result)
 
+
 def test_triviaqa():
     exec_result = run_eval("triviaqa")
     check_result(exec_result)
+
 
 def test_mmlu():
     exec_result = run_eval("mmlu")
     check_result(exec_result)
 
+
 def test_gsm8k():
     exec_result = run_eval("gsm8k")
     check_result(exec_result)
+
 
 def test_wmt14_fren():
     exec_result = run_eval("wmt14_fren")
     check_result(exec_result)
 
+
 def test_wmt19_deen():
     exec_result = run_eval("wmt19_deen")
     check_result(exec_result)
+
 
 def test_xsum():
     exec_result = run_eval("xsum")
