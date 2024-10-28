@@ -60,7 +60,7 @@ def load_dataset(args):
 
 
 def load_stat_calculator(config, builder):
-    train_dataset, background_train_dataset = load_dataset(config.args)
+    train_dataset, background_train_dataset = load_dataset(config)
     return TrainingStatisticExtractionCalculator(
         train_dataset, background_train_dataset
     )
