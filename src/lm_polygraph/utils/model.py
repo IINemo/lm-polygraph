@@ -113,7 +113,8 @@ class BlackboxModel(Model):
         super().__init__(model_path, "Blackbox")
         self.parameters = parameters
         self.openai_api_key = openai_api_key
-        openai.api_key = openai_api_key
+        if openai_api_key is not None:
+            self.openai_api = openai.OpenAI(api_key=openai_api_key)
         self.hf_api_token = hf_api_token
 
     def _query(self, payload):
@@ -195,7 +196,7 @@ class BlackboxModel(Model):
                 retries = 0
                 while True:
                     try:
-                        response = openai.ChatCompletion.create(
+                        response = self.openai_api.chat.completions.create(
                             model=self.model_path,
                             messages=messages,
                             **args,
