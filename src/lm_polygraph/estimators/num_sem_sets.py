@@ -88,7 +88,8 @@ class NumSemSets(Estimator):
         connected_components = self.find_connected_components(graph)
 
         # Calculate the number of connected components
-        num_components = len(connected_components)
+        # Cast to float for consistency with other estimators
+        num_components = float(len(connected_components))
 
         return num_components
 
