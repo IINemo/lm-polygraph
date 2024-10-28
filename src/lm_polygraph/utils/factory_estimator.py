@@ -32,6 +32,8 @@ def load_simple_estimators(name, config):
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
         RandomBaselineClaim,
+        
+        LexicalSimilarity,
     ]
 
     try:
