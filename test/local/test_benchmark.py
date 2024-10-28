@@ -1,7 +1,6 @@
 import subprocess
 import pathlib
 import os
-import sys
 import torch
 
 from lm_polygraph.utils.manager import UEManager
