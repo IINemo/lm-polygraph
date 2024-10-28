@@ -4,7 +4,7 @@
 2. Clone the repository to your local machine
 3. Create a new branch for your changes
 4. Make your changes
-5. If at all possible, add tests for your changes.
+5. If at all possible, add tests for your changes. Tests are required for new methods of uncertainty estimation.
 6. **Make sure to update documentation if needed**
 7. Use flake8 and black to conform to the code style. Github actions will check this automatically using the following command:
     ```bash
