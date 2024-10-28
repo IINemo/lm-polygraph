@@ -65,7 +65,7 @@ This dataset is created in order to separate dataset creation code from benchmar
 
 <!-- This section describes the data collection and processing process such as data selection criteria, filtering and normalization methods, tools and libraries used, etc. -->
 
-Data is collected from {src_url} and processed by using build_dataset.py script in repository.
+Data is collected from {src_url} and processed by using https://github.com/IINemo/lm-polygraph/blob/main/dataset_builders/build_dataset.py script in repository.
 
 #### Who are the source data producers?
 

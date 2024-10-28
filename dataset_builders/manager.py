@@ -97,13 +97,6 @@ def create_repo_if_not_exists(dataset_name, namespace):
         repo_id=path,
         repo_type="dataset",
     )
-    print("Uploading build_dataset.py")
-    api.upload_file(
-        path_or_fileobj="build_dataset.py",
-        path_in_repo="build_dataset.py",
-        repo_id=path,
-        repo_type="dataset",
-    )
 
 
 def main():
