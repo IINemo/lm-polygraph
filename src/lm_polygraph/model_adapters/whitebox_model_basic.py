@@ -3,7 +3,7 @@ from lm_polygraph.utils.model import Model
 from typing import List
 
 
-class WhiteBoxModelBasic(Model):
+class WhiteboxModelBasic(Model):
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
