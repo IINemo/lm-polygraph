@@ -36,4 +36,4 @@ jobs:
         plugins: "flake8-black"
     - name: Test with pytest
       run: |
-        pytest
+        pytest --ignore=tests/local
