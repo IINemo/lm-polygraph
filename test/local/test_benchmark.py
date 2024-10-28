@@ -17,7 +17,7 @@ def run_eval(dataset):
     else:
         device = "cpu"
 
-    command = f"HYDRA_CONFIG={pwd()}/../examples/configs/polygraph_eval_{dataset}.yaml \
+    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
                 subsample_train_dataset=2 \
