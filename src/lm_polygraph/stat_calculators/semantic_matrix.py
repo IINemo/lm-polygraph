@@ -30,15 +30,7 @@ class SemanticMatrixCalculator(StatCalculator):
         ], ["blackbox_sample_texts"]
 
     def __init__(self, nli_model):
-        super().__init__(
-            [
-                "semantic_matrix_entail",
-                "semantic_matrix_contra",
-                "semantic_matrix_classes",
-                "entailment_id",
-            ],
-            ["sample_texts"],
-        )
+        super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
 
