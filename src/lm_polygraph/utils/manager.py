@@ -61,7 +61,6 @@ def order_calculators(
     have_stats: Set[str] = set()
     while len(stats) > 0:
         stat = stats[0]
-        print(stats)
         if stat in have_stats:
             stats = stats[1:]
             continue
@@ -228,18 +227,6 @@ class UEManager(UQPipeline):
 
         if self.verbose:
             log.info(f"Stat calculators: {str(self.stat_calculators)}")
-
-        self.ensemble_estimators = []
-        single_estimators = []
-        for e in self.estimators:
-            for s in e.stats_dependencies:
-                if s.startswith("ensemble"):
-                    self.ensemble_estimators.append(e)
-                    break
-            if e not in self.ensemble_estimators:
-                single_estimators.append(e)
-
-        self.estimators = single_estimators
 
         log.info("Done intitializing stat calculators...")
 
