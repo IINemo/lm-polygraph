@@ -1,7 +1,7 @@
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import Model
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -24,26 +24,29 @@ class InferCausalLMCalculator(StatCalculator):
     """
 
     def __init__(self, n_alternatives=10, tokenize=False, return_embeddings=True):
-        super().__init__(
-            (
-                [
-                    "input_tokens",
-                    "greedy_log_probs",
-                    "greedy_tokens",
-                    "greedy_texts",
-                    "greedy_log_likelihoods",
-                    "train_greedy_log_likelihoods",
-                ]
-                + ["embeddings"]
-                if return_embeddings
-                else []
-            ),
-            [],
-        )
+        super().__init__()
 
         self.n_alternatives = n_alternatives
         self._tokenize = tokenize
         self._return_embeddings = return_embeddings
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "input_texts",
+            "input_tokens",
+            "greedy_log_probs",
+            "greedy_tokens",
+            "greedy_tokens_alternatives",
+            "greedy_texts",
+            "greedy_log_likelihoods",
+            "train_greedy_log_likelihoods",
+            "embeddings",
+        ], []
 
     def _get_embeddings_from_output(
         self,
