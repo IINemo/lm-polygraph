@@ -1,5 +1,3 @@
-from functools import partial
-
 import datasets
 
 from builders.base import CONFIG as base_config
