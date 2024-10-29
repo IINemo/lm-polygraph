@@ -19,10 +19,10 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         Returns the statistics and dependencies for the calculator.
         """
 
-        return ["blackbox_greedy_texts"], []
+        return ["greedy_texts"], []
 
     def __init__(self):
-        super().__init__(["greedy_texts"], [])
+        super().__init__()
 
     def __call__(
         self,

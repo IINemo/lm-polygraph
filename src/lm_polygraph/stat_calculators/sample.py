@@ -18,13 +18,12 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         Returns the statistics and dependencies for the calculator.
         """
 
-        return ["blackbox_sample_texts"], []
+        return ["sample_texts"], []
 
     def __init__(self, samples_n: int = 10):
         super().__init__()
         self.samples_n = samples_n
-        super().__init__(["sample_texts"], [])
-
+        
     def __call__(
         self,
         dependencies: Dict[str, np.array],
