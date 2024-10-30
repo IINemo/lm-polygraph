@@ -59,13 +59,26 @@ class OtherSentenceSAR(Estimator):
     Like SAR, but only looks at other samples for each sample in the output.
     """
 
-    def __init__(self, verbose: bool = False):
+    def __init__(
+        self,
+        verbose: bool = False,
+        t: float = 0.001,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
         super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
         self.verbose = verbose
-        self.t = 0.001
+        self.t = t
+        self.use_log = use_log
+        self.reverse = reverse
 
     def __str__(self):
-        return "OtherSentenceSAR"
+        base = f"OtherSentenceSAR_t{self.t}"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -93,7 +106,15 @@ class OtherSentenceSAR(Estimator):
                 * (1 - np.eye(sample_sentence_similarity.shape[0]))
             )
             sent_relevance = R_s.sum(-1) / self.t
-            E_s = -np.log(sent_relevance)
+
+            if use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                if reverse:
+                    E_s = -sent_relevance
+                else:
+                    E_s = sent_relevance
+
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
@@ -200,6 +221,263 @@ class PPLSentenceSAR(Estimator):
             sent_relevance = R_s.sum(-1) / self.t
             # Compute SentenceSAR (Uncertainty Estimation) using PPL
             E_s = -np.log(sent_relevance + ppl)
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
+
+class DistilSentenceSAR(Estimator):
+    """
+    Like SAR, but only looks at other samples for each sample in the output.
+    """
+
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
+        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        self.verbose = verbose
+        self.use_log = use_log
+        self.reverse = reverse
+
+    def __str__(self):
+        base = "DistilSentenceSAR"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_log_probs = stats["sample_log_probs"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+        for sample_log_probs, sample_sentence_similarity in zip(
+            batch_sample_log_probs, batch_sample_sentence_similarity
+        ):
+            sample_probs = np.exp(np.array(sample_log_probs))
+            R_s = (
+                sample_probs
+                * sample_sentence_similarity
+            )
+            sent_relevance = R_s.sum(-1)
+
+            if use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                if reverse:
+                    E_s = -sent_relevance
+                else:
+                    E_s = sent_relevance
+
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
+
+class DistilSAR(Estimator):
+    """
+    Like SAR, but only looks at other samples for each sample in the output.
+    """
+
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
+        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        self.verbose = verbose
+        self.use_log = use_log
+        self.reverse = reverse
+
+    def __str__(self):
+        base = "DistilSentenceSAR"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_log_probs = stats["sample_log_probs"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+        for sample_log_probs, sample_sentence_similarity in zip(
+            batch_sample_log_probs, batch_sample_sentence_similarity
+        ):
+            sample_probs = np.exp(np.array(sample_log_probs))
+            R_s = (
+                sample_probs
+                * sample_sentence_similarity
+            )
+            sent_relevance = R_s.sum(-1)
+
+            if use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                if reverse:
+                    E_s = -sent_relevance
+                else:
+                    E_s = sent_relevance
+
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
+
+class DistilPPLSAR(Estimator):
+    """
+    Like SAR, but only looks at other samples for each sample in the output.
+    """
+
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
+        super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
+        self.verbose = verbose
+        self.use_log = use_log
+        self.reverse = reverse
+
+    def __str__(self):
+        base = "DistilPPLSAR"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+        for sample_log_likelihoods, sample_sentence_similarity in zip(
+            batch_sample_likelihoods, batch_sample_sentence_similarity
+        ):
+            ppl = np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
+
+            R_s = (
+                ppl
+                * sample_sentence_similarity
+            )
+            sent_relevance = R_s.sum(-1)
+
+            if use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                if reverse:
+                    E_s = -sent_relevance
+                else:
+                    E_s = sent_relevance
+
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
+
+class DistilMTESAR(Estimator):
+    """
+    Like SAR, but only looks at other samples for each sample in the output.
+    """
+
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
+        super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
+        self.verbose = verbose
+        self.use_log = use_log
+        self.reverse = reverse
+
+    def __str__(self):
+        base = "DistilMTESAR"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+        for sample_log_likelihoods, sample_sentence_similarity in zip(
+            batch_sample_likelihoods, batch_sample_sentence_similarity
+        ):
+            entropy = []
+            for lp in sample_log_likelihoods:
+                mask = ~np.isinf(lp)
+                entropy.append(-np.sum(np.array(lp[mask]) * np.exp(lp[mask])))
+
+            R_s = (
+                entropy
+                * sample_sentence_similarity
+            )
+            sent_relevance = R_s.sum(-1)
+
+            if use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                if reverse:
+                    E_s = -sent_relevance
+                else:
+                    E_s = sent_relevance
+
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
