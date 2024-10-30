@@ -52,7 +52,7 @@ def prepare_trivia_qa(
                         question=inst["question"].strip(),
                         answer=inst["answer"]["normalized_value"],
                     )
-                    + "\n\n"
+                    + "\n"
                 )
     else:
         formatted_few_shot_prompt += "\n"

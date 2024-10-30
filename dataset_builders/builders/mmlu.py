@@ -122,7 +122,7 @@ CONFIG = {
             prepare_mmlu,
             output_column="answer",
             prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
-            description="The following are multiple choice questions (with answers) about {subject}.\n",
+            description="The following are multiple choice questions (with answers) about {subject}.",
             mmlu_max_subject_size=100,
             n_shot=5,
             few_shot_dataset_func=partial(

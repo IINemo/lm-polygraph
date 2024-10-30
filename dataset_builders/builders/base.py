@@ -46,7 +46,7 @@ CONFIG = {
     "xsum": {
         "name": "xsum",
         "train_split": "train",
-        "test_split": "validation",
+        "test_split": "test",
         "prepare_func": partial(
             prepare_base,
             input_column="document",
