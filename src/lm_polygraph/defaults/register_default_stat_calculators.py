@@ -7,7 +7,7 @@ from lm_polygraph.utils.factory_stat_calculator import (
 )
 
 
-def register_default_stat_calculators() -> List[StatCalculatorContainer]:
+def register_default_stat_calculators(model_type) -> List[StatCalculatorContainer]:
     """
     Registers all available statistic calculators to be seen by UEManager
     for properly organizing the calculations order.
@@ -48,45 +48,47 @@ def register_default_stat_calculators() -> List[StatCalculatorContainer]:
         #     )
         #     stat_dependencies[stat] = dependencies
 
-    _register(GreedyProbsCalculator)
-    _register(BlackboxGreedyTextsCalculator)
-    _register(EntropyCalculator)
-    _register(GreedyLMProbsCalculator)
-    _register(PromptCalculator)
-    _register(SamplingGenerationCalculator)
-    _register(BlackboxSamplingGenerationCalculator)
-    _register(BartScoreCalculator)
-    _register(ModelScoreCalculator)
-    # _register(EmbeddingsCalculator)
-    # _register(EmbeddingsExtractionCalculator)
-    _register(EnsembleTokenLevelDataCalculator)
-    _register(SemanticMatrixCalculator)
-    _register(CrossEncoderSimilarityMatrixCalculator)
-    _register(GreedyProbsCalculator)
-    # _register(SemanticClassesCalculator)
-    _register(
-        GreedyAlternativesNLICalculator,
-        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-        {
-            "nli_model": {
-                "deberta_path": "microsoft/deberta-large-mnli",
-                "batch_size": 10,
-                "device": "cuda",
-            }
-        },
-    )
-    _register(
-        GreedyAlternativesFactPrefNLICalculator,
-        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
-        {
-            "nli_model": {
-                "deberta_path": "microsoft/deberta-large-mnli",
-                "batch_size": 10,
-                "device": "cuda",
-            }
-        },
-    )
-    _register(ClaimsExtractor)
+    if model_type == "Blackbox":
+        _register(BlackboxGreedyTextsCalculator)
+        _register(BlackboxSamplingGenerationCalculator)
+    elif model_type == "Whitebox":
+        _register(GreedyProbsCalculator)
+        _register(EntropyCalculator)
+        _register(GreedyLMProbsCalculator)
+        _register(PromptCalculator)
+        _register(SamplingGenerationCalculator)
+        _register(BartScoreCalculator)
+        _register(ModelScoreCalculator)
+        # _register(EmbeddingsCalculator)
+        # _register(EmbeddingsExtractionCalculator)
+        _register(EnsembleTokenLevelDataCalculator)
+        _register(SemanticMatrixCalculator)
+        _register(CrossEncoderSimilarityMatrixCalculator)
+        # _register(SemanticClassesCalculator)
+        _register(
+            GreedyAlternativesNLICalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
+            {
+                "nli_model": {
+                    "deberta_path": "microsoft/deberta-large-mnli",
+                    "batch_size": 10,
+                    "device": "cuda",
+                }
+            },
+        )
+        _register(
+            GreedyAlternativesFactPrefNLICalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
+            {
+                "nli_model": {
+                    "deberta_path": "microsoft/deberta-large-mnli",
+                    "batch_size": 10,
+                    "device": "cuda",
+                }
+            },
+        )
+        _register(ClaimsExtractor)
+    else:
+        raise NotImplementedError(f"Unknown model type: {model_type}")
 
     return all_stat_calculators
-    # return stat_calculators, stat_dependencies

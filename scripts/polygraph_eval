@@ -137,9 +137,10 @@ def get_ue_metrics(args):
 
 def get_stat_calculator_names(config):
     result_stat_calculators = dict()
+    model_type = getattr(config.model, "type", "Whitebox")
     
     if "auto" in config.stat_calculators:
-        scs = register_default_stat_calculators()
+        scs = register_default_stat_calculators(model_type)
         for sc in scs:
             result_stat_calculators[sc.name] = sc
 

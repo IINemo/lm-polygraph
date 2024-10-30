@@ -18,7 +18,7 @@ def polygraph_module_init(func):
         if func.__name__ == "__init__":
             log.info(f"Initializing {args[0].__class__.__name__}")
         func(*args, **kwargs)
-
+        
     return wrapper
 
 

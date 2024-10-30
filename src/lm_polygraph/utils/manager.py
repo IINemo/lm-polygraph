@@ -171,7 +171,7 @@ class UEManager(UQPipeline):
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
         self.max_new_tokens = max_new_tokens
-
+        
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
 
