@@ -62,9 +62,30 @@ def register_default_stat_calculators(model_type) -> List[StatCalculatorContaine
         # _register(EmbeddingsCalculator)
         # _register(EmbeddingsExtractionCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(SemanticMatrixCalculator)
-        _register(CrossEncoderSimilarityMatrixCalculator)
-        # _register(SemanticClassesCalculator)
+        _register(SemanticClassesCalculator)        
+        _register(
+            CrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": "microsoft/deberta-large-mnli",
+                    "batch_size": 10,
+                    "device": "cuda",
+                },
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large"
+            },
+        )
+        _register(
+            SemanticMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": "microsoft/deberta-large-mnli",
+                    "batch_size": 10,
+                    "device": "cuda",
+                }
+            },
+        )
         _register(
             GreedyAlternativesNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
@@ -87,7 +108,14 @@ def register_default_stat_calculators(model_type) -> List[StatCalculatorContaine
                 }
             },
         )
-        _register(ClaimsExtractor)
+        _register(
+            ClaimsExtractor,
+            "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
+            {
+                "openai_model": "gpt-4o",
+                "cache_path": "~/.cache"
+            },
+        )
     else:
         raise NotImplementedError(f"Unknown model type: {model_type}")
 

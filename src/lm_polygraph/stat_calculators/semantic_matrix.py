@@ -27,7 +27,7 @@ class SemanticMatrixCalculator(StatCalculator):
             "semantic_matrix_contra",
             "semantic_matrix_classes",
             "entailment_id",
-        ], ["blackbox_sample_texts"]
+        ], ["sample_texts"]
 
     def __init__(self, nli_model):
         super().__init__()
