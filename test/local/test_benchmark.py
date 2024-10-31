@@ -29,7 +29,6 @@ def run_eval(dataset):
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={device} \
                 save_path={pwd()}"
-
     return subprocess.run(command, shell=True)
 
 
@@ -57,34 +56,34 @@ def check_result(dataset, exec_result):
 # ================= TEST CASES ==================
 
 
-#def test_coqa():
-#    exec_result = run_eval("coqa")
-#    check_result('coqa', exec_result)
+def test_coqa():
+    exec_result = run_eval("coqa")
+    check_result('coqa', exec_result)
 
 
-#def test_triviaqa():
-#    exec_result = run_eval("triviaqa")
-#    check_result('triviaqa', exec_result)
+def test_triviaqa():
+    exec_result = run_eval("triviaqa")
+    check_result('triviaqa', exec_result)
 
 
-#def test_mmlu():
-#    exec_result = run_eval("mmlu")
-#    check_result('mmlu', exec_result)
+def test_mmlu():
+    exec_result = run_eval("mmlu")
+    check_result('mmlu', exec_result)
 
 
-#def test_gsm8k():
-#    exec_result = run_eval("gsm8k")
-#    check_result('gsm8k', exec_result)
+def test_gsm8k():
+    exec_result = run_eval("gsm8k")
+    check_result('gsm8k', exec_result)
 
 
-#def test_wmt14_fren():
-#    exec_result = run_eval("wmt14_fren")
-#    check_result('wmt14_fren', exec_result)
-#
-#
-#def test_wmt19_deen():
-#    exec_result = run_eval("wmt19_deen")
-#    check_result('wmt19_deen', exec_result)
+def test_wmt14_fren():
+    exec_result = run_eval("wmt14_fren")
+    check_result('wmt14_fren', exec_result)
+
+
+def test_wmt19_deen():
+    exec_result = run_eval("wmt19_deen")
+    check_result('wmt19_deen', exec_result)
 
 
 def test_xsum():
