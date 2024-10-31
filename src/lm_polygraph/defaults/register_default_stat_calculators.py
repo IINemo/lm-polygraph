@@ -59,10 +59,11 @@ def register_default_stat_calculators(model_type) -> List[StatCalculatorContaine
         _register(SamplingGenerationCalculator)
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
-        # _register(EmbeddingsCalculator)
-        # _register(EmbeddingsExtractionCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(SemanticClassesCalculator)        
+        _register(SemanticClassesCalculator)    
+        _register(PromptCalculator)    
+        _register(SamplingPromptCalculator)    
+        _register(ClaimPromptCalculator)        
         _register(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",

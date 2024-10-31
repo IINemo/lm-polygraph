@@ -7,7 +7,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 
 
-class PromptCalculator(StatCalculator):
+class BasePromptCalculator(StatCalculator):
     """
     Calculates the probability for a specific token to be generated from the specific prompt.
     Used for P(True)-based methods.
@@ -39,14 +39,6 @@ class PromptCalculator(StatCalculator):
         self.input_text_dependency = "input_texts"
         self.sample_text_dependency = sample_text_dependency
         self.generation_text_dependency = "greedy_texts"
-
-    @staticmethod
-    def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
-
-        return ["input_texts"], ["greedy_texts"]
 
     def __call__(
         self,
@@ -110,3 +102,61 @@ class PromptCalculator(StatCalculator):
         log_probs = logits[:, -1, expected_token].cpu().numpy()
 
         return {self.method: log_probs}
+
+
+class PromptCalculator(BasePromptCalculator):
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the PromptCalculator.
+        """
+
+        return ["p_true"], ["greedy_texts"]
+
+    def __init__(self):
+        super().__init__(
+            "Question: {q}\n Possible answer:{a}\n "
+            "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+            "True",
+            "p_true",
+        )
+
+
+class SamplingPromptCalculator(BasePromptCalculator):
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the SamplingPromptCalculator.
+        """
+
+        return ["p_true_sampling"], ["greedy_texts", "sample_texts"]
+
+    def __init__(self):
+        super().__init__(
+            "Question: {q}\n Here are some ideas that were brainstormed: {s}\n Possible answer:{a}\n "
+            "Is the possible answer:\n (A) True\n (B) False\n The possible answer is:",
+            "True",
+            "p_true_sampling",
+            sample_text_dependency="sample_texts",
+        )
+
+
+class ClaimPromptCalculator(BasePromptCalculator):
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the ClaimPromptCalculator.
+        """
+
+        return ["p_true_claim"], ["greedy_texts"]
+
+    def __init__(self):
+        super().__init__(
+            "Question: {q}\n Possible answer:{a}\n "
+            "Is the possible answer True or False? The possible answer is: ",
+            "True",
+            "p_true_claim",
+        )
