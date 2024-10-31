@@ -57,9 +57,19 @@ additional_estimators:
   - module: lm_polygraph.estimators.token_sar
     class_name: TokenSAR
     kwargs: {}
+  - module: lm_polygraph.estimators.monte_carlo_sequence_entropy
+    class_name: MonteCarloSequenceEntropy
+    kwargs: {}
+  - module: lm_polygraph.estimators.monte_carlo_normalized_sequence_entropy
+    class_name: MonteCarloNormalizedSequenceEntropy
+    kwargs: {}
   - module: lm_polygraph.estimators.sar
     class_name: SAR
     kwargs: {}
+  - module: lm_polygraph.estimators.sar
+    class_name: SAR
+    kwargs:
+      t: 1
   - module: lm_polygraph.estimators.semantic_entropy
     class_name: SemanticEntropy
     kwargs: {}
@@ -67,14 +77,69 @@ additional_estimators:
     class_name: SentenceSAR
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
-    class_name: OtherSentenceSAR
-    kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
     class_name: ReweightedSentenceSAR
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: PPLSentenceSAR
     kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs: 
+      t: 1
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs: 
+      t: 1
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: OtherSentenceSAR
+    kwargs: 
+      t: 1
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSentenceSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSentenceSAR
+    kwargs: 
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSentenceSAR
+    kwargs: 
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSAR
+    kwargs: 
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilSAR
+    kwargs: 
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilPPLSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilPPLSAR
+    kwargs: 
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilPPLSAR
+    kwargs: 
+      use_log: false
+      reverse: true
 
 ignore_exceptions: false
 

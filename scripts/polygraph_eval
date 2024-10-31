@@ -395,7 +395,9 @@ def get_generation_metrics(args):
                 output_ignore_regex = getattr(args, "output_ignore_regex", None),
                 normalize = getattr(args, "normalize", False),
             ),
-            AlignScore(target_is_claims=False if args.task == "ats" else True),
+            AlignScore(),
+            AlignScore(target_is_claims=False),
+            AlignScore(ignore_target=True),
         ]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
             if getattr(args, "use_claim_ue", False):
