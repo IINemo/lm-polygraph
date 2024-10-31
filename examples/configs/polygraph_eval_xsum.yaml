@@ -4,19 +4,25 @@ hydra:
 
 defaults:
   - model: bloomz-560m
+  - default_estimatiors
+  - default_calculators
   - _self_
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
 device: cpu
-
+instruct: false
 task: ats
 
 dataset: xsum
 text_column: document
 label_column: summary
+description: ""
 prompt: "Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):\n"
+n_shot: 0
+few_shot_split: train
+few_shot_prompt: ""
 train_split: train
 eval_split: test
 max_new_tokens: 56
@@ -44,16 +50,6 @@ use_density_based_ue: true
 use_seq_ue: true
 use_tok_ue: false
 use_ens_ue: false
-
-# Examples of providing additional UE methods:
-# additional_estimators: {
-#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
-#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
-# }
-# additional_estimators_kwargs: {
-#   'Perplexity': {},
-#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
-# }
 
 ignore_exceptions: false
 

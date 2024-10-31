@@ -25,7 +25,7 @@ def load_dataset(args):
             batch_size=args.batch_size,
             prompt=getattr(args, "prompt", ""),
             description=getattr(args, "description", ""),
-            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100) if "mmlu" in dataset_name else 0,
+            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100) if "cais/mmlu" in dataset_name else 0,
             n_shot=getattr(args, "n_shot", 5),
             few_shot_split=getattr(args, "few_shot_split", "train"),
             few_shot_prompt=getattr(args, "few_shot_prompt", None),
