@@ -107,10 +107,10 @@ class OtherSentenceSAR(Estimator):
             )
             sent_relevance = R_s.sum(-1) / self.t
 
-            if use_log:
+            if self.use_log:
                 E_s = -np.log(sent_relevance)
             else:
-                if reverse:
+                if self.reverse:
                     E_s = -sent_relevance
                 else:
                     E_s = sent_relevance
@@ -276,10 +276,10 @@ class DistilSentenceSAR(Estimator):
             )
             sent_relevance = R_s.sum(-1)
 
-            if use_log:
+            if self.use_log:
                 E_s = -np.log(sent_relevance)
             else:
-                if reverse:
+                if self.reverse:
                     E_s = -sent_relevance
                 else:
                     E_s = sent_relevance
@@ -306,7 +306,7 @@ class DistilSAR(Estimator):
         self.reverse = reverse
 
     def __str__(self):
-        base = "DistilSentenceSAR"
+        base = "DistilSAR"
         if not self.use_log:
             base += "_no_log"
             if self.reverse:
@@ -325,31 +325,50 @@ class DistilSAR(Estimator):
             np.ndarray: float sentenceSAR for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        batch_sample_log_probs = stats["sample_log_probs"]
+        batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
+        batch_sample_token_similarity = stats["sample_token_similarity"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
 
-        sentenceSAR = []
-        for sample_log_probs, sample_sentence_similarity in zip(
-            batch_sample_log_probs, batch_sample_sentence_similarity
+        SAR = []
+        for batch_data in zip(
+            batch_sample_log_likelihoods,
+            batch_sample_token_similarity,
+            batch_sample_sentence_similarity,
         ):
-            sample_probs = np.exp(np.array(sample_log_probs))
+            sample_log_likelihoods = batch_data[0]
+            sample_token_similarity = batch_data[1]
+            sample_sentence_similarity = batch_data[2]
+
+            tokenSAR = []
+            for log_likelihoods, token_similarity in zip(
+                sample_log_likelihoods, sample_token_similarity
+            ):
+                log_likelihoods = np.array(log_likelihoods)
+                R_t = 1 - token_similarity
+                R_t_norm = R_t / R_t.sum()
+                E_t = -log_likelihoods * R_t_norm
+                tokenSAR.append(E_t.sum())
+
+            tokenSAR = np.array(tokenSAR)
+            probs_token_sar = np.exp(-tokenSAR)
+
             R_s = (
-                sample_probs
+                probs_token_sar
                 * sample_sentence_similarity
             )
             sent_relevance = R_s.sum(-1)
 
-            if use_log:
+            if self.use_log:
                 E_s = -np.log(sent_relevance)
             else:
-                if reverse:
+                if self.reverse:
                     E_s = -sent_relevance
                 else:
                     E_s = sent_relevance
 
-            sentenceSAR.append(E_s.mean())
+            SAR.append(E_s.mean())
 
-        return np.array(sentenceSAR)
+        return np.array(SAR)
 
 
 class DistilPPLSAR(Estimator):
@@ -393,7 +412,7 @@ class DistilPPLSAR(Estimator):
 
         sentenceSAR = []
         for sample_log_likelihoods, sample_sentence_similarity in zip(
-            batch_sample_likelihoods, batch_sample_sentence_similarity
+            batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
             ppl = np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
 
@@ -403,10 +422,10 @@ class DistilPPLSAR(Estimator):
             )
             sent_relevance = R_s.sum(-1)
 
-            if use_log:
+            if self.use_log:
                 E_s = -np.log(sent_relevance)
             else:
-                if reverse:
+                if self.reverse:
                     E_s = -sent_relevance
                 else:
                     E_s = sent_relevance
@@ -457,12 +476,15 @@ class DistilMTESAR(Estimator):
 
         sentenceSAR = []
         for sample_log_likelihoods, sample_sentence_similarity in zip(
-            batch_sample_likelihoods, batch_sample_sentence_similarity
+            batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
             entropy = []
-            for lp in sample_log_likelihoods:
-                mask = ~np.isinf(lp)
-                entropy.append(-np.sum(np.array(lp[mask]) * np.exp(lp[mask])))
+            for seq_lp in sample_log_likelihoods:
+                seq_entropy = []
+                for lp in seq_lp:
+                    mask = ~np.isinf(lp)
+                    seq_entropy.append(-np.sum(np.array(lp[mask]) * np.exp(lp[mask])))
+                entropy.append(np.mean(seq_entropy))
 
             R_s = (
                 entropy
@@ -470,10 +492,10 @@ class DistilMTESAR(Estimator):
             )
             sent_relevance = R_s.sum(-1)
 
-            if use_log:
+            if self.use_log:
                 E_s = -np.log(sent_relevance)
             else:
-                if reverse:
+                if self.reverse:
                     E_s = -sent_relevance
                 else:
                     E_s = sent_relevance
