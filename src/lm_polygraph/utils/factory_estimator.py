@@ -15,6 +15,10 @@ def load_simple_estimators(name, config):
         MonteCarloSequenceEntropy,
         MonteCarloNormalizedSequenceEntropy,
         NumSemSets,
+        LexicalSimilarity,
+        EigValLaplacian,
+        DegMat,
+        Eccentricity,
         SemanticEntropy,
         SAR,
         TokenSAR,
@@ -32,8 +36,6 @@ def load_simple_estimators(name, config):
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
         RandomBaselineClaim,
-        
-        LexicalSimilarity,
     ]
 
     try:
