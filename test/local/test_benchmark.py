@@ -8,12 +8,13 @@ from lm_polygraph.utils.manager import UEManager
 
 
 # ================= TEST HELPERS ==================
+
 def load_input_texts(dataset, method=None):
     filename = f"{dataset}"
     if method:
         filename += f"_{method}"
 
-    with open(f"{pwd()}/{filename}.txt", "r") as f:
+    with open(f"{pwd()}/fixtures/{filename}.txt", "r") as f:
         return f.read()
 
 
