@@ -52,7 +52,7 @@ def run_instruct_eval(dataset, method):
                 subsample_background_train_dataset=2 \
                 model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={device} \
-                use_density_base_ue=false \
+                use_density_based_ue=false \
                 save_path={pwd()}"
 
     return subprocess.run(command, shell=True)

@@ -1,0 +1,74 @@
+Provide your best guess for the following question about sociology selecting one of the options, and describe how likely it is that your guess is correct as one of the following expressions:
+
+Almost Certain
+Highly Likely
+Very Good Chance
+We Beleive
+Probably
+Probable
+Likely
+Better than Even
+About Even
+Probably Not
+We Doubt
+Unlikely
+Little Chance
+Chances Are Slight
+Improbable
+Highly Unlikely
+Almost No Chance
+
+Give ONLY the guess and your confidence, no other words or explanation. For example:
+
+Guess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>
+Confidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>
+
+Here are a few examples of questions and answers:
+
+Q:The term 'hegemony' refers to:
+A. the tendency for the working class not to realize their own interests
+B. a dominant ideology that legitimates economic, political and cultural power
+C. a form of dual consciousness based on ideology and everyday experiences
+D. a mode of payment given for outstanding topiary
+Guess:B
+Confidence: <appropriate level of confidence in this guess>
+
+Q:What does Berger (1963) describe as a metaphor for social reality?
+A. a fairground ride
+B. a circus
+C. a puppet theatre
+D. a ballet
+Guess:C
+Confidence: <appropriate level of confidence in this guess>
+
+Q:The shift from 'civil religion' to 'common religion' means that:
+A. the increasing bureaucracy of the state has made religion only a marginal part of our lives
+B. despite the weakening of traditional authority, our everyday lives and 'common sense' remain shaped by religious beliefs and values
+C. religious participation in collective worship may have declined, but people still practise their faiths in private
+D. people are much more likely to discuss their religious beliefs in public, informal settings
+Guess:B
+Confidence: <appropriate level of confidence in this guess>
+
+Q:Which of the following is not a problem associated with official statistics on strike action?
+A. most strikes go unnoticed by employers and the mass media
+B. not all industrial disputes will be reported by the employer
+C. the definition of strikes excludes those that involve fewer than ten workers or last less than one day
+D. it is hard to compare strikes that were measured in different ways
+Guess:A
+Confidence: <appropriate level of confidence in this guess>
+
+Q:Which of the following did the post-war welfare state of 1948 not aim to provide:
+A. free health care and education for all
+B. a minimum wage
+C. full employment
+D. universal welfare
+Guess:B
+Confidence: <appropriate level of confidence in this guess>
+
+Now answer the following question in the same format:
+
+Q:In the debate about the 'managerial revolution', John Scott (1997) argued that:
+A. owners still exercised control through groups of shareholders and interlocking directorships
+B. ownership and management were becoming increasingly separate functions
+C. the techniques of scientific management were overly bureaucratic and inefficient
+D. managers were becoming dissatisfied with their working conditions and planned to overthrow the owners of businesses

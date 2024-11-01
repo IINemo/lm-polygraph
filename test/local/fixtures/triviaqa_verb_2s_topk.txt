@@ -1,0 +1,36 @@
+Provide your 4 best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:
+
+G1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>
+...
+G4: <4-th most likely guess, as short as possible; not a complete sentence, just the guess!>
+
+Here are a few examples of questions and answers:
+
+Question: What is the capital of the Indian state of Tamil Nadu?
+G1: chennai
+...
+G4: <other guess>
+
+Question: Who rules Narnia following the reign of High King Peter in the Chronicles of Narnia series by C.S. Lewis?
+G1: prince caspian
+...
+G4: <other guess>
+
+Question: Which motor manufacturer builds the 'Movano' range of vans and mini-buses?
+G1: vauxhall
+...
+G4: <other guess>
+
+Question: In which BBC magazine style TV programme do John Craven, Julia Bradbury and Matt Baker take part?
+G1: countryfile
+...
+G4: <other guess>
+
+Question: Search for Extra-Terrestrial Intelligence (SETI) is the collective name for a number of activities to search for extra-terrestrial life using scientific methods to search for what, specifically?
+G1: electromagnetic transmissions
+...
+G4: <other guess>
+
+Now answer the following question in the same format:
+
+Question: Vendredi is French for which day of the week?
