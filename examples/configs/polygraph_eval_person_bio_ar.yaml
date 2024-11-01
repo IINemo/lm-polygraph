@@ -5,7 +5,9 @@ hydra:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
-  - model: default
+  - model: bloomz-560m
+  - default_claim_estimators
+  - _self_
 
 model:
   path: core42/jais-13b-chat
@@ -31,25 +33,13 @@ test_split_size: 1
 
 subsample_eval_dataset: -1
 
-use_density_based_ue: false
-use_seq_ue: false
-use_tok_ue: false
-use_ens_ue: false
 use_claim_ue: true
 generation_metrics: [{
   'name': 'OpenAIFactCheck'
 }]
-ens_type:
 
-# Examples of providing additional UE methods:
-# additional_estimators: {
-#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
-#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
-# }
-# additional_estimators_kwargs: {
-#   'Perplexity': {},
-#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
-# }
+stat_calculators:
+  - auto
 
 ignore_exceptions: false
 
