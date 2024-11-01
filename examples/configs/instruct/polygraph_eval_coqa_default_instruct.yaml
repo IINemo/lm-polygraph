@@ -35,12 +35,7 @@ subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
-use_density_based_ue: false
-use_seq_ue: false
-use_tok_ue: false
-use_ens_ue: false
 generation_metrics: null
-ens_type: 
 
 ignore_exceptions: false
 

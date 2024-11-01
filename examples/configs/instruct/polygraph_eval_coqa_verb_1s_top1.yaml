@@ -10,9 +10,11 @@ few_shot_prompt: "Question: {question}\nGuess: {answer}\nProbability: <number be
 prompt: "Question: {question}\n"
 max_new_tokens: 30
 
-additional_estimators: 
-  - module: lm_polygraph.estimators.verbalized_1s
-    class_name: Verbalized1S
-    kwargs:
+estimators:
+  - name: Verbalized1S
+    cfg:
       confidence_regex: 'Probability: (\d+\.\d+)'
       name_postfix: "_top1"
+
+stat_calculators:
+  - auto

@@ -10,11 +10,13 @@ few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]
 prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
 max_new_tokens: 13
 
-additional_estimators: 
-  - module: lm_polygraph.estimators.verbalized_2s
-    class_name: Verbalized2S
-    kwargs:
+estimators:
+  - name: Verbalized2S
+    cfg:
       confidence_prompt: "Provide the probability that your guess is correct. Give ONLY the probability, no other words or explanation.\n\nFor example:\n\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>"
       confidence_regex: 'Probability: (\d+\.\d+)'
       max_new_tokens: 10 
       name_postfix: "_top1"
+
+stat_calculators:
+  - auto
