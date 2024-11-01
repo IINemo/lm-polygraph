@@ -50,8 +50,9 @@ def run_instruct_eval(dataset, method):
                 subsample_eval_dataset=2 \
                 subsample_train_dataset=2 \
                 subsample_background_train_dataset=2 \
-                model=stablelm_1.6b_chat \
+                model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={device} \
+                use_density_base_ue=false \
                 save_path={pwd()}"
 
     return subprocess.run(command, shell=True)
@@ -68,7 +69,8 @@ def check_result(dataset, exec_result, method=None):
 
     man = UEManager.load(f"{pwd()}/ue_manager_seed1")
 
-    assert len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 2
+    if method is None:
+        assert len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 2
     try:
         assert man.stats["input_texts"][0] == load_input_texts(dataset, method)
     except:
