@@ -99,7 +99,7 @@ def generate_mmlu_instruct_config(description, few_shot_prompt):
         "prepare_func": partial(
             prepare_mmlu,
             output_column="answer",
-            prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
+            prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n",
             description=description,
             mmlu_max_subject_size=100,
             n_shot=5,
