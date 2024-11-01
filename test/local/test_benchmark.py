@@ -32,6 +32,7 @@ def run_eval(dataset):
                 subsample_background_train_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={device} \
+                use_density_based_ue=false \
                 save_path={pwd()}"
 
     return subprocess.run(command, shell=True)
