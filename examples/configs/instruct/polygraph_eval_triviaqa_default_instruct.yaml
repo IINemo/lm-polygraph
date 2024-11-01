@@ -13,14 +13,11 @@ task: qa
 instruct: true
 experiment_name:
 
-dataset: [trivia_qa, rc.nocontext]
-text_column: question
-label_column: answer
-few_shot_split: train
+text_column: input
+label_column: output
 train_split: train
-eval_split: validation
+eval_split: test
 load_from_disk: false
-n_shot: 5
 multiref: true
 generation_params: {}
 

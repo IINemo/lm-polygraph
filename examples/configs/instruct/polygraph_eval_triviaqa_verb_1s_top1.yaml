@@ -5,6 +5,7 @@ defaults:
 
 experiment_name: triviaqa_verb_1s_top1
 
+dataset: [LM-Polygraph/triviaqa, verb_1s_top1]
 description: "Provide your best guess and the probability that it is correct (0.0 to 1.0) for the following question. Give ONLY the guess and probability, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>"
 few_shot_prompt: "Question: {question}\nGuess: {answer}\nProbability: <number between 0.0 and 1.0 reflecting confidence in the guess>"
 prompt: "Question: {question}\n"

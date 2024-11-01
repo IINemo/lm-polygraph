@@ -13,11 +13,10 @@ task: qa
 instruct: true
 experiment_name:
 
-dataset: coqa
-text_column: questions
-label_column: answers
+text_column: input
+label_column: output
 train_split: train
-eval_split: validation
+eval_split: test
 load_from_disk: false
 generation_params: {}
 
