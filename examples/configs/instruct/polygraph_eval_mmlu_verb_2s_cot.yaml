@@ -5,7 +5,7 @@ defaults:
 
 experiment_name: mmlu_verb_2s_cot
 
-dataset: [LM-Polygraph/mmlu, verb_1s_top1]
+dataset: [LM-Polygraph/mmlu, verb_2s_cot]
 description: "Provide your best guess for the following question about {subject} selecting one of the options. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>"
 few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nExplanation: <step-by-step explanation of your thought process>\nGuess:{answer}"
 prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
