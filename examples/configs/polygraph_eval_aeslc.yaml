@@ -4,7 +4,7 @@ hydra:
 
 defaults:
   - model: bloomz-560m
-  - default_estimatiors
+  - default_estimators
   - default_calculators
   - _self_
 
@@ -46,12 +46,7 @@ subsample_background_train_dataset: 1000
 subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
-use_density_based_ue: true
-use_seq_ue: true
-use_tok_ue: false
-use_ens_ue: false
 generation_metrics: null
-ens_type: 
 
 ignore_exceptions: false
 
