@@ -1,4 +1,4 @@
-from typing import List, Set, Dict, Union
+from typing import List, Union
 from dataclasses import dataclass
 
 from lm_polygraph.utils.model import Model, WhiteboxModel

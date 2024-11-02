@@ -9,7 +9,7 @@ log = logging.getLogger("lm_polygraph")
 
 def load_dataset(args):
     log.info("=" * 100)
-    log.info(f"Loading train dataset...")
+    log.info("Loading train dataset...")
     if args.train_test_split:
         raise NotImplementedError
     else:
@@ -59,7 +59,7 @@ def load_dataset(args):
             args.subsample_background_train_dataset, seed=args.seed
         )
 
-    log.info(f"Done loading train data.")
+    log.info("Done loading train data.")
     return train_dataset, background_train_dataset
 
 
