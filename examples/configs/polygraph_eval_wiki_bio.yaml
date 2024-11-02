@@ -8,22 +8,24 @@ defaults:
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-
+instruct: false
 task: bio
 
 dataset_name: wiki-bio
 dataset: [wiki_bio]
 n_shot: 0
 text_column: input_text
+label_column: null
 prompt: "This is a Wikipedia passage about {context}:\n"
+description: ""
+few_shot_split: train
+few_shot_prompt: null
 eval_split: test
 subsample_eval_dataset: 100
 max_new_tokens: 256
 load_from_disk: false
+trust_remote_code: false
 
-train_dataset: null
-train_test_split: false
-test_split_size: 1
 
 use_density_based_ue: false
 use_seq_ue: false
@@ -35,20 +37,9 @@ generation_metrics: [{
 }]
 ens_type:
 
-# Examples of providing additional UE methods:
-# additional_estimators: {
-#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
-#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
-# }
-# additional_estimators_kwargs: {
-#   'Perplexity': {},
-#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
-# }
-
 ignore_exceptions: false
 
 batch_size: 1
-deberta_batch_size: 10
 
 seed:
     - 1

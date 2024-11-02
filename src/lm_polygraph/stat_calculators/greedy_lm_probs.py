@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -13,10 +13,16 @@ class GreedyLMProbsCalculator(StatCalculator):
     Used to calculate P(y_t|y_<t) subtrahend in PointwiseMutualInformation.
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]
+
     def __init__(self):
-        super().__init__(
-            ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]
-        )
+        super().__init__()
 
     def __call__(
         self,

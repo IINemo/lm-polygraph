@@ -1,0 +1,12 @@
+estimators:
+  - name: MaximumClaimProbability
+  - name: PerplexityClaim
+  - name: MaxTokenEntropyClaim
+  - name: PointwiseMutualInformationClaim
+  - name: PTrueClaim
+  - name: ClaimConditionedProbabilityClaim
+    cfg:
+      nli_context: "no_context"
+  - name: ClaimConditionedProbabilityClaim
+    cfg:
+      nli_context: "fact_pref"

@@ -1,6 +1,7 @@
 defaults:
   - polygraph_eval_mmlu_default_instruct
   - top1_processing
+  - default_blackbox_estimators
   - _self_
 
 experiment_name: mmlu_empirical_baselines
@@ -13,16 +14,5 @@ generation_params:
   generate_until:
     - "\n"
 
-use_seq_ue: true
-include_whitebox_ue: false
-additional_estimators: 
-  - module: lm_polygraph.estimators.semantic_entropy
-    class_name: SemanticEntropy
-    kwargs:
-      class_probability_estimation: frequency
-  - module: lm_polygraph.estimators.p_true_empirical
-    class_name: PTrueEmpirical
-    kwargs: {}
-  - module: lm_polygraph.estimators.label_prob
-    class_name: LabelProb
-    kwargs: {}
+stat_calculators:
+  - auto

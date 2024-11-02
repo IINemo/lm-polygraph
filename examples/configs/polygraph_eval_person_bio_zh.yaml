@@ -4,6 +4,8 @@ hydra:
 
 defaults:
   - model: bloomz-560m
+  - default_claim_estimators
+  - _self_
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -18,39 +20,27 @@ eval_split: train
 max_new_tokens: 256
 load_from_disk: false
 
-train_dataset: null
-train_test_split: false
-test_split_size: 1
-
 subsample_eval_dataset: -1
 
 model:
+  path: 01-ai/Yi-6B-Chat
   load_tokenizer_args: {"add_bos_token": false}
 
-use_density_based_ue: false
-use_seq_ue: false
-use_tok_ue: false
-use_ens_ue: false
 use_claim_ue: true
 generation_metrics: [{
   'name': 'OpenAIFactCheck'
 }]
-ens_type:
 
-# Examples of providing additional UE methods:
-# additional_estimators: {
-#   'lm_polygraph.estimators.perplexity': ['Perplexity'],
-#   'lm_polygraph.estimators.eig_val_laplacian': ['EigValLaplacian']
-# }
-# additional_estimators_kwargs: {
-#   'Perplexity': {},
-#   'EigValLaplacian': {'similarity_score': 'NLI_score', 'affinity': 'entail'}
-# }
+stat_calculators:
+  - auto
+  - name: ClaimsExtractor
+    builder: defaults.stat_calculators.ClaimExtractor
+    openai_model: gpt-4o
+    language: zh
 
 ignore_exceptions: false
 
 batch_size: 1
-deberta_batch_size: 10
 language: zh
 
 seed:
