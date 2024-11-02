@@ -1,7 +1,7 @@
+import traceback
 import numpy as np
 import torch
 import sys
-import traceback
 import gc
 
 from collections import defaultdict

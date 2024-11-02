@@ -26,9 +26,6 @@ max_new_tokens: 256
 load_from_disk: false
 trust_remote_code: false
 
-train_dataset: null
-train_test_split: false
-test_split_size: 1
 
 use_density_based_ue: false
 use_seq_ue: false

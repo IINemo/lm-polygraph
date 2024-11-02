@@ -27,9 +27,6 @@ eval_split: train
 max_new_tokens: 256
 load_from_disk: false
 
-train_dataset: null
-train_test_split: false
-test_split_size: 1
 
 subsample_eval_dataset: -1
 
