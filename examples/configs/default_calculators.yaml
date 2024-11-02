@@ -11,17 +11,17 @@ stat_calculators:
       few_shot_split: '${few_shot_split}'
       train_split: '${train_split}'
       load_from_disk: '${load_from_disk}'
-      subsample_train_dataset: '${subsample_train_dataset}'
+      subsample_train_dataset: 1000
       n_shot: '${n_shot}'
       mmlu_max_subject_size: '${mmlu_max_subject_size}'
       train_dataset: '${train_dataset}'
       train_test_split: '${train_test_split}'
-      background_train_dataset: '${background_train_dataset}'
-      background_train_dataset_text_column: '${background_train_dataset_text_column}'
-      background_train_dataset_label_column: '${background_train_dataset_label_column}'
-      background_train_dataset_data_files: '${background_train_dataset_data_files}'
-      background_load_from_disk: '${background_load_from_disk}'
-      subsample_background_train_dataset: '${subsample_background_train_dataset}'
+      background_train_dataset: allenai/c4
+      background_train_dataset_text_column: text
+      background_train_dataset_label_column: url
+      background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+      background_load_from_disk: false
+      subsample_background_train_dataset: 1000
       batch_size: '${batch_size}'
       seed: '${seed}'
     stats: 

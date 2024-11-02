@@ -40,11 +40,13 @@ generation_metrics: [{
 
 stat_calculators:
   - auto
+  - name: ClaimsExtractor
+    builder: defaults.stat_calculators.ClaimExtractor
+    openai_model: gpt-4o
+    language: ar
 
 ignore_exceptions: false
-
 batch_size: 1
-deberta_batch_size: 10
 language: ar
 
 seed:

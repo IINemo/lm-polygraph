@@ -35,9 +35,8 @@ stat_calculators:
   - auto
 
 ignore_exceptions: false
-
+language: en
 batch_size: 1
-deberta_batch_size: 10
 
 seed:
     - 1

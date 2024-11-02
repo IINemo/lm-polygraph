@@ -43,7 +43,6 @@ ens_type:
 ignore_exceptions: false
 
 batch_size: 1
-deberta_batch_size: 10
 
 seed:
     - 1
