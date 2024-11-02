@@ -1,6 +1,8 @@
 from importlib import import_module
-from lm_polygraph.stat_calculators import *
 from typing import List
+
+from lm_polygraph.stat_calculators import *
+from lm_polygraph.utils.builder_enviroment_stat_calculator import BuilderEnvironmentBase
 
 import logging
 
@@ -44,10 +46,10 @@ class StatCalculatorContainer:
 
 
 class FactoryStatCalculator:
-    def __init__(self, environment):
+    def __init__(self, environment: BuilderEnvironmentBase):
         self.environment = environment
 
-    def __call__(self, stat_calculators_info: List[StatCalculatorContainer]):
+    def __call__(self, stat_calculators_info: List[StatCalculatorContainer]) -> List[StatCalculator]:
         stat_calculators = [
             create_stat_calculator(
                 sci.name if sci.builder is None else sci.builder,

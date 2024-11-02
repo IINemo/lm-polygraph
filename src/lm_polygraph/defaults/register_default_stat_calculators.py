@@ -7,7 +7,7 @@ from lm_polygraph.utils.factory_stat_calculator import (
 )
 
 
-def register_default_stat_calculators(model_type) -> List[StatCalculatorContainer]:
+def register_default_stat_calculators(model_type: str) -> List[StatCalculatorContainer]:
     """
     Registers all available statistic calculators to be seen by UEManager
     for properly organizing the calculations order.

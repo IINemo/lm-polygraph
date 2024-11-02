@@ -23,7 +23,12 @@ class InferCausalLMCalculator(StatCalculator):
     * embeddings from the model
     """
 
-    def __init__(self, n_alternatives=10, tokenize=False, return_embeddings=True):
+    def __init__(
+        self,
+        n_alternatives: int = 10,
+        tokenize: bool = False,
+        return_embeddings: bool = True,
+    ):
         super().__init__()
 
         self.n_alternatives = n_alternatives
@@ -37,15 +42,12 @@ class InferCausalLMCalculator(StatCalculator):
         """
 
         return [
-            "input_texts",
-            "input_tokens",
             "greedy_log_probs",
+            "greedy_logits",
             "greedy_tokens",
-            "greedy_tokens_alternatives",
-            "greedy_texts",
             "greedy_log_likelihoods",
-            "train_greedy_log_likelihoods",
-            "embeddings",
+            "greedy_tokens_alternatives",
+            "embeddings_decoder",
         ], []
 
     def _get_embeddings_from_output(

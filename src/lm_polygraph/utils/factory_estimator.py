@@ -53,7 +53,7 @@ def load_simple_estimators(name, config):
 
 
 class FactoryEstimator:
-    def __call__(self, name, config):
+    def __call__(self, name: str, config) -> Estimator:
         est = load_simple_estimators(name, config)
         if est is not None:
             return est
