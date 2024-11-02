@@ -23,7 +23,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
     def __init__(self, samples_n: int = 10):
         super().__init__()
         self.samples_n = samples_n
-        
+
     def __call__(
         self,
         dependencies: Dict[str, np.array],

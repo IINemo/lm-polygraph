@@ -173,7 +173,7 @@ class UEManager:
         self.ignore_exceptions = ignore_exceptions
         self.verbose = verbose
         self.max_new_tokens = max_new_tokens
-        
+
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
 
@@ -187,8 +187,8 @@ class UEManager:
         for sc in self.stat_calculator_descr:
             for stat in sc.stats:
                 self.stat_calculators_dict[stat] = sc
-            
-        #stat_calculators_dict = {sc.name: sc for sc in self.stat_calculator_descr}
+
+        # stat_calculators_dict = {sc.name: sc for sc in self.stat_calculator_descr}
         stat_dependencies_dict = dict()
         for sc in self.stat_calculator_descr:
             for stat in sc.stats:
@@ -321,12 +321,14 @@ class UEManager:
                 batch_stats, self.estimators
             )
 
-            batch_callback(batch_i, target_texts, batch_stats, batch_estimations, bad_estimators)
+            batch_callback(
+                batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
+            )
 
             torch.cuda.empty_cache()
             gc.collect()
 
-        return self.estimations 
+        return self.estimations
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """

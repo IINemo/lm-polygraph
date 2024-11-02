@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import List
 from omegaconf import OmegaConf
 
 from lm_polygraph.stat_calculators import *
@@ -9,9 +9,10 @@ from lm_polygraph.utils.factory_stat_calculator import (
 
 def register_default_stat_calculators(model_type: str) -> List[StatCalculatorContainer]:
     """
-    Registers all available statistic calculators to be seen by UEManager
-    for properly organizing the calculations order.
+    Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
+    estimate_uncertainty() function with default configurations.
     """
+
     all_stat_calculators = []
 
     def _register(
@@ -32,25 +33,11 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
             stats=calculator_class.meta_info()[0],
         )
         all_stat_calculators.append(sc)
-        # stats, dependencies = calculator_class.meta_info()
-        # for stat in stats:
-        #     if stat in stat_calculators.keys():
-        #         continue
-
-        #     dct = dict()
-        #     dct.update(default_config)
-        #     dct.update({"obj": calculator_class.__name__})
-        #     dct = OmegaConf.create(dct)
-        #     stat_calculators[stat] = StatCalculatorContainer(
-        #         obj=calculator_class,
-        #         builder=builder,
-        #         cfg=dct,
-        #     )
-        #     stat_dependencies[stat] = dependencies
 
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
+
     elif model_type == "Whitebox":
         _register(GreedyProbsCalculator)
         _register(EntropyCalculator)
@@ -60,10 +47,10 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(SemanticClassesCalculator)    
-        _register(PromptCalculator)    
-        _register(SamplingPromptCalculator)    
-        _register(ClaimPromptCalculator)        
+        _register(SemanticClassesCalculator)
+        _register(PromptCalculator)
+        _register(SamplingPromptCalculator)
+        _register(ClaimPromptCalculator)
         _register(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
@@ -73,7 +60,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
                     "batch_size": 10,
                     "device": "cuda",
                 },
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large"
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
         _register(
@@ -112,11 +99,9 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {
-                "openai_model": "gpt-4o",
-                "cache_path": "~/.cache"
-            },
+            {"openai_model": "gpt-4o", "cache_path": "~/.cache"},
         )
+
     else:
         raise NotImplementedError(f"Unknown model type: {model_type}")
 

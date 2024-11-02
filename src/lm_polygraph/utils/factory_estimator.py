@@ -2,7 +2,7 @@ from importlib import import_module
 from lm_polygraph.estimators import *
 
 
-def load_simple_estimators(name, config):
+def load_simple_estimators(name: str, config):
     SIMPLE_ESTIMATORS = [
         MaximumSequenceProbability,
         Perplexity,
@@ -53,6 +53,8 @@ def load_simple_estimators(name, config):
 
 
 class FactoryEstimator:
+    """Constructs an estimator from a given name and configuration."""
+
     def __call__(self, name: str, config) -> Estimator:
         est = load_simple_estimators(name, config)
         if est is not None:

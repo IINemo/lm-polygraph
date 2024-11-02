@@ -6,6 +6,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class WhiteboxModelBasic(Model):
+    """Basic whitebox model adapter for using in stat calculators and uncertainty estimators."""
+
     def __init__(self, model: AutoModelForCausalLM, tokenizer: AutoTokenizer):
         self.model = model
         self.tokenizer = tokenizer

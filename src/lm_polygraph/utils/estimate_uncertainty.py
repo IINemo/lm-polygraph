@@ -5,8 +5,12 @@ from lm_polygraph.utils.model import Model, WhiteboxModel
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.builder_enviroment_stat_calculator import BuilderEnvironmentStatCalculator
-from lm_polygraph.defaults.register_default_stat_calculators import register_default_stat_calculators
+from lm_polygraph.utils.builder_enviroment_stat_calculator import (
+    BuilderEnvironmentStatCalculator,
+)
+from lm_polygraph.defaults.register_default_stat_calculators import (
+    register_default_stat_calculators,
+)
 
 
 @dataclass
@@ -75,7 +79,9 @@ def estimate_uncertainty(
         Dataset([input_text], [""], batch_size=1),
         model,
         [estimator],
-        available_stat_calculators=register_default_stat_calculators(model_type), # TODO:
+        available_stat_calculators=register_default_stat_calculators(
+            model_type
+        ),  # TODO:
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],
         ue_metrics=[],

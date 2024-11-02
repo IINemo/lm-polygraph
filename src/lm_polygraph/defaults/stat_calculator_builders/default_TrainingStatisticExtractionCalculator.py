@@ -17,7 +17,7 @@ def load_dataset(args):
             dataset_name = args.train_dataset
         else:
             dataset_name = args.dataset
-        
+
         train_dataset = Dataset.load(
             dataset_name,
             args.text_column,
@@ -25,7 +25,11 @@ def load_dataset(args):
             batch_size=args.batch_size,
             prompt=getattr(args, "prompt", ""),
             description=getattr(args, "description", ""),
-            mmlu_max_subject_size=getattr(args, "mmlu_max_subject_size", 100) if "cais/mmlu" in dataset_name else 0,
+            mmlu_max_subject_size=(
+                getattr(args, "mmlu_max_subject_size", 100)
+                if "cais/mmlu" in dataset_name
+                else 0
+            ),
             n_shot=getattr(args, "n_shot", 5),
             few_shot_split=getattr(args, "few_shot_split", "train"),
             few_shot_prompt=getattr(args, "few_shot_prompt", None),
@@ -35,7 +39,7 @@ def load_dataset(args):
             load_from_disk=args.load_from_disk,
             trust_remote_code=getattr(args, "trust_remote_code", False),
         )
-        
+
     background_train_dataset = Dataset.load(
         args.background_train_dataset,
         args.background_train_dataset_text_column,

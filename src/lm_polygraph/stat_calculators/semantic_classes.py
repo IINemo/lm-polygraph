@@ -18,13 +18,15 @@ class SemanticClassesCalculator(StatCalculator):
         Returns the statistics and dependencies for the calculator.
         """
 
-        return ["semantic_classes_entail",],[
+        return [
+            "semantic_classes_entail",
+        ], [
             "sample_texts",
             "semantic_matrix_entail",
             "semantic_matrix_classes",
             "entailment_id",
         ]
-        
+
     def __init__(self):
         super().__init__()
 

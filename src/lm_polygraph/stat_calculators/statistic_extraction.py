@@ -17,7 +17,11 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
         Returns the statistics and dependencies for the calculator.
         """
 
-        return ["train_embeddings", "background_train_embeddings", "train_greedy_log_likelihoods"], []
+        return [
+            "train_embeddings",
+            "background_train_embeddings",
+            "train_greedy_log_likelihoods",
+        ], []
 
     def __init__(self, train_dataset=None, background_train_dataset=None):
         super().__init__()
