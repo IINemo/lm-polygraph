@@ -25,38 +25,8 @@ def load_input_texts(dataset, method=None):
     with open(f"{pwd()}/fixtures/{filename}.txt", "r") as f:
         return f.read()
 
-
-def run_eval(dataset):
-    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
-                polygraph_eval \
-                subsample_eval_dataset=2 \
-                subsample_train_dataset=2 \
-                subsample_background_train_dataset=2 \
-                model.path=bigscience/bloomz-560m \
-                model.load_model_args.device_map={get_device()} \
-                use_density_based_ue=false \
-                save_path={pwd()}"
-
-    return subprocess.run(command, shell=True)
-
-
-def run_instruct_eval(dataset, method):
-    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/instruct/polygraph_eval_{dataset}_{method}.yaml \
-                polygraph_eval \
-                subsample_eval_dataset=2 \
-                subsample_train_dataset=2 \
-                subsample_background_train_dataset=2 \
-                model=stablelm-1.6b-chat \
-                model.load_model_args.device_map={get_device()} \
-                use_density_based_ue=false \
-                save_path={pwd()}"
-
-    return subprocess.run(command, shell=True)
-
-
 def pwd():
     return pathlib.Path(__file__).parent.resolve()
-
 
 def check_result(dataset, exec_result, method=None):
     assert (
@@ -77,6 +47,19 @@ def check_result(dataset, exec_result, method=None):
 
 
 # ================= TEST CASES ==================
+
+def run_eval(dataset):
+    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
+                polygraph_eval \
+                subsample_eval_dataset=2 \
+                subsample_train_dataset=2 \
+                subsample_background_train_dataset=2 \
+                model.path=bigscience/bloomz-560m \
+                model.load_model_args.device_map={get_device()} \
+                use_density_based_ue=false \
+                save_path={pwd()}"
+
+    return subprocess.run(command, shell=True)
 
 
 def test_coqa():
@@ -116,6 +99,18 @@ def test_xsum():
 
 # ================= INSTRUCT TEST CASES ==================
 
+def run_instruct_eval(dataset, method):
+    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/instruct/polygraph_eval_{dataset}_{method}.yaml \
+                polygraph_eval \
+                subsample_eval_dataset=2 \
+                subsample_train_dataset=2 \
+                subsample_background_train_dataset=2 \
+                model=stablelm-1.6b-chat \
+                model.load_model_args.device_map={get_device()} \
+                use_density_based_ue=false \
+                save_path={pwd()}"
+
+    return subprocess.run(command, shell=True)
 
 METHODS = ["ling_1s", "verb_1s_top1", "verb_1s_topk", "verb_2s_top1", "verb_2s_topk", "verb_2s_cot", "empirical_baselines"]
 
