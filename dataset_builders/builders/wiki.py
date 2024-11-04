@@ -18,5 +18,7 @@ CONFIG = {
             input_column="input_text",
             prompt="This is a Wikipedia passage about {context}:\n",
         ),
+        "dataset": "wiki_bio",
+        "subset": "continuation",
     },
 }

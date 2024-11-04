@@ -26,5 +26,7 @@ CONFIG = {
             output_column="answer",
             prompt="Imagine that you are only able to say a single word. Answer the question given a context. You must only output the full name of the location the same way it is mentioned in the text. Do not try to be polite of helpful.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\nContext:\n{context}\n\nQuestion:\n{question}\nAnswer:\n",
         ),
+        "dataset": "babi_qa",
+        "subset": "continuation",
     },
 }

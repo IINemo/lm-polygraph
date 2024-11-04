@@ -42,35 +42,18 @@ def parse_args():
 
 def get_dataset_path(dataset_name, namespace):
     config = DATASET_CONFIG[dataset_name]
-    is_main_dataset = config.get("is_main_dataset", True)
-    if is_main_dataset:
-        result_dataset_name = dataset_name
-        subset = "continuation"
-    else:
-        result_dataset_name = dataset_name.split("_")[0]
-        subset = "_".join(dataset_name.split("_")[1:])
-
-    return f"{namespace}/{result_dataset_name}", subset
+    return f"{namespace}/{config['dataset']}", config["subset"]
 
 
 def create_readme_file(dataset_name, namespace):
-    config = DATASET_CONFIG[dataset_name]
-    source_dataset_name = (
-        config["name"][0] if isinstance(config["name"], list) else config["name"]
-    )
-    is_main_dataset = config.get("is_main_dataset", True)
-    if is_main_dataset:
-        result_dataset_name = dataset_name
-    else:
-        result_dataset_name = dataset_name.split("_")[0]
-
     with open("template_readme.md") as f:
         template_readme = f.read()
-    src_url = f"https://huggingface.co/datasets/{source_dataset_name}"
+    dataset = DATASET_CONFIG[dataset_name]["dataset"]
+    src_url = f"https://huggingface.co/datasets/{dataset}"
 
     readme_contents = template_readme.format(
         empty_brackets="{}",
-        dataset=result_dataset_name,
+        dataset=dataset,
         src_url=src_url,
     )
 

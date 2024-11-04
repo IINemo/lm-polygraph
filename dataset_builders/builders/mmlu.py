@@ -91,7 +91,7 @@ def prepare_mmlu(
     return x, y
 
 
-def generate_mmlu_instruct_config(description, few_shot_prompt):
+def generate_mmlu_instruct_config(description, few_shot_prompt, subset):
     return {
         "name": ["cais/mmlu", "all"],
         "train_split": "validation",
@@ -109,7 +109,8 @@ def generate_mmlu_instruct_config(description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
-        "is_main_dataset": False,
+        "dataset": "mmlu",
+        "subset": subset,
     }
 
 
@@ -131,33 +132,42 @@ CONFIG = {
             few_shot_prompt=None,
             instruct=False,
         ),
+        "dataset": "mmlu",
+        "subset": "continuation",
     },
     "mmlu_empirical_baselines": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}",
+        subset="empirical_baselines",
     ),
     "mmlu_ling_1s": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nConfidence: <appropriate level of confidence in this guess>",
+        subset="ling_1s",
     ),
     "mmlu_verb_1s_top1": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options and the probability that it is correct (0.0 to 1.0). Give ONLY the guess and probability, no other words or explanation. For example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nProbability: <number between 0.0 and 1.0 reflecting confidence in the guess>",
+        subset="verb_1s_top1",
     ),
     "mmlu_verb_1s_topk": generate_mmlu_instruct_config(
         description="Provide your {topk} best guesses for the following question about {subject} selecting one of the options and the probability that each guess is correct (0.0 to 1.0). Give ONLY the guesses and probabilities, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\nP{topk}: <the probability between 0.0 and 1.0 that G{topk} is correct, without any extra commentary whatsoever; just the probability!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG{topk}: <other guess>\nP{topk}: <probability of this guess>",
+        subset="verb_1s_topk",
     ),
     "mmlu_verb_2s_cot": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nExplanation: <step-by-step explanation of your thought process>\nGuess:{answer}",
+        subset="verb_2s_cot",
     ),
     "mmlu_verb_2s_top1": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}",
+        subset="verb_2s_top1",
     ),
     "mmlu_verb_2s_topk": generate_mmlu_instruct_config(
         description="Provide your {topk} best guesses for the following question about {subject} selecting one of the options. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\n...\nG{topk}: <other guess>",
+        subset="verb_2s_topk",
     ),
 }

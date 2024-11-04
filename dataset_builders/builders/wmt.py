@@ -31,7 +31,8 @@ CONFIG = {
             output_column="en",
             prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
         ),
-        "is_main_dataset": False,
+        "dataset": "wmt14",
+        "subset": "deen",
     },
     "wmt14_fren": {
         "name": ["wmt14", "fr-en"],
@@ -43,7 +44,8 @@ CONFIG = {
             output_column="en",
             prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
         ),
-        "is_main_dataset": False,
+        "dataset": "wmt14",
+        "subset": "fren",
     },
     "wmt19_deen": {
         "name": ["wmt19", "de-en"],
@@ -55,6 +57,7 @@ CONFIG = {
             output_column="en",
             prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
         ),
-        "is_main_dataset": False,
+        "dataset": "wmt19",
+        "subset": "deen",
     },
 }
