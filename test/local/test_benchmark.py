@@ -9,6 +9,14 @@ from lm_polygraph.utils.manager import UEManager
 
 # ================= TEST HELPERS ==================
 
+def get_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"
+
 def load_input_texts(dataset, method=None):
     filename = f"{dataset}"
     if method:
@@ -19,20 +27,13 @@ def load_input_texts(dataset, method=None):
 
 
 def run_eval(dataset):
-    if torch.cuda.is_available():
-        device = "cuda"
-    elif torch.mps.is_available():
-        device = "mps"
-    else:
-        device = "cpu"
-
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
                 subsample_train_dataset=2 \
                 subsample_background_train_dataset=2 \
                 model.path=bigscience/bloomz-560m \
-                model.load_model_args.device_map={device} \
+                model.load_model_args.device_map={get_device()} \
                 use_density_based_ue=false \
                 save_path={pwd()}"
 
@@ -40,20 +41,13 @@ def run_eval(dataset):
 
 
 def run_instruct_eval(dataset, method):
-    if torch.cuda.is_available():
-        device = "cuda"
-    elif torch.mps.is_available():
-        device = "mps"
-    else:
-        device = "cpu"
-
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/instruct/polygraph_eval_{dataset}_{method}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
                 subsample_train_dataset=2 \
                 subsample_background_train_dataset=2 \
                 model=stablelm-1.6b-chat \
-                model.load_model_args.device_map={device} \
+                model.load_model_args.device_map={get_device()} \
                 use_density_based_ue=false \
                 save_path={pwd()}"
 
@@ -119,7 +113,9 @@ def test_xsum():
     exec_result = run_eval("xsum")
     check_result('xsum', exec_result)
 
+
 # ================= INSTRUCT TEST CASES ==================
+
 
 METHODS = ["ling_1s", "verb_1s_top1", "verb_1s_topk", "verb_2s_top1", "verb_2s_topk", "verb_2s_cot", "empirical_baselines"]
 
@@ -137,3 +133,36 @@ def test_mmlu_instruct():
     for method in METHODS:
         exec_result = run_instruct_eval("mmlu", method)
         check_result('mmlu', exec_result, method)
+
+
+# ================= CLAIM-LEVEL ==================
+
+def run_claim_eval(dataset):
+    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
+                polygraph_eval \
+                subsample_eval_dataset=2 \
+                model.path=bigscience/bloomz-560m \
+                model.load_model_args.device_map={get_device()} \
+                save_path={pwd()}"
+
+    return subprocess.run(command, shell=True)
+
+def check_claim_level_result(dataset):
+    man = UEManager.load(f"{pwd()}/ue_manager_seed1")
+
+    try:
+        assert man.stats["input_texts"][0] == load_input_texts(dataset)
+    except:
+        sys.stdout.flush()
+        breakpoint()
+
+    os.remove(f"{pwd()}/ue_manager_seed1")
+
+def test_person_bio():
+    base_dataset_name = "person_bio"
+    langs = ["en", "ru", "zh", "ar"]
+
+    for lang in langs:
+        dataset = f"{base_dataset_name}_{lang}"
+        exec_result = run_claim_eval(dataset)
+        check_claim_level_result(dataset)
