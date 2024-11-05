@@ -10,35 +10,28 @@ log = logging.getLogger("lm_polygraph")
 def load_dataset(args):
     log.info("=" * 100)
     log.info("Loading train dataset...")
-    if args.train_test_split:
-        raise NotImplementedError
-    else:
-        if (args.train_dataset is not None) and (args.train_dataset != args.dataset):
-            dataset_name = args.train_dataset
-        else:
-            dataset_name = args.dataset
-
-        train_dataset = Dataset.load(
-            dataset_name,
-            args.text_column,
-            getattr(args, "label_column", None),
-            batch_size=args.batch_size,
-            prompt=getattr(args, "prompt", ""),
-            description=getattr(args, "description", ""),
-            mmlu_max_subject_size=(
-                getattr(args, "mmlu_max_subject_size", 100)
-                if "cais/mmlu" in dataset_name
-                else 0
-            ),
-            n_shot=getattr(args, "n_shot", 5),
-            few_shot_split=getattr(args, "few_shot_split", "train"),
-            few_shot_prompt=getattr(args, "few_shot_prompt", None),
-            instruct=getattr(args, "instruct", None),
-            split=args.train_split,
-            size=10_000,
-            load_from_disk=args.load_from_disk,
-            trust_remote_code=getattr(args, "trust_remote_code", False),
-        )
+    
+    train_dataset = Dataset.load(
+        args.dataset,
+        args.text_column,
+        getattr(args, "label_column", None),
+        batch_size=args.batch_size,
+        prompt=getattr(args, "prompt", ""),
+        description=getattr(args, "description", ""),
+        mmlu_max_subject_size=(
+            getattr(args, "mmlu_max_subject_size", 100)
+            if "cais/mmlu" in args.dataset
+            else 0
+        ),
+        n_shot=getattr(args, "n_shot", 5),
+        few_shot_split=getattr(args, "few_shot_split", "train"),
+        few_shot_prompt=getattr(args, "few_shot_prompt", None),
+        instruct=getattr(args, "instruct", None),
+        split=args.train_split,
+        size=10_000,
+        load_from_disk=args.load_from_disk,
+        trust_remote_code=getattr(args, "trust_remote_code", False),
+    )
 
     background_train_dataset = Dataset.load(
         args.background_train_dataset,

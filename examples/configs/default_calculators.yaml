@@ -14,8 +14,6 @@ stat_calculators:
       subsample_train_dataset: 1000
       n_shot: '${n_shot}'
       mmlu_max_subject_size: '${mmlu_max_subject_size}'
-      train_dataset: '${train_dataset}'
-      train_test_split: '${train_test_split}'
       background_train_dataset: allenai/c4
       background_train_dataset_text_column: text
       background_train_dataset_label_column: url
