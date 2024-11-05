@@ -4,6 +4,7 @@ import os
 import torch
 import sys
 import json
+import pytest
 
 from lm_polygraph.utils.manager import UEManager
 
@@ -19,7 +20,7 @@ def get_device():
         return "cpu"
 
 @pytest.fixture(scope="module")
-def reference_texts(reference):
+def reference():
     with open(f"{pwd()}/fixtures/input_output_fixtures.json") as f:
         return json.load(f)
 
@@ -54,49 +55,48 @@ def run_eval(dataset):
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
-                subsample_train_dataset=2 \
-                subsample_background_train_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
                 use_density_based_ue=false \
-                save_path={pwd()}"
+                save_path={pwd()} \
+                > log.log"
 
     return subprocess.run(command, shell=True)
 
 
 def test_coqa(reference):
     exec_result = run_eval("coqa")
-    check_result('coqa', exec_result, reference):
+    check_result('coqa', exec_result, reference)
 
 
 def test_triviaqa(reference):
     exec_result = run_eval("triviaqa")
-    check_result('triviaqa', exec_result, reference):
+    check_result('triviaqa', exec_result, reference)
 
 
 def test_mmlu(reference):
     exec_result = run_eval("mmlu")
-    check_result('mmlu', exec_result, reference):
+    check_result('mmlu', exec_result, reference)
 
 
 def test_gsm8k(reference):
     exec_result = run_eval("gsm8k")
-    check_result('gsm8k', exec_result, reference):
+    check_result('gsm8k', exec_result, reference)
 
 
 def test_wmt14_fren(reference):
     exec_result = run_eval("wmt14_fren")
-    check_result('wmt14_fren', exec_result, reference):
+    check_result('wmt14_fren', exec_result, reference)
 
 
 def test_wmt19_deen(reference):
     exec_result = run_eval("wmt19_deen")
-    check_result('wmt19_deen', exec_result, reference):
+    check_result('wmt19_deen', exec_result, reference)
 
 
 def test_xsum(reference):
     exec_result = run_eval("xsum")
-    check_result('xsum', exec_result, reference):
+    check_result('xsum', exec_result, reference)
 
 
 # ================= INSTRUCT TEST CASES ==================
@@ -105,7 +105,6 @@ def run_instruct_eval(dataset, method):
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/instruct/polygraph_eval_{dataset}_{method}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
-                subsample_train_dataset=2 \
                 subsample_background_train_dataset=2 \
                 model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={get_device()} \
@@ -144,7 +143,7 @@ def run_claim_eval(dataset):
 
     return subprocess.run(command, shell=True)
 
-def check_claim_level_result(dataset):
+def check_claim_level_result(dataset, reference):
     man = UEManager.load(f"{pwd()}/ue_manager_seed1")
 
     try:
@@ -163,4 +162,10 @@ def test_person_bio(reference):
     for lang in langs:
         dataset = f"{base_dataset_name}_{lang}"
         exec_result = run_claim_eval(dataset)
-        check_claim_level_result(dataset)
+        check_claim_level_result(dataset, reference)
+
+def test_wiki_bio(reference):
+    dataset = "wiki_bio"
+
+    exec_result = run_claim_eval(dataset)
+    check_claim_level_result(dataset, reference)
