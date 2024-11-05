@@ -4,7 +4,7 @@ from functools import partial
 def prepare_wiki(dataset, input_column, prompt):
     x, y = [], []
     for sample in dataset[input_column]:
-        x.append(prompt.format(context=sample["context".strip()]))
+        x.append(prompt.format(context=sample["context"].strip()))
         y.append("")
     return x, y
 
