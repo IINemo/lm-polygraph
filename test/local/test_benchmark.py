@@ -60,8 +60,7 @@ def run_eval(dataset):
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
                 use_density_based_ue=false \
-                save_path={pwd()} \
-                > log.log"
+                save_path={pwd()}"
 
     return subprocess.run(command, shell=True)
 
