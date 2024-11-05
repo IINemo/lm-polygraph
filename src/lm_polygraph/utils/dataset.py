@@ -183,40 +183,11 @@ class Dataset:
                 Default: None.
         """
         dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
-        few_shot_dataset = None
-        if n_shot > 0:
-            _, few_shot_dataset = Dataset.load_hf_dataset(
-                dataset_path, few_shot_split, **kwargs
-            )
 
         if size is not None and size < len(dataset):
             dataset = dataset.select(range(size))
 
-        if ("wiki" in dataset_name.lower()) and len(prompt):
-            x, y = [], []
-            for sample in dataset[x_column]:
-                x.append(prompt.format(context=sample["context"].strip()))
-                y.append("")
-        elif "person" in dataset_name.lower():
-            x = dataset[x_column]
-            if len(prompt):
-                for i in range(len(x)):
-                    x[i] = prompt.format(text=x[i])
-            y = []
-            for _ in x:
-                y.append("")
-        elif ("babi_qa" in dataset_name.lower()) and len(prompt):
-            x, y = [], []
-            for inst in dataset:
-                inst = inst["story"]
-                context = ""
-                for text, answer in zip(inst[x_column], inst[y_column]):
-                    if answer == "":
-                        context += text + " "
-                    else:
-                        x.append(prompt.format(context=context.strip(), question=text))
-                        y.append(answer)
-        elif "allenai/c4" in dataset_name.lower():
+        if "allenai/c4" in dataset_name.lower():
             x, y = [], []
             for inst in dataset:
                 if len(inst[x_column]) <= 1024:
