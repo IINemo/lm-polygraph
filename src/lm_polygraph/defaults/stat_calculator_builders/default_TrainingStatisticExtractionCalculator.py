@@ -10,7 +10,7 @@ log = logging.getLogger("lm_polygraph")
 def load_dataset(args):
     log.info("=" * 100)
     log.info("Loading train dataset...")
-    
+
     train_dataset = Dataset.load(
         args.dataset,
         args.text_column,
