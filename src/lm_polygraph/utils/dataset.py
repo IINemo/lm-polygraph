@@ -195,7 +195,10 @@ class Dataset:
                     y.append(inst[y_column])
         else:
             x = dataset[x_column]
-            y = dataset[y_column]
+            if y_column is not None:
+                y = dataset[y_column]
+            else:
+                y = 'None'
 
         return Dataset(x, y, batch_size)
 
