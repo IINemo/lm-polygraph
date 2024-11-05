@@ -58,7 +58,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
                 "nli_model": {
                     "deberta_path": "microsoft/deberta-large-mnli",
                     "batch_size": 10,
-                    "device": "cuda",
+                    "device": None,
                 },
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
@@ -70,7 +70,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
                 "nli_model": {
                     "deberta_path": "microsoft/deberta-large-mnli",
                     "batch_size": 10,
-                    "device": "cuda",
+                    "device": None,
                 }
             },
         )
@@ -81,7 +81,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
                 "nli_model": {
                     "deberta_path": "microsoft/deberta-large-mnli",
                     "batch_size": 10,
-                    "device": "cuda",
+                    "device": None,
                 }
             },
         )
@@ -92,7 +92,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
                 "nli_model": {
                     "deberta_path": "microsoft/deberta-large-mnli",
                     "batch_size": 10,
-                    "device": "cuda",
+                    "device": None,
                 }
             },
         )
