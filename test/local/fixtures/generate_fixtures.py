@@ -10,6 +10,7 @@ from lm_polygraph.utils.manager import UEManager
 def pwd():
     return pathlib.Path(__file__).parent.resolve()
 
+
 def get_device():
     if torch.cuda.is_available():
         return "cuda"
@@ -18,9 +19,11 @@ def get_device():
     else:
         return "cpu"
 
+
 result = {}
 
 # ============ CONTINUATION ============
+
 
 def run_eval(dataset):
     command = f"HYDRA_CONFIG={pwd()}/../../../examples/configs/polygraph_eval_{dataset}.yaml \
@@ -40,30 +43,43 @@ def print_result(dataset, exec_result):
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
     man = UEManager.load(f"{pwd()}/ue_manager_seed1")
-    
-    result[f"{dataset}_input"] = man.stats['input_texts'][0]
-    result[f"{dataset}_output"] = man.stats['target_texts'][0]
+
+    result[f"{dataset}_input"] = man.stats["input_texts"][0]
+    result[f"{dataset}_output"] = man.stats["target_texts"][0]
 
     os.remove(f"{pwd()}/ue_manager_seed1")
 
-datasets = ["coqa", "triviaqa", "mmlu", "gsm8k", "wmt14_fren", "wmt19_deen", "xsum", "aeslc", "babiqa"]
+
+datasets = [
+    "coqa",
+    "triviaqa",
+    "mmlu",
+    "gsm8k",
+    "wmt14_fren",
+    "wmt19_deen",
+    "xsum",
+    "aeslc",
+    "babiqa",
+]
 
 
 for dataset in datasets:
     exec_result = run_eval(dataset)
     print_result(dataset, exec_result)
 
-# ============ INSTRUCT ============ 
+# ============ INSTRUCT ============
 
 
 datasets = ["coqa", "triviaqa", "mmlu"]
-methods = ["ling_1s",
-           "verb_1s_top1",
-           "verb_1s_topk",
-           "verb_2s_top1",
-           "verb_2s_topk",
-           "verb_2s_cot",
-           "empirical_baselines"]
+methods = [
+    "ling_1s",
+    "verb_1s_top1",
+    "verb_1s_topk",
+    "verb_2s_top1",
+    "verb_2s_topk",
+    "verb_2s_cot",
+    "empirical_baselines",
+]
 
 
 def run_instruct_eval(dataset, method):
@@ -86,8 +102,8 @@ def print_instruct_result(dataset, exec_result, method):
 
     man = UEManager.load(f"{pwd()}/ue_manager_seed1")
 
-    result[f"{dataset}_{method}_input"] = man.stats['input_texts'][0]
-    result[f"{dataset}_{method}_output"] = man.stats['target_texts'][0]
+    result[f"{dataset}_{method}_input"] = man.stats["input_texts"][0]
+    result[f"{dataset}_{method}_output"] = man.stats["target_texts"][0]
 
     os.remove(f"{pwd()}/ue_manager_seed1")
 
@@ -98,7 +114,7 @@ for dataset in datasets:
         print_instruct_result(dataset, exec_result, method)
 
 
-# ============ CLAIM ============ 
+# ============ CLAIM ============
 
 
 datasets = [
@@ -106,7 +122,7 @@ datasets = [
     "person_bio_ru",
     "person_bio_ar",
     "person_bio_zh",
-    "wiki_bio"
+    "wiki_bio",
 ]
 
 
@@ -124,8 +140,8 @@ def run_claim_eval(dataset):
 def print_claim_result(dataset, exec_result):
     man = UEManager.load(f"{pwd()}/ue_manager_seed1")
 
-    result[f"{dataset}_input"] = man.stats['input_texts'][0]
-    result[f"{dataset}_output"] = man.stats['target_texts'][0]
+    result[f"{dataset}_input"] = man.stats["input_texts"][0]
+    result[f"{dataset}_output"] = man.stats["target_texts"][0]
 
     os.remove(f"{pwd()}/ue_manager_seed1")
 
@@ -135,5 +151,5 @@ for dataset in datasets:
     print_claim_result(dataset, exec_result)
 
 
-with open('input_output_fixtures.json', 'w') as f:
+with open("input_output_fixtures.json", "w") as f:
     json.dump(result, f)
