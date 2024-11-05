@@ -198,7 +198,7 @@ class Dataset:
             if y_column is not None:
                 y = dataset[y_column]
             else:
-                y = ''
+                y = ['' for _ in range(len(x))]
 
         return Dataset(x, y, batch_size)
 
