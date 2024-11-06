@@ -55,11 +55,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
             {
-                "nli_model": {
-                    "deberta_path": "microsoft/deberta-large-mnli",
-                    "batch_size": 10,
-                    "device": None,
-                },
+                "batch_size": 10,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
