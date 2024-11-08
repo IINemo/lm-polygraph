@@ -401,7 +401,7 @@ class UEManager:
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
         self.total_bad_estimators: Dict[Estimator, float] = {}
         self.stats: Dict[str, List] = defaultdict(list)
-        self.save_stats = list(set(['greedy_texts', 'greedy_tokens']) + set(save_stats))
+        self.save_stats = list(set(['greedy_texts', 'greedy_tokens']).union(set(save_stats)))
 
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions

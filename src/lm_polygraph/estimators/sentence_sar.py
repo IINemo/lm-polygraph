@@ -319,7 +319,7 @@ class DistilOneSentenceSAR(Estimator):
         ):
             sample_probs = np.exp(np.array(sample_log_probs))
             np.fill_diagonal(sample_sentence_similarity, 1)
-            
+
             R_s = (
                 sample_probs
                 * sample_sentence_similarity
