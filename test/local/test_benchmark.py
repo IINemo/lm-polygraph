@@ -6,6 +6,12 @@ import json
 import pytest
 
 from lm_polygraph.utils.manager import UEManager
+from lm_polygraph.utils.builder_enviroment_stat_calculator import (
+    BuilderEnvironmentStatCalculator,
+)
+from lm_polygraph.defaults.register_default_stat_calculators import (
+    register_default_stat_calculators,
+)
 
 
 # ================= TEST HELPERS ==================
@@ -35,7 +41,13 @@ def check_result(dataset, exec_result, reference, method=None):
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
-    man = UEManager.load(f"{pwd()}/ue_manager_seed1")
+    man = UEManager.load(
+        f"{pwd()}/ue_manager_seed1",
+        builder_env_stat_calc=BuilderEnvironmentStatCalculator(None),
+        available_stat_calculators=register_default_stat_calculators(
+            model_type="Whitebox"
+        ),
+    )
 
     if method is None:
         assert len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 2
@@ -59,7 +71,6 @@ def run_eval(dataset):
                 subsample_eval_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
-                use_density_based_ue=false \
                 save_path={pwd()}"
 
     return subprocess.run(command, shell=True)
@@ -110,7 +121,6 @@ def run_instruct_eval(dataset, method):
                 subsample_background_train_dataset=2 \
                 model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={get_device()} \
-                use_density_based_ue=false \
                 save_path={pwd()}"
 
     return subprocess.run(command, shell=True)
@@ -160,7 +170,13 @@ def run_claim_eval(dataset):
 
 
 def check_claim_level_result(dataset, reference):
-    man = UEManager.load(f"{pwd()}/ue_manager_seed1")
+    man = UEManager.load(
+        f"{pwd()}/ue_manager_seed1",
+        builder_env_stat_calc=BuilderEnvironmentStatCalculator(None),
+        available_stat_calculators=register_default_stat_calculators(
+            model_type="Whitebox"
+        ),
+    )
 
     assert man.stats["input_texts"][0] == reference[dataset + "_input"]
     assert man.stats["target_texts"][0] == reference[dataset + "_output"]

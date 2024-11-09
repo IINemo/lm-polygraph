@@ -5,12 +5,6 @@ defaults:
 
 experiment_name: mmlu_ling_1s
 
-dataset: [LM-Polygraph/mmlu, ling_1s]
-description: "Provide your best guess for the following question about {subject} selecting one of the options, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>"
-few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nConfidence: <appropriate level of confidence in this guess>"
-prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
-max_new_tokens: 23
-
 expressions_of_confidence:
   Almost Certain: 0.95
   Highly Likely: 0.9
@@ -29,6 +23,12 @@ expressions_of_confidence:
   Improbable: 0.1
   Highly Unlikely: 0.05
   Almost No Chance: 0.02
+
+dataset: [LM-Polygraph/mmlu, ling_1s]
+description: "Provide your best guess for the following question about {subject} selecting one of the options, and describe how likely it is that your guess is correct as one of the following expressions:\n\nAlmost Certain\nHighly Likely\nVery Good Chance\nWe Beleive\nProbably\nProbable\nLikely\nBetter than Even\nAbout Even\nProbably Not\nWe Doubt\nUnlikely\nLittle Chance\nChances Are Slight\nImprobable\nHighly Unlikely\nAlmost No Chance\n\nGive ONLY the guess and your confidence, no other words or explanation. For example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>\nConfidence: <description of confidence, without any extra commentary whatsoever; just a short phrase!>"
+few_shot_prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nGuess:{answer}\nConfidence: <appropriate level of confidence in this guess>"
+prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
+max_new_tokens: 23
 
 estimators:
   - name: Linguistic1S

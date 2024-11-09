@@ -429,7 +429,11 @@ class UEManager:
         )
 
     @staticmethod
-    def load(load_path: str) -> "UEManager":
+    def load(
+        load_path: str,
+        builder_env_stat_calc: BuilderEnvironmentStatCalculator,
+        available_stat_calculators: List[StatCalculatorContainer],
+    ) -> "UEManager":
         """
         Loads UEManager from the specified path. To save the calculated manager results, see UEManager.save().
 
@@ -437,7 +441,17 @@ class UEManager:
             load_path (str): Path to file with saved benchmark results to load.
         """
         res_dict = torch.load(load_path)
-        man = UEManager(None, None, [], [], [], [])
+        man = UEManager(
+            data=None,
+            model=None,
+            estimators=[],
+            available_stat_calculators=available_stat_calculators,
+            generation_metrics=[],
+            ue_metrics=[],
+            processors=[],
+            builder_env_stat_calc=builder_env_stat_calc,
+        )
+
         man.metrics = res_dict.get("metrics", None)
         man.gen_metrics = res_dict.get("gen_metrics", None)
         man.estimations = res_dict.get("estimations", None)
