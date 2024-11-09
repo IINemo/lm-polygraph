@@ -63,6 +63,7 @@ def register_stat_calculators(
     else:
         _register(GreedyProbsCalculator(n_alternatives=n_ccp_alternatives))
         _register(EntropyCalculator())
+        _register(SampleEntropyCalculator())
         _register(GreedyLMProbsCalculator())
         _register(SamplingGenerationCalculator())
         _register(BartScoreCalculator())
