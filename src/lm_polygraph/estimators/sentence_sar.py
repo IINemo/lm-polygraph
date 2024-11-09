@@ -503,3 +503,56 @@ class DistilMTESAR(Estimator):
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
+
+
+class EntropySentenceSAR(Estimator):
+    """
+    Like SAR, but uses sample entropy calculated from token-wise log probs for each sample.
+    Tokenwise log-likelihoods are available in stats['sample_log_likelihoods'].
+    """
+    def __init__(self, verbose: bool = False):
+        super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
+        self.verbose = verbose
+        self.t = 0.001
+
+    def __str__(self):
+        return "EntropySentenceSAR"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the Entropy-based sentence-level uncertainty using token-wise log-likelihoods.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): Input statistics, including:
+                * 'sample_log_likelihoods': token-wise log-likelihoods for each sample.
+        
+        Returns:
+            np.ndarray: float PPL values for each sample.
+                Lower values indicate less uncertainty (better predictions), higher values indicate more uncertainty.
+        """
+        # Extract token-wise log-likelihoods from the stats
+        batch_sample_entropy = stats["sample_entropy"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+
+        # Loop over each sample's log-likelihoods and sentence similarities
+        for sample_entropy, sample_sentence_similarity in zip(
+            batch_sample_entropy, batch_sample_sentence_similarity
+        ):
+            entropy = sample_entropy
+            # Initialize the sentence relevance (R_s) using PPL
+            R_s = (
+                entropy  # Use entropy instead of probabilities
+                * sample_sentence_similarity
+                * (1 - np.eye(sample_sentence_similarity.shape[0]))  # Remove self-similarity
+            )
+
+            # Compute sentence relevance
+            sent_relevance = R_s.sum(-1) / self.t
+            # Compute SentenceSAR (Uncertainty Estimation) using PPL
+            E_s = -np.log(sent_relevance + entropy)
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+

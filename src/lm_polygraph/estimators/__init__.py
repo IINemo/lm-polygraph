@@ -71,6 +71,7 @@ from .sentence_sar import (
     DistilSAR,
     DistilPPLSAR,
     DistilMTESAR,
+    EntropySentenceSAR,
 )
 from .sar import SAR
 from .renyi_neg import RenyiNeg
