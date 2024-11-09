@@ -15,14 +15,9 @@ device: cpu
 instruct: false
 task: ats
 
-dataset: xsum
-text_column: document
-label_column: summary
-description: ""
-prompt: "Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):\n"
-n_shot: 0
-few_shot_split: train
-few_shot_prompt: ""
+dataset: ['LM-Polygraph/xsum', 'continuation']
+text_column: input
+label_column: output
 train_split: train
 eval_split: test
 max_new_tokens: 56

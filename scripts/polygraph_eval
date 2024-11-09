@@ -56,7 +56,7 @@ def main(args):
 
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
-        
+
         model = get_model(args)
 
         log.info("Done with loading model.")
@@ -112,17 +112,19 @@ def main(args):
             max_new_tokens=args.max_new_tokens
         )
 
-        man()
-
-        man.save(save_path + f"/ue_manager_seed{seed}")
+        try:
+            man()
+        except Exception as e:
+            man.state = "failed"
+            raise e
+        finally:
+            man.save(save_path + f"/ue_manager_seed{seed}")
 
 
 def get_ue_metrics(args):
     ue_metrics = [
-        ReversedPairsProportion(),
         PredictionRejectionArea(),
         PredictionRejectionArea(max_rejection=0.5),
-        RiskCoverageCurveAUC(),
     ]
     if getattr(args, "use_claim_ue", False):
         ue_metrics += [
@@ -209,7 +211,7 @@ def get_generation_metrics(args):
     process_output_fn = getattr(args, "process_output_fn", None)
     process_target_fn = getattr(args, "process_target_fn", None)
     if process_target_fn or process_output_fn:
-        if (getattr(args, "target_ignore_regex", None) or 
+        if (getattr(args, "target_ignore_regex", None) or
             getattr(args, "output_ignore_regex", None) or
             getattr(args, "normalize", False)):
             raise ValueError("Specifying ignore_regex or normalize simultaneously with process scripts is not allowed.")
@@ -243,7 +245,7 @@ def get_model(args, cache_kwargs={}):
 
 
 def get_blackbox_model(args):
-    provider = getattr(args.model, "provider", "") 
+    provider = getattr(args.model, "provider", "")
     if provider is None or provider.strip() == "":
         raise ValueError("Blackbox model provider cannot be empty or None. Please specify a valid provider.")
 

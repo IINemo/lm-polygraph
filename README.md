@@ -192,6 +192,7 @@ The server should be available on `http://localhost:3001`
 A more detailed description of the demo is available in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
 
 ## Cite
+EMNLP-2023 paper:
 ```
 @inproceedings{fadeeva-etal-2023-lm,
     title = "{LM}-Polygraph: Uncertainty Estimation for Language Models",
@@ -218,6 +219,16 @@ A more detailed description of the demo is available in the [documentation](http
     doi = "10.18653/v1/2023.emnlp-demo.41",
     pages = "446--461",
     abstract = "Recent advancements in the capabilities of large language models (LLMs) have paved the way for a myriad of groundbreaking applications in various fields. However, a significant challenge arises as these models often {``}hallucinate{''}, i.e., fabricate facts without providing users an apparent means to discern the veracity of their statements. Uncertainty estimation (UE) methods are one path to safer, more responsible, and more effective use of LLMs. However, to date, research on UE methods for LLMs has been focused primarily on theoretical rather than engineering contributions. In this work, we tackle this issue by introducing LM-Polygraph, a framework with implementations of a battery of state-of-the-art UE methods for LLMs in text generation tasks, with unified program interfaces in Python. Additionally, it introduces an extendable benchmark for consistent evaluation of UE techniques by researchers, and a demo web application that enriches the standard chat dialog with confidence scores, empowering end-users to discern unreliable responses. LM-Polygraph is compatible with the most recent LLMs, including BLOOMz, LLaMA-2, ChatGPT, and GPT-4, and is designed to support future releases of similarly-styled LMs.",
+}
+```
+
+Submitted:
+```
+@article{vashurin2024benchmarking,
+  title={Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph},
+  author={Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and Tsvigun, Akim and Vasilev, Daniil and Xing, Rui and Sadallah, Abdelrahman Boda and Rvanova, Lyudmila and Petrakov, Sergey and Panchenko, Alexander and others},
+  journal={arXiv preprint arXiv:2406.15627},
+  year={2024}
 }
 ```
 

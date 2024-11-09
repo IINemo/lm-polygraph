@@ -33,3 +33,4 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["Thumbs.db", ".DS_Store"]
 html_theme = "sphinx_rtd_theme"
+latex_engine = "xelatex"

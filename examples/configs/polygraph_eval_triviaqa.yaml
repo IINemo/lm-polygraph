@@ -14,18 +14,13 @@ save_path: '${hydra:run.dir}'
 instruct: false
 task: qa
 
-dataset: [trivia_qa, rc.nocontext]
-text_column: question
-label_column: answer
-description: ""
-prompt: "Question: {question}\nAnswer:{answer}"
-few_shot_prompt: null
-few_shot_split: train
+dataset: ['LM-Polygraph/triviaqa', 'continuation']
+text_column: input
+label_column: output
 train_split: train
-eval_split: validation
+eval_split: test
 max_new_tokens: 20
 load_from_disk: false
-n_shot: 5
 multiref: true
 trust_remote_code: false
 generation_params:

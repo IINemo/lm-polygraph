@@ -13,15 +13,11 @@ task: qa
 instruct: true
 experiment_name:
 
-dataset: [cais/mmlu, all]
-text_column: question
-label_column: answer
-few_shot_split: dev
-train_split: validation
+text_column: input
+label_column: output
+train_split: train
 eval_split: test
 load_from_disk: false
-n_shot: 5
-max_subject_size: 100
 generation_params: {}
 
 train_dataset: null

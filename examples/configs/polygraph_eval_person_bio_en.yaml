@@ -12,10 +12,8 @@ save_path: '${hydra:run.dir}'
 
 task: bio
 
-dataset_name: person-bio
-dataset: [rediska0123/person-bio]
-n_shot: 0
-text_column: question
+dataset: ['LM-Polygraph/person_bio', 'en']
+text_column: input
 eval_split: test
 max_new_tokens: 256
 load_from_disk: false
