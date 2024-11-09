@@ -71,7 +71,8 @@ def run_eval(dataset):
                 subsample_eval_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
-                save_path={pwd()}"
+                save_path={pwd()} \
+                stat_calculators.1.cfg.size=10"
 
     return subprocess.run(command, shell=True)
 

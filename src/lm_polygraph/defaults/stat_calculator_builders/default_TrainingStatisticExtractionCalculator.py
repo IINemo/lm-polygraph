@@ -18,19 +18,25 @@ def load_dataset(args):
         batch_size=args.batch_size,
         prompt=getattr(args, "prompt", ""),
         description=getattr(args, "description", ""),
-        mmlu_max_subject_size=(
-            getattr(args, "mmlu_max_subject_size", 100)
-            if "cais/mmlu" in args.dataset
-            else 0
-        ),
+        mmlu_max_subject_size=0,
+        # (
+        #     getattr(args, "mmlu_max_subject_size", 100)
+        #     if "cais/mmlu" in args.dataset
+        #     else 0
+        # ),
         n_shot=getattr(args, "n_shot", 5),
-        few_shot_split=getattr(args, "few_shot_split", "train"),
-        few_shot_prompt=getattr(args, "few_shot_prompt", None),
-        instruct=getattr(args, "instruct", None),
+        #n_shot=args.n_shot,
+        few_shot_split=args.few_shot_split,
+        few_shot_prompt=None,
+        instruct=None,
+        # few_shot_split=getattr(args, "few_shot_split", "train"),
+        # few_shot_prompt=getattr(args, "few_shot_prompt", None),
+        # instruct=getattr(args, "instruct", None),
         split=args.train_split,
-        size=10_000,
+        size=args.size,
         load_from_disk=args.load_from_disk,
-        trust_remote_code=getattr(args, "trust_remote_code", False),
+        #trust_remote_code=getattr(args, "trust_remote_code", False),
+        trust_remote_code=False,
     )
 
     background_train_dataset = Dataset.load(
