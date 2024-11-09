@@ -11,6 +11,9 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
+stat_calculators:
+  - default_calculators
+
 device: cpu
 instruct: false
 task: ats
