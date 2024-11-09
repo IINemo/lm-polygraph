@@ -26,7 +26,9 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         ], ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"]
 
     def __init__(
-        self, batch_size: int = 10, cross_encoder_name: str = "cross-encoder/stsb-roberta-large"
+        self,
+        batch_size: int = 10,
+        cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
     ):
         super().__init__()
         self.crossencoder_setup = False
