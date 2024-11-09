@@ -23,6 +23,7 @@ stat_calculators:
       batch_size: '${batch_size}'
       seed: '${seed}'
       size: 10000
+      bg_size: 100000
     stats: 
       - "train_embeddings"
       - "background_train_embeddings"
