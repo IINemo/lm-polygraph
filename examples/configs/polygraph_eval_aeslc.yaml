@@ -11,26 +11,22 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-stat_calculators:
-  - default_calculators
-
 device: cpu
 instruct: false
 task: ats
 
-dataset: aeslc
-text_column: email_body
-label_column: subject_line
-description: ""
-prompt: "Write a short subject line for the email. Output only the subject line itself.\n\nEmail:\n{text}\n\nSubject line:\n"
-n_shot: 0
-few_shot_split: train
-few_shot_prompt: ""
+dataset: 'LM-polygraph/aeslc'
+text_column: input
+label_column: output
 train_split: train
 eval_split: test
+n_shot: 0
+few_shot_split: train
+few_shot_prompt: null
+trust_remote_code: false
+
 max_new_tokens: 31
 load_from_disk: false
-trust_remote_code: false
 generation_params:
   generate_until:
     - "\n"

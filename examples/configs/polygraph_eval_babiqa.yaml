@@ -15,20 +15,18 @@ device: cpu
 instruct: false
 task: qa
 
-dataset_name: babi_qa
-dataset: [facebook/babi_qa, en-10k-qa1]
-text_column: text
-label_column: answer
-description: ""
-prompt: "Imagine that you are only able to say a single word. Answer the question given a context. You must only output the full name of the location the same way it is mentioned in the text. Do not try to be polite of helpful.\n\nExample:\n\nContext:\nMary moved to the bathroom. John went to the hallway. Daniel went back to the hallway. Sandra moved to the garden. John moved to the office. Sandra journeyed to the bathroom. Mary moved to the hallway. Daniel travelled to the office. John went back to the garden. John moved to the bedroom.\nQuestion:\nWhere is Sandra?\nAnswer:\nbathroom\n\nContext:\n{context}\n\nQuestion:\n{question}\nAnswer:\n"
+dataset: 'LM-polygraph/babi_qa'
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
 n_shot: 0
 few_shot_split: train
 few_shot_prompt: null
-train_split: train
-eval_split: test
+trust_remote_code: false
+
 max_new_tokens: 3
 load_from_disk: false
-trust_remote_code: false
 generation_params:
   generate_until:
     - "\n"
