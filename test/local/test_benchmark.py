@@ -73,7 +73,7 @@ def run_eval(dataset):
                 model.load_model_args.device_map={get_device()} \
                 save_path={pwd()} \
                 stat_calculators.1.cfg.size=10 \
-                stat_calculators.1.cfg.bg_size=100"
+                stat_calculators.1.cfg.bg_size=20"
 
     return subprocess.run(command, shell=True)
 
@@ -120,10 +120,11 @@ def run_instruct_eval(dataset, method):
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/instruct/polygraph_eval_{dataset}_{method}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
-                subsample_background_train_dataset=2 \
                 model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={get_device()} \
-                save_path={pwd()}"
+                save_path={pwd()} \
+                stat_calculators.1.cfg.size=10 \
+                stat_calculators.1.cfg.bg_size=20"
 
     return subprocess.run(command, shell=True)
 
