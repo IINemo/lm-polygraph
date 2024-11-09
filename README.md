@@ -226,7 +226,22 @@ Submitted:
 ```
 @article{vashurin2024benchmarking,
   title={Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph},
-  author={Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and Tsvigun, Akim and Vasilev, Daniil and Xing, Rui and Sadallah, Abdelrahman Boda and Rvanova, Lyudmila and Petrakov, Sergey and Panchenko, Alexander and others},
+  author={
+    Vashurin, Roman and
+    Fadeeva, Ekaterina and
+    Vazhentsev, Artem and
+    Rvanova, Lyudmila and
+    Tsvigun, Akim and
+    Vasilev, Daniil and
+    Xing, Rui and
+    Sadallah, Abdelrahman Boda and
+    Grishchenkov, Kirill and
+    Petrakov, Sergey and
+    Panchenko, Alexander and
+    Baldwin, Timothy and
+    Nakov, Preslav and
+    Panov, Maxim and
+    Shelmanov, Artem},
   journal={arXiv preprint arXiv:2406.15627},
   year={2024}
 }
