@@ -408,6 +408,7 @@ class UEManager:
         self.background_train_dataset_max_new_tokens = (
             background_train_dataset_max_new_tokens
         )
+        self.state = "Initialized"
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """
@@ -676,16 +677,15 @@ class UEManager:
 
     def save(self, save_path: str):
         """
-        Saves the run results in the provided path. Will raise exception, if no results are calculated yet.
+        Saves the run results in the provided path.
         To load the saved manager, see UEManager.load().
 
         Parameters:
             save_path (str): Path to file to save benchmark results to.
         """
-        if len(self.metrics) == 0:
-            raise Exception("Nothing to save. Consider calling manager() first.")
         torch.save(
             {
+                "state": self.state,
                 "metrics": self.metrics,
                 "gen_metrics": self.gen_metrics,
                 "estimations": self.estimations,

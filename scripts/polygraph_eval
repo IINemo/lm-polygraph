@@ -203,17 +203,19 @@ def main(args):
             language=getattr(args, 'language', 'en'),
         )
 
-        man()
-
-        man.save(save_path + f"/ue_manager_seed{seed}")
+        try:
+            man()
+        except Exception as e:
+            man.state = "failed"
+            raise e
+        finally:
+            man.save(save_path + f"/ue_manager_seed{seed}")
 
 
 def get_ue_metrics(args):
     ue_metrics = [
-        ReversedPairsProportion(),
         PredictionRejectionArea(),
         PredictionRejectionArea(max_rejection=0.5),
-        RiskCoverageCurveAUC(),
     ]
     if getattr(args, "use_claim_ue", False):
         ue_metrics += [

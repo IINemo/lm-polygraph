@@ -13,10 +13,9 @@ device: cpu
 
 task: nmt
 
-dataset: [wmt14, de-en]
-text_column: de
-label_column: en
-prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
+dataset: ['LM-Polygraph/wmt14', 'deen']
+text_column: input
+label_column: output
 train_split: train
 eval_split: test
 max_new_tokens: 107

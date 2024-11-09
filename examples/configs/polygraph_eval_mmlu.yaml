@@ -11,18 +11,13 @@ save_path: '${hydra:run.dir}'
 
 task: qa
 
-dataset: [cais/mmlu, all]
-text_column: question
-label_column: answer
-description: "The following are multiple choice questions (with answers) about {subject}."
-prompt: "Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}"
-few_shot_split: dev
-train_split: validation
+dataset: ['LM-Polygraph/mmlu', 'continuation']
+text_column: input
+label_column: output
+train_split: train
 eval_split: test
 max_new_tokens: 3
 load_from_disk: false
-n_shot: 5
-max_subject_size: 100
 generation_params:
   generate_until:
     - "\n"
