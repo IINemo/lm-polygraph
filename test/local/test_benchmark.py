@@ -122,9 +122,7 @@ def run_instruct_eval(dataset, method):
                 subsample_eval_dataset=2 \
                 model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={get_device()} \
-                save_path={pwd()} \
-                stat_calculators.1.cfg.size=10 \
-                stat_calculators.1.cfg.bg_size=20"
+                save_path={pwd()}"
 
     return subprocess.run(command, shell=True)
 
