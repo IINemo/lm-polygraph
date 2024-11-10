@@ -4,6 +4,7 @@ hydra:
 
 defaults:
   - model: bloomz-560m
+  - default_claim_estimators
   - _self_
 
 cache_path: ./workdir/output
@@ -33,6 +34,9 @@ ens_type:
 ignore_exceptions: false
 
 batch_size: 1
+
+stat_calculators:
+  - auto
 
 seed:
     - 1
