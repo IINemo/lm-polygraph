@@ -1,7 +1,7 @@
 import numpy as np
 
 import itertools
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
@@ -13,23 +13,30 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
 
-    def __init__(self, nli_model):
-        super().__init__(
-            [
-                "sample_sentence_similarity",
-                "sample_token_similarity",
-                "token_similarity",
-            ],
-            ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"],
-        )
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
 
+        return [
+            "sample_sentence_similarity",
+            "sample_token_similarity",
+            "token_similarity",
+        ], ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"]
+
+    def __init__(
+        self,
+        batch_size: int = 10,
+        cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+    ):
+        super().__init__()
         self.crossencoder_setup = False
-        self.nli_model = nli_model
+        self.batch_size = batch_size
+        self.cross_encoder_name = cross_encoder_name
 
     def _setup(self, device="cuda"):
-        self.crossencoder = CrossEncoder(
-            "cross-encoder/stsb-roberta-large", device=device
-        )
+        self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
 
     def __call__(
         self,
@@ -47,9 +54,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
-        deberta_batch_size = (
-            self.nli_model.batch_size
-        )  # TODO: Why we use parameters of nli_model for the cross-encoder model???
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
 
@@ -88,7 +92,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                     for t in cropped_tokens
                 ]
                 token_scores = self.crossencoder.predict(
-                    batches, batch_size=deberta_batch_size
+                    batches, batch_size=self.batch_size
                 )
                 token_scores[is_special_tokens] = 1
             else:
@@ -97,7 +101,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         sim_matrices = []
         for i, pairs in enumerate(batch_pairs):
-            sim_scores = self.crossencoder.predict(pairs, batch_size=deberta_batch_size)
+            sim_scores = self.crossencoder.predict(pairs, batch_size=self.batch_size)
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
             sim_scores_matrix = sim_scores.reshape(unique_mat_shape)
@@ -132,7 +136,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                         for t in cropped_tokens
                     ]
                     token_scores = self.crossencoder.predict(
-                        batches, batch_size=deberta_batch_size
+                        batches, batch_size=self.batch_size
                     )
                     token_scores[is_special_tokens] = 1
                 else:

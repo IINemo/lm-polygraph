@@ -12,9 +12,11 @@ few_shot_prompt: "Question: {question}\nG1: {answer}\nP1: <number between 0.0 an
 prompt: "Question: {question}\n"
 max_new_tokens: 150
 
-additional_estimators: 
-  - module: lm_polygraph.estimators.verbalized_1s
-    class_name: Verbalized1S
-    kwargs:
+estimators:
+  - name: Verbalized1S
+    cfg:
       confidence_regex: 'P1: (\d+\.\d+)'
       name_postfix: "_topk"
+
+stat_calculators:
+  - auto

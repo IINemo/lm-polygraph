@@ -1,7 +1,7 @@
 import numpy as np
 
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -12,18 +12,23 @@ class SemanticClassesCalculator(StatCalculator):
     Paritions samples into semantic classes based on semantic matrix.
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "semantic_classes_entail",
+        ], [
+            "sample_texts",
+            "semantic_matrix_entail",
+            "semantic_matrix_classes",
+            "entailment_id",
+        ]
+
     def __init__(self):
-        super().__init__(
-            [
-                "semantic_classes_entail",
-            ],
-            [
-                "sample_texts",
-                "semantic_matrix_entail",
-                "semantic_matrix_classes",
-                "entailment_id",
-            ],
-        )
+        super().__init__()
 
     def __call__(
         self,

@@ -31,8 +31,10 @@ prompt: "Question: {question}\n"
 max_new_tokens: 40
 
 
-additional_estimators: 
-  - module: lm_polygraph.estimators.linguistic_1s
-    class_name: Linguistic1S
-    kwargs:
+estimators:
+  - name: Linguistic1S
+    cfg:
       expressions: ${expressions_of_confidence}
+
+stat_calculators:
+  - auto

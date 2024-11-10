@@ -1,7 +1,6 @@
+from typing import Tuple
 import logging
 import importlib.util
-
-from typing import Tuple
 
 log = logging.getLogger("lm_polygraph")
 
@@ -30,3 +29,29 @@ def load_external_module(path_to_file: str):
     spec.loader.exec_module(module)
 
     return module
+
+
+def flatten_results(results, result_generator_class):
+    """
+    Flattens a list of lists into a single list.
+    Сan be used with any type of result, such as UEs, statistics, or generation metrics.
+
+    Args:
+        results: A list of lists, where each sublist contains results for a single input.
+                 Expected shape: [num_inputs, num_token_level_results_per_input].
+        result_generator_class: The class of the object that generated the results.
+                                 Used for error reporting.
+
+    Returns:
+        A flattened list of results of shape [num_inputs * num_token_level_results_per_input].
+
+    Raises:
+        Exception: If the input is not a list of lists.
+    """
+    if not isinstance(results, list) or not all(isinstance(x, list) for x in results):
+        raise Exception(
+            f"Class {result_generator_class} returned {results}, expected list of lists"
+        )
+    # Flatten the list of lists into a single list
+    # The expected shape is [num_inputs, num_token_level_results_per_input]
+    return [result for sample_results in results for result in sample_results]

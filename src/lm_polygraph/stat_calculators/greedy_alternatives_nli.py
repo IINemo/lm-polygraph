@@ -42,14 +42,15 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
 
 
 class GreedyAlternativesNLICalculator(StatCalculator):
-    def __init__(self, nli_model):
-        super().__init__(
-            [
-                "greedy_tokens_alternatives_nli",
-            ],
-            ["greedy_tokens_alternatives"],
-        )
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the SamplingPromptCalculator.
+        """
+        return ["greedy_tokens_alternatives_nli"], ["greedy_tokens_alternatives"]
 
+    def __init__(self, nli_model):
+        super().__init__()
         self.nli_model = nli_model
 
     def _strip(self, w: str):
@@ -105,18 +106,20 @@ class GreedyAlternativesNLICalculator(StatCalculator):
 
 
 class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
-    def __init__(self, nli_model):
-        super().__init__(
-            [
-                "greedy_tokens_alternatives_fact_pref_nli",
-            ],
-            [
-                "greedy_tokens_alternatives",
-                "greedy_tokens",
-                "claims",
-            ],
-        )
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the SamplingPromptCalculator.
+        """
 
+        return ["greedy_tokens_alternatives_fact_pref_nli"], [
+            "greedy_tokens_alternatives",
+            "greedy_tokens",
+            "claims",
+        ]
+
+    def __init__(self, nli_model):
+        super().__init__()
         self.nli_model = nli_model
 
     def _strip(self, w: str):

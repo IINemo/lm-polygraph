@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
 from .stat_calculator import StatCalculator
@@ -36,7 +36,18 @@ class ClaimsExtractor(StatCalculator):
         matching_prompts: Dict[str, str] = MATCHING_PROMPTS,
         n_threads: int = 1,
     ):
-        super().__init__(
+        super().__init__()
+        self.language = language
+        self.openai_chat = openai_chat
+        self.sent_separators = sent_separators
+        self.progress_bar = progress_bar
+        self.extraction_prompts = extraction_prompts
+        self.matching_prompts = matching_prompts
+        self.n_threads = n_threads
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        return (
             [
                 "claims",
                 "claim_texts_concatenated",
@@ -47,13 +58,6 @@ class ClaimsExtractor(StatCalculator):
                 "greedy_tokens",
             ],
         )
-        self.language = language
-        self.openai_chat = openai_chat
-        self.sent_separators = sent_separators
-        self.progress_bar = progress_bar
-        self.extraction_prompts = extraction_prompts
-        self.matching_prompts = matching_prompts
-        self.n_threads = n_threads
 
     def __call__(
         self,

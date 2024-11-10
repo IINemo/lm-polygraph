@@ -3,7 +3,7 @@ import pytest
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from lm_polygraph.utils.manager import estimate_uncertainty
+from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel
 

@@ -4,6 +4,7 @@ hydra:
 
 defaults:
   - model: bloomz-560m
+  - test_default_estimators
   - _self_
 
 cache_path: ./workdir/output
@@ -20,16 +21,12 @@ label_column: output
 prompt: ""
 
 ignore_exceptions: false
-use_seq_ue: true
-use_tok_ue: false
-use_density_based_ue: false
-use_ens_ue: false
 generation_metrics:
   - name: RougeMetric
     args: ["rouge1"]
-ens_type:
 
-additional_estimators: {}
+stat_calculators:
+  - auto
 
 subsample_eval_dataset: 10
 batch_size: 2
