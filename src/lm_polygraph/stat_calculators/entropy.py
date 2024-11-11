@@ -42,3 +42,29 @@ class EntropyCalculator(StatCalculator):
                 mask = ~np.isinf(lp)
                 entropies[-1].append(-np.sum(np.array(lp[mask]) * np.exp(lp[mask])))
         return {"entropy": entropies}
+
+class SampleEntropyCalculator(StatCalculator):
+    def __init__(self):
+        super().__init__(["sample_entropy"], ["sample_log_likelihoods"])
+
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str] = None,
+        model: WhiteboxModel = None,
+        max_new_tokens: int = 100,
+        **kwargs,
+    ) -> Dict[str, np.ndarray]:
+        logprobs = dependencies["sample_log_likelihoods"]
+        entropies = []
+
+        for sample_log_probs in logprobs:
+            for token_log_probs in sample_log_probs:
+                token_log_probs = np.array(token_log_probs)
+                probabilities = np.exp(token_log_probs)
+
+                mask = ~np.isinf(token_log_probs)
+                sample_entropy = -np.sum(probabilities[mask] * token_log_probs[mask])
+            
+                entropies.append(sample_entropy)
+        return {"sample_entropy": entropies}

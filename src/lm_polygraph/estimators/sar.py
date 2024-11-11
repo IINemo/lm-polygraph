@@ -15,7 +15,7 @@ class SAR(Estimator):
     and text relevance relative to all other generations.
     """
 
-    def __init__(self, verbose: bool = False):
+    def __init__(self, verbose: bool = False, t: float = 0.001):
         super().__init__(
             [
                 "sample_sentence_similarity",
@@ -25,10 +25,10 @@ class SAR(Estimator):
             "sequence",
         )
         self.verbose = verbose
-        self.t = 0.001
+        self.t = t
 
     def __str__(self):
-        return "SAR"
+        return f"SAR_t{self.t}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """

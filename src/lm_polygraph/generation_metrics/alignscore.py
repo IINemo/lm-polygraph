@@ -18,11 +18,13 @@ class AlignScore(GenerationMetric):
         ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt",
         batch_size=16,
         target_is_claims=True,
+        ignore_target=False,
     ):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.target_is_claims = target_is_claims
         self.batch_size = batch_size
+        self.ignore_target = ignore_target
         self.scorer = AlignScorer(
             model="roberta-large",
             batch_size=batch_size,
@@ -32,7 +34,14 @@ class AlignScore(GenerationMetric):
         )
 
     def __str__(self):
-        return "AlignScore"
+        base = "AlignScore"
+        if self.ignore_target:
+            base += "InputOutput"
+        elif self.target_is_claims:
+            base += "OutputTarget"
+        else:
+            base += "TargetOutput"
+        return base
 
     def __call__(
         self,
@@ -51,16 +60,22 @@ class AlignScore(GenerationMetric):
             np.ndarray: list of AlignScore Scores for each sample in input.
         """
         greedy_texts = stats["greedy_texts"]
+        input_texts = stats["input_texts"]
 
         filtered_targets = [x if len(x.strip()) else "(empty)" for x in target_texts]
         filtered_outputs = [x if len(x.strip()) else "(empty)" for x in greedy_texts]
+        filtered_inputs = [x if len(x.strip()) else "(empty)" for x in input_texts]
 
-        if self.target_is_claims:
-            claims = filtered_targets
-            contexts = filtered_outputs
-        else:
+        if self.ignore_target:
             claims = filtered_outputs
-            contexts = filtered_targets
+            contexts = filtered_inputs
+        else:
+            if self.target_is_claims:
+                claims = filtered_targets
+                contexts = filtered_outputs
+            else:
+                claims = filtered_outputs
+                contexts = filtered_targets
 
         scores = np.array(
             self.scorer.score(
