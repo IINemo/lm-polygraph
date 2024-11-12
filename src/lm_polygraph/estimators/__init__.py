@@ -67,6 +67,7 @@ from .sentence_sar import (
     OtherSentenceSAR,
     ReweightedSentenceSAR,
     PPLSentenceSAR,
+    MTESentenceSAR,
     DistilSentenceSAR,
     DistilOneSentenceSAR,
     DistilSAR,

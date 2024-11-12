@@ -501,7 +501,7 @@ class DistilPPLSAR(Estimator):
         return np.array(sentenceSAR)
 
 
-class DistilMTESAR(Estimator):
+class MTESentenceSAR(Estimator):
     """
     Like SAR, but uses sample entropy calculated from token-wise log probs for each sample.
     Tokenwise log-likelihoods are available in stats['sample_log_likelihoods'].
@@ -512,7 +512,7 @@ class DistilMTESAR(Estimator):
         self.t = 0.001
 
     def __str__(self):
-        return "EntropySentenceSAR"
+        return "MTESentenceSAR"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -548,6 +548,72 @@ class DistilMTESAR(Estimator):
             sent_relevance = R_s.sum(-1) / self.t
             # Compute SentenceSAR (Uncertainty Estimation) using PPL
             E_s = -np.log(sent_relevance + entropy)
+            sentenceSAR.append(E_s.mean())
+
+        return np.array(sentenceSAR)
+
+
+
+
+class DistilMTESAR(Estimator):
+    """
+    Like SAR, but uses Mean Token Entropy (MTE) calculated from token-wise log probs for each sample.
+    Token-wise log-likelihoods are available in stats['sample_entropy'].
+    """
+
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
+        super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
+        self.verbose = verbose
+        self.use_log = use_log
+        self.reverse = reverse
+
+    def __str__(self):
+        base = "DistilMTESAR"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample using Mean Token Entropy (MTE).
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * 'sample_entropy': Mean Token Entropy for each sample,
+                * 'sample_sentence_similarity': matrix with cross-encoder similarities.
+        
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_entropy = stats["sample_entropy"]
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+
+        sentenceSAR = []
+
+        # Loop over each sample's Mean Token Entropy and sentence similarities
+        for sample_entropy, sample_sentence_similarity in zip(
+            batch_sample_entropy, batch_sample_sentence_similarity
+        ):
+            # Use MTE for sentence relevance calculation
+            R_s = sample_entropy * sample_sentence_similarity
+            
+            # Compute sentence relevance by summing along the last axis
+            sent_relevance = R_s.sum(-1)
+
+            # Calculate E_s with options for log transformation and reversal
+            if self.use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                E_s = -sent_relevance if self.reverse else sent_relevance
+
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
