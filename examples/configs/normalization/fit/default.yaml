@@ -53,6 +53,8 @@ ue_method_names:
   - SentenceSAR
   - RenyiNeg
   - FisherRao
+  - Focus
+  - FocusClaim
 
 gen_metric_names:
   - AlignScore

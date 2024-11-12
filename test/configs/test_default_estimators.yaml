@@ -61,3 +61,5 @@ estimators:
   - name: SentenceSAR
   - name: RenyiNeg
   - name: FisherRao
+  - name: Focus
+  - name: FocusClaim
