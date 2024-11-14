@@ -41,6 +41,8 @@ def load_simple_estimators(name: str, config):
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
         RandomBaselineClaim,
+        Focus,
+        FocusClaim,
     ]
 
     try:
