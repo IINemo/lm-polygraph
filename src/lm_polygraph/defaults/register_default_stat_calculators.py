@@ -34,6 +34,20 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
         )
         all_stat_calculators.append(sc)
 
+    _register(InitialStateCalculator)
+    _register(
+        SemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
+        {
+            "nli_model": {
+                "deberta_path": "microsoft/deberta-large-mnli",
+                "batch_size": 10,
+                "device": None,
+            }
+        },
+    )
+    _register(SemanticClassesCalculator)
+
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
@@ -47,7 +61,6 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(SemanticClassesCalculator)
         _register(PromptCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
@@ -57,17 +70,6 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
             {
                 "batch_size": 10,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
-            },
-        )
-        _register(
-            SemanticMatrixCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
-            {
-                "nli_model": {
-                    "deberta_path": "microsoft/deberta-large-mnli",
-                    "batch_size": 10,
-                    "device": None,
-                }
             },
         )
         _register(
