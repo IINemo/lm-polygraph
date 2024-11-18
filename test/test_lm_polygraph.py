@@ -1,7 +1,8 @@
 import subprocess
 import pathlib
-
-# import numpy as np
+import pytest
+import time
+from openai import OpenAI
 
 from lm_polygraph.utils.manager import UEManager
 
@@ -51,6 +52,38 @@ def test_just_works():
 
 def test_all_seq_ue():
     exec_result = run_config_with_overrides("test_polygraph_eval_seq_ue")
+    assert (
+        exec_result.returncode == 0
+    ), f"polygraph_eval returned code {exec_result.returncode} != 0"
+
+
+def test_chat_completion(mock_response, request):  # Added request parameter
+    """Test chat completion with mock server"""
+    client = OpenAI()
+    max_retries = 3
+    retry_delay = 2
+
+    for attempt in range(max_retries):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "Test message"}],
+                temperature=0.7,
+                max_tokens=50,
+            )
+
+            content = response.choices[0].message.content.strip()
+            assert content == mock_response, "Unexpected response content"
+            break
+
+        except Exception as e:
+            if attempt == max_retries - 1:
+                pytest.fail(f"All attempts failed: {str(e)}")
+            time.sleep(retry_delay)
+
+
+def test_blackbox_local():
+    exec_result = run_config_with_overrides("test_polygraph_eval_blackbox")
     assert (
         exec_result.returncode == 0
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
