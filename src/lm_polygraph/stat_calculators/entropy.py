@@ -66,9 +66,8 @@ class SampleEntropyCalculator(StatCalculator):
                 token_dist_tensor = torch.tensor(np.array(token_dist))
 
                 # Calculate entropy using torch's Categorical distribution
-                # Apply mean() in case the entropy returns a multi-element tensor
-                entropy = torch.distributions.Categorical(probs=token_dist_tensor).entropy().mean()
-                sample_entropies.append(entropy.item())  # Convert to a scalar value if needed
+                entropy = torch.distributions.Categorical(probs=token_dist_tensor).entropy()
+                sample_entropies.append(entropy.item()) 
 
             # Calculate mean entropy for the sample
             mean_entropy = torch.mean(torch.tensor(sample_entropies)) if sample_entropies else 0
