@@ -5,6 +5,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 from typing import Optional, Dict, Any
 import time
+import os
 
 
 class MockOpenAIHandler(BaseHTTPRequestHandler):
@@ -36,7 +37,9 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
             self.send_error(400, "Invalid request format")
             return
 
-        # Prepare response
+        if self.response_delay:
+            time.sleep(self.response_delay)
+
         response = {
             "id": f"mock-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
             "object": "chat.completion",
@@ -49,11 +52,6 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
                     "finish_reason": "stop",
                 }
             ],
-            "usage": {
-                "prompt_tokens": 10,
-                "completion_tokens": len(self.fixed_response.split()),
-                "total_tokens": 10 + len(self.fixed_response.split()),
-            },
         }
 
         # Send response
@@ -79,7 +77,6 @@ class MockOpenAIHandler(BaseHTTPRequestHandler):
                 return False
             if "role" not in message or "content" not in message:
                 return False
-
         return True
 
     def log_message(self, format: str, *args) -> None:
@@ -98,26 +95,35 @@ class MockOpenAIServer:
         server.stop()
     """
 
-    def __init__(self, host: str = "localhost", port: int = 8080, max_retries: int = 5):
+    def __init__(
+        self, host: str = "127.0.0.1", port: Optional[int] = None, max_retries: int = 25
+    ):
         self.host = host
-        self.initial_port = port
-        self.port = port
+        self.port = port or self._get_default_port()
         self.max_retries = max_retries
         self.server: Optional[HTTPServer] = None
         self.server_thread: Optional[threading.Thread] = None
 
+    def _get_default_port(self) -> int:
+        """Get port from environment or default"""
+        return int(os.getenv("MOCK_OPENAI_PORT", "8080"))
+
     def _find_available_port(self) -> int:
         """Find an available port starting from the initial port"""
-        current_port = self.initial_port
+        current_port = self.port
+        retries = 0
 
-        for _ in range(self.max_retries):
+        while retries < self.max_retries:
             try:
                 # Test if port is available
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     s.bind((self.host, current_port))
-                return current_port
+                    return current_port
             except OSError:
                 current_port += 1
+                retries += 1
+                time.sleep(0.1)  # Brief delay between retries
 
         raise RuntimeError(
             f"Could not find an available port after {self.max_retries} attempts"
@@ -137,8 +143,19 @@ class MockOpenAIServer:
             self.server_thread.daemon = True
             self.server_thread.start()
 
-            # Wait briefly to ensure server starts
-            time.sleep(0.1)
+            # Verify server is running
+            start_time = time.time()
+            while time.time() - start_time < 5:  # 5 second timeout
+                try:
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.connect((self.host, self.port))
+                        break
+                except Exception as e:
+                    print(str(e))
+                    time.sleep(0.1)
+            else:
+                raise RuntimeError("Server failed to start within timeout")
+
         except Exception as e:
             self.stop()  # Clean up if startup fails
             raise RuntimeError(f"Failed to start server: {str(e)}")
@@ -150,6 +167,7 @@ class MockOpenAIServer:
             self.server.server_close()
             self.server = None
             self.server_thread = None
+            time.sleep(0.1)  # Brief delay to ensure cleanup
 
     def __enter__(self):
         """Context manager support"""

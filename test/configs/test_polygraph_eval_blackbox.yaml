@@ -6,7 +6,7 @@ defaults:
   - model: gpt-4o-mini
   - test_default_blackbox_estimators
   - test_default_calculators
-
+  
   - _self_
 
 cache_path: ./workdir/output
