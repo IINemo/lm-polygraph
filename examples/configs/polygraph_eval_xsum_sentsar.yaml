@@ -25,6 +25,11 @@ trust_remote_code: true
 generation_params:
   generate_until:
     - "\n"
+save_stats:
+  - sample_tokens
+  - sample_texts
+  - sample_log_probs
+  - sample_sentence_similarity
 
 train_dataset: null
 train_test_split: false

@@ -201,6 +201,7 @@ def main(args):
             ensemble_model=ensemble_model,
             cache_path=args.cache_path,
             language=getattr(args, 'language', 'en'),
+            save_stats=getattr(args, 'save_stats', []),
         )
 
         man()
