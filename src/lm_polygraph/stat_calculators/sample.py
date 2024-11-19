@@ -98,6 +98,7 @@ class SamplingGenerationCalculator(StatCalculator):
                 "sample_tokens",
                 "sample_texts",
                 "sample_log_likelihoods",
+                "token_distributions",
             ],
             [],
         )
@@ -123,6 +124,7 @@ class SamplingGenerationCalculator(StatCalculator):
                 - 'sample_tokens' (List[List[List[float]]]): tokenized 'sample_texts',
                 - 'sample_log_probs' (List[List[float]]): sum of the log probabilities at each token of the sampling generation.
                 - 'sample_log_likelihoods' (List[List[List[float]]]): log probabilities at each token of the sampling generation.
+                - 'token_distributions' (List[List[List[float]]]): full token probability distributions for each generated token.
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
@@ -152,10 +154,14 @@ class SamplingGenerationCalculator(StatCalculator):
         tokens = [[] for _ in range(len(texts))]
         texts = [[] for _ in range(len(texts))]
         log_likelihoods = [[] for _ in range(len(texts))]
+        token_distributions = [[] for _ in range(len(texts))]
+
+
         if model.model_type == "Seq2SeqLM":
             sequences = [seq[1:] for seq in sequences]
+
         for i in range(len(logits)):
-            log_prob, ll, toks = 0, [], []
+            log_prob, ll, toks, distributions = 0, [], [], []
             inp_size = (
                 len(batch["input_ids"][int(i / self.samples_n)])
                 if model.model_type == "CausalLM"
@@ -168,15 +174,18 @@ class SamplingGenerationCalculator(StatCalculator):
                     break
                 ll.append(logits[i][j][cur_token].item())
                 toks.append(cur_token)
+                distributions.append(logits[i][j].softmax(dim=-1).cpu().numpy())
 
             log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
             texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
+            token_distributions[int(i / self.samples_n)].append(distributions)
 
         return {
             "sample_log_likelihoods": log_likelihoods,
             "sample_log_probs": log_probs,
             "sample_tokens": tokens,
             "sample_texts": texts,
+            "token_distributions": token_distributions,
         }

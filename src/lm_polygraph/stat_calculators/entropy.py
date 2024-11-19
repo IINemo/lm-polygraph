@@ -4,7 +4,8 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-
+import torch
+from torch.nn import functional as F
 
 class EntropyCalculator(StatCalculator):
     """
@@ -45,7 +46,7 @@ class EntropyCalculator(StatCalculator):
 
 class SampleEntropyCalculator(StatCalculator):
     def __init__(self):
-        super().__init__(["sample_entropy"], ["sample_log_likelihoods"])
+        super().__init__(["sample_entropy"], ["token_distributions"])
 
     def __call__(
         self,
@@ -55,16 +56,21 @@ class SampleEntropyCalculator(StatCalculator):
         max_new_tokens: int = 100,
         **kwargs,
     ) -> Dict[str, np.ndarray]:
-        logprobs = dependencies["sample_log_likelihoods"]
+        token_distributions = dependencies["token_distributions"]
         entropies = []
 
-        for sample_log_probs in logprobs:
-            for token_log_probs in sample_log_probs:
-                token_log_probs = np.array(token_log_probs)
-                probabilities = np.exp(token_log_probs)
+        for sample_distributions in token_distributions:
+            sample_entropies = []
+            for token_dist in sample_distributions:
+                # Convert token_dist to a numpy array first, then to a torch tensor
+                token_dist_tensor = torch.tensor(np.array(token_dist))
 
-                mask = ~np.isinf(token_log_probs)
-                sample_entropy = -np.sum(probabilities[mask] * token_log_probs[mask])
-            
-                entropies.append(sample_entropy)
+                # Calculate entropy using torch's Categorical distribution
+                entropy = torch.distributions.Categorical(probs=token_dist_tensor).entropy()
+                sample_entropies.append(entropy.item()) 
+
+            # Calculate mean entropy for the sample
+            mean_entropy = torch.mean(torch.tensor(sample_entropies)) if sample_entropies else 0
+            entropies.append(mean_entropy.item())
+        
         return {"sample_entropy": entropies}
