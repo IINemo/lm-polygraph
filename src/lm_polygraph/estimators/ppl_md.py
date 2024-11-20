@@ -39,14 +39,15 @@ class PPLMDSeq(Estimator):
         parameters_path: str = None,
         normalize: bool = False,
     ):
+        self.stats_dependencies = [
+            "train_greedy_log_likelihoods",
+            "greedy_log_likelihoods",
+            "embeddings",
+            "train_embeddings",
+            "background_train_embeddings",
+        ]
         super().__init__(
-            [
-                "train_greedy_log_likelihoods",
-                "greedy_log_likelihoods",
-                "embeddings",
-                "train_embeddings",
-                "background_train_embeddings",
-            ],
+            self.stats_dependencies,
             "sequence",
         )
         self.parameters_path = parameters_path
@@ -98,11 +99,17 @@ class PPLMDSeq(Estimator):
         md = self.MD(stats)
 
         if not self.is_fitted:
-            copy_stats = copy.deepcopy(stats)
-            copy_stats["greedy_log_likelihoods"] = copy_stats[
+            stats_copy = {
+                k: v
+                for k, v in stats.items()
+                if any(k.startswith(stat) for stat in self.stats_dependencies)
+            }
+            stats_copy = copy.deepcopy(stats_copy)
+
+            stats_copy["greedy_log_likelihoods"] = stats_copy[
                 "train_greedy_log_likelihoods"
             ]
-            self.train_ppl = self.PPL(copy_stats)
+            self.train_ppl = self.PPL(stats_copy)
             if self.parameters_path is not None:
                 save_array(self.train_ppl, f"{self.full_path}/train_ppl.npy")
         if not self.is_fitted:
@@ -111,10 +118,15 @@ class PPLMDSeq(Estimator):
                 test_size=0.3,
                 random_state=42,
             )
-            copy_stats = copy.deepcopy(stats)
-            copy_stats[f"train_embeddings_{self.embeddings_type}"] = train_embeds
-            copy_stats[f"embeddings_{self.embeddings_type}"] = val_embeds
-            self.train_md = self.MD_val(copy_stats)
+            stats_copy = {
+                k: v
+                for k, v in stats.items()
+                if any(k.startswith(stat) for stat in self.stats_dependencies)
+            }
+            stats_copy = copy.deepcopy(stats_copy)
+            stats_copy[f"train_embeddings_{self.embeddings_type}"] = train_embeds
+            stats_copy[f"embeddings_{self.embeddings_type}"] = val_embeds
+            self.train_md = self.MD_val(stats_copy)
             if self.parameters_path is not None:
                 save_array(self.train_md, f"{self.full_path}/train_md.npy")
             self.is_fitted = True
