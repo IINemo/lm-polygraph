@@ -18,7 +18,7 @@ def load_dataset(args):
         batch_size=args.batch_size,
         prompt=getattr(args, "prompt", ""),
         description=getattr(args, "description", ""),
-        mmlu_max_subject_size=0,
+        mmlu_max_subject_size=100,
         n_shot=getattr(args, "n_shot", 5),
         few_shot_split=args.few_shot_split,
         few_shot_prompt=None,
@@ -42,10 +42,18 @@ def load_dataset(args):
     )
 
     if args.subsample_train_dataset != -1:
-        train_dataset.subsample(args.subsample_train_dataset, seed=args.seed)
+        train_dataset.subsample(
+            args.subsample_train_dataset,
+            seed=(
+                int(list(args.seed)[0]) if not isinstance(args.seed, int) else args.seed
+            ),
+        )
     if args.subsample_background_train_dataset != -1:
         background_train_dataset.subsample(
-            args.subsample_background_train_dataset, seed=args.seed
+            args.subsample_background_train_dataset,
+            seed=(
+                int(list(args.seed)[0]) if not isinstance(args.seed, int) else args.seed
+            ),
         )
 
     log.info("Done loading train data.")

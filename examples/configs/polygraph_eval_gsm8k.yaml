@@ -23,6 +23,7 @@ max_new_tokens: 256
 load_from_disk: false
 normalize: true
 trust_remote_code: false
+size: 10000
 generation_params:
   generate_until:
     - "\n"

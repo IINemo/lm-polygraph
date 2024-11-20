@@ -24,6 +24,7 @@ n_shot: 0
 few_shot_split: train
 few_shot_prompt: null
 trust_remote_code: false
+size: 10000
 
 max_new_tokens: 3
 load_from_disk: false

@@ -178,12 +178,12 @@ class GreedyProbsCalculator(StatCalculator):
 
         if model.model_type == "CausalLM":
             embeddings_dict = {
-                "embeddings_decoder": embeddings_decoder,
+                "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }
         elif model.model_type == "Seq2SeqLM":
             embeddings_dict = {
-                "embeddings_encoder": embeddings_encoder,
-                "embeddings_decoder": embeddings_decoder,
+                "embeddings_encoder": embeddings_encoder.cpu().detach().numpy(),
+                "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }
         else:
             raise NotImplementedError

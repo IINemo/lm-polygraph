@@ -13,7 +13,6 @@ stat_calculators:
       load_from_disk: '${load_from_disk}'
       subsample_train_dataset: 1000
       n_shot: 5
-      mmlu_max_subject_size: '${mmlu_max_subject_size}'
       background_train_dataset: allenai/c4
       background_train_dataset_text_column: text
       background_train_dataset_label_column: url
@@ -22,7 +21,7 @@ stat_calculators:
       subsample_background_train_dataset: 1000
       batch_size: '${batch_size}'
       seed: '${seed}'
-      size: 10000
+      size: '${size}'
       bg_size: 100000
     stats: 
       - "train_embeddings"
