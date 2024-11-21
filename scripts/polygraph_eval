@@ -89,7 +89,7 @@ def main(args):
             instruct=getattr(args, "instruct", None),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
-            #trust_remote_code=getattr(args, "trust_remote_code", False),
+            trust_remote_code=getattr(args, "trust_remote_code", False),
             **cache_kwargs
         )
         log.info("Done with loading eval data.")
