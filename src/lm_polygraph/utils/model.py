@@ -389,6 +389,8 @@ class WhiteboxModel(Model):
         Returns:
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
+        # if hasattr(model, "generation_parameters"):
+        # print(self.generation_parameters)
         default_params = asdict(self.generation_parameters)
 
         if len(self.generation_parameters.generate_until) > 0:
@@ -485,7 +487,7 @@ class WhiteboxModel(Model):
             model_path, trust_remote_code=True, **kwargs
         )
         generation_params = GenerationParameters(**generation_params)
-
+        
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
@@ -516,6 +518,11 @@ class WhiteboxModel(Model):
         ):
             model_type = "Seq2SeqLM"
             model = BartForConditionalGeneration.from_pretrained(model_path, **kwargs)
+        # elif any(
+        #     ["Kosmos2ForConditionalGeneration" in architecture for architecture in config.architectures]
+        # ):
+        #     model_type = "Vision2Seq"
+        #     model = AutoModelForVision2Seq.from_pretrained(model_path, **kwargs)
         else:
             raise ValueError(
                 f"Model {model_path} is not adapted for the sequence generation task"

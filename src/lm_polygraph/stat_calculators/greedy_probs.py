@@ -77,6 +77,8 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_texts",
             "greedy_log_likelihoods",
             "embeddings",
+            "attention_all",
+            "tokenizer",
         ], []
 
     def __init__(self, n_alternatives: int = 10):
@@ -108,8 +110,28 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
-        batch: Dict[str, torch.Tensor] = model.tokenize(texts)
+        if hasattr(model, "image"):
+            batch: Dict[str, torch.Tensor] = model.processor(text=texts, 
+                                   images=model.image,
+                                   return_tensors="pt",
+                                  )
+
+        else:
+            batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
+        # if hasattr(model, "image"):
+        #     out = model.generate(
+        #         **batch,
+        #         output_scores=True,
+        #         return_dict_in_generate=True,
+        #         max_new_tokens=max_new_tokens,
+        #         min_new_tokens=2,
+        #         output_attentions=True,
+        #         output_hidden_states=True,
+        #         num_return_sequences=1,
+        #     )
+
+        # else:
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -117,7 +139,7 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_new_tokens=2,
-                output_attentions=False,
+                output_attentions=True,
                 output_hidden_states=True,
                 num_return_sequences=1,
                 suppress_tokens=(
@@ -130,12 +152,13 @@ class GreedyProbsCalculator(StatCalculator):
                     ]
                 ),
             )
-            logits = torch.stack(out.scores, dim=1)
+        logits = torch.stack(out.scores, dim=1)
 
-            sequences = out.sequences
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
-            )
+        sequences = out.sequences
+        attentions = out.attentions
+        embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+            out, batch, model.model_type
+        )
 
         cut_logits = []
         cut_sequences = []
@@ -169,12 +192,40 @@ class GreedyProbsCalculator(StatCalculator):
                     reverse=True,
                 )
 
+        attention_all = []
+        if not hasattr(model, "image"):
+            for i in range(len(texts)):
+                c = len(cut_sequences[i])
+                attn_mask = np.zeros(
+                    shape=(
+                        model.model.config.num_attention_heads
+                        * model.model.config.num_hidden_layers,
+                        c,
+                        c,
+                    )
+                )
+                for j in range(1, c):
+                    attn_mask[:, j, :j] = (
+                        torch.vstack(
+                            [
+                                attentions[j][layer][0][head][0][-j:]
+                                for layer in range(len(attentions[j]))
+                                for head in range(len(attentions[j][layer][0]))
+                            ]
+                        )
+                        .cpu()
+                        .numpy()
+                    )
+                attention_all.append(attn_mask.max(0))
+
         ll = []
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+
+        
 
         if model.model_type == "CausalLM":
             embeddings_dict = {
@@ -195,6 +246,8 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,
+            "attention_all": attention_all,
+            "tokenizer": model.tokenizer,
         }
         result_dict.update(embeddings_dict)
 
