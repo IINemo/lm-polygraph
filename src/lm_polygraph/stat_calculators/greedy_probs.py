@@ -110,8 +110,28 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
-        batch: Dict[str, torch.Tensor] = model.tokenize(texts)
+        if hasattr(model, "image"):
+            batch: Dict[str, torch.Tensor] = model.processor(text=texts, 
+                                   images=model.image,
+                                   return_tensors="pt",
+                                  )
+
+        else:
+            batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
+        # if hasattr(model, "image"):
+        #     out = model.generate(
+        #         **batch,
+        #         output_scores=True,
+        #         return_dict_in_generate=True,
+        #         max_new_tokens=max_new_tokens,
+        #         min_new_tokens=2,
+        #         output_attentions=True,
+        #         output_hidden_states=True,
+        #         num_return_sequences=1,
+        #     )
+
+        # else:
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -132,13 +152,13 @@ class GreedyProbsCalculator(StatCalculator):
                     ]
                 ),
             )
-            logits = torch.stack(out.scores, dim=1)
+        logits = torch.stack(out.scores, dim=1)
 
-            sequences = out.sequences
-            attentions = out.attentions
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
-            )
+        sequences = out.sequences
+        attentions = out.attentions
+        embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+            out, batch, model.model_type
+        )
 
         cut_logits = []
         cut_sequences = []
@@ -173,29 +193,30 @@ class GreedyProbsCalculator(StatCalculator):
                 )
 
         attention_all = []
-        for i in range(len(texts)):
-            c = len(cut_sequences[i])
-            attn_mask = np.zeros(
-                shape=(
-                    model.model.config.num_attention_heads
-                    * model.model.config.num_hidden_layers,
-                    c,
-                    c,
-                )
-            )
-            for j in range(1, c):
-                attn_mask[:, j, :j] = (
-                    torch.vstack(
-                        [
-                            attentions[j][layer][0][head][0][-j:]
-                            for layer in range(len(attentions[j]))
-                            for head in range(len(attentions[j][layer][0]))
-                        ]
+        if not hasattr(model, "image"):
+            for i in range(len(texts)):
+                c = len(cut_sequences[i])
+                attn_mask = np.zeros(
+                    shape=(
+                        model.model.config.num_attention_heads
+                        * model.model.config.num_hidden_layers,
+                        c,
+                        c,
                     )
-                    .cpu()
-                    .numpy()
                 )
-            attention_all.append(attn_mask.max(0))
+                for j in range(1, c):
+                    attn_mask[:, j, :j] = (
+                        torch.vstack(
+                            [
+                                attentions[j][layer][0][head][0][-j:]
+                                for layer in range(len(attentions[j]))
+                                for head in range(len(attentions[j][layer][0]))
+                            ]
+                        )
+                        .cpu()
+                        .numpy()
+                    )
+                attention_all.append(attn_mask.max(0))
 
         ll = []
         for i in range(len(texts)):
@@ -203,6 +224,8 @@ class GreedyProbsCalculator(StatCalculator):
             tokens = cut_sequences[i]
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+
+        
 
         if model.model_type == "CausalLM":
             embeddings_dict = {

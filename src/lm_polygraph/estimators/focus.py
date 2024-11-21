@@ -21,7 +21,6 @@ nlp = spacy.load('en_core_web_sm')
 
 #calculating tokens idf on 1M documents from RedPajama dataset 
 def calcu_idf(tokenizer_path, path):
-    print(tokenizer_path)
     filename = "/tmp/not_exist/filenames.pkl"
     os.makedirs(os.path.dirname(path), exist_ok=True)
     dataset = load_dataset("togethercomputer/RedPajama-Data-1T-Sample")
@@ -37,7 +36,6 @@ def calcu_idf(tokenizer_path, path):
         for token in unique_tokens:
             document_frequency[token] += 1
     total_documents = len(data)
-    print(np.array([math.log(total_documents / (document_frequency[i] + 1)) for i in range(len(tokenizer.vocab))]))
     pickle.dump(np.array([math.log(total_documents / (document_frequency[i] + 1)) for i in range(len(tokenizer.vocab))]), open(path, "wb"))
 
 
@@ -47,17 +45,18 @@ class Focus(Estimator):
         gamma: float = 0.9,
         p: float = 0.01,
         model_name: str = "meta-llama/Llama-3.2-1B",
+        path = f"../../../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
     ):
         super().__init__([
-                            "greedy_log_probs",
+                            "greedy_log_probs", 
                             "greedy_tokens", 
-                            "greedy_texts",
+                            "greedy_texts", 
                             "attention_all",
                             "tokenizer",
                          ], 
-                         "sequence")
-        #path where idf scores are stored 
-        path = f"../../../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
+                         "sequence",
+                        )
+        
         if not os.path.exists(path):
             calcu_idf(model_name, path)
         self.token_idf = pickle.load(open(path, "rb"))
