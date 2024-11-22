@@ -355,6 +355,10 @@ class WhiteboxModel(Model):
         def __call__(self, input_ids, scores, **kwargs) -> bool:
             # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
             lookback_ids_batch = input_ids[:, self.initial_decoder_input_length :]
+            
+            # Do not stop generation if stop sequence is the first thing generated
+            if lookback_ids_batch.shape[1] < 2:
+                return False
 
             lookback_ids_batch = lookback_ids_batch[:, -self.sequence_id_len :]
 
