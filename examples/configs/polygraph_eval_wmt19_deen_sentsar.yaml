@@ -56,6 +56,9 @@ additional_estimators:
   - module: lm_polygraph.estimators.token_sar
     class_name: TokenSAR
     kwargs: {}
+  - module: lm_polygraph.estimators.token_entropy
+    class_name: MeanTokenEntropy
+    kwargs: {}
   - module: lm_polygraph.estimators.monte_carlo_sequence_entropy
     class_name: MonteCarloSequenceEntropy
     kwargs: {}
@@ -82,6 +85,9 @@ additional_estimators:
     class_name: PPLSentenceSAR
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
+    class_name: MTESentenceSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
     class_name: OtherSentenceSAR
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
@@ -136,6 +142,19 @@ additional_estimators:
       reverse: false
   - module: lm_polygraph.estimators.sentence_sar
     class_name: DistilPPLSAR
+    kwargs: 
+      use_log: false
+      reverse: true
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilMTESAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilMTESAR
+    kwargs: 
+      use_log: false
+      reverse: false
+  - module: lm_polygraph.estimators.sentence_sar
+    class_name: DistilMTESAR
     kwargs: 
       use_log: false
       reverse: true

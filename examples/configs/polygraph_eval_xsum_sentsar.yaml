@@ -60,6 +60,9 @@ additional_estimators:
   - module: lm_polygraph.estimators.token_sar
     class_name: TokenSAR
     kwargs: {}
+  - module: lm_polygraph.estimators.token_entropy
+    class_name: MeanTokenEntropy
+    kwargs: {}
   - module: lm_polygraph.estimators.monte_carlo_sequence_entropy
     class_name: MonteCarloSequenceEntropy
     kwargs: {}
