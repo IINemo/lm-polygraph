@@ -356,17 +356,14 @@ class WhiteboxModel(Model):
             # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
             lookback_ids_batch = input_ids[:, self.initial_decoder_input_length :]
             
-            # Do not stop generation if stop sequence is the first thing generated
-            if lookback_ids_batch.shape[1] < 2:
-                return False
-
             lookback_ids_batch = lookback_ids_batch[:, -self.sequence_id_len :]
 
             lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)
 
             for i, done in enumerate(self.done_tracker):
                 if not done:
-                    self.done_tracker[i] = self.sequence in lookback_tokens_batch[i]
+                    # Stop generation if the stop sequence is in the lookback tokens but doesn't start with stop sequence
+                    self.done_tracker[i] = (self.sequence in lookback_tokens_batch[i] and not lookback_tokens_batch[i][: len(self.sequence)] == self.sequence)
             return False not in self.done_tracker
 
     def get_stopping_criteria(self, input_ids: torch.Tensor):
