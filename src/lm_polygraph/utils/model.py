@@ -17,7 +17,6 @@ from transformers import (
     BartForConditionalGeneration,
     StoppingCriteria,
     StoppingCriteriaList,
-    StopStringCriteria,
     PreTrainedTokenizer,
 )
 
@@ -376,11 +375,10 @@ class WhiteboxModel(Model):
         return StoppingCriteriaList(
             [
                 *[
-                    #self._MultiTokenEOSCriteria(
-                    #    sequence, self.tokenizer, input_ids.shape[1], input_ids.shape[0]
-                    #)
-                    #for sequence in stop_sequences
-                    StopStringCriteria(self.tokenizer, stop_sequences)
+                    self._MultiTokenEOSCriteria(
+                        sequence, self.tokenizer, input_ids.shape[1], input_ids.shape[0]
+                    )
+                    for sequence in stop_sequences
                 ],
             ]
         )
