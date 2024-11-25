@@ -45,7 +45,6 @@ class Focus(Estimator):
         gamma: float = 0.9,
         p: float = 0.01,
         model_name: str = "meta-llama/Llama-3.2-1B",
-        path = f"../../../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
     ):
         super().__init__([
                             "greedy_log_probs", 
@@ -57,6 +56,7 @@ class Focus(Estimator):
                          "sequence",
                         )
         
+        path = f"../../../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
         if not os.path.exists(path):
             calcu_idf(model_name, path)
         self.token_idf = pickle.load(open(path, "rb"))
