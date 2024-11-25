@@ -68,16 +68,16 @@ additional_estimators:
   - module: lm_polygraph.estimators.sentence_sar
     class_name: SentenceSAR
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilSentenceSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: MaxprobGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilSentenceSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: MaxprobGSU
     kwargs: 
       use_log: false
       reverse: false
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilSentenceSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: MaxprobGSU
     kwargs: 
       use_log: false
       reverse: true
@@ -88,20 +88,16 @@ additional_estimators:
   - module: lm_polygraph.estimators.sar
     class_name: SAR
     kwargs: {}
-  - module: lm_polygraph.estimators.sar
-    class_name: SAR
-    kwargs:
-      t: 1
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: TokenSARGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: TokenSARGSU
     kwargs: 
       use_log: false
       reverse: false
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: TokenSARGSU
     kwargs: 
       use_log: false
       reverse: true
@@ -110,18 +106,18 @@ additional_estimators:
     class_name: Perplexity
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
-    class_name: PPLSentenceSAR
+    class_name: PPLSAR
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilPPLSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: PPLGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilPPLSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: PPLGSU
     kwargs: 
       use_log: false
       reverse: false
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilPPLSAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: PPLGSU
     kwargs: 
       use_log: false
       reverse: true
@@ -130,18 +126,18 @@ additional_estimators:
     class_name: MeanTokenEntropy
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
-    class_name: MTESentenceSAR
+    class_name: MTESAR
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilMTESAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: MTEGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilMTESAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: MTEGSU
     kwargs: 
       use_log: false
       reverse: false
-  - module: lm_polygraph.estimators.sentence_sar
-    class_name: DistilMTESAR
+  - module: lm_polygraph.estimators.gsu
+    class_name: MTEGSU
     kwargs: 
       use_log: false
       reverse: true
