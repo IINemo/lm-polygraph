@@ -12,7 +12,11 @@ class EntropyCalculator(StatCalculator):
     Calculates entropy of probabilities at each token position in the generation of a Whitebox model.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        top_k: int = None,
+    ):
+        self.top_k = top_k
         super().__init__(["entropy"], ["greedy_log_probs"])
 
     def __call__(
@@ -40,12 +44,23 @@ class EntropyCalculator(StatCalculator):
         for s_lp in logprobs:
             entropies.append([])
             for lp in s_lp:
-                mask = ~np.isinf(lp)
-                entropies[-1].append(-np.sum(np.array(lp[mask]) * np.exp(lp[mask])))
+                lp = torch.tensor(lp)
+                if self.top_k is not None:
+                    lp = torch.topk(lp, self.top_k).values
+                #mask = ~np.isinf(lp)
+                #lp = lp[mask]
+                #if self.top_k is not None:
+                #    lp = np.sort(lp)[-self.top_k:]
+                #entropies[-1].append(-np.sum(np.array(lp) * np.exp(lp)))
+                entropies[-1].append(torch.distributions.Categorical(logits=lp).entropy().item())
         return {"entropy": entropies}
 
 class SampleEntropyCalculator(StatCalculator):
-    def __init__(self):
+    def __init__(
+        self,
+        top_k: int = None,
+    ):
+        self.top_k = top_k
         super().__init__(["sample_entropy"], ["token_distributions"])
 
     def __call__(
@@ -58,20 +73,23 @@ class SampleEntropyCalculator(StatCalculator):
     ) -> Dict[str, np.ndarray]:
         batch_distributions = dependencies["token_distributions"]
         entropies = []
-        
+
         for input_distributions in batch_distributions:
             for sample_distributions in input_distributions:
                 sample_entropies = []
                 for token_dist in sample_distributions:
                     # Convert token_dist to a numpy array first, then to a torch tensor
-                    token_dist_tensor = torch.tensor(np.array(token_dist))
+                    token_dist_tensor = torch.tensor(token_dist)
+
+                    if self.top_k is not None:
+                        token_dist_tensor = torch.topk(token_dist_tensor, self.top_k).values
 
                     # Calculate entropy using torch's Categorical distribution
-                    entropy = torch.distributions.Categorical(probs=token_dist_tensor).entropy()
+                    entropy = torch.distributions.Categorical(logits=token_dist_tensor).entropy()
                     sample_entropies.append(entropy.item()) 
 
             # Calculate mean entropy for the sample
             mean_entropy = torch.mean(torch.tensor(sample_entropies)) if sample_entropies else 0
             entropies.append(mean_entropy.item())
-        
+
         return {"sample_entropy": entropies}

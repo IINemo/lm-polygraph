@@ -174,7 +174,7 @@ class SamplingGenerationCalculator(StatCalculator):
                     break
                 ll.append(logits[i][j][cur_token].item())
                 toks.append(cur_token)
-                distributions.append(logits[i][j].softmax(dim=-1).cpu().numpy())
+                distributions.append(logits[i][j].cpu().numpy())
 
             log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)

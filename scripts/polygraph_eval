@@ -202,6 +202,7 @@ def main(args):
             cache_path=args.cache_path,
             language=getattr(args, 'language', 'en'),
             save_stats=getattr(args, 'save_stats', []),
+            entropy_top_k=getattr(args, 'entropy_top_k', None),
         )
 
         man()
