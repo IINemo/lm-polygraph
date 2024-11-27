@@ -86,19 +86,21 @@ class SamplingGenerationCalculator(StatCalculator):
     * probabilities of the sampled tokens generation
     """
 
-    def __init__(self, samples_n: int = 10):
+    def __init__(self, samples_n: int = 10, n_alternatives: int = 10):
         """
         Parameters:
             samples_n (int): number of samples to generate per input text. Default: 10
         """
         self.samples_n = samples_n
+        self.n_alternatives = n_alternatives
         super().__init__(
             [
                 "sample_log_probs",
                 "sample_tokens",
                 "sample_texts",
                 "sample_log_likelihoods",
-                "token_distributions",
+                "sample_tokens_distributions",
+                "sample_tokens_alternatives",
             ],
             [],
         )
@@ -155,6 +157,7 @@ class SamplingGenerationCalculator(StatCalculator):
         texts = [[] for _ in range(len(texts))]
         log_likelihoods = [[] for _ in range(len(texts))]
         token_distributions = [[] for _ in range(len(texts))]
+        alternatives = [[] for _ in range(len(texts))]
 
 
         if model.model_type == "Seq2SeqLM":
@@ -167,25 +170,39 @@ class SamplingGenerationCalculator(StatCalculator):
                 if model.model_type == "CausalLM"
                 else 0
             )
-            for j in range(len(sequences[i]) - inp_size):
+            gen_size = len(sequences[i]) - inp_size
+            sample_alternatives = [[] for _ in range(gen_size)]
+            for j in range(gen_size):
                 cur_token = sequences[i][j + inp_size].item()
                 log_prob += logits[i][j][cur_token].item()
-                if cur_token == model.tokenizer.eos_token_id:
-                    break
                 ll.append(logits[i][j][cur_token].item())
                 toks.append(cur_token)
-                distributions.append(logits[i][j].cpu().numpy())
+
+                lt = logits[i][j].cpu().numpy()
+                distributions.append(lt)
+
+                best_tokens = np.argpartition(lt, -self.n_alternatives)
+                ln = len(best_tokens)
+                best_tokens = best_tokens[ln - self.n_alternatives : ln]
+                for t in best_tokens:
+                    sample_alternatives[j].append((t.item(), lt[t].item()))
+                sample_alternatives[j].sort(
+                    key=lambda x: x[0] == cur_token,
+                    reverse=True,
+                )
 
             log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
-            texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
+            texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks, skip_special_tokens=True))
             token_distributions[int(i / self.samples_n)].append(distributions)
+            alternatives[int(i / self.samples_n)].append(sample_alternatives)
 
         return {
             "sample_log_likelihoods": log_likelihoods,
             "sample_log_probs": log_probs,
             "sample_tokens": tokens,
             "sample_texts": texts,
-            "token_distributions": token_distributions,
+            "sample_tokens_distributions": token_distributions,
+            "sample_tokens_alternatives": alternatives,
         }

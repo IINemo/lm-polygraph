@@ -480,11 +480,7 @@ class UEManager:
 
             for key in self.save_stats:
                 if key in batch_stats.keys():
-                    try:
-                        self.stats[key] += list(batch_stats[key])
-                    except:
-                        breakpoint()
-                        pass
+                    self.stats[key] += list(batch_stats[key])
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 

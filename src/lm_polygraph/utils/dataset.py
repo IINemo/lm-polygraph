@@ -184,6 +184,8 @@ class Dataset:
         """
         dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
         few_shot_dataset = None
+        #no_few_shot_x = None
+
         if n_shot > 0:
             _, few_shot_dataset = Dataset.load_hf_dataset(
                 dataset_path, few_shot_split, **kwargs
@@ -417,7 +419,11 @@ class Dataset:
         else:
             x = dataset[x_column]
             y = dataset[y_column]
+    
+        #if no_few_shot_x is None:
+        #    no_few_shot_x = x
 
+        #return Dataset(x, y, batch_size, no_few_shot_x)
         return Dataset(x, y, batch_size)
 
     @staticmethod

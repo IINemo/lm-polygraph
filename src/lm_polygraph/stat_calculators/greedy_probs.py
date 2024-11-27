@@ -134,14 +134,9 @@ class GreedyProbsCalculator(StatCalculator):
                 seq = sequences[i, idx:].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
-            length, text_length = len(seq), len(seq)
-            for j in range(len(seq)):
-                if seq[j] == model.tokenizer.eos_token_id:
-                    length = j + 1
-                    text_length = j
-                    break
+            length = len(seq)
             cut_sequences.append(seq[:length].tolist())
-            cut_texts.append(model.tokenizer.decode(seq[:text_length]))
+            cut_texts.append(model.tokenizer.decode(seq[:length], skip_special_tokens=True))
             cut_logits.append(logits[i, :length, :].cpu().numpy())
             cut_alternatives.append([[] for _ in range(length)])
             for j in range(length):

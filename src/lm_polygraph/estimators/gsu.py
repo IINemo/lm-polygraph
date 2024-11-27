@@ -4,6 +4,7 @@ from typing import Dict
 from copy import deepcopy
 
 from .estimator import Estimator
+from lm_polygraph.estimators.claim_conditioned_probability import ClaimConditionedProbability
 
 
 class MaxprobGSU(Estimator):
@@ -249,6 +250,87 @@ class MTEGSU(Estimator):
             sent_relevance = R_s.sum(-1)
 
             # Calculate E_s with options for log transformation and reversal
+            if self.use_log:
+                E_s = -np.log(sent_relevance)
+            else:
+                E_s = -sent_relevance if self.reverse else sent_relevance
+
+            GSU.append(E_s.mean())
+
+        return np.array(GSU)
+
+
+class CCPGSU(Estimator):
+    def __init__(
+        self,
+        verbose: bool = False,
+        use_log: bool = True,
+        reverse: bool = False
+    ):
+        super().__init__(["sample_sentence_similarity",
+                          "sample_tokens",
+                          "sample_tokens_alternatives",
+                          "sample_tokens_alternatives_nli"], "sequence")
+        self.verbose = verbose
+        self.use_log = use_log
+        self.reverse = reverse
+
+    def __str__(self):
+        base = "CCPGSU"
+        if not self.use_log:
+            base += "_no_log"
+            if self.reverse:
+                base += "_reverse"
+        return base
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the sentenceSAR for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * corresponding log probabilities in 'sample_log_probs',
+                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
+        Returns:
+            np.ndarray: float sentenceSAR for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        batch_sample_tokens = stats["sample_tokens"]
+        batch_sample_tokens_alternatives = stats["sample_tokens_alternatives"]
+        batch_sample_tokens_alternatives_nli = stats["sample_tokens_alternatives_nli"]
+
+        GSU = []
+        for sample_sentence_similarity, \
+            samples_tokens, \
+            samples_tokens_alternatives, \
+            samples_tokens_alternatives_nli in zip(
+                batch_sample_sentence_similarity,
+                batch_sample_tokens,
+                batch_sample_tokens_alternatives,
+                batch_sample_tokens_alternatives_nli
+            ):
+            ccps = []
+            for sample_tokens, \
+                sample_tokens_alternatives, \
+                sample_tokens_alternatives_nli in zip(
+                    samples_tokens,
+                    samples_tokens_alternatives,
+                    samples_tokens_alternatives_nli
+                ):
+                ccp_stats = {
+                    "greedy_tokens": [sample_tokens],
+                    "greedy_tokens_alternatives": [sample_tokens_alternatives],
+                    "greedy_tokens_alternatives_nli": [sample_tokens_alternatives_nli]
+                }
+                ccps.append(ClaimConditionedProbability()(stats=ccp_stats)[0])
+
+            R_s = (
+                ccps
+                * sample_sentence_similarity
+            )
+            sent_relevance = R_s.sum(-1)
+
             if self.use_log:
                 E_s = -np.log(sent_relevance)
             else:

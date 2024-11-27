@@ -61,7 +61,7 @@ class SampleEntropyCalculator(StatCalculator):
         top_k: int = None,
     ):
         self.top_k = top_k
-        super().__init__(["sample_entropy"], ["token_distributions"])
+        super().__init__(["sample_entropy"], ["sample_tokens_distributions"])
 
     def __call__(
         self,
@@ -71,7 +71,7 @@ class SampleEntropyCalculator(StatCalculator):
         max_new_tokens: int = 100,
         **kwargs,
     ) -> Dict[str, np.ndarray]:
-        batch_distributions = dependencies["token_distributions"]
+        batch_distributions = dependencies["sample_tokens_distributions"]
         entropies = []
 
         for input_distributions in batch_distributions:

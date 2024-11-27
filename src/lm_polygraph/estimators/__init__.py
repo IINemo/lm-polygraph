@@ -71,7 +71,7 @@ from .sentence_sar import (
     #DistilOneSentenceSAR,
 )
 from .sar import SAR
-from .gsu import MaxprobGSU, PPLGSU, MTEGSU, TokenSARGSU
+from .gsu import MaxprobGSU, PPLGSU, MTEGSU, TokenSARGSU, CCPGSU
 from .renyi_neg import RenyiNeg
 from .fisher_rao import FisherRao
 from .verbalized_1s import Verbalized1S

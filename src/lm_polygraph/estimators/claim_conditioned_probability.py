@@ -20,7 +20,22 @@ class ClaimConditionedProbability(Estimator):
         return "CCP"
 
     def _reduce(self, logprobs: list[float]):
-        return np.exp(np.sum(logprobs))
+        return np.sum(logprobs)
+
+    def _combine_nli(self, forward: str, backward: str):
+        """
+        Combines two NLI predictions NLI(x, y) and NLI(y, x) into a single prediction.
+
+        Prioritizes "entail" or "contra" if present, otherwise returns "neutral".
+        """
+        if forward == backward:
+            return forward
+        if all(x in [forward, backward] for x in ["entail", "contra"]):
+            return "neutral"
+        for x in ["entail", "contra"]:
+            if x in [forward, backward]:
+                return x
+        return "neutral"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         words = stats["greedy_tokens"]
@@ -42,10 +57,14 @@ class ClaimConditionedProbability(Estimator):
                 contra_logprobs, contra_words = [], []
                 for i in range(len(word_alternatives)):
                     word_alt, logprob = word_alternatives[i]
-                    if i == 0 or word_alternatives_nli[0][i] == "entail":
+                    nli_outcome = self._combine_nli(
+                        word_alternatives_nli[0][i],
+                        word_alternatives_nli[i][0],
+                    )
+                    if i == 0 or nli_outcome == "entail":
                         entail_logprobs.append(logprob)
                         entail_words.append(word_alt)
-                    elif word_alternatives_nli[0][i] == "contra":
+                    elif nli_outcome == "contra":
                         contra_logprobs.append(logprob)
                         contra_words.append(word_alt)
                 entail_logprob = np.logaddexp.reduce(entail_logprobs)
