@@ -72,11 +72,12 @@ class SampleEntropyCalculator(StatCalculator):
         **kwargs,
     ) -> Dict[str, np.ndarray]:
         batch_distributions = dependencies["sample_tokens_distributions"]
-        entropies = []
 
+        input_entropies = []
         for input_distributions in batch_distributions:
+            sample_entropies = []
             for sample_distributions in input_distributions:
-                sample_entropies = []
+                token_entropies = []
                 for token_dist in sample_distributions:
                     # Convert token_dist to a numpy array first, then to a torch tensor
                     token_dist_tensor = torch.tensor(token_dist)
@@ -86,10 +87,11 @@ class SampleEntropyCalculator(StatCalculator):
 
                     # Calculate entropy using torch's Categorical distribution
                     entropy = torch.distributions.Categorical(logits=token_dist_tensor).entropy()
-                    sample_entropies.append(entropy.item()) 
+                    token_entropies.append(entropy.item()) 
 
-            # Calculate mean entropy for the sample
-            mean_entropy = torch.mean(torch.tensor(sample_entropies)) if sample_entropies else 0
-            entropies.append(mean_entropy.item())
+                # Calculate mean entropy for the sample
+                sample_entropy = torch.mean(torch.tensor(token_entropies)) if token_entropies else 0
+                sample_entropies.append(sample_entropy.item())
+            input_entropies.append(sample_entropies)
 
-        return {"sample_entropy": entropies}
+        return {"sample_entropy": input_entropies}

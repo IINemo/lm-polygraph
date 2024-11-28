@@ -142,23 +142,6 @@ additional_estimators:
       use_log: false
       reverse: true
 
-  - module: lm_polygraph.estimators.claim_conditioned_probability
-    class_name: ClaimConditionedProbability
-    kwargs: {}
-  - module: lm_polygraph.estimators.gsu
-    class_name: CCPGSU
-    kwargs: {}
-  - module: lm_polygraph.estimators.gsu
-    class_name: CCPGSU
-    kwargs: 
-      use_log: false
-      reverse: false
-  - module: lm_polygraph.estimators.gsu
-    class_name: CCPGSU
-    kwargs: 
-      use_log: false
-      reverse: true
-
 ignore_exceptions: false
 
 batch_size: 1
