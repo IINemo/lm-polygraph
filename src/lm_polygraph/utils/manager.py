@@ -463,7 +463,7 @@ class UEManager:
                 result_stat_calculators[sc.name] = sc
             available_stat_calculators = list(result_stat_calculators.values())
         if builder_env_stat_calc is None:
-            builder_env_stat_calc = (BuilderEnvironmentStatCalculator(model=None),)
+            builder_env_stat_calc = BuilderEnvironmentStatCalculator(model=None)
 
         man = UEManager(
             data=None,
