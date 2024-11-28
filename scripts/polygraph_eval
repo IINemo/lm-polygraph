@@ -212,10 +212,10 @@ def main(args):
 
 def get_ue_metrics(args):
     ue_metrics = [
-        ReversedPairsProportion(),
+        #ReversedPairsProportion(),
         PredictionRejectionArea(),
         PredictionRejectionArea(max_rejection=0.5),
-        RiskCoverageCurveAUC(),
+        #RiskCoverageCurveAUC(),
     ]
     if getattr(args, "use_claim_ue", False):
         ue_metrics += [
