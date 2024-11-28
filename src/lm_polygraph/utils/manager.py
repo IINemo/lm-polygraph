@@ -26,6 +26,9 @@ from lm_polygraph.utils.factory_stat_calculator import (
     FactoryStatCalculator,
     StatCalculatorContainer,
 )
+from lm_polygraph.defaults.register_default_stat_calculators import (
+    register_default_stat_calculators,
+)
 from lm_polygraph.utils.common import flatten_results
 
 import logging
@@ -442,8 +445,8 @@ class UEManager:
     @staticmethod
     def load(
         load_path: str,
-        builder_env_stat_calc: BuilderEnvironmentStatCalculator,
-        available_stat_calculators: List[StatCalculatorContainer],
+        builder_env_stat_calc: BuilderEnvironmentStatCalculator = None,
+        available_stat_calculators: List[StatCalculatorContainer] = None,
     ) -> "UEManager":
         """
         Loads UEManager from the specified path. To save the calculated manager results, see UEManager.save().
@@ -452,6 +455,16 @@ class UEManager:
             load_path (str): Path to file with saved benchmark results to load.
         """
         res_dict = torch.load(load_path)
+
+        if available_stat_calculators is None:
+            result_stat_calculators = dict()
+            scs = register_default_stat_calculators("Whitebox")
+            for sc in scs:
+                result_stat_calculators[sc.name] = sc
+            available_stat_calculators = list(result_stat_calculators.values())
+        if builder_env_stat_calc is None:
+            builder_env_stat_calc = BuilderEnvironmentStatCalculator(model=None)
+
         man = UEManager(
             data=None,
             model=None,
