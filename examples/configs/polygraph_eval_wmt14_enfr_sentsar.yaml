@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/wmt14_fren/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/wmt14_enfr/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -14,12 +14,12 @@ device: cpu
 task: nmt
 
 dataset: [wmt14, fr-en]
-text_column: fr
-label_column: en
+text_column: en
+label_column: fr
 prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
 train_split: train
 eval_split: test
-max_new_tokens: 107
+max_new_tokens: 182
 load_from_disk: false
 generation_params:
   generate_until:

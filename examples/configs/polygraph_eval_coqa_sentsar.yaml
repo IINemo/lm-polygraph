@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/wmt14_fren/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/coqa/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -9,18 +9,18 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-device: cpu
+task: qa
 
-task: nmt
-
-dataset: [wmt14, fr-en]
-text_column: fr
-label_column: en
-prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
+dataset: coqa
+text_column: questions
+label_column: answers
+description: "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}"
+prompt: "Question: {question}\nAnswer:{answer}"
 train_split: train
-eval_split: test
-max_new_tokens: 107
+eval_split: validation
+max_new_tokens: 20
 load_from_disk: false
+normalize: true
 generation_params:
   generate_until:
     - "\n"
@@ -38,8 +38,6 @@ save_stats:
   - sample_entropy
 entropy_top_k: 50
 
-source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
-
 train_dataset: null
 train_test_split: false
 test_split_size: 1
@@ -55,9 +53,9 @@ subsample_train_dataset: 1000
 subsample_eval_dataset: -1
 
 use_density_based_ue: false
-use_ens_ue: false
 use_seq_ue: false
 use_tok_ue: false
+use_ens_ue: false
 generation_metrics: null
 
 additional_estimators:

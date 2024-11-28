@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/triviaqa/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -27,10 +27,17 @@ generation_params:
   generate_until:
     - "\n"
 save_stats:
+  - greedy_tokens
+  - greedy_log_likelihoods
+  - greedy_tokens_alternatives
+  - entropy
   - sample_tokens
+  - sample_tokens_alternatives
   - sample_texts
   - sample_log_probs
+  - sample_log_likelihoods
   - sample_sentence_similarity
+  - sample_entropy
 entropy_top_k: 50
 
 train_dataset: null
