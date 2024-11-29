@@ -107,8 +107,8 @@ class BartScoreSeqMetric(GenerationMetric):
 
             except RuntimeError:
                 traceback.print_exc()
-                print(f"source: {src_list}")
-                print(f"target: {tgt_list}")
+                log.error(f"source: {src_list}")
+                log.error(f"target: {tgt_list}")
                 exit(0)
         return score_list
 
@@ -124,7 +124,7 @@ class BartScoreSeqMetric(GenerationMetric):
 
         tgt_list = ["That's stupid.", "What's the problem?", "He is trustworthy."]
 
-        print(self.score(src_list, tgt_list, batch_size))
+        log.info(self.score(src_list, tgt_list, batch_size))
 
     def __call__(
         self,

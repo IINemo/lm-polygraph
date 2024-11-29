@@ -75,8 +75,8 @@ class ModelScoreCalculator(StatCalculator):
                             )
             except RuntimeError:
                 traceback.print_exc()
-                print(f"source: {src_list}")
-                print(f"target: {tgt_list}")
+                log.error(f"source: {src_list}")
+                log.error(f"target: {tgt_list}")
                 exit(0)
         return score_list
 

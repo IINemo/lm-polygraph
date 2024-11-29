@@ -88,6 +88,6 @@ class EigValLaplacian(Estimator):
         res = []
         for i, answers in enumerate(stats["sample_texts"]):
             if self.verbose:
-                print(f"generated answers: {answers}")
+                log.debug(f"generated answers: {answers}")
             res.append(self.U_EigVal_Laplacian(i, stats))
         return np.array(res)
