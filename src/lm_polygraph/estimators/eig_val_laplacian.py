@@ -1,11 +1,11 @@
 import numpy as np
-
+import logging
 from typing import Dict, Literal
-
 from scipy.linalg import eigh
-
 from .common import compute_sim_score
 from .estimator import Estimator
+
+log = logging.getLogger(__name__)
 
 
 class EigValLaplacian(Estimator):

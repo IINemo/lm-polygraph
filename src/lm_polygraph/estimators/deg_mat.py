@@ -1,9 +1,10 @@
 import numpy as np
-
+import logging
 from typing import Dict, Literal
-
 from .estimator import Estimator
 from .common import compute_sim_score
+
+log = logging.getLogger(__name__)
 
 
 class DegMat(Estimator):

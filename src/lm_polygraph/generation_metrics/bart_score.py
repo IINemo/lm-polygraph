@@ -1,12 +1,13 @@
 import traceback
+import logging
 from typing import List, Dict
-
 import numpy as np
 import torch
 import torch.nn as nn
 from transformers import BartTokenizer, BartForConditionalGeneration
-
 from .generation_metric import GenerationMetric
+
+log = logging.getLogger(__name__)
 
 SCORE_TYPES = ["rh"]
 

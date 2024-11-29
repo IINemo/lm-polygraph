@@ -1,13 +1,14 @@
 import numpy as np
+import logging
 import os
 import torch
-
 from typing import Dict, List
 from transformers import AutoTokenizer, AutoModel
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
-
 from .estimator import Estimator
+
+log = logging.getLogger(__name__)
 
 
 def split_classes(

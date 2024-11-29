@@ -1,8 +1,10 @@
 import numpy as np
+import logging
 from sentence_transformers import SentenceTransformer, util
-
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+
+log = logging.getLogger(__name__)
 
 
 class SbertMetric(GenerationMetric):

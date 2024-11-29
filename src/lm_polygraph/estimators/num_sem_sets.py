@@ -1,9 +1,10 @@
 import numpy as np
-
+import logging
 from typing import Dict
-
 from .estimator import Estimator
 import torch.nn as nn
+
+log = logging.getLogger(__name__)
 
 softmax = nn.Softmax(dim=1)
 

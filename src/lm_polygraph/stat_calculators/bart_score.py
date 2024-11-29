@@ -1,15 +1,15 @@
 # %%
+import logging
 import traceback
 from typing import List, Dict, Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn
 from transformers import BartTokenizer, BartForConditionalGeneration
-
 from .stat_calculator import StatCalculator
-
 from lm_polygraph.utils.model import WhiteboxModel
+
+log = logging.getLogger(__name__)
 
 
 class BartScoreCalculator(StatCalculator):

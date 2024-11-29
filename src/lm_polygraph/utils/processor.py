@@ -1,7 +1,10 @@
 import numpy as np
 
+import logging
 from typing import List, Dict, Tuple
 from lm_polygraph.estimators.estimator import Estimator
+
+log = logging.getLogger(__name__)
 
 
 class Processor:

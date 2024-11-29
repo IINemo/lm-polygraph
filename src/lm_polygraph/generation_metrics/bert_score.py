@@ -1,8 +1,10 @@
 import numpy as np
+import logging
 from bert_score import BERTScorer
-
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+
+log = logging.getLogger(__name__)
 
 
 class BertScoreMetric(GenerationMetric):
