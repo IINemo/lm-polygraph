@@ -108,7 +108,14 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
-        batch: Dict[str, torch.Tensor] = model.tokenize(texts)
+        if hasattr(model, "image"):
+            batch: Dict[str, torch.Tensor] = model.processor(text=texts, 
+                                    images=model.image,
+                                    return_tensors="pt",
+                                   )
+
+        else:
+            batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
             out = model.generate(
