@@ -74,7 +74,7 @@ class OpenAIChat:
         for i in range(len(sleep_time_values)):
             try:
                 return openai.OpenAI().chat.completions.create(
-                    model=self.openai_model, messages=messages
+                    model=self.openai_model, messages=messages, temperature=0  # for deterministic outputs
                 )
             except Exception as e:
                 sleep_time = sleep_time_values[i]
@@ -84,5 +84,5 @@ class OpenAIChat:
                 time.sleep(sleep_time)
 
         return openai.OpenAI().chat.completions.create(
-            model=self.openai_model, messages=messages
+            model=self.openai_model, messages=messages, temperature=0  # for deterministic outputs
         )
