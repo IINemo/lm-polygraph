@@ -7,6 +7,8 @@ from typing import Optional, Dict, Any
 import time
 import os
 
+__all__ = ["MockOpenAIServer"]
+
 
 class MockOpenAIHandler(BaseHTTPRequestHandler):
     """Handler for mock OpenAI API requests"""
@@ -150,8 +152,7 @@ class MockOpenAIServer:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.connect((self.host, self.port))
                         break
-                except Exception as e:
-                    print(str(e))
+                except Exception:
                     time.sleep(0.1)
             else:
                 raise RuntimeError("Server failed to start within timeout")

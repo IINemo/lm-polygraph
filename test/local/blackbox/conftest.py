@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 import shutil
 import os
-from mock_openai import MockOpenAIServer
+from .mock_openai import MockOpenAIServer
 
 
 def setup_openai_config(base_url: str):
