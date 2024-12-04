@@ -2,6 +2,7 @@ import numpy as np
 
 import itertools
 from typing import Dict, List
+from tqdm import tqdm
 
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
@@ -67,7 +68,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             batch_counts.append(len(unique_texts))
 
         batch_token_scores = []
-        for input_texts, tokens in zip(batch_input_texts, batch_greedy_tokens):
+        for input_texts, tokens in tqdm(zip(batch_input_texts, batch_greedy_tokens)):
             if len(tokens) > 1:
                 is_special_tokens = np.isin(tokens, special_tokens)
                 cropped_tokens = list(itertools.combinations(tokens, len(tokens) - 1))[
@@ -96,7 +97,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             batch_token_scores.append(token_scores)
 
         sim_matrices = []
-        for i, pairs in enumerate(batch_pairs):
+        for i, pairs in tqdm(enumerate(batch_pairs)):
             sim_scores = self.crossencoder.predict(pairs, batch_size=deberta_batch_size)
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
@@ -109,7 +110,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         sim_matrices = np.stack(sim_matrices)
 
         batch_samples_token_scores = []
-        for sample_tokens, input_texts in zip(batch_sample_tokens, batch_input_texts):
+        for sample_tokens, input_texts in tqdm(zip(batch_sample_tokens, batch_input_texts)):
             samples_token_scores = []
             for tokens in sample_tokens:
                 if len(tokens) > 1:
