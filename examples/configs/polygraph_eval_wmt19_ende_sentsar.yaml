@@ -28,6 +28,7 @@ save_stats:
   - greedy_tokens
   - greedy_log_likelihoods
   - greedy_tokens_alternatives
+  - token_similarity
   - entropy
   - sample_tokens
   - sample_tokens_alternatives
@@ -35,6 +36,7 @@ save_stats:
   - sample_log_probs
   - sample_log_likelihoods
   - sample_sentence_similarity
+  - sample_token_similarity
   - sample_entropy
 entropy_top_k: 50
 
