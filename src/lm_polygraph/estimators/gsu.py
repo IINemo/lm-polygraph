@@ -11,21 +11,12 @@ class MaxprobGSU(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        use_log: bool = True,
-        reverse: bool = False
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
         self.verbose = verbose
-        self.use_log = use_log
-        self.reverse = reverse
 
     def __str__(self):
-        base = "MaxprobGSU"
-        if not self.use_log:
-            base += "_no_log"
-            if self.reverse:
-                base += "_reverse"
-        return base
+        return "MaxprobGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -46,17 +37,12 @@ class MaxprobGSU(Estimator):
         for sample_log_probs, sample_sentence_similarity in zip(
             batch_sample_log_probs, batch_sample_sentence_similarity
         ):
-            sample_probs = np.exp(np.array(sample_log_probs))
+            sample_probs = -np.exp(np.array(sample_log_probs))
             R_s = (
                 sample_probs
                 * sample_sentence_similarity
             )
-            sent_relevance = R_s.sum(-1)
-
-            if self.use_log:
-                E_s = -np.log(sent_relevance)
-            else:
-                E_s = -sent_relevance if self.reverse else sent_relevance
+            E_s = R_s.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -66,22 +52,13 @@ class MaxprobGSU(Estimator):
 class PPLGSU(Estimator):
     def __init__(
         self,
-        verbose: bool = False,
-        use_log: bool = True,
-        reverse: bool = False
+        verbose: bool = False
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
         self.verbose = verbose
-        self.use_log = use_log
-        self.reverse = reverse
 
     def __str__(self):
-        base = "PPLGSU"
-        if not self.use_log:
-            base += "_no_log"
-            if self.reverse:
-                base += "_reverse"
-        return base
+        return "PPLGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -102,18 +79,13 @@ class PPLGSU(Estimator):
         for sample_log_likelihoods, sample_sentence_similarity in zip(
             batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
-            ppl = np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
+            ppl = -np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
 
             R_s = (
                 ppl
                 * sample_sentence_similarity
             )
-            sent_relevance = R_s.sum(-1)
-
-            if self.use_log:
-                E_s = -np.log(sent_relevance)
-            else:
-                E_s = -sent_relevance if self.reverse else sent_relevance
+            E_s = R_s.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -123,10 +95,7 @@ class PPLGSU(Estimator):
 class TokenSARGSU(Estimator):
     def __init__(
         self,
-        verbose: bool = False,
-        use_log: bool = True,
-        reverse: bool = False
-    ):
+        verbose: bool = False):
         super().__init__(
             [
                 "sample_sentence_similarity",
@@ -136,16 +105,9 @@ class TokenSARGSU(Estimator):
             "sequence",
         )
         self.verbose = verbose
-        self.use_log = use_log
-        self.reverse = reverse
 
     def __str__(self):
-        base = "TokenSARGSU"
-        if not self.use_log:
-            base += "_no_log"
-            if self.reverse:
-                base += "_reverse"
-        return base
+        return "TokenSARGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -185,17 +147,12 @@ class TokenSARGSU(Estimator):
                 tokenSAR.append(E_t.sum())
 
             tokenSAR = np.array(tokenSAR)
-            probs_token_sar = np.exp(-tokenSAR)
+            probs_token_sar = -np.exp(-tokenSAR)
             R_s = (
                 probs_token_sar
                 * sample_sentence_similarity
             )
-            sent_relevance = R_s.sum(-1)
-            E_s = -np.log(sent_relevance)
-            if self.use_log:
-                E_s = -np.log(sent_relevance)
-            else:
-                E_s = -sent_relevance if self.reverse else sent_relevance
+            E_s = R_s.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -205,22 +162,13 @@ class TokenSARGSU(Estimator):
 class MTEGSU(Estimator):
     def __init__(
         self,
-        verbose: bool = False,
-        use_log: bool = True,
-        reverse: bool = False
+        verbose: bool = False
     ):
         super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
         self.verbose = verbose
-        self.use_log = use_log
-        self.reverse = reverse
 
     def __str__(self):
-        base = "MTEGSU"
-        if not self.use_log:
-            base += "_no_log"
-            if self.reverse:
-                base += "_reverse"
-        return base
+        return "MTEGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -247,13 +195,7 @@ class MTEGSU(Estimator):
             R_s = sample_entropy * sample_sentence_similarity
             
             # Compute sentence relevance by summing along the last axis
-            sent_relevance = R_s.sum(-1)
-
-            # Calculate E_s with options for log transformation and reversal
-            if self.use_log:
-                E_s = -np.log(sent_relevance)
-            else:
-                E_s = -sent_relevance if self.reverse else sent_relevance
+            E_s = R_s.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -263,25 +205,16 @@ class MTEGSU(Estimator):
 class CCPGSU(Estimator):
     def __init__(
         self,
-        verbose: bool = False,
-        use_log: bool = True,
-        reverse: bool = False
+        verbose: bool = False
     ):
         super().__init__(["sample_sentence_similarity",
                           "sample_tokens",
                           "sample_tokens_alternatives",
                           "sample_tokens_alternatives_nli"], "sequence")
         self.verbose = verbose
-        self.use_log = use_log
-        self.reverse = reverse
 
     def __str__(self):
-        base = "CCPGSU"
-        if not self.use_log:
-            base += "_no_log"
-            if self.reverse:
-                base += "_reverse"
-        return base
+        return "CCPGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -330,11 +263,6 @@ class CCPGSU(Estimator):
                 * sample_sentence_similarity
             )
             sent_relevance = R_s.sum(-1)
-
-            if self.use_log:
-                E_s = -np.log(sent_relevance)
-            else:
-                E_s = -sent_relevance if self.reverse else sent_relevance
 
             GSU.append(E_s.mean())
 

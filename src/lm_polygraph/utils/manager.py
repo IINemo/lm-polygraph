@@ -514,7 +514,15 @@ class UEManager:
 
             torch.cuda.empty_cache()
             gc.collect()
+            
+        self.eval_ue()
 
+        for processor in self.processors:
+            processor.on_eval(self.metrics, self.total_bad_estimators)
+
+        return self.metrics
+
+    def eval_ue(self):
         for (e_level, e_name), estimator_values in self.estimations.items():
             for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
                 for ue_metric in self.ue_metrics:
@@ -541,10 +549,6 @@ class UEManager:
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
-        for processor in self.processors:
-            processor.on_eval(self.metrics, self.total_bad_estimators)
-
-        return self.metrics
 
     def calculate(self, batch_stats: dict, calculators: list, inp_texts: list) -> dict:
         """
