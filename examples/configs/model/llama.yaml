@@ -1,0 +1,11 @@
+defaults:
+  - default
+
+path: meta-llama/Meta-Llama-3.1-8B
+type: CausalLM
+path_to_load_script: model/default_causal.py
+
+load_model_args:
+  device_map: balanced_low_0
+  dtype: bfloat16
+load_tokenizer_args: {}
