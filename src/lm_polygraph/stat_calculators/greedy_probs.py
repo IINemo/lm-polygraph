@@ -110,9 +110,9 @@ class GreedyProbsCalculator(StatCalculator):
         """
         if hasattr(model, "image"):
             batch: Dict[str, torch.Tensor] = model.processor(text=texts, 
-                                    images=model.image,
-                                    return_tensors="pt",
-                                   )
+                                                             images=model.image,
+                                                             return_tensors="pt",
+                                                            )
 
         else:
             batch: Dict[str, torch.Tensor] = model.tokenize(texts)
