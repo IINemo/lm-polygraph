@@ -109,11 +109,9 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
         if hasattr(model, "image"):
-            batch: Dict[str, torch.Tensor] = model.processor(text=texts, 
+            batch: Dict[str, torch.Tensor] = model.processor(text=texts,
                                                              images=model.image,
-                                                             return_tensors="pt",
-                                                            )
-
+                                                             return_tensors="pt",)
         else:
             batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
