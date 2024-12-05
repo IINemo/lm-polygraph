@@ -1,4 +1,3 @@
-import torch
 import logging
 
 from lm_polygraph.utils.deberta import Deberta, MultilingualDeberta
@@ -7,9 +6,9 @@ log = logging.getLogger("lm_polygraph")
 
 
 def load_nli_model(
-    deberta_path = "microsoft/deberta-large-mnli",
-    batch_size = 10,
-    device = None,
+    deberta_path="microsoft/deberta-large-mnli",
+    batch_size=10,
+    device=None,
 ):
     if deberta_path.startswith("microsoft"):
         nli_model = Deberta(deberta_path, batch_size, device)
