@@ -82,16 +82,6 @@ additional_estimators:
   - module: lm_polygraph.estimators.gsu
     class_name: MaxprobGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.gsu
-    class_name: MaxprobGSU
-    kwargs: 
-      use_log: false
-      reverse: false
-  - module: lm_polygraph.estimators.gsu
-    class_name: MaxprobGSU
-    kwargs: 
-      use_log: false
-      reverse: true
 
   - module: lm_polygraph.estimators.token_sar
     class_name: TokenSAR
@@ -102,16 +92,6 @@ additional_estimators:
   - module: lm_polygraph.estimators.gsu
     class_name: TokenSARGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.gsu
-    class_name: TokenSARGSU
-    kwargs: 
-      use_log: false
-      reverse: false
-  - module: lm_polygraph.estimators.gsu
-    class_name: TokenSARGSU
-    kwargs: 
-      use_log: false
-      reverse: true
 
   - module: lm_polygraph.estimators.perplexity
     class_name: Perplexity
@@ -122,16 +102,6 @@ additional_estimators:
   - module: lm_polygraph.estimators.gsu
     class_name: PPLGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.gsu
-    class_name: PPLGSU
-    kwargs: 
-      use_log: false
-      reverse: false
-  - module: lm_polygraph.estimators.gsu
-    class_name: PPLGSU
-    kwargs: 
-      use_log: false
-      reverse: true
 
   - module: lm_polygraph.estimators.token_entropy
     class_name: MeanTokenEntropy
@@ -142,16 +112,6 @@ additional_estimators:
   - module: lm_polygraph.estimators.gsu
     class_name: MTEGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.gsu
-    class_name: MTEGSU
-    kwargs: 
-      use_log: false
-      reverse: false
-  - module: lm_polygraph.estimators.gsu
-    class_name: MTEGSU
-    kwargs: 
-      use_log: false
-      reverse: true
 
 ignore_exceptions: false
 
