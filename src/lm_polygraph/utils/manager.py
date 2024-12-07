@@ -26,6 +26,9 @@ from lm_polygraph.utils.factory_stat_calculator import (
     FactoryStatCalculator,
     StatCalculatorContainer,
 )
+from lm_polygraph.defaults.register_default_stat_calculators import (
+    register_default_stat_calculators,
+)
 from lm_polygraph.utils.common import flatten_results
 
 import logging
@@ -138,18 +141,16 @@ class UEManager:
             model (Model): Model to run benchmark on. Can be either lm_polygraph.WhiteboxModel or
                 lm_polygraph.BlackboxModel
             estimators (List[Estimator]): List of estimators to evaluate at benchmark.
+            builder_env_stat_calc (BuilderEnvironmentStatCalculator): Environment seen by all stat calculators when
+                they are built in polygraph_eval script.
+            available_stat_calculators (List[StatCalculatorContainer]): List of stats calculators to use.
+                Can be initialized automatically with `register_default_stat_calculators`.
             generation_metrics (List[GenerationMetrics]): List of methods to use to calculate ground-truth uncertainty.
             ue_metrics (List[UEMetric]): List of methods to measure correlation between ground-truth uncertainties from
                 `generation_metrics` and uncertainty estimators in `estimators`.
             processors (List[Processor]): List of processors to apply after each batch.
-            train_data (Optional[Dataset]): Dataset to train density-based estimators on. Can be set to None, if
-                no density-based method is used. Default: None.
             ignore_exceptions (bool): If true, exceptions on a new batch will be printed to stderr and
                 the batch will be skipped. Useful to skip CUDA OOM errors on large datasets. Default: True.
-            deberta_batch_size (int): Batch size for DeBERTa model used in some estimators. Default: 10.
-            deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
-                'cpu' otherwise. Default: None.
-            language (str): Language to test in claim-level benchmark, one of 'en', 'zh', 'ar', 'ru'. Default: 'en'.
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
@@ -378,9 +379,15 @@ class UEManager:
 
         self._process(iterable_data, fn_on_batch_callback)
 
-        for (e_level, e_name), estimator_values in self.estimations.items():
-            for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
-                for ue_metric in self.ue_metrics:
+        for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
+            for ue_metric in self.ue_metrics:
+                oracle_score_all = ue_metric(
+                    -np.array(generation_metric), np.array(generation_metric)
+                )
+                random_score_all = get_random_scores(
+                    ue_metric, np.array(generation_metric)
+                )
+                for (e_level, e_name), estimator_values in self.estimations.items():
                     if gen_level != e_level:
                         continue
                     if len(estimator_values) != len(generation_metric):
@@ -394,8 +401,13 @@ class UEManager:
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        oracle_score = ue_metric(-metric, metric)
-                        random_score = get_random_scores(ue_metric, metric)
+                        if len(ue) != len(estimator_values):
+                            oracle_score = ue_metric(-metric, metric)
+                            random_score = get_random_scores(ue_metric, metric)
+                        else:
+                            oracle_score = oracle_score_all
+                            random_score = random_score_all
+
                         ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
@@ -431,8 +443,8 @@ class UEManager:
     @staticmethod
     def load(
         load_path: str,
-        builder_env_stat_calc: BuilderEnvironmentStatCalculator,
-        available_stat_calculators: List[StatCalculatorContainer],
+        builder_env_stat_calc: BuilderEnvironmentStatCalculator = None,
+        available_stat_calculators: List[StatCalculatorContainer] = None,
     ) -> "UEManager":
         """
         Loads UEManager from the specified path. To save the calculated manager results, see UEManager.save().
@@ -441,6 +453,16 @@ class UEManager:
             load_path (str): Path to file with saved benchmark results to load.
         """
         res_dict = torch.load(load_path)
+
+        if available_stat_calculators is None:
+            result_stat_calculators = dict()
+            scs = register_default_stat_calculators("Whitebox")
+            for sc in scs:
+                result_stat_calculators[sc.name] = sc
+            available_stat_calculators = list(result_stat_calculators.values())
+        if builder_env_stat_calc is None:
+            builder_env_stat_calc = BuilderEnvironmentStatCalculator(model=None)
+
         man = UEManager(
             data=None,
             model=None,

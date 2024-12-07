@@ -37,6 +37,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
         texts: List[str],
         model: WhiteboxModel,
         max_new_tokens: int = 100,
+        background_train_dataset_max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         if self.statistics_extracted:
             return {}
@@ -48,6 +49,11 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
             for dataset, dataset_name in zip(datasets, datasets_name):
                 if dataset is None:
                     continue
+                train_max_new_tokens = (
+                    max_new_tokens
+                    if datasets_name == "train_"
+                    else background_train_dataset_max_new_tokens
+                )
                 for inp_texts, target_texts in tqdm(dataset):
                     batch_stats: Dict[str, np.ndarray] = {}
                     for key, val in [
@@ -58,7 +64,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
 
                     for stat_calculator in self.base_calculators:
                         new_stats = stat_calculator(
-                            batch_stats, inp_texts, model, max_new_tokens
+                            batch_stats, inp_texts, model, train_max_new_tokens
                         )
                         for stat, stat_value in new_stats.items():
                             if stat in batch_stats.keys():

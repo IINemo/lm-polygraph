@@ -18,8 +18,10 @@ eval_split: test
 max_new_tokens: 256
 load_from_disk: false
 
-
 subsample_eval_dataset: -1
+
+model:
+  path: mistralai/Mistral-7B-Instruct-v0.1
 
 use_claim_ue: true
 generation_metrics: [{
