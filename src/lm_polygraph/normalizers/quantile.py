@@ -17,9 +17,9 @@ class QuantileNormalizer(BaseUENormalizer):
         conf = -ues
         self.scaler = ecdf(conf).cdf
 
-    def transform(self, ues: np.ndarray) -> np.ndarray:
+    def transform(self, ues: list) -> np.ndarray:
         """Transforms the ues data using the fitted QuantileTransformer."""
-        conf = -ues
+        conf = -np.array(ues)
         return self.scaler.evaluate(conf)
 
     def dumps(self) -> str:
