@@ -7,7 +7,10 @@ from lm_polygraph.utils.factory_stat_calculator import (
 )
 
 
-def register_default_stat_calculators(model_type: str) -> List[StatCalculatorContainer]:
+def register_default_stat_calculators(
+    model_type: str,
+    language: str = "en",
+) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
     estimate_uncertainty() function with default configurations.
@@ -34,20 +37,25 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
         )
         all_stat_calculators.append(sc)
 
+    if language == "en":
+        deberta_model_path = "microsoft/deberta-large-mnli"
+    else:
+        deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7" 
+       
     _register(InitialStateCalculator)
     _register(
         SemanticMatrixCalculator,
-        "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
-        {
-            "nli_model": {
-                "deberta_path": "microsoft/deberta-large-mnli",
-                "batch_size": 10,
-                "device": None,
-            }
-        },
+            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "batch_size": 10,
+                    "device": None,
+                }
+            },
     )
     _register(SemanticClassesCalculator)
-
+    
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
@@ -77,7 +85,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
             {
                 "nli_model": {
-                    "deberta_path": "microsoft/deberta-large-mnli",
+                    "deberta_path": deberta_model_path,
                     "batch_size": 10,
                     "device": None,
                 }
@@ -88,7 +96,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
             {
                 "nli_model": {
-                    "deberta_path": "microsoft/deberta-large-mnli",
+                    "deberta_path": deberta_model_path,
                     "batch_size": 10,
                     "device": None,
                 }
@@ -97,7 +105,7 @@ def register_default_stat_calculators(model_type: str) -> List[StatCalculatorCon
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": "~/.cache"},
+            {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
         )
 
     else:
