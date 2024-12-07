@@ -40,22 +40,22 @@ def register_default_stat_calculators(
     if language == "en":
         deberta_model_path = "microsoft/deberta-large-mnli"
     else:
-        deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7" 
-       
+        deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
+
     _register(InitialStateCalculator)
     _register(
         SemanticMatrixCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": 10,
-                    "device": None,
-                }
-            },
+        "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
+        {
+            "nli_model": {
+                "deberta_path": deberta_model_path,
+                "batch_size": 10,
+                "device": None,
+            }
+        },
     )
     _register(SemanticClassesCalculator)
-    
+
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
