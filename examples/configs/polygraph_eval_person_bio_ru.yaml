@@ -10,9 +10,6 @@ defaults:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-model:
-  path: Vikhrmodels/Vikhr-7B-instruct_0.3
-
 task: bio
 
 dataset: ['LM-Polygraph/person_bio', 'ru']
@@ -21,8 +18,10 @@ eval_split: test
 max_new_tokens: 256
 load_from_disk: false
 
-
 subsample_eval_dataset: -1
+
+model:
+  path: Vikhrmodels/Vikhr-7B-instruct_0.3
 
 use_claim_ue: true
 generation_metrics: [{
@@ -31,22 +30,8 @@ generation_metrics: [{
 
 stat_calculators:
   - auto
-  - name: ClaimsExtractor
-    builder: lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor
-    cfg:
-      openai_model: gpt-4o
-      language: ru
-      cache_path: ${cache_path}
-    dependencies:
-      - greedy_texts
-      - greedy_tokens
-    stats: 
-      - claims
-      - claim_texts_concatenated
-      - claim_input_texts_concatenated
 
 ignore_exceptions: false
-
 batch_size: 1
 language: ru
 
