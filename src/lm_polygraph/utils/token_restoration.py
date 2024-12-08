@@ -1,8 +1,10 @@
 import numpy as np
 import torch
-
+import logging
 from torch.nn.functional import log_softmax
 from torch.distributions.categorical import Categorical
+
+log = logging.getLogger(__name__)
 
 TOP_K = [5, 10, 15]
 

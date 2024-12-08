@@ -233,7 +233,7 @@ class BlackboxModel(Model):
                         elif (list(output.keys())[0] == "error") & (
                             "estimated_time" not in output.keys()
                         ):
-                            print(f"{output['error']}")
+                            log.error(f"{output['error']}")
                             break
                     elif isinstance(output, list):
                         break

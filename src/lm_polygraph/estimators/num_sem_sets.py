@@ -1,9 +1,10 @@
 import numpy as np
-
+import logging
 from typing import Dict
-
 from .estimator import Estimator
 import torch.nn as nn
+
+log = logging.getLogger(__name__)
 
 softmax = nn.Softmax(dim=1)
 
@@ -109,7 +110,7 @@ class NumSemSets(Estimator):
         res = []
         for i, answers in enumerate(stats["sample_texts"]):
             if self.verbose:
-                print(f"generated answers: {answers}")
+                log.debug(f"generated answers: {answers}")
             res.append(self.U_NumSemSets(i, stats))
 
         return np.array(res)
