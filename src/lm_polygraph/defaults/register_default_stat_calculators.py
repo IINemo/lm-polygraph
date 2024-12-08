@@ -42,6 +42,20 @@ def register_default_stat_calculators(
     else:
         deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
 
+    _register(InitialStateCalculator)
+    _register(
+        SemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
+        {
+            "nli_model": {
+                "deberta_path": deberta_model_path,
+                "batch_size": 10,
+                "device": None,
+            }
+        },
+    )
+    _register(SemanticClassesCalculator)
+
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
@@ -55,7 +69,6 @@ def register_default_stat_calculators(
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(SemanticClassesCalculator)
         _register(PromptCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
@@ -65,17 +78,6 @@ def register_default_stat_calculators(
             {
                 "batch_size": 10,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
-            },
-        )
-        _register(
-            SemanticMatrixCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": 10,
-                    "device": None,
-                }
             },
         )
         _register(
