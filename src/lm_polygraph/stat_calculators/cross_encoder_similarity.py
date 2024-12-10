@@ -94,6 +94,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                 token_scores[is_special_tokens] = 1
             else:
                 token_scores = np.array([0.5] * len(tokens))
+
             batch_token_scores.append(token_scores)
 
         sim_matrices = []

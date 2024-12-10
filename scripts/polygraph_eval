@@ -183,27 +183,50 @@ def main(args):
         generation_metrics = get_generation_metrics(args)
 
         ue_metrics = get_ue_metrics(args)
-
-        man = UEManager(
-            dataset,
-            model,
-            estimators,
-            generation_metrics,
-            ue_metrics,
-            [
-                Logger(),
-            ],
-            deberta_batch_size=getattr(args, 'deberta_batch_size', 10),
-            train_data=train_dataset,
-            ignore_exceptions=args.ignore_exceptions,
-            background_train_data=background_train_dataset,
-            max_new_tokens=args.max_new_tokens,
-            ensemble_model=ensemble_model,
-            cache_path=args.cache_path,
-            language=getattr(args, 'language', 'en'),
-            save_stats=getattr(args, 'save_stats', []),
-            entropy_top_k=getattr(args, 'entropy_top_k', None),
-        )
+        
+        if getattr(args, "base_manager", None) is None:
+            man = UEManager(
+                dataset,
+                model,
+                estimators,
+                generation_metrics,
+                ue_metrics,
+                [
+                    Logger(),
+                ],
+                batch_size=args.batch_size,
+                deberta_batch_size=getattr(args, 'deberta_batch_size', 10),
+                train_data=train_dataset,
+                ignore_exceptions=args.ignore_exceptions,
+                background_train_data=background_train_dataset,
+                max_new_tokens=args.max_new_tokens,
+                ensemble_model=ensemble_model,
+                cache_path=args.cache_path,
+                language=getattr(args, 'language', 'en'),
+                save_stats=getattr(args, 'save_stats', []),
+                entropy_top_k=getattr(args, 'entropy_top_k', None),
+            )
+        else:
+            man = UEManager.load(
+                args.base_manager,
+                data = dataset,
+                model = model,
+                estimators = estimators,
+                generation_metrics = generation_metrics,
+                ue_metrics = ue_metrics,
+                processors = [Logger()],
+                batch_size=args.batch_size,
+                deberta_batch_size=getattr(args, 'deberta_batch_size', 10),
+                train_data=train_dataset,
+                ignore_exceptions=args.ignore_exceptions,
+                background_train_data=background_train_dataset,
+                max_new_tokens=args.max_new_tokens,
+                ensemble_model=ensemble_model,
+                cache_path=args.cache_path,
+                language=getattr(args, 'language', 'en'),
+                save_stats=getattr(args, 'save_stats', []),
+                entropy_top_k=getattr(args, 'entropy_top_k', None),
+            )
 
         man()
 
@@ -267,10 +290,18 @@ def get_density_based_ue_methods(args, model_type):
 
 
 def get_ue_methods(args, model):
+    if getattr(args, "base_manager", None) is not None:
+        base_manager = UEManager.load(args.base_manager)
+        existing_estimators = list(base_manager.estimations.keys())
+    else:
+        existing_estimators = []
+
+    overwrite = getattr(args, "overwrite_base_estimations", False)
+
     estimators = []
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         if getattr(args, "use_seq_ue", False):
-            estimators += [
+            bb_estimators = [
                 LexicalSimilarity(metric="rouge1"),
                 LexicalSimilarity(metric="rouge2"),
                 LexicalSimilarity(metric="rougeL"),
@@ -287,6 +318,10 @@ def get_ue_methods(args, model):
                 Eccentricity(similarity_score="Jaccard_score"),
             ]
 
+            for estimator in bb_estimators:
+                if overwrite or ('sequence', str(estimator)) not in existing_estimators:
+                    estimators.append(estimator)
+
         if getattr(args, "use_ens_ue", False):
             raise NotImplementedError('Ensemble UE methods not applicable for blackbox models')
 
@@ -297,7 +332,7 @@ def get_ue_methods(args, model):
             raise NotImplementedError('Claim UE methods not applicable for blackbox models')
     else:
         if getattr(args, "use_seq_ue", False):
-            estimators += [
+            wb_estimators = [
                 MaximumSequenceProbability(),
                 Perplexity(),
                 MeanTokenEntropy(),
@@ -330,6 +365,10 @@ def get_ue_methods(args, model):
                 FisherRao(),
             ]
 
+            for estimator in wb_estimators:
+                if overwrite or ('sequence', str(estimator)) not in existing_estimators:
+                    estimators.append(estimator)
+
         if getattr(args, "use_ens_ue", False):
             # Ensemble-based UE methods have been disabled due to dependency on old
             # transformers code, which prevents bumping transformers version in 
@@ -350,7 +389,7 @@ def get_ue_methods(args, model):
             #estimators += (token_measures + sequence_measures)
 
         if getattr(args, "use_tok_ue", False):
-            estimators += [
+            tok_estimators = [
                 MaximumTokenProbability(),
                 TokenEntropy(),
                 PointwiseMutualInformation(),
@@ -358,8 +397,12 @@ def get_ue_methods(args, model):
                 SemanticEntropyToken(model.model_path, args.cache_path),
             ]
 
+            for estimator in tok_estimators:
+                if overwrite or ('token', str(estimator)) not in existing_estimators:
+                    estimators.append(estimator)
+
         if getattr(args, "use_claim_ue", False):
-            estimators += [
+            claim_estimators = [
                 MaximumClaimProbability(),
                 PerplexityClaim(),
                 MaxTokenEntropyClaim(),
@@ -369,12 +412,19 @@ def get_ue_methods(args, model):
                 ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
             ]
 
+            for estimator in claim_estimators:
+                if overwrite or ('claim', str(estimator)) not in existing_estimators:
+                    estimators.append(estimator)
+
     additional_estimators = getattr(args, "additional_estimators", {})
 
     for estimator_args in additional_estimators:
         module = importlib.import_module(estimator_args.module)
         estimator_class = getattr(module, estimator_args.class_name)
-        estimators.append(estimator_class(**estimator_args.kwargs))
+        estimator = estimator_class(**estimator_args.kwargs)
+        # Additional estimator filtering only works correctly for sequence-level estimators
+        if overwrite or ('sequence', str(estimator)) not in existing_estimators:
+            estimators.append(estimator_class(**estimator_args.kwargs))
 
     return estimators
 
@@ -382,6 +432,12 @@ def get_ue_methods(args, model):
 def get_generation_metrics(args):
     log.info("="*100)
     log.info("Initializing generation metrics...")
+
+    if getattr(args, "base_manager", None) is not None:
+        base_manager = UEManager.load(args.base_manager)
+        existing_metrics = list(base_manager.gen_metrics.keys())
+    else:
+        existing_metrics = []
 
     generation_metrics = getattr(args, "generation_metrics", None)
     if not generation_metrics:
@@ -414,6 +470,15 @@ def get_generation_metrics(args):
             metric_class = globals()[metric_name]
             metric_args = metric.get("args", [])
             result.append(metric_class(*metric_args))
+
+    # Filter out metrics that are already present in the base manager
+    filtered_result = []
+    for metric in result:
+        if (metric.level, str(metric)) in existing_metrics:
+            log.warning(f"Skipping metric {metric} as it is already present in the base manager.")
+        else:
+            filtered_result.append(metric)
+    result = filtered_result
 
     process_output_fn = getattr(args, "process_output_fn", None)
     process_target_fn = getattr(args, "process_target_fn", None)

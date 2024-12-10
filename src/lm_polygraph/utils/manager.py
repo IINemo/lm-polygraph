@@ -245,6 +245,7 @@ class UEManager:
         generation_metrics: List[GenerationMetric],
         ue_metrics: List[UEMetric],
         processors: List[Processor],
+        batch_size: int = 1,
         train_data: Dataset = None,
         background_train_data: Dataset = None,
         ignore_exceptions: bool = True,
@@ -281,122 +282,18 @@ class UEManager:
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
 
-        stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
-            deberta_batch_size=deberta_batch_size,
-            deberta_device=deberta_device,
-            language=language,
-            cache_path=cache_path,
-            model=model,
-            entropy_top_k=entropy_top_k,
-        )
-
-        self.stat_calculators_dict = stat_calculators_dict
-
         self.model: Model = model
         self.train_data: Dataset = train_data
         self.background_train_data: Dataset = background_train_data
         self.ensemble_model = ensemble_model
         self.data: Dataset = data
+        self.batch_size: int = batch_size
         self.estimators: List[Estimator] = estimators
         self.generation_metrics: List[GenerationMetric] = generation_metrics
         self.ue_metrics: List[UEMetric] = ue_metrics
         _check_unique_names(generation_metrics)
         _check_unique_names(estimators)
         _check_unique_names(ue_metrics)
-
-        greedy = ["greedy_texts"]
-        if not isinstance(self.model, BlackboxModel):
-            greedy += ["greedy_tokens"]
-
-        stats = (
-            [s for e in self.estimators for s in e.stats_dependencies]
-            + [s for m in generation_metrics for s in m.stats_dependencies]
-            + greedy
-        )
-
-        stats, have_stats = _order_calculators(
-            stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-
-        self.stats_names = stats
-        stats = [
-            s
-            for s in stats
-            if not (str(s).startswith("ensemble_"))
-            and not (
-                (
-                    str(s).startswith("blackbox_")
-                    and s[len("blackbox_") :] in have_stats
-                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
-            )
-        ]  # below in calculate() we copy X in blackbox_X
-        self.stat_calculators: List[StatCalculator] = [
-            stat_calculators_dict[c] for c in stats
-        ]
-        if verbose:
-            print("Stat calculators:", self.stat_calculators)
-
-        self.ensemble_estimators = []
-        single_estimators = []
-        for e in estimators:
-            for s in e.stats_dependencies:
-                if s.startswith("ensemble"):
-                    self.ensemble_estimators.append(e)
-                    break
-            if e not in self.ensemble_estimators:
-                single_estimators.append(e)
-        self.estimators = single_estimators
-
-        train_stats = [
-            s
-            for e in self.estimators
-            for s in e.stats_dependencies
-            if s.startswith("train")
-        ]
-        train_stats += (
-            ["greedy_tokens", "greedy_texts"]
-            if "train_greedy_log_likelihoods" in train_stats
-            else []
-        )
-        train_stats, _ = _order_calculators(
-            train_stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-        self.train_stat_calculators: List[StatCalculator] = [
-            stat_calculators_dict[c] for c in train_stats
-        ]
-        background_train_stats = [
-            s
-            for e in self.estimators
-            for s in e.stats_dependencies
-            if s.startswith("background_train")
-        ]
-        background_train_stats, _ = _order_calculators(
-            background_train_stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-        self.background_train_stat_calculators: List[StatCalculator] = [
-            stat_calculators_dict[c] for c in background_train_stats
-        ]
-
-        ensemble_stats = [
-            s
-            for e in self.ensemble_estimators
-            for s in e.stats_dependencies
-            if s.startswith("ensemble")
-        ]
-        ensemble_stats, _ = _order_calculators(
-            ensemble_stats,
-            stat_calculators_dict,
-            stat_dependencies_dict,
-        )
-        self.ensemble_stat_calculators: List[StatCalculator] = [
-            stat_calculators_dict[c] for c in ensemble_stats
-        ]
 
         self.gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
         self.estimations: Dict[Tuple[str, str], List[float]] = defaultdict(list)
@@ -412,6 +309,120 @@ class UEManager:
         self.background_train_dataset_max_new_tokens = (
             background_train_dataset_max_new_tokens
         )
+        self.cache_path = cache_path
+        self.entropy_top_k = entropy_top_k
+        self.deberta_batch_size = deberta_batch_size
+        self.deberta_device = deberta_device
+        self.language = language
+
+
+    def prepare_calculators(self):
+        stat_calculators_dict, stat_dependencies_dict = register_stat_calculators(
+            deberta_batch_size=self.deberta_batch_size,
+            deberta_device=self.deberta_device,
+            language=self.language,
+            cache_path=self.cache_path,
+            model=self.model,
+            entropy_top_k=self.entropy_top_k,
+        )
+
+        self.stat_calculators_dict = stat_calculators_dict
+
+        greedy = ["greedy_texts"]
+        if not isinstance(self.model, BlackboxModel):
+            greedy += ["greedy_tokens"]
+
+        stats = (
+            [s for e in self.estimators for s in e.stats_dependencies]
+            + [s for m in self.generation_metrics for s in m.stats_dependencies]
+            + greedy
+        )
+        
+        # Only calculate stats that are not already calculated
+        stats = list(set(stats) - set(self.stats))
+
+        stats, have_stats = _order_calculators(
+            stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+
+        self.stats_names = stats
+        stats = [
+            s
+            for s in stats
+            if not (
+                    str(s).startswith("blackbox_")
+                    and s[len("blackbox_") :] in have_stats
+                   )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
+        ]  # below in calculate() we copy X in blackbox_X
+        self.stat_calculators: List[StatCalculator] = [
+            stat_calculators_dict[c] for c in stats
+        ]
+        if self.verbose:
+            print("Stat calculators:", self.stat_calculators)
+
+        train_stats = [
+            s
+            for e in self.estimators
+            for s in e.stats_dependencies
+            if s.startswith("train")
+        ]
+        train_stats += (
+            ["greedy_tokens", "greedy_texts"]
+            if "train_greedy_log_likelihoods" in train_stats
+            else []
+        )
+
+        train_stats = list(set(train_stats) - set(self.stats))
+
+        train_stats, _ = _order_calculators(
+            train_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+        self.train_stat_calculators: List[StatCalculator] = [
+            stat_calculators_dict[c] for c in train_stats
+        ]
+
+        background_train_stats = [
+            s
+            for e in self.estimators
+            for s in e.stats_dependencies
+            if s.startswith("background_train")
+        ]
+
+        background_train_stats = list(set(background_train_stats) - set(self.stats))
+
+        background_train_stats, _ = _order_calculators(
+            background_train_stats,
+            stat_calculators_dict,
+            stat_dependencies_dict,
+        )
+        self.background_train_stat_calculators: List[StatCalculator] = [
+            stat_calculators_dict[c] for c in background_train_stats
+        ]
+
+    def initiate_batch_stats(self, batch_i, inp_texts, target_texts):
+        batch_stats: Dict[str, np.ndarray] = {}
+        
+        for key, val in self.stats.items():
+            # Get corresponding batch from existing stats
+            val_batch = val[batch_i * self.batch_size : (batch_i + 1) * self.batch_size]
+            batch_stats[key] = val_batch
+
+        for key, val in [
+            ("input_texts", inp_texts),
+            ("target_texts", target_texts),
+        ]:  
+            if key not in batch_stats:
+                self.stats[key] += val
+                batch_stats[key] = val
+
+        batch_stats["model"] = self.model
+
+        return batch_stats
+
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """
@@ -431,22 +442,13 @@ class UEManager:
                 - generation metrics name,
                 - `ue_metrics` name which was used to calculate quality.
         """
-
+        self.prepare_calculators()
         train_stats = self._extract_train_embeddings()
         background_train_stats = self._extract_train_embeddings(background=True)
 
         iterable_data = tqdm(self.data) if self.verbose else self.data
         for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
-            batch_stats: Dict[str, np.ndarray] = {}
-            for key, val in [
-                ("input_texts", inp_texts),
-                ("target_texts", target_texts),
-            ]:
-                self.stats[key] += val
-                batch_stats[key] = val
-            batch_stats["model"] = self.model
-
-            batch_stats["model"] = self.model
+            batch_stats = self.initiate_batch_stats(batch_i, inp_texts, target_texts)
 
             train_stats_keys = list(train_stats.keys())
             for stat in train_stats_keys:
@@ -455,8 +457,10 @@ class UEManager:
             background_train_stats_keys = list(background_train_stats.keys())
             for stat in background_train_stats_keys:
                 batch_stats[stat] = background_train_stats.pop(stat)
-
+            
+            old_stats = set(batch_stats.keys())
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
+            new_stats = set(batch_stats.keys()) - old_stats
 
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
@@ -479,42 +483,14 @@ class UEManager:
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
             for key in self.save_stats:
-                if key in batch_stats.keys():
+                if key in new_stats:
                     self.stats[key] += list(batch_stats[key])
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
-        if self.ensemble_model is not None:
-            iterable_data = tqdm(self.data) if self.verbose else self.data
-            for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
-                batch_stats: Dict[str, np.ndarray] = {}
-                for key, val in [
-                    ("input_texts", inp_texts),
-                    ("target_texts", target_texts),
-                    ("model", self.model),
-                ]:
-                    batch_stats[key] = val
-
-                batch_stats["ensemble_generation_params"] = {}
-                batch_stats["ensemble_model"] = self.ensemble_model
-
-                batch_stats = self.calculate(
-                    batch_stats, self.ensemble_stat_calculators, inp_texts
-                )
-
-                batch_estimations, bad_estimators = self.estimate(
-                    batch_stats, self.ensemble_estimators
-                )
-
-                for bad_estimator in bad_estimators:
-                    key = (bad_estimator.level, str(bad_estimator))
-                    self.estimations.pop(key, None)
-                    self.ensemble_estimators.remove(bad_estimator)
-                    self.total_bad_estimators[bad_estimator] = batch_i
-
             torch.cuda.empty_cache()
             gc.collect()
-            
+
         self.eval_ue()
 
         for processor in self.processors:
@@ -703,7 +679,7 @@ class UEManager:
         )
 
     @staticmethod
-    def load(load_path: str) -> "UEManager":
+    def load(load_path: str, **kwargs) -> "UEManager":
         """
         Loads UEManager from the specified path. To save the calculated manager results, see UEManager.save().
 
@@ -711,7 +687,16 @@ class UEManager:
             load_path (str): Path to file with saved benchmark results to load.
         """
         res_dict = torch.load(load_path)
-        man = UEManager(None, None, [], [], [], [])
+        default_kwargs = {
+            "data": None,
+            "model": None,
+            "estimators": [],
+            "generation_metrics": [],
+            "ue_metrics": [],
+            "processors": [],
+        }
+        default_kwargs.update(kwargs)
+        man = UEManager(**default_kwargs)
         man.metrics = res_dict.get("metrics", None)
         man.gen_metrics = res_dict.get("gen_metrics", None)
         man.estimations = res_dict.get("estimations", None)

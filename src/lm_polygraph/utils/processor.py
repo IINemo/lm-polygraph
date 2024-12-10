@@ -61,7 +61,7 @@ class Logger(Processor):
         for key, val in batch_stats.items():
             str_repr = str(val)
             # to skip large outputs
-            if len(str_repr) < 10000 and str_repr.count("\n") < 10:
+            if len(str_repr) < 10000 and str_repr.count("\n") < 20:
                 print(f"{key}: {val}")
                 print()
         print("-" * 100)
