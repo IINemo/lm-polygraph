@@ -2,6 +2,7 @@
 ![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
 ![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)
 <a href="https://arxiv.org/pdf/2406.15627" target="_blank"><img src=https://img.shields.io/badge/arXiv-b5212f.svg></a>
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow)](https://huggingface.co/LM-Polygraph)
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
