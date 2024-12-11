@@ -19,8 +19,13 @@ class AlignScore(GenerationMetric):
         batch_size=16,
         target_is_claims=True,
         ignore_target=False,
+        sample: bool = False,
     ):
-        super().__init__(["greedy_texts", "input_texts"], "sequence")
+        if sample:
+            super().__init__(["first_sample_texts", "input_texts"], "sequence")
+        else:
+            super().__init__(["greedy_texts", "input_texts"], "sequence")
+        self.sample = sample
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.target_is_claims = target_is_claims
         self.batch_size = batch_size
@@ -41,6 +46,10 @@ class AlignScore(GenerationMetric):
             base += "OutputTarget"
         else:
             base += "TargetOutput"
+
+        if self.sample:
+            return f"Sample{base}"
+
         return base
 
     def __call__(
@@ -59,11 +68,15 @@ class AlignScore(GenerationMetric):
         Returns:
             np.ndarray: list of AlignScore Scores for each sample in input.
         """
-        greedy_texts = stats["greedy_texts"]
+        if self.sample:
+            gen_texts = stats["first_sample_texts"]
+        else:
+            gen_texts = stats["greedy_texts"]
+
         input_texts = stats["input_texts"]
 
         filtered_targets = [x if len(x.strip()) else "(empty)" for x in target_texts]
-        filtered_outputs = [x if len(x.strip()) else "(empty)" for x in greedy_texts]
+        filtered_outputs = [x if len(x.strip()) else "(empty)" for x in gen_texts]
         filtered_inputs = [x if len(x.strip()) else "(empty)" for x in input_texts]
 
         if self.ignore_target:

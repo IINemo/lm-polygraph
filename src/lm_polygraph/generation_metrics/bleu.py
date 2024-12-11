@@ -10,11 +10,17 @@ class BLEUMetric(GenerationMetric):
     Calculates BLEU metric between model-generated texts and ground truth texts.
     """
 
-    def __init__(self):
-        super().__init__(["greedy_texts"], "sequence")
+    def __init__(self, sample: bool = False):
+        if sample:
+            super().__init__(["first_sample_texts"], "sequence")
+        else:
+            super().__init__(["greedy_texts"], "sequence")
+        self.sample = sample
         self.scorer = BLEU(effective_order=True, lowercase=True)
 
     def __str__(self):
+        if self.sample:
+            return "SampleBLEU"
         return "BLEU"
 
     def _score_single(self, t1: str, t2: str):
@@ -37,9 +43,14 @@ class BLEUMetric(GenerationMetric):
         Returns:
             np.ndarray: list of BLEU Scores for each sample in input.
         """
+        if self.sample:
+            gen_texts = stats["first_sample_texts"]
+        else:
+            gen_texts = stats["greedy_texts"]
+
         return np.array(
             [
                 self._score_single(hyp, ref)
-                for hyp, ref in zip(stats["greedy_texts"], target_texts)
+                for hyp, ref in zip(gen_texts, target_texts)
             ]
         )

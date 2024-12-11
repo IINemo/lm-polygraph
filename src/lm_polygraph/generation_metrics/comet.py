@@ -12,14 +12,20 @@ class Comet(GenerationMetric):
     between model-generated texts and ground truth texts.
     """
 
-    def __init__(self, source_ignore_regex=None, lang="en"):
-        super().__init__(["greedy_texts", "input_texts"], "sequence")
+    def __init__(self, source_ignore_regex=None, lang="en", sample: bool = False):
+        if sample:
+            super().__init__(["first_sample_texts", "input_texts"], "sequence")
+        else:
+            super().__init__(["greedy_texts", "input_texts"], "sequence")
+        self.sample = sample
         self.scorer = load("comet")
         self.source_ignore_regex = (
             re.compile(source_ignore_regex) if source_ignore_regex else None
         )
 
     def __str__(self):
+        if self.sample:
+            return "SampleComet"
         return "Comet"
 
     def _filter_text(self, text: str, ignore_regex: re.Pattern) -> str:
@@ -54,9 +60,15 @@ class Comet(GenerationMetric):
             self._filter_text(src, self.source_ignore_regex)
             for src in stats["input_texts"]
         ]
+
+        if self.sample:
+            gen_texts = stats["first_sample_texts"]
+        else:
+            gen_texts = stats["greedy_texts"]
+
         scores = np.array(
             self.scorer.compute(
-                predictions=stats["greedy_texts"],
+                predictions=gen_texts,
                 references=target_texts,
                 sources=sources,
             )["scores"]

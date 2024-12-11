@@ -67,6 +67,7 @@ def register_stat_calculators(
         _register(SampleEntropyCalculator(top_k=entropy_top_k))
         _register(GreedyLMProbsCalculator())
         _register(SamplingGenerationCalculator(n_alternatives=n_ccp_alternatives))
+        _register(FirstSampleCalculator())
         _register(BartScoreCalculator())
         _register(ModelScoreCalculator())
         _register(EmbeddingsCalculator())

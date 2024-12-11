@@ -206,3 +206,29 @@ class SamplingGenerationCalculator(StatCalculator):
             "sample_tokens_distributions": token_distributions,
             "sample_tokens_alternatives": alternatives,
         }
+
+class FirstSampleCalculator(StatCalculator):
+    def __init__(self):
+        super().__init__(
+            [
+                "first_sample_texts",
+            ],
+            [
+                "sample_texts",
+            ]
+        )
+
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
+        sample_texts = dependencies["sample_texts"]
+        first_sample_texts = [st[0] for st in sample_texts]
+
+        return {
+            "first_sample_texts": first_sample_texts,
+        }
+
