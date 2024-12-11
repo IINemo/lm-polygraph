@@ -13,6 +13,9 @@ device: cpu
 
 task: nmt
 
+base_manager: null
+overwrite_base_estimations: false
+
 dataset: [wmt14, fr-en]
 text_column: en
 label_column: fr
@@ -76,6 +79,9 @@ additional_estimators:
   - module: lm_polygraph.estimators.max_probability
     class_name: MaximumSequenceProbability
     kwargs: {}
+  - module: lm_polygraph.estimators.max_probability
+    class_name: SampledMaximumSequenceProbability
+    kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: SentenceSAR
     kwargs: {}
@@ -86,16 +92,21 @@ additional_estimators:
   - module: lm_polygraph.estimators.token_sar
     class_name: TokenSAR
     kwargs: {}
+  - module: lm_polygraph.estimators.token_sar
+    class_name: SampledTokenSAR
+    kwargs: {}
   - module: lm_polygraph.estimators.sar
     class_name: SAR
     kwargs: {}
   - module: lm_polygraph.estimators.gsu
     class_name: TokenSARGSU
     kwargs: {}
-  - module: lm_polygraph.estimators.gsu
 
   - module: lm_polygraph.estimators.perplexity
     class_name: Perplexity
+    kwargs: {}
+  - module: lm_polygraph.estimators.perplexity
+    class_name: SampledPerplexity
     kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: PPLSAR
@@ -107,11 +118,27 @@ additional_estimators:
   - module: lm_polygraph.estimators.token_entropy
     class_name: MeanTokenEntropy
     kwargs: {}
+  - module: lm_polygraph.estimators.token_entropy
+    class_name: SampledMeanTokenEntropy
+    kwargs: {}
   - module: lm_polygraph.estimators.sentence_sar
     class_name: MTESAR
     kwargs: {}
   - module: lm_polygraph.estimators.gsu
     class_name: MTEGSU
+    kwargs: {}
+
+  - module: lm_polygraph.estimators.average_ue
+    class_name: AveMaxprob
+    kwargs: {}
+  - module: lm_polygraph.estimators.average_ue
+    class_name: AvePPL
+    kwargs: {}
+  - module: lm_polygraph.estimators.average_ue
+    class_name: AveTokenSAR
+    kwargs: {}
+  - module: lm_polygraph.estimators.average_ue
+    class_name: AveMTE
     kwargs: {}
 
 ignore_exceptions: false

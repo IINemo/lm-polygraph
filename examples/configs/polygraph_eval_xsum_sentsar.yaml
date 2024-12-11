@@ -13,7 +13,7 @@ device: cpu
 
 task: ats
 
-base_manager: /Users/romanvashurin/workspace/sar_enhancements/gsu/mistral7b_xsum.man
+base_manager: null
 overwrite_base_estimations: false
 
 dataset: xsum
