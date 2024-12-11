@@ -11,6 +11,7 @@ class AggregatedMetric(GenerationMetric):
 
     def __init__(self, base_metric: GenerationMetric, aggregation: str = "max"):
         self.base_metric = base_metric
+        self.sample = base_metric.sample
         self.level = base_metric.level
         self.stats_dependencies = base_metric.stats_dependencies
         self.aggregation = aggregation
@@ -34,8 +35,14 @@ class AggregatedMetric(GenerationMetric):
             np.ndarray: list of aggregated metric values for each sample in input.
         """
         metric_values = []
-        for i, (targets, greedy_text) in enumerate(
-            zip(target_texts, stats["greedy_texts"])
+
+        if self.sample:
+            gen_texts = stats["first_sample_texts"]
+        else:
+            gen_texts = stats["greedy_texts"]
+
+        for i, (targets, gen_text) in enumerate(
+            zip(target_texts, gen_texts)
         ):
             # truncate stats to only process one sample at a time
             truncated_stats = {

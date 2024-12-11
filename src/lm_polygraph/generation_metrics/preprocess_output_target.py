@@ -12,6 +12,7 @@ class PreprocessOutputTarget(GenerationMetric):
 
     def __init__(self, base_metric, process_output_fn, process_target_fn):
         self.base_metric = getattr(base_metric, "base_metric", base_metric)
+        self.sample = base_metric.sample
         self.level = base_metric.level
         self.stats_dependencies = base_metric.stats_dependencies
         self.process_output_fn = process_output_fn
@@ -44,8 +45,13 @@ class PreprocessOutputTarget(GenerationMetric):
         stats_copy = {k: v for k, v in stats.items() if k in self.stats_dependencies}
         stats_copy = deepcopy(stats_copy)
 
-        stats_copy["greedy_texts"] = [
-            self.process_output_fn(output) for output in stats_copy["greedy_texts"]
-        ]
+        if self.sample:
+            stats_copy["first_sample_texts"] = [
+                self.process_output_fn(output) for output in stats_copy["first_sample_texts"]
+            ]
+        else:
+            stats_copy["greedy_texts"] = [
+                self.process_output_fn(output) for output in stats_copy["greedy_texts"]
+            ]
 
         return self.base_metric(stats_copy, processed_target_texts)
