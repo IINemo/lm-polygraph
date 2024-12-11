@@ -1,6 +1,5 @@
 import re
 import numpy as np
-from evaluate import load
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
@@ -12,16 +11,16 @@ class Comet(GenerationMetric):
     between model-generated texts and ground truth texts.
     """
 
-    def __init__(self, source_ignore_regex=None, lang="en", sample: bool = False):
+    def __init__(self, scorer, source_ignore_regex=None, lang="en", sample: bool = False):
         if sample:
             super().__init__(["first_sample_texts", "input_texts"], "sequence")
         else:
             super().__init__(["greedy_texts", "input_texts"], "sequence")
         self.sample = sample
-        self.scorer = load("comet")
         self.source_ignore_regex = (
             re.compile(source_ignore_regex) if source_ignore_regex else None
         )
+        self.scorer = scorer
 
     def __str__(self):
         if self.sample:

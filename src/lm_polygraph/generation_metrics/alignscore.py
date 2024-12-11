@@ -14,9 +14,8 @@ class AlignScore(GenerationMetric):
 
     def __init__(
         self,
+        scorer,
         lang="en",
-        ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt",
-        batch_size=16,
         target_is_claims=True,
         ignore_target=False,
         sample: bool = False,
@@ -26,17 +25,9 @@ class AlignScore(GenerationMetric):
         else:
             super().__init__(["greedy_texts", "input_texts"], "sequence")
         self.sample = sample
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.target_is_claims = target_is_claims
-        self.batch_size = batch_size
         self.ignore_target = ignore_target
-        self.scorer = AlignScorer(
-            model="roberta-large",
-            batch_size=batch_size,
-            device=device,
-            ckpt_path=ckpt_path,
-            evaluation_mode="nli_sp",
-        )
+        self.scorer = scorer
 
     def __str__(self):
         base = "AlignScore"

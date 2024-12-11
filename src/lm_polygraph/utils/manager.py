@@ -408,8 +408,11 @@ class UEManager:
         
         for key, val in self.stats.items():
             # Get corresponding batch from existing stats
-            val_batch = val[batch_i * self.batch_size : (batch_i + 1) * self.batch_size]
-            batch_stats[key] = val_batch
+            batch_start = batch_i * self.batch_size
+            batch_end = (batch_i + 1) * self.batch_size
+            if len(val) >= batch_end:
+                val_batch = val[batch_start:batch_end]
+                batch_stats[key] = val_batch
 
         for key, val in [
             ("input_texts", inp_texts),
