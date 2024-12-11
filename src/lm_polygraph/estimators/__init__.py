@@ -31,7 +31,10 @@ from .eig_val_laplacian import EigValLaplacian
 from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
-from .perplexity import Perplexity
+from .perplexity import (
+    Perplexity, 
+    MaxSampledPerplexity,
+)
 from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq
