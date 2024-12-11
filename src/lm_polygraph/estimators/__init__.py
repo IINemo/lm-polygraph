@@ -8,6 +8,7 @@ from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
 from .max_probability import (
     MaximumSequenceProbability,
     MaximumTokenProbability,
+    MaxSampledMaximumSequenceProbability,
 )
 from .claim_conditioned_probability import ClaimConditionedProbability
 from .token_entropy import MeanTokenEntropy, TokenEntropy
