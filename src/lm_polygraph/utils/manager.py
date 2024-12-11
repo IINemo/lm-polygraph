@@ -27,11 +27,12 @@ from lm_polygraph.utils.register_stat_calculators import register_stat_calculato
 
 def _order_calculators(
     stats: List[str],
+    existing_stats: Set[str],
     stat_calculators: Dict[str, StatCalculator],
     stat_dependencies: Dict[str, List[str]],
 ) -> Tuple[List[str], Set[str]]:
     ordered: List[str] = []
-    have_stats: Set[str] = set()
+    have_stats: Set[str] = set(existing_stats)
     while len(stats) > 0:
         stat = stats[0]
         if stat in have_stats:
@@ -339,10 +340,12 @@ class UEManager:
         )
         
         # Only calculate stats that are not already calculated
-        stats = list(set(stats) - set(self.stats))
+        existing_stats = set(self.stats.keys())
+        stats = list(set(stats) - existing_stats)
 
         stats, have_stats = _order_calculators(
             stats,
+            existing_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
@@ -374,10 +377,11 @@ class UEManager:
             else []
         )
 
-        train_stats = list(set(train_stats) - set(self.stats))
+        train_stats = list(set(train_stats) - existing_stats)
 
         train_stats, _ = _order_calculators(
             train_stats,
+            existing_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
@@ -392,10 +396,11 @@ class UEManager:
             if s.startswith("background_train")
         ]
 
-        background_train_stats = list(set(background_train_stats) - set(self.stats))
+        background_train_stats = list(set(background_train_stats) - existing_stats)
 
         background_train_stats, _ = _order_calculators(
             background_train_stats,
+            existing_stats,
             stat_calculators_dict,
             stat_dependencies_dict,
         )
