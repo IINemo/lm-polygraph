@@ -416,7 +416,7 @@ class UEManager:
             # Get corresponding batch from existing stats
             batch_start = batch_i * self.batch_size
             # If last batch is not full, we need to adjust the end index
-            batch_end = (batch_i + 1) * cur_batch_size
+            batch_end = batch_start + cur_batch_size
             # This will only be true if the calculation is based off
             # existing manager. Otherwise, all stats will contain only
             # values calculated in previous batches
