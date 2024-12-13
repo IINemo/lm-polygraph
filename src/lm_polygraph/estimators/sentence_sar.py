@@ -338,7 +338,7 @@ class MTESAR(Estimator):
             # Compute sentence relevance
             sent_relevance = R_s.sum(-1) / self.t
             # Compute SentenceSAR (Uncertainty Estimation) using PPL
-            E_s = -np.log(sent_relevance + entropy)
+            E_s = np.log(sent_relevance + entropy)
             sentenceSAR.append(E_s.mean())
 
         return np.array(sentenceSAR)
