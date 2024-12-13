@@ -431,9 +431,9 @@ class UEManager:
             if key not in batch_stats:
                 self.stats[key] += val
                 batch_stats[key] = val
-            else:
+            elif key == "input_texts":
                 # Check that new stats will be calculated
-                # against the same input texts and targets
+                # against the same input texts
                 assert np.all(np.array(batch_stats[key]) == np.array(val))
 
         batch_stats["model"] = self.model
