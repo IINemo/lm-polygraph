@@ -414,8 +414,12 @@ class UEManager:
 
         for key, val in self.stats.items():
             # Get corresponding batch from existing stats
-            batch_start = batch_i * cur_batch_size
+            batch_start = batch_i * self.batch_size
+            # If last batch is not full, we need to adjust the end index
             batch_end = (batch_i + 1) * cur_batch_size
+            # This will only be true if the calculation is based off
+            # existing manager. Otherwise, all stats will contain only
+            # values calculated in previous batches
             if len(val) >= batch_end:
                 val_batch = val[batch_start:batch_end]
                 batch_stats[key] = val_batch
