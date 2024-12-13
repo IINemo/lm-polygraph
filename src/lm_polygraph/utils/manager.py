@@ -410,11 +410,12 @@ class UEManager:
 
     def initiate_batch_stats(self, batch_i, inp_texts, target_texts):
         batch_stats: Dict[str, np.ndarray] = {}
-        
+        cur_batch_size = len(inp_texts)
+
         for key, val in self.stats.items():
             # Get corresponding batch from existing stats
-            batch_start = batch_i * self.batch_size
-            batch_end = (batch_i + 1) * self.batch_size
+            batch_start = batch_i * cur_batch_size
+            batch_end = (batch_i + 1) * cur_batch_size
             if len(val) >= batch_end:
                 val_batch = val[batch_start:batch_end]
                 batch_stats[key] = val_batch
@@ -422,10 +423,14 @@ class UEManager:
         for key, val in [
             ("input_texts", inp_texts),
             ("target_texts", target_texts),
-        ]:  
+        ]:
             if key not in batch_stats:
                 self.stats[key] += val
                 batch_stats[key] = val
+            else:
+                # Check that new stats will be calculated
+                # against the same input texts and targets
+                assert np.all(np.array(batch_stats[key]) == np.array(val))
 
         batch_stats["model"] = self.model
 
