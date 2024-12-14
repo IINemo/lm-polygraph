@@ -4,6 +4,7 @@ import hydra
 import os
 import transformers
 from pathlib import Path
+from omegaconf import OmegaConf
 
 import logging
 
@@ -40,6 +41,14 @@ def main(args):
     save_path = os.getcwd()
     log.info(f"Main directory: {save_path}")
     os.chdir(hydra.utils.get_original_cwd())
+
+    if hasattr(args, "report_to_wandb") and args.report_to_wandb:
+        import wandb
+        wandb.config = OmegaConf.to_container(
+        args, resolve=True, throw_on_missing=True
+        )
+        project=os.environ["WANDB_PROJECT"]
+        wandb.init(project=project, dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
     save_path = args.save_path if "save_path" in args else save_path
 
@@ -119,6 +128,14 @@ def main(args):
             raise e
         finally:
             man.save(save_path + f"/ue_manager_seed{seed}")
+
+        if hasattr(args, "report_to_wandb") and args.report_to_wandb:
+            wandb.log({str(k) : v for k, v in man.gen_metrics})
+            wandb.log({str(k) : v for k, v in man.metrics.items()})
+    
+    if hasattr(args, "report_to_wandb") and args.report_to_wandb:
+        wandb.finish()
+        
 
 
 def get_ue_metrics(args):
