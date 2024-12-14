@@ -1,7 +1,10 @@
 import numpy as np
 
+import logging
 from typing import List, Dict, Tuple
 from lm_polygraph.estimators.estimator import Estimator
+
+log = logging.getLogger(__name__)
 
 
 class Processor:
@@ -55,27 +58,27 @@ class Logger(Processor):
         """
         Outputs statistics from `batch_stats`, `batch_gen_metrics` and `batch_estimations` to stdout.
         """
-        print("=" * 50 + " NEW BATCH " + "=" * 50)
-        print("Statistics:")
-        print()
+        log.info("=" * 50 + " NEW BATCH " + "=" * 50)
+        log.info("Statistics:")
+        log.info("")
         for key, val in batch_stats.items():
             str_repr = str(val)
             # to skip large outputs
             if len(str_repr) < 10000 and str_repr.count("\n") < 10:
-                print(f"{key}: {val}")
-                print()
-        print("-" * 100)
-        print("Estimations:")
-        print()
+                log.info(f"{key}: {val}")
+                log.info("")
+        log.info("-" * 100)
+        log.info("Estimations:")
+        log.info("")
         for key, val in batch_estimations.items():
-            print(f"{key}: {val}")
-            print()
-        print("-" * 100)
-        print("Generation metrics:")
-        print()
+            log.info(f"{key}: {val}")
+            log.info("")
+        log.info("-" * 100)
+        log.info("Generation metrics:")
+        log.info("")
         for key, val in batch_gen_metrics.items():
-            print(f"{key}: {val}")
-            print()
+            log.info(f"{key}: {val}")
+            log.info("")
 
     def on_eval(
         self,
@@ -85,13 +88,13 @@ class Logger(Processor):
         """
         Outputs statistics from `metrics` and failed estimators to stdout.
         """
-        print("=" * 50 + " METRICS " + "=" * 50)
-        print("Metrics:")
-        print()
+        log.info("=" * 50 + " METRICS " + "=" * 50)
+        log.info("Metrics:")
+        log.info("")
         for key, val in metrics.items():
-            print(f"{key}: {val}")
-            print()
+            log.info(f"{key}: {val}")
+            log.info("")
         if len(bad_estimators) > 0:
-            print("=" * 45 + " FAILED ESTIMATORS " + "=" * 45)
+            log.info("=" * 45 + " FAILED ESTIMATORS " + "=" * 45)
             for bad_estimator, batch_i in bad_estimators.items():
-                print(str(bad_estimator), " on batch ", batch_i)
+                log.info(str(bad_estimator) + " on batch " + str(batch_i))

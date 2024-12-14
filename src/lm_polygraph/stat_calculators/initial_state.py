@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import numpy as np
 
 from .stat_calculator import StatCalculator
@@ -11,8 +11,20 @@ class InitialStateCalculator(StatCalculator):
     This calculator ensures that the 'input_texts' dependency is always satisfied.
     """
 
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+
+        Returns:
+            Tuple containing:
+                - List of statistics provided by this calculator
+                - List of dependencies required by this calculator
+        """
+        return ["input_texts"], []
+
     def __init__(self):
-        super().__init__(["input_texts"], [])
+        super().__init__()
 
     def __call__(
         self,

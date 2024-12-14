@@ -1,6 +1,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/IINemo/isanlp_srl_framebank/blob/master/LICENSE)
 ![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
+![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)
 <a href="https://arxiv.org/pdf/2406.15627" target="_blank"><img src=https://img.shields.io/badge/arXiv-b5212f.svg></a>
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow)](https://huggingface.co/LM-Polygraph)
 
 # LM-Polygraph: Uncertainty estimation for LLMs
 
@@ -94,6 +96,18 @@ ue = estimate_uncertainty(model, ue_method, input_text=input_text)
 print(ue)
 # UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')
 ```
+
+## Using Custom OpenAI-Compatible Endpoints for BlackBox Model Evaluation
+
+To use LM-Polygraph with a custom OpenAI-compatible endpoint (like Azure OpenAI or self-hosted models), configure the following environment variables:
+
+```shell
+export OPENAI_BASE_URL="http://your-endpoint/v1"  # Your custom API endpoint
+export OPENAI_API_KEY="your-api-key"              # Your API key
+export OPENAI_API_TYPE="open_ai"                  # Use "open_ai" for OpenAI-compatible endpoints
+```
+
+This allows seamless integration with any OpenAI-compatible API service while maintaining the same interface and functionality.
 
 ### Other examples:
 

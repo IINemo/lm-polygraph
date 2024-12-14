@@ -1,13 +1,14 @@
 import numpy as np
+import logging
 import os
 import torch
-
 from typing import Dict, List
 from transformers import AutoTokenizer, AutoModel
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
-
 from .estimator import Estimator
+
+log = logging.getLogger(__name__)
 
 
 def split_classes(
@@ -88,13 +89,13 @@ class SemanticEntropyToken(Estimator):
             tokenizer_save_path, tokenizer.name_or_path.split("/")[-1] + "_classes.npy"
         )
         if os.path.exists(tokenizer_classes_path):
-            print(f"Loading tokenizer classes from {tokenizer_classes_path}")
+            log.info(f"Loading tokenizer classes from {tokenizer_classes_path}")
             self.classes: np.ndarray = np.load(tokenizer_classes_path)
         else:
             self.classes: np.ndarray = split_classes(
                 tokens, batch_size, semantic_bert_path
             )
-            print(f"Saving tokenizer classes at {tokenizer_classes_path}")
+            log.info(f"Saving tokenizer classes at {tokenizer_classes_path}")
             np.save(tokenizer_classes_path, self.classes)
 
     def __str__(self):

@@ -1,9 +1,10 @@
 import numpy as np
-
+import logging
 from typing import Dict, Literal
-
 from .estimator import Estimator
 from .common import compute_sim_score
+
+log = logging.getLogger(__name__)
 
 
 class DegMat(Estimator):
@@ -85,6 +86,6 @@ class DegMat(Estimator):
         res = []
         for i, answers in enumerate(stats["sample_texts"]):
             if self.verbose:
-                print(f"generated answers: {answers}")
+                log.debug(f"generated answers: {answers}")
             res.append(self.U_DegMat(i, stats))
         return np.array(res)

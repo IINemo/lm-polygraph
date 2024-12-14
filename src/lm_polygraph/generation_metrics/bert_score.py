@@ -1,8 +1,10 @@
 import numpy as np
+import logging
 from bert_score import BERTScorer
-
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+
+log = logging.getLogger(__name__)
 
 
 class BertScoreMetric(GenerationMetric):
@@ -55,7 +57,7 @@ if __name__ == "__main__":
     target_texts = ["Apple", "Apple", "Apple", "Octoberfest", "Octoberfest"]
 
     scores = metric(stats, target_texts)
-    print(scores)
+    log.info(scores)
 
     assert scores.shape == (5,)
     assert scores[0] - 1 < 1e-5
