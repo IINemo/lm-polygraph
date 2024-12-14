@@ -48,7 +48,7 @@ def _check_unique_names(xs):
 def _delete_nans(ue, metric):
     new_ue, new_metric = [], []
     for i in range(len(metric)):
-        if not np.isnan(metric[i]) and not np.isnan(ue[i]):
+        if np.isfinite(metric[i]) and np.isfinite(ue[i]):
             if not isinstance(ue[i], complex):
                 new_ue.append(ue[i])
             else:
@@ -405,6 +405,8 @@ class UEManager:
 
         for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
             for ue_metric in self.ue_metrics:
+                log.info(f"Metric: {ue_metric}")
+
                 oracle_score_all = ue_metric(
                     -np.array(generation_metric), np.array(generation_metric)
                 )
