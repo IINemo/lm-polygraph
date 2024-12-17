@@ -37,7 +37,7 @@ class MaxprobGSU(Estimator):
         for sample_log_probs, sample_sentence_similarity in zip(
             batch_sample_log_probs, batch_sample_sentence_similarity
         ):
-            sample_probs = -np.exp(np.array(sample_log_probs))
+            sample_probs = -np.array(sample_log_probs)
             R_s = (
                 sample_probs
                 * sample_sentence_similarity
@@ -79,7 +79,7 @@ class PPLGSU(Estimator):
         for sample_log_likelihoods, sample_sentence_similarity in zip(
             batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
-            ppl = -np.exp([np.mean(token_ll) for token_ll in sample_log_likelihoods])
+            ppl = -np.array([np.mean(token_ll) for token_ll in sample_log_likelihoods])
 
             R_s = (
                 ppl
@@ -146,10 +146,8 @@ class TokenSARGSU(Estimator):
                 E_t = -log_likelihoods * R_t_norm
                 tokenSAR.append(E_t.sum())
 
-            tokenSAR = np.array(tokenSAR)
-            probs_token_sar = -np.exp(-tokenSAR)
             R_s = (
-                probs_token_sar
+                tokenSAR
                 * sample_sentence_similarity
             )
             E_s = R_s.sum(-1)
@@ -193,76 +191,9 @@ class MTEGSU(Estimator):
         ):
             # Use MTE for sentence relevance calculation
             R_s = sample_entropy * sample_sentence_similarity
-            
+
             # Compute sentence relevance by summing along the last axis
             E_s = R_s.sum(-1)
-
-            GSU.append(E_s.mean())
-
-        return np.array(GSU)
-
-
-class CCPGSU(Estimator):
-    def __init__(
-        self,
-        verbose: bool = False
-    ):
-        super().__init__(["sample_sentence_similarity",
-                          "sample_tokens",
-                          "sample_tokens_alternatives",
-                          "sample_tokens_alternatives_nli"], "sequence")
-        self.verbose = verbose
-
-    def __str__(self):
-        return "CCPGSU"
-
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        """
-        Estimates the sentenceSAR for each sample in the input statistics.
-
-        Parameters:
-            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * corresponding log probabilities in 'sample_log_probs',
-                * matrix with cross-encoder similarities in 'sample_sentence_similarity'
-        Returns:
-            np.ndarray: float sentenceSAR for each sample in input statistics.
-                Higher values indicate more uncertain samples.
-        """
-        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
-        batch_sample_tokens = stats["sample_tokens"]
-        batch_sample_tokens_alternatives = stats["sample_tokens_alternatives"]
-        batch_sample_tokens_alternatives_nli = stats["sample_tokens_alternatives_nli"]
-
-        GSU = []
-        for sample_sentence_similarity, \
-            samples_tokens, \
-            samples_tokens_alternatives, \
-            samples_tokens_alternatives_nli in zip(
-                batch_sample_sentence_similarity,
-                batch_sample_tokens,
-                batch_sample_tokens_alternatives,
-                batch_sample_tokens_alternatives_nli
-            ):
-            ccps = []
-            for sample_tokens, \
-                sample_tokens_alternatives, \
-                sample_tokens_alternatives_nli in zip(
-                    samples_tokens,
-                    samples_tokens_alternatives,
-                    samples_tokens_alternatives_nli
-                ):
-                ccp_stats = {
-                    "greedy_tokens": [sample_tokens],
-                    "greedy_tokens_alternatives": [sample_tokens_alternatives],
-                    "greedy_tokens_alternatives_nli": [sample_tokens_alternatives_nli]
-                }
-                ccps.append(ClaimConditionedProbability()(stats=ccp_stats)[0])
-
-            R_s = (
-                ccps
-                * sample_sentence_similarity
-            )
-            sent_relevance = R_s.sum(-1)
 
             GSU.append(E_s.mean())
 

@@ -75,7 +75,7 @@ from .sentence_sar import (
     #DistilOneSentenceSAR,
 )
 from .sar import SAR
-from .gsu import MaxprobGSU, PPLGSU, MTEGSU, TokenSARGSU, CCPGSU
+from .gsu import MaxprobGSU, PPLGSU, MTEGSU, TokenSARGSU
 from .renyi_neg import RenyiNeg
 from .fisher_rao import FisherRao
 from .verbalized_1s import Verbalized1S
@@ -84,3 +84,4 @@ from .linguistic_1s import Linguistic1S
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
 from .average_ue import AveMaxprob, AvePPL, AveTokenSAR, AveMTE
+from .semantic_average_ue import SemanticAveMaxprob, SemanticAvePPL, SemanticAveTokenSAR, SemanticAveMTE

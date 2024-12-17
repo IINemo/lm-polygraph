@@ -6,7 +6,7 @@ from copy import deepcopy
 from .estimator import Estimator
 
 
-class AveMaxprob(Estimator):
+class SemanticAveMaxprob(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -15,7 +15,7 @@ class AveMaxprob(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return "AveMaxprob"
+        return "SemanticAveMaxprob"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_probs = stats["sample_log_probs"]
@@ -26,12 +26,12 @@ class AveMaxprob(Estimator):
             batch_sample_log_probs, batch_sample_sentence_similarity
         ):
             sample_probs = -np.array(sample_log_probs)
-
-            ave.append(sample_probs.mean())
+            weights = sample_sentence_similarity[0, :]
+            ave.append(np.average(sample_probs, weights=weights))
 
         return np.array(ave)
 
-class AvePPL(Estimator):
+class SemanticAvePPL(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -40,7 +40,7 @@ class AvePPL(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return "AvePPL"
+        return "SemanticAvePPL"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
@@ -51,12 +51,13 @@ class AvePPL(Estimator):
             batch_sample_log_likelihoods, batch_sample_sentence_similarity
         ):
             ppl = -np.array([np.mean(token_ll) for token_ll in sample_log_likelihoods])
+            weights = sample_sentence_similarity[0, :]
 
-            ave.append(ppl.mean())
+            ave.append(np.average(ppl, weights=weights))
 
         return np.array(ave)
 
-class AveTokenSAR(Estimator):
+class SemanticAveTokenSAR(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -72,7 +73,7 @@ class AveTokenSAR(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return "AveTokenSAR"
+        return "SemanticAveTokenSAR"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
@@ -99,11 +100,13 @@ class AveTokenSAR(Estimator):
                 E_t = -log_likelihoods * R_t_norm
                 tokenSAR.append(E_t.sum())
 
-            ave.append(np.mean(tokenSAR))
+            weights = sample_sentence_similarity[0, :]
+
+            ave.append(np.average(tokenSAR, weights=weights))
 
         return np.array(ave)
 
-class AveMTE(Estimator):
+class SemanticAveMTE(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -112,7 +115,7 @@ class AveMTE(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return "AveMTE"
+        return "SemanticAveMTE"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]
@@ -122,6 +125,7 @@ class AveMTE(Estimator):
         for sample_entropy, sample_sentence_similarity in zip(
             batch_sample_entropy, batch_sample_sentence_similarity
         ):
-            ave.append(np.mean(sample_entropy))
+            weights = sample_sentence_similarity[0, :]
+            ave.append(np.average(sample_entropy, weights=weights))
 
         return np.array(ave)

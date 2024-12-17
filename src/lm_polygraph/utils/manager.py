@@ -516,9 +516,13 @@ class UEManager:
         return self.metrics
 
     def eval_ue(self):
-        for (e_level, e_name), estimator_values in self.estimations.items():
-            for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
-                for ue_metric in self.ue_metrics:
+        for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
+            generation_metric = np.array(generation_metric)
+            for ue_metric in self.ue_metrics:
+                oracle_score = ue_metric(-generation_metric, generation_metric)
+                random_score = get_random_scores(ue_metric, generation_metric)
+
+                for (e_level, e_name), estimator_values in self.estimations.items():
                     if gen_level != e_level:
                         continue
                     if len(estimator_values) != len(generation_metric):
@@ -529,11 +533,12 @@ class UEManager:
                     # TODO: Report how many nans!
                     # This is important to know for a user
                     ue, metric = _delete_nans(estimator_values, generation_metric)
+                    assert len(ue) == len(estimator_values)
+                    assert len(metric) == len(generation_metric)
+
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        oracle_score = ue_metric(-metric, metric)
-                        random_score = get_random_scores(ue_metric, metric)
                         ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val

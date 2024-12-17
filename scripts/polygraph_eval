@@ -455,8 +455,6 @@ def get_generation_metrics(args):
         )
 
         result = [
-            RougeMetric("rouge1"),
-            RougeMetric("rouge2"),
             RougeMetric("rougeL"),
             BLEUMetric(),
             AccuracyMetric(
@@ -467,8 +465,6 @@ def get_generation_metrics(args):
             AlignScore(align_scorer),
             AlignScore(align_scorer, target_is_claims=False),
             AlignScore(align_scorer, ignore_target=True),
-            RougeMetric("rouge1", sample=True),
-            RougeMetric("rouge2", sample=True),
             RougeMetric("rougeL", sample=True),
             BLEUMetric(sample=True),
             AccuracyMetric(
