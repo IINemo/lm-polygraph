@@ -42,6 +42,7 @@ save_stats:
   - sample_sentence_similarity
   - sample_token_similarity
   - sample_entropy
+  - first_sample_texts
 entropy_top_k: 50
 
 target_ignore_regex: "(?s).*#### "
