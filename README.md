@@ -175,7 +175,7 @@ This allows seamless integration with any OpenAI-compatible API service while ma
 
 ## Benchmark
 
-To evaluate the performance of uncertainty estimation methods consider a quick example: 
+To evaluate the performance of uncertainty estimation methods consider a quick example:
 
 ```
 HYDRA_CONFIG=../examples/configs/polygraph_eval_coqa.yaml python ./scripts/polygraph_eval \
@@ -191,16 +191,15 @@ A detailed description of the benchmark is in the [documentation](https://lm-pol
 
 ## <a name="demo_web_application"></a>Demo web application
 
- 
+
 <img width="850" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
 
 
 ### Start with Docker
 
 ```sh
-docker run -p 3001:3001 -it \
-    -v $HOME/.cache/huggingface/hub:/root/.cache/huggingface/hub \
-    --gpus all mephodybro/polygraph_demo:0.0.17 polygraph_server
+docker build -t lm-polygraph .
+docker run --rm -it docker.io/library/lm-polygraph
 ```
 The server should be available on `http://localhost:3001`
 
