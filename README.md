@@ -200,6 +200,7 @@ A detailed description of the benchmark is in the [documentation](https://lm-pol
 ```sh
 docker build -t lm-polygraph .
 docker run --rm -it docker.io/library/lm-polygraph
+# If you want to use GPU: docker run --gpus all --rm -it docker.io/library/lm-polygraph
 ```
 The server should be available on `http://localhost:3001`
 
