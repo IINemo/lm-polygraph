@@ -232,3 +232,40 @@ class FirstSampleCalculator(StatCalculator):
             "first_sample_texts": first_sample_texts,
         }
 
+class BestSampleCalculator(StatCalculator):
+    def __init__(self):
+        super().__init__(
+            [
+                "best_sample_texts",
+                "best_normalized_sample_texts",
+            ],
+            [
+                "sample_texts",
+                "sample_log_probs",
+                "sample_log_likelihoods",
+            ]
+        )
+
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
+        best_sample_texts = []
+        best_normalized_sample_texts = []
+
+        for batch_i, (sample_texts, sample_log_probs, sample_log_likelihoods) in enumerate(zip(dependencies["sample_texts"], dependencies["sample_log_probs"], dependencies["sample_log_likelihoods"])):
+            best_i = np.argmax(sample_log_probs)
+            best_sample_texts.append(sample_texts[best_i])
+
+            ppls = [np.mean(ll) for ll in sample_log_likelihoods]
+            best_ppl_i = np.argmax(ppls)
+            best_normalized_sample_texts.append(sample_texts[best_ppl_i])
+
+        return {
+            "best_sample_texts": best_sample_texts,
+            "best_normalized_sample_texts": best_normalized_sample_texts,
+        }
+

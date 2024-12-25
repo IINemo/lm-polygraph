@@ -19,12 +19,19 @@ class AlignScore(GenerationMetric):
         target_is_claims=True,
         ignore_target=False,
         sample: bool = False,
+        sample_strategy: str = "First",
     ):
         if sample:
-            super().__init__(["first_sample_texts", "input_texts"], "sequence")
+            super().__init__([
+                "first_sample_texts",
+                "best_sample_texts",
+                "best_normalized_sample_texts",
+                "input_texts"],
+            "sequence")
         else:
             super().__init__(["greedy_texts", "input_texts"], "sequence")
         self.sample = sample
+        self.sample_strategy = sample_strategy
         self.target_is_claims = target_is_claims
         self.ignore_target = ignore_target
         self.scorer = scorer
@@ -39,7 +46,10 @@ class AlignScore(GenerationMetric):
             base += "TargetOutput"
 
         if self.sample:
-            return f"Sample{base}"
+            if self.sample_strategy == "First":
+                return f"Sample{base}"
+            else:
+                return f"{self.sample_strategy}Sample{base}"
 
         return base
 
@@ -60,7 +70,14 @@ class AlignScore(GenerationMetric):
             np.ndarray: list of AlignScore Scores for each sample in input.
         """
         if self.sample:
-            gen_texts = stats["first_sample_texts"]
+            if self.sample_strategy == "First":
+                gen_texts = stats["first_sample_texts"]
+            elif self.sample_strategy == "Best":
+                gen_texts = stats["best_sample_texts"]
+            elif self.sample_strategy == "BestNormalized":
+                gen_texts = stats["best_normalized_sample_texts"]
+            else:
+                raise ValueError(f"Invalid sample strategy: {self.sample_strategy}")
         else:
             gen_texts = stats["greedy_texts"]
 

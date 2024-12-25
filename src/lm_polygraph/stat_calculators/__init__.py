@@ -10,7 +10,7 @@ from .claim_level_prompts import (
 )
 from .entropy import EntropyCalculator
 from .entropy import SampleEntropyCalculator
-from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator, FirstSampleCalculator
+from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator, FirstSampleCalculator, BestSampleCalculator
 from .sample_alternatives_nli import SampleAlternativesNLICalculator
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,

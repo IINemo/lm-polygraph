@@ -12,15 +12,24 @@ class BLEUMetric(GenerationMetric):
 
     def __init__(self, sample: bool = False):
         if sample:
-            super().__init__(["first_sample_texts"], "sequence")
+            super().__init__([
+                "first_sample_texts",
+                "best_sample_texts",
+                "best_normalized_sample_texts",
+                "input_texts"],
+            "sequence")
         else:
             super().__init__(["greedy_texts"], "sequence")
         self.sample = sample
+        self.sample_strategy = sample_strategy
         self.scorer = BLEU(effective_order=True, lowercase=True)
 
     def __str__(self):
         if self.sample:
-            return "SampleBLEU"
+            if self.sample_strategy == "First":
+                return "SampleBLEU"
+            else:
+                return f"{self.sample_strategy}SampleBLEU"
         return "BLEU"
 
     def _score_single(self, t1: str, t2: str):
@@ -44,7 +53,14 @@ class BLEUMetric(GenerationMetric):
             np.ndarray: list of BLEU Scores for each sample in input.
         """
         if self.sample:
-            gen_texts = stats["first_sample_texts"]
+            if self.sample_strategy == "First":
+                gen_texts = stats["first_sample_texts"]
+            elif self.sample_strategy == "Best":
+                gen_texts = stats["best_sample_texts"]
+            elif self.sample_strategy == "BestNormalized":
+                gen_texts = stats["best_normalized_sample_texts"]
+            else:
+                raise ValueError(f"Invalid sample strategy: {self.sample_strategy}")
         else:
             gen_texts = stats["greedy_texts"]
 
