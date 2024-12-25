@@ -88,3 +88,48 @@ class DegMat(Estimator):
                 print(f"generated answers: {answers}")
             res.append(self.U_DegMat(i, stats))
         return np.array(res)
+
+
+class CEDegMat(Estimator):
+    """
+    Estimates the sequence-level uncertainty of a language model following the method of
+    "The Degree Matrix" as provided in the paper https://arxiv.org/abs/2305.19187.
+    Works with both whitebox and blackbox models (initialized using
+    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+
+    Elements on diagonal of matrix D are sums of similarities between the particular number
+    (position in matrix) and other answers. Thus, it is an average pairwise distance
+    (lower values indicated smaller distance between answers which means greater uncertainty).
+    """
+
+    def __init__(
+        self,
+        verbose: bool = False,
+    ):
+        super().__init__(["sample_sentence_similarity", "sample_texts"], "sequence")
+        self.verbose = verbose
+
+    def __str__(self):
+        return "CEDegMat"
+
+    def U_DegMat(self, W, answers):
+        # The Degree Matrix
+        D = np.diag(W.sum(axis=1))
+        return np.trace(len(answers) - D) / (len(answers) ** 2)
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the uncertainties for each sample in the input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * generated samples in 'sample_texts',
+                * matrix with semantic similarities in 'semantic_matrix_entail'/'semantic_matrix_contra'
+        Returns:
+            np.ndarray: float uncertainty for each sample in input statistics.
+                Higher values indicate more uncertain samples.
+        """
+        res = []
+        for W, answers in zip(stats["sample_sentence_similarity"], stats["sample_texts"]):
+            res.append(self.U_DegMat(W, answers))
+        return np.array(res)

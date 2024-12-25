@@ -11,12 +11,17 @@ class MaxprobGSU(Estimator):
     def __init__(
         self,
         verbose: bool = False,
+        exp: bool = False
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
         self.verbose = verbose
+        self.exp = exp
 
     def __str__(self):
-        return "MaxprobGSU"
+        if self.exp:
+            return "MaxprobGSUexp"
+        else:
+            return "MaxprobGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -38,11 +43,15 @@ class MaxprobGSU(Estimator):
             batch_sample_log_probs, batch_sample_sentence_similarity
         ):
             sample_probs = -np.array(sample_log_probs)
+            if self.exp:
+                sample_probs = -np.exp(-sample_probs)
             R_s = (
                 sample_probs
                 * sample_sentence_similarity
             )
             E_s = R_s.sum(-1)
+
+            E_s = E_s / sample_sentence_similarity.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -52,13 +61,18 @@ class MaxprobGSU(Estimator):
 class PPLGSU(Estimator):
     def __init__(
         self,
-        verbose: bool = False
+        verbose: bool = False,
+        exp: bool = False
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
         self.verbose = verbose
+        self.exp = exp
 
     def __str__(self):
-        return "PPLGSU"
+        if self.exp:
+            return "PPLGSUexp"
+        else:
+            return "PPLGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -81,11 +95,16 @@ class PPLGSU(Estimator):
         ):
             ppl = -np.array([np.mean(token_ll) for token_ll in sample_log_likelihoods])
 
+            if self.exp:
+                ppl = -np.exp(-ppl)
+
             R_s = (
                 ppl
                 * sample_sentence_similarity
             )
             E_s = R_s.sum(-1)
+
+            E_s = E_s / sample_sentence_similarity.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -95,7 +114,9 @@ class PPLGSU(Estimator):
 class TokenSARGSU(Estimator):
     def __init__(
         self,
-        verbose: bool = False):
+        verbose: bool = False,
+        exp: bool = False
+    ):
         super().__init__(
             [
                 "sample_sentence_similarity",
@@ -105,9 +126,13 @@ class TokenSARGSU(Estimator):
             "sequence",
         )
         self.verbose = verbose
+        self.exp = exp
 
     def __str__(self):
-        return "TokenSARGSU"
+        if self.exp:
+            return "TokenSARGSUexp"
+        else:
+            return "TokenSARGSU"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -146,11 +171,16 @@ class TokenSARGSU(Estimator):
                 E_t = -log_likelihoods * R_t_norm
                 tokenSAR.append(E_t.sum())
 
+            if self.exp:
+                tokenSAR = -np.exp(-np.array(tokenSAR))
+
             R_s = (
                 tokenSAR
                 * sample_sentence_similarity
             )
             E_s = R_s.sum(-1)
+
+            E_s = E_s / sample_sentence_similarity.sum(-1)
 
             GSU.append(E_s.mean())
 
@@ -194,6 +224,8 @@ class MTEGSU(Estimator):
 
             # Compute sentence relevance by summing along the last axis
             E_s = R_s.sum(-1)
+
+            E_s = E_s / sample_sentence_similarity.sum(-1)
 
             GSU.append(E_s.mean())
 

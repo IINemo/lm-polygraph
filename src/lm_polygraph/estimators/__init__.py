@@ -25,7 +25,7 @@ from .p_true_sampling import PTrueSampling
 from .monte_carlo_sequence_entropy import MonteCarloSequenceEntropy
 from .monte_carlo_normalized_sequence_entropy import MonteCarloNormalizedSequenceEntropy
 from .lexical_similarity import LexicalSimilarity
-from .deg_mat import DegMat
+from .deg_mat import DegMat, CEDegMat
 from .eccentricity import Eccentricity
 from .eig_val_laplacian import EigValLaplacian
 from .num_sem_sets import NumSemSets
@@ -85,3 +85,4 @@ from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
 from .average_ue import AveMaxprob, AvePPL, AveTokenSAR, AveMTE
 from .semantic_average_ue import SemanticAveMaxprob, SemanticAvePPL, SemanticAveTokenSAR, SemanticAveMTE
+from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE
