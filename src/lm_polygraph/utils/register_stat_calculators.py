@@ -68,6 +68,7 @@ def register_stat_calculators(
         _register(GreedyLMProbsCalculator())
         _register(SamplingGenerationCalculator(n_alternatives=n_ccp_alternatives))
         _register(FirstSampleCalculator())
+        _register(BestSampleCalculator())
         _register(BartScoreCalculator())
         _register(ModelScoreCalculator())
         _register(EmbeddingsCalculator())

@@ -10,7 +10,7 @@ class BLEUMetric(GenerationMetric):
     Calculates BLEU metric between model-generated texts and ground truth texts.
     """
 
-    def __init__(self, sample: bool = False):
+    def __init__(self, sample: bool = False, sample_strategy: str = "First"):
         if sample:
             super().__init__([
                 "first_sample_texts",

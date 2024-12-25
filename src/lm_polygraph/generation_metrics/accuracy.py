@@ -16,7 +16,7 @@ class AccuracyMetric(GenerationMetric):
     """
 
     def __init__(
-        self, target_ignore_regex=None, output_ignore_regex=None, normalize=False, sample: bool = False
+        self, target_ignore_regex=None, output_ignore_regex=None, normalize=False, sample: bool = False, sample_strategy: str = "First"
     ):
         if sample:
             super().__init__([
