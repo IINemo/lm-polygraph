@@ -465,6 +465,7 @@ def get_generation_metrics(args):
             AlignScore(align_scorer),
             AlignScore(align_scorer, target_is_claims=False),
             AlignScore(align_scorer, ignore_target=True),
+            # Sample-based metrics
             RougeMetric("rougeL", sample=True),
             BLEUMetric(sample=True),
             AccuracyMetric(
@@ -476,7 +477,34 @@ def get_generation_metrics(args):
             AlignScore(align_scorer, sample=True),
             AlignScore(align_scorer, target_is_claims=False, sample=True),
             AlignScore(align_scorer, ignore_target=True, sample=True),
+            # Best sample-based metrics
+            RougeMetric("rougeL", sample=True, sample_strategy="Best"),
+            BLEUMetric(sample=True, sample_strategy="Best"),
+            AccuracyMetric(
+                target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                normalize = getattr(args, "normalize", False),
+                sample=True,
+                sample_strategy="Best",
+            ),
+            AlignScore(align_scorer, sample=True, sample_strategy="Best"),
+            AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="Best"),
+            AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="Best"),
+            # Best normalized sample-based metrics
+            RougeMetric("rougeL", sample=True, sample_strategy="BestNormalized"),
+            BLEUMetric(sample=True, sample_strategy="BestNormalized"),
+            AccuracyMetric(
+                target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                normalize = getattr(args, "normalize", False),
+                sample=True,
+                sample_strategy="BestNormalized",
+            ),
+            AlignScore(align_scorer, sample=True, sample_strategy="BestNormalized"),
+            AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="BestNormalized"),
+            AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="BestNormalized"),
         ]
+
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
             if getattr(args, "use_claim_ue", False):
                 result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
