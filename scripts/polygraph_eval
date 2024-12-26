@@ -512,7 +512,7 @@ def get_generation_metrics(args):
             ignore_regex = getattr(args, "source_ignore_regex", None)
             comet_scorer = load("comet")
             result += [Comet(comet_scorer, source_ignore_regex = ignore_regex),
-                       Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True)
+                       Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True),
                        Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Best"),
                        Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized")]
     else:
