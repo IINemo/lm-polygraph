@@ -85,4 +85,5 @@ from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
 from .average_ue import AveMaxprob, AvePPL, AveTokenSAR, AveMTE
 from .semantic_average_ue import SemanticAveMaxprob, SemanticAvePPL, SemanticAveTokenSAR, SemanticAveMTE
+from .semantic_average_ue_average_similarity import SemanticAveMaxprobAveSimilarity, SemanticAvePPLAveSimilarity, SemanticAveTokenSARAveSimilarity,SemanticAveMTEAveSimilarity
 from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE
