@@ -4,7 +4,7 @@ import itertools
 from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import Model
 import torch.nn as nn
 import torch
 

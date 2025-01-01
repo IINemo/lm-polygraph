@@ -18,7 +18,9 @@ def normalize_kernel(K: np.ndarray) -> np.ndarray:
 
 
 def scale_entropy(entropy: np.ndarray, n_classes: int) -> np.ndarray:
-    max_entropy = -np.log(1.0 / n_classes)  # For a discrete distribution with num_classes
+    max_entropy = -np.log(
+        1.0 / n_classes
+    )  # For a discrete distribution with num_classes
     scaled_entropy = entropy / max_entropy
     return scaled_entropy
 
@@ -27,7 +29,9 @@ def vn_entropy(K: np.ndarray, normalize=True, scale=True, jitter=0) -> np.float6
     if normalize:
         K = normalize_kernel(K) / K.shape[0]
     result = 0
-    eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0])).eigenvalues.astype(np.float64)
+    eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0])).eigenvalues.astype(
+        np.float64
+    )
     for e in eigvs:
         if np.abs(e) > 1e-8:
             result -= e * np.log(e)
@@ -44,13 +48,15 @@ class KernelLanguageEntropy(Estimator):
     lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
 
     This method calculates KLE(Kheat) = VNE(Kheat), where VNE is von Neumann entropy and
-    Kheat is a heat kernel of a semantic graph over language model's outputs. 
+    Kheat is a heat kernel of a semantic graph over language model's outputs.
     """
 
     def __init__(self, t: float = 0.3):  # Default value is taken from the paper
-        super().__init__(["semantic_matrix_entail", "semantic_matrix_contra"], "sequence")
+        super().__init__(
+            ["semantic_matrix_entail", "semantic_matrix_contra"], "sequence"
+        )
         self.t = t
-    
+
     def __str__(self):
         return "KernelLanguageEntropy"
 
@@ -68,7 +74,8 @@ class KernelLanguageEntropy(Estimator):
         """
         weighted_graph = stats["semantic_matrix_entail"] + 0.5 * (
             np.ones(stats["semantic_matrix_entail"].shape)
-            - stats["semantic_matrix_entail"] - stats["semantic_matrix_contra"]
+            - stats["semantic_matrix_entail"]
+            - stats["semantic_matrix_contra"]
         )
         degrees = np.diag(np.sum(weighted_graph, axis=0))
         laplacian = weighted_graph - degrees
