@@ -38,7 +38,7 @@ class SemanticMatrixCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Model,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """

@@ -171,7 +171,7 @@ This allows seamless integration with any OpenAI-compatible API service while ma
 | Lexical similarity (LexSim) [(Fomicheva et al., 2020a)](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00330/96475/Unsupervised-Quality-Estimation-for-Neural-Machine) | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
 | Verbalized Uncertainty 1S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Low     | Low    |         No          | sequence       |
 | Verbalized Uncertainty 2S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Medium  | Low    |         No          | sequence       |
-
+| Kernel Language Entropy [(Nikitin et al., 2024)](https://arxiv.org/pdf/2405.20003) | Black-box | Meaning Diversity | High | Low | No | sequence |
 
 ## Benchmark
 
