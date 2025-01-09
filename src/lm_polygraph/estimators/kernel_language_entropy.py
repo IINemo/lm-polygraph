@@ -6,6 +6,11 @@ from typing import Dict
 from .estimator import Estimator
 
 
+def laplacian_matrix(weighted_graph: np.ndarray) -> np.ndarray:
+    degrees = np.diag(np.sum(weighted_graph, axis=0))
+    return weighted_graph - degrees
+
+
 def heat_kernel(laplacian: np.ndarray, t: float) -> np.ndarray:
     return scipy.linalg.expm(-t * laplacian)
 
@@ -25,7 +30,9 @@ def scale_entropy(entropy: np.ndarray, n_classes: int) -> np.ndarray:
     return scaled_entropy
 
 
-def vn_entropy(K: np.ndarray, normalize=True, scale=True, jitter=0) -> np.float64:
+def vn_entropy(
+    K: np.ndarray, normalize: bool, scale: bool, jitter: float
+) -> np.float64:
     if normalize:
         K = normalize_kernel(K) / K.shape[0]
     result = 0
@@ -51,11 +58,28 @@ class KernelLanguageEntropy(Estimator):
     Kheat is a heat kernel of a semantic graph over language model's outputs.
     """
 
-    def __init__(self, t: float = 0.3):  # Default value is taken from the paper
+    def __init__(
+        self,
+        t: float = 0.3,
+        normalize: bool = True,
+        scale: bool = True,
+        jitter: float = 0,
+    ):
+        """
+        Parameters:
+            t (float): temperature for method; default is taken from the paper
+            normalize (bool): whether VNE should be calculated on normalized kernel or not
+            scale (bool): whether VNE should scale the result by amount of samples
+            jitter (float): calculate VNE not on kernel, but kernel + jitter * I
+        """
+
         super().__init__(
             ["semantic_matrix_entail", "semantic_matrix_contra"], "sequence"
         )
         self.t = t
+        self.normalize = normalize
+        self.scale = scale
+        self.jitter = jitter
 
     def __str__(self):
         return "KernelLanguageEntropy"
@@ -67,17 +91,18 @@ class KernelLanguageEntropy(Estimator):
         2. Let NLI'(Si, Sj) = one-hot prediction over (entailment, neutral class, contradiction)
         Note that NLI'(Si, Sj) is calculated in stats
         3. Let W be a matrix, such that Wij = wNLI'(Si, Sj), where w = (1, 0.5, 0)
-        4. Let D be a matrix, such that Dii = sum(Wij) over j.
-        4. Let L be a laplacian matrix of W, i.e. L = W - D.
+        4. Let L be a laplacian matrix of W, i.e. L = W - D, where Dii = sum(Wij) over j.
         5. Let Kheat = heat kernel of W, i.e. Kheat = expm(-t * L), where t is a hyperparameter.
         6. Finally, KLE(x) = VNE(Kheat), where VNE(A) = -Tr(A log A).
         """
-        weighted_graph = stats["semantic_matrix_entail"] + 0.5 * (
+        semantic_matrix_neutral = (
             np.ones(stats["semantic_matrix_entail"].shape)
             - stats["semantic_matrix_entail"]
             - stats["semantic_matrix_contra"]
         )
-        degrees = np.diag(np.sum(weighted_graph, axis=0))
-        laplacian = weighted_graph - degrees
-        heat_kernels = heat_kernel(laplacian, self.t)
+        weighted_graph = stats["semantic_matrix_entail"] + 0.5 * semantic_matrix_neutral
+        laplacian = laplacian_matrix(weighted_graph)
+        heat_kernels = heat_kernel(
+            laplacian, self.t, self.normalize, self.scale, self.jitter
+        )
         return [vn_entropy(heat_kernel) for heat_kernel in heat_kernels]
