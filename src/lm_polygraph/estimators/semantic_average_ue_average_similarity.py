@@ -4,27 +4,32 @@ from typing import Dict
 from copy import deepcopy
 
 from .estimator import Estimator
+from .common import sample_strategy_to_prefix, best_sample_ids
 
 
 class SemanticAveMaxprobAveSimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        exp: bool = False
+        exp: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
         self.verbose = verbose
         self.exp = exp
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
         if self.exp:
-            return "SemanticAveMaxprobAveSimilarityexp"
+            base = "SemanticAveMaxprobAveSimilarityexp"
         else:
-            return "SemanticAveMaxprobAveSimilarity"
+            base = "SemanticAveMaxprobAveSimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_probs = stats["sample_log_probs"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_metrics = []  # To store enriched metrics for each sample
 
@@ -53,29 +58,37 @@ class SemanticAveMaxprobAveSimilarity(Estimator):
                 enriched_sample_metrics.append(enriched_metric)
 
             enriched_metrics.append(np.array(enriched_sample_metrics))
-        # Return only metric for the first sample for prr calculation
-        first_elements = [metrics[0] for metrics in enriched_metrics]
-        return np.array(first_elements)
+
+        # Return only metric for the best sample for prr calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_metrics):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 class SemanticEnrichedMaxprobAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        exp: bool = False
+        exp: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
         self.verbose = verbose
         self.exp = exp
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
         if self.exp:
-            return "SemanticEnrichedMaxprobAveDissimilarityexp"
+            base = "SemanticEnrichedMaxprobAveDissimilarityexp"
         else:
-            return "SemanticEnrichedMaxprobAveDissimilarity"
+            base = "SemanticEnrichedMaxprobAveDissimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_probs = stats["sample_log_probs"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_metrics = []  # To store enriched metrics for each sample
 
@@ -108,30 +121,37 @@ class SemanticEnrichedMaxprobAveDissimilarity(Estimator):
 
             enriched_metrics.append(np.array(enriched_sample_metrics))
 
-        # Return only metric for the first sample for PRR calculation
-        first_elements = [metrics[0] for metrics in enriched_metrics]
-        return np.array(first_elements)
+        # Return only metric for the best sample for PRR calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_metrics):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 
 class SemanticAvePPLAveSimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        exp: bool = False
+        exp: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
         self.verbose = verbose
         self.exp = exp
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
         if self.exp:
-            return "SemanticAvePPLAveSimilarityexp"
+            base = "SemanticAvePPLAveSimilarityexp"
         else:
-            return "SemanticAvePPLAveSimilarity"
+            base = "SemanticAvePPLAveSimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_ppl = []  # To store enriched PPL for each sample
 
@@ -159,29 +179,37 @@ class SemanticAvePPLAveSimilarity(Estimator):
                 enriched_sample_ppl.append(enriched_value)
 
             enriched_ppl.append(np.array(enriched_sample_ppl))  # Collect enriched PPL values
-        # Return only metric for the first sample for prr calculation
-        first_elements = [metrics[0] for metrics in enriched_ppl]
-        return np.array(first_elements)
+
+        # Return only metric for the best sample for prr calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_ppl):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 class SemanticEnrichedPPLAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        exp: bool = False
+        exp: bool = False,  
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
         self.verbose = verbose
         self.exp = exp
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
         if self.exp:
-            return "SemanticEnrichedPPLAveDissimilarityexp"
+            base = "SemanticEnrichedPPLAveDissimilarityexp"
         else:
-            return "SemanticEnrichedPPLAveDissimilarity"
+            base = "SemanticEnrichedPPLAveDissimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_ppl = []  # To store enriched PPL for each sample
 
@@ -211,16 +239,20 @@ class SemanticEnrichedPPLAveDissimilarity(Estimator):
 
             enriched_ppl.append(np.array(enriched_sample_ppl))  # Collect enriched PPL values
 
-        # Return only metric for the first sample for PRR calculation
-        first_elements = [metrics[0] for metrics in enriched_ppl]
-        return np.array(first_elements)
+        # Return only metric for the best sample for PRR calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_ppl):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 
 class SemanticAveTokenSARAveSimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        exp: bool = False
+        exp: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(
             [
@@ -232,17 +264,20 @@ class SemanticAveTokenSARAveSimilarity(Estimator):
         )
         self.verbose = verbose
         self.exp = exp
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
         if self.exp:
-            return "SemanticAveTokenSARAveSimilarityexp"
+            base = "SemanticAveTokenSARAveSimilarityexp"
         else:
-            return "SemanticAveTokenSARAveSimilarity"
+            base = "SemanticAveTokenSARAveSimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
         batch_sample_token_similarity = stats["sample_token_similarity"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_tokenSAR = []
 
@@ -284,17 +319,21 @@ class SemanticAveTokenSARAveSimilarity(Estimator):
                 enriched_sample_tokenSAR.append(enriched_value)
 
             enriched_tokenSAR.append(np.array(enriched_sample_tokenSAR))
-        # Return only metric for the first sample for prr calculation
 
-        first_elements = [metrics[0] for metrics in enriched_tokenSAR]
-        return np.array(first_elements)
+        # Return only metric for the best sample for prr calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_tokenSAR):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 
 class SemanticEnrichedTokenSARAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        exp: bool = False
+        exp: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(
             [
@@ -306,17 +345,20 @@ class SemanticEnrichedTokenSARAveDissimilarity(Estimator):
         )
         self.verbose = verbose
         self.exp = exp
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
         if self.exp:
-            return "SemanticEnrichedTokenSARAveDissimilarityexp"
+            base = "SemanticEnrichedTokenSARAveDissimilarityexp"
         else:
-            return "SemanticEnrichedTokenSARAveDissimilarity"
+            base = "SemanticEnrichedTokenSARAveDissimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_likelihoods = stats["sample_log_likelihoods"]
         batch_sample_token_similarity = stats["sample_token_similarity"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_tokenSAR = []
 
@@ -358,26 +400,32 @@ class SemanticEnrichedTokenSARAveDissimilarity(Estimator):
                 enriched_sample_tokenSAR.append(enriched_value)
 
             enriched_tokenSAR.append(np.array(enriched_sample_tokenSAR))
-        # Return only metric for the first sample for PRR calculation
 
-        first_elements = [metrics[0] for metrics in enriched_tokenSAR]
-        return np.array(first_elements)
+        # Return only metric for the best sample for PRR calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_tokenSAR):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 
 class SemanticAveMTEAveSimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
         self.verbose = verbose
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return "SemanticAveMTEAveSimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + "SemanticAveMTEAveSimilarity"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_entropy = []
 
@@ -400,9 +448,13 @@ class SemanticAveMTEAveSimilarity(Estimator):
                 enriched_sample_entropy.append(enriched_value)
 
             enriched_entropy.append(np.array(enriched_sample_entropy))
-        # Return only metric for the first sample for prr calculation
-        first_elements = [metrics[0] for metrics in enriched_entropy]
-        return np.array(first_elements)
+
+        # Return only metric for the best sample for prr calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_entropy):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 
 
@@ -410,16 +462,19 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
         self.verbose = verbose
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return "SemanticEnrichedMTEAveDissimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + "SemanticEnrichedMTEAveDissimilarity"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_entropy = []
 
@@ -442,9 +497,13 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
                 enriched_sample_entropy.append(enriched_value)
 
             enriched_entropy.append(np.array(enriched_sample_entropy))
-        # Return only metric for the first sample for PRR calculation
-        first_elements = [metrics[0] for metrics in enriched_entropy]
-        return np.array(first_elements)
+
+        # Return only metric for the best sample for PRR calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_entropy):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)
 
 
 
@@ -452,16 +511,19 @@ class AveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
+        sample_strategy: str = "first"
     ):
         super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
         self.verbose = verbose
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return "AveDissimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + "AveDissimilarity"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]
         batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
 
         enriched_entropy = []
 
@@ -484,6 +546,10 @@ class AveDissimilarity(Estimator):
                 enriched_sample_entropy.append(enriched_value)
 
             enriched_entropy.append(np.array(enriched_sample_entropy))
-        # Return only metric for the first sample for PRR calculation
-        first_elements = [metrics[0] for metrics in enriched_entropy]
-        return np.array(first_elements)
+
+        # Return only metric for the best sample for PRR calculation
+        best_elements = []
+        for best_id, metrics in zip(sample_ids, enriched_entropy):
+            best_elements.append(metrics[best_id])
+
+        return np.array(best_elements)

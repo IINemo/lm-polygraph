@@ -254,18 +254,23 @@ class BestSampleCalculator(StatCalculator):
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         best_sample_texts = []
+        best_sample_text_ids = []
         best_normalized_sample_texts = []
+        best_normalized_sample_text_ids = []
 
         for batch_i, (sample_texts, sample_log_probs, sample_log_likelihoods) in enumerate(zip(dependencies["sample_texts"], dependencies["sample_log_probs"], dependencies["sample_log_likelihoods"])):
             best_i = np.argmax(sample_log_probs)
             best_sample_texts.append(sample_texts[best_i])
+            best_sample_text_ids.append(best_i)
 
             ppls = [np.mean(ll) for ll in sample_log_likelihoods]
             best_ppl_i = np.argmax(ppls)
             best_normalized_sample_texts.append(sample_texts[best_ppl_i])
+            best_normalized_sample_text_ids.append(best_ppl_i)
 
         return {
             "best_sample_texts": best_sample_texts,
+            "best_sample_text_ids": best_sample_text_ids,
             "best_normalized_sample_texts": best_normalized_sample_texts,
+            "best_normalized_sample_text_ids": best_normalized_sample_text_ids,
         }
-

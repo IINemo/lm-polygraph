@@ -7,11 +7,11 @@ from .claim.token_entropy import MaxTokenEntropyClaim
 from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
 from .max_probability import (
     MaximumSequenceProbability,
+    SampledMaximumSequenceProbability,
     MaximumTokenProbability,
-    MaxSampledMaximumSequenceProbability,
 )
 from .claim_conditioned_probability import ClaimConditionedProbability
-from .token_entropy import MeanTokenEntropy, TokenEntropy
+from .token_entropy import MeanTokenEntropy, TokenEntropy, SampledMeanTokenEntropy
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,
     PointwiseMutualInformation,
@@ -32,8 +32,7 @@ from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
 from .perplexity import (
-    Perplexity, 
-    MaxSampledPerplexity,
+    Perplexity, SampledPerplexity
 )
 from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
@@ -65,7 +64,7 @@ from .ensemble_sequence_measures import (
     PESrmi,
     PESrmiabs,
 )
-from .token_sar import TokenSAR
+from .token_sar import TokenSAR, SampledTokenSAR
 from .sentence_sar import (
     SentenceSAR,
 #    OtherSentenceSAR,
@@ -95,4 +94,14 @@ from .semantic_average_ue_average_similarity import (
     SemanticEnrichedMaxprobAveDissimilarity,
     SemanticEnrichedMTEAveDissimilarity,
     AveDissimilarity)
+from .greedy_semantic_average_ue_average_similarity import (
+    GreedySemanticAveMaxprobAveSimilarity, 
+    GreedySemanticAvePPLAveSimilarity, 
+    GreedySemanticAveTokenSARAveSimilarity,
+    GreedySemanticAveMTEAveSimilarity,
+    GreedySemanticEnrichedPPLAveDissimilarity,
+    GreedySemanticEnrichedTokenSARAveDissimilarity ,
+    GreedySemanticEnrichedMaxprobAveDissimilarity,
+    GreedySemanticEnrichedMTEAveDissimilarity,
+)
 from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE

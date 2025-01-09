@@ -29,3 +29,22 @@ def _compute_Jaccard_score(lst):
 
 def compute_sim_score(answers, affinity, similarity_score):
     return _compute_Jaccard_score(answers)
+
+def sample_strategy_to_prefix(sample_strategy):
+    if sample_strategy == "first":
+        return ""
+    elif sample_strategy in ["best", "best_normalized"]:
+        return "".join(list(map(lambda x: x.capitalize(), sample_strategy.split("_"))))
+    else:
+        raise ValueError(f"Unknown sample strategy: {sample_strategy}")
+
+def best_sample_ids(sample_strategy, stats):
+    batch_size = len(stats["sample_log_probs"])
+    if sample_strategy == "first":
+        return [0] * batch_size
+    elif sample_strategy == "best":
+        return stats["best_sample_text_ids"]
+    elif sample_strategy == "best_normalized":
+        return stats["best_normalized_sample_text_ids"]
+    else:
+        raise ValueError(f"Unknown sample strategy: {sample_strategy}")

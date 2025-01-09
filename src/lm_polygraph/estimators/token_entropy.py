@@ -3,6 +3,7 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
+from .common import sample_strategy_to_prefix, best_sample_ids
 
 
 class MeanTokenEntropy(Estimator):
@@ -40,11 +41,12 @@ class SampledMeanTokenEntropy(Estimator):
     Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
     """
 
-    def __init__(self):
+    def __init__(self, sample_strategy: str = "first"):
         super().__init__(["sample_entropy"], "sequence")
+        self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return "SampledMeanTokenEntropy"
+        return sample_strategy_to_prefix(self.sample_strategy) + "SampledMeanTokenEntropy"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -58,7 +60,9 @@ class SampledMeanTokenEntropy(Estimator):
                 Higher values indicate more uncertain samples.
         """
         entropy = stats["sample_entropy"]
-        return np.array([e[0] for e in entropy])
+        sample_ids = best_sample_ids(self.sample_strategy, stats)
+
+        return np.array([e[best_id] for e, best_id in zip(entropy, sample_ids)])
 
 
 class TokenEntropy(Estimator):
