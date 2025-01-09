@@ -50,7 +50,7 @@ class GreedySemanticAveMaxprobAveSimilarity(Estimator):
         return np.array(enriched_metrics)
 
 
-class GreedySemanticAveMaxprobAveDissimilarity(Estimator):
+class GreedySemanticEnrichedMaxprobAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -132,7 +132,7 @@ class GreedySemanticAvePPLAveSimilarity(Estimator):
         return np.array(enriched_ppl)
 
 
-class GreedySemanticAvePPLAveDissimilarity(Estimator):
+class GreedySemanticEnrichedPPLAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -231,7 +231,7 @@ class GreedySemanticAveTokenSARAveSimilarity(Estimator):
         return np.array(enriched_tokenSAR)
 
 
-class GreedySemanticAveTokenSARAveDissimilarity(Estimator):
+class GreedySemanticEnrichedTokenSARAveDissimilarity(Estimator):
     def __init__(
         self,
         verbose: bool = False,
