@@ -1,5 +1,6 @@
 import numpy as np
 
+SAMPLE_SELECTION_STAT_KEYS = ["best_sample_text_ids", "best_normalized_sample_text_ids"]
 
 def _get_pairs(lst):
     pairs = []
@@ -30,6 +31,7 @@ def _compute_Jaccard_score(lst):
 def compute_sim_score(answers, affinity, similarity_score):
     return _compute_Jaccard_score(answers)
 
+
 def sample_strategy_to_prefix(sample_strategy):
     if sample_strategy == "first":
         return ""
@@ -37,6 +39,7 @@ def sample_strategy_to_prefix(sample_strategy):
         return "".join(list(map(lambda x: x.capitalize(), sample_strategy.split("_"))))
     else:
         raise ValueError(f"Unknown sample strategy: {sample_strategy}")
+
 
 def best_sample_ids(sample_strategy, stats):
     batch_size = len(stats["sample_log_probs"])

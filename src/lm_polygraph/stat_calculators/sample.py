@@ -237,7 +237,9 @@ class BestSampleCalculator(StatCalculator):
         super().__init__(
             [
                 "best_sample_texts",
+                "best_sample_text_ids",
                 "best_normalized_sample_texts",
+                "best_normalized_sample_text_ids",
             ],
             [
                 "sample_texts",

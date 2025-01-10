@@ -4,7 +4,7 @@ from typing import Dict
 from copy import deepcopy
 
 from .estimator import Estimator
-from .common import sample_strategy_to_prefix, best_sample_ids
+from .common import sample_strategy_to_prefix, best_sample_ids, SAMPLE_SELECTION_STAT_KEYS
 
 
 class SemanticAveMaxprobAveSimilarity(Estimator):
@@ -14,7 +14,10 @@ class SemanticAveMaxprobAveSimilarity(Estimator):
         exp: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        super().__init__(
+            ["sample_sentence_similarity", "sample_log_probs"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.exp = exp
         self.sample_strategy = sample_strategy
@@ -73,7 +76,10 @@ class SemanticEnrichedMaxprobAveDissimilarity(Estimator):
         exp: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_log_probs"], "sequence")
+        super().__init__(
+            ["sample_sentence_similarity", "sample_log_probs"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.exp = exp
         self.sample_strategy = sample_strategy
@@ -136,7 +142,10 @@ class SemanticAvePPLAveSimilarity(Estimator):
         exp: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
+        super().__init(
+            ["sample_sentence_similarity", "sample_log_likelihoods"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.exp = exp
         self.sample_strategy = sample_strategy
@@ -194,7 +203,10 @@ class SemanticEnrichedPPLAveDissimilarity(Estimator):
         exp: bool = False,  
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_log_likelihoods"], "sequence")
+        super().__init(
+            ["sample_sentence_similarity", "sample_log_likelihoods"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.exp = exp
         self.sample_strategy = sample_strategy
@@ -259,7 +271,7 @@ class SemanticAveTokenSARAveSimilarity(Estimator):
                 "sample_sentence_similarity",
                 "sample_log_likelihoods",
                 "sample_token_similarity",
-            ],
+            ] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence",
         )
         self.verbose = verbose
@@ -340,7 +352,7 @@ class SemanticEnrichedTokenSARAveDissimilarity(Estimator):
                 "sample_sentence_similarity",
                 "sample_log_likelihoods",
                 "sample_token_similarity",
-            ],
+            ] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence",
         )
         self.verbose = verbose
@@ -415,7 +427,10 @@ class SemanticAveMTEAveSimilarity(Estimator):
         verbose: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
+        super().__init(
+            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.sample_strategy = sample_strategy
 
@@ -464,7 +479,10 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
         verbose: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
+        super().__init(
+            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.sample_strategy = sample_strategy
 
@@ -513,7 +531,10 @@ class AveDissimilarity(Estimator):
         verbose: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init__(["sample_sentence_similarity", "sample_entropy"], "sequence")
+        super().__init(
+            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence"
+        )
         self.verbose = verbose
         self.sample_strategy = sample_strategy
 

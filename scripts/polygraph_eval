@@ -426,7 +426,7 @@ def get_ue_methods(args, model):
         estimator = estimator_class(**estimator_args.kwargs)
         # Additional estimator filtering only works correctly for sequence-level estimators
         if overwrite or ('sequence', str(estimator)) not in existing_estimators:
-            estimators.append(estimator_class(**estimator_args.kwargs))
+            estimators.append(estimator)
 
     return estimators
 

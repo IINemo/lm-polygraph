@@ -146,6 +146,10 @@ additional_estimators:
     class_name: AveMTE
     kwargs: {}
 
+  - module: lm_polygraph.estimators.semantic_average_ue_average_similarity
+    class_name: SemanticAveMaxprobAveSimilarity
+    kwargs: {}
+
 ignore_exceptions: false
 
 batch_size: 1
