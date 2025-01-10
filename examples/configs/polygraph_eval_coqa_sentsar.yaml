@@ -31,6 +31,7 @@ save_stats:
   - greedy_tokens
   - greedy_log_likelihoods
   - greedy_tokens_alternatives
+  - greedy_sentence_similarity
   - token_similarity
   - entropy
   - sample_tokens
@@ -43,7 +44,9 @@ save_stats:
   - sample_entropy
   - first_sample_texts
   - best_sample_texts
+  - best_sample_text_ids
   - best_normalized_sample_texts
+  - best_normalized_sample_texts_ids
 entropy_top_k: 50
 
 train_dataset: null
