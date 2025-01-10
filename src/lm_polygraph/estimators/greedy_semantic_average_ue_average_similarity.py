@@ -38,11 +38,11 @@ class GreedySemanticAveMaxprobAveSimilarity(Estimator):
 
             # Compute row-wise average similarity, excluding self-similarity
             # Diagonal contains self-similarities
-            ave_similarity = np.mean(greedy_sentence_similarity)
+            avg_similarity = np.mean(greedy_sentence_similarity)
 
             # Enrich each metric by scaling it by 1/row_average
-            if ave_similarity == 0:
-                ave_similarity = 1e-10  # Avoid division by zero
+            if avg_similarity == 0:
+                avg_similarity = 1e-10  # Avoid division by zero
 
             enriched_metric = prob * (1 / avg_similarity)
             enriched_metrics.append(enriched_metric)
@@ -62,9 +62,9 @@ class GreedySemanticEnrichedMaxprobAveDissimilarity(Estimator):
 
     def __str__(self):
         if self.exp:
-            return "GreedySemanticAveMaxprobAveDissimilarityexp"
+            return "GreedySemanticEnrichedMaxprobAveDissimilarityexp"
         else:
-            return "GreedySemanticAveMaxprobAveDissimilarity"
+            return "GreedySemanticEnrichedMaxprobAveDissimilarity"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
@@ -81,7 +81,7 @@ class GreedySemanticEnrichedMaxprobAveDissimilarity(Estimator):
 
             # Compute row-wise average similarity, excluding self-similarity
             # Diagonal contains self-similarities
-            ave_dissimilarity = np.mean(1 - greedy_sentence_similarity)
+            avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
 
             enriched_metric = prob * avg_dissimilarity
             enriched_metrics.append(enriched_metric)
@@ -144,9 +144,9 @@ class GreedySemanticEnrichedPPLAveDissimilarity(Estimator):
 
     def __str__(self):
         if self.exp:
-            return "GreedySemanticAvePPLAveDissimilarityexp"
+            return "GreedySemanticEnrichedPPLAveDissimilarityexp"
         else:
-            return "GreedySemanticAvePPLAveDissimilarity"
+            return "GreedySemanticEnrichedPPLAveDissimilarity"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_greedy_log_likelihoods = stats["greedy_log_likelihoods"]
@@ -213,7 +213,7 @@ class GreedySemanticAveTokenSARAveSimilarity(Estimator):
             R_t = 1 - token_similarity
             R_t_norm = R_t / R_t.sum()
             E_t = -log_likelihoods * R_t_norm
-            tokenSAR.append(E_t.sum())
+            tokenSAR = E_t.sum()
 
             if self.exp:
                 tokenSAR = -np.exp(-np.array(tokenSAR))
@@ -249,9 +249,9 @@ class GreedySemanticEnrichedTokenSARAveDissimilarity(Estimator):
 
     def __str__(self):
         if self.exp:
-            return "GreedySemanticAveTokenSARAveDissimilarityexp"
+            return "GreedySemanticEnrichedTokenSARAveDissimilarityexp"
         else:
-            return "GreedySemanticAveTokenSARAveDissimilarity"
+            return "GreedySemanticEnrichedTokenSARAveDissimilarity"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_greedy_log_likelihoods = stats["greedy_log_likelihoods"]
@@ -273,7 +273,7 @@ class GreedySemanticEnrichedTokenSARAveDissimilarity(Estimator):
             R_t = 1 - token_similarity
             R_t_norm = R_t / R_t.sum()
             E_t = -log_likelihoods * R_t_norm
-            tokenSAR.append(E_t.sum())
+            tokenSAR = E_t.sum()
 
             if self.exp:
                 tokenSAR = -np.exp(-np.array(tokenSAR))
@@ -313,8 +313,9 @@ class GreedySemanticAveMTEAveSimilarity(Estimator):
             # Enrich each PPL independently by scaling with 1/row_average
             if avg_similarity == 0:
                 avg_similarity = 1e-10  # Avoid division by zero
-
-            enriched_value = greedy_entropy * (1 / avg_similarity)
+            
+            entropy = np.mean(greedy_entropy)
+            enriched_value = entropy * (1 / avg_similarity)
             enriched_entropy.append(enriched_value)
 
         return np.array(enriched_entropy)
@@ -342,8 +343,9 @@ class GreedySemanticEnrichedMTEAveDissimilarity(Estimator):
         ):
             #  Compute row-wise average similarity, excluding self-similarity
             avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
-
-            enriched_value = greedy_entropy * avg_dissimilarity
+            
+            entropy = np.mean(greedy_entropy)
+            enriched_value = entropy * avg_dissimilarity
             enriched_entropy.append(enriched_value)
 
         return np.array(enriched_entropy)
