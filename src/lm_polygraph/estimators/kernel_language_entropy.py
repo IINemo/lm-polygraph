@@ -102,7 +102,5 @@ class KernelLanguageEntropy(Estimator):
         )
         weighted_graph = stats["semantic_matrix_entail"] + 0.5 * semantic_matrix_neutral
         laplacian = laplacian_matrix(weighted_graph)
-        heat_kernels = heat_kernel(
-            laplacian, self.t, self.normalize, self.scale, self.jitter
-        )
-        return [vn_entropy(heat_kernel) for heat_kernel in heat_kernels]
+        heat_kernels = heat_kernel(laplacian, self.t)
+        return [vn_entropy(heat_kernel, self.normalize, self.scale, self.jitter) for heat_kernel in heat_kernels]
