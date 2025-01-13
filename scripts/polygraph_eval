@@ -207,6 +207,7 @@ def main(args):
                 language=getattr(args, 'language', 'en'),
                 save_stats=getattr(args, 'save_stats', []),
                 entropy_top_k=getattr(args, 'entropy_top_k', None),
+                save_path=save_path + f"/ue_manager_seed{seed}",
             )
         else:
             man = UEManager.load(
@@ -228,7 +229,6 @@ def main(args):
                 language=getattr(args, 'language', 'en'),
                 save_stats=getattr(args, 'save_stats', []),
                 entropy_top_k=getattr(args, 'entropy_top_k', None),
-                save_path=save_path + f"/ue_manager_seed{seed}",
             )
 
         man()

@@ -698,8 +698,6 @@ class UEManager:
         Parameters:
             save_path (str): Path to file to save benchmark results to.
         """
-        if len(self.metrics) == 0:
-            raise Exception("Nothing to save. Consider calling manager() first.")
         if self.save_path is None:
             raise Exception("No save path provided.")
 
