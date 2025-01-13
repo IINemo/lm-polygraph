@@ -18,7 +18,9 @@ class BasePromptCalculator(StatCalculator):
         prompt: str,
         expected: str,
         method: str,
+        input_text_dependency: str = "input_texts",
         sample_text_dependency: Optional[str] = None,
+        generation_text_dependency: str = "greedy_texts",
     ):
         """
         Parameters:
@@ -36,9 +38,9 @@ class BasePromptCalculator(StatCalculator):
         self.method = method
         self.prompt = prompt
         self.expected = expected
-        self.input_text_dependency = "input_texts"
+        self.input_text_dependency = input_text_dependency
         self.sample_text_dependency = sample_text_dependency
-        self.generation_text_dependency = "greedy_texts"
+        self.generation_text_dependency = generation_text_dependency
 
     def __call__(
         self,
@@ -159,4 +161,7 @@ class ClaimPromptCalculator(BasePromptCalculator):
             "Is the possible answer True or False? The possible answer is: ",
             "True",
             "p_true_claim",
+            input_text_dependency="claim_input_texts_concatenated",
+            sample_text_dependency=None,
+            generation_text_dependency="claim_texts_concatenated",
         )

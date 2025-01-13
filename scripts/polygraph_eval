@@ -137,9 +137,10 @@ def get_ue_metrics(args):
 def get_stat_calculator_names(config):
     result_stat_calculators = dict()
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
+    language = getattr(config, "language", "en")
     
     if "auto" in config.stat_calculators:
-        scs = register_default_stat_calculators(model_type)
+        scs = register_default_stat_calculators(model_type, language)
         for sc in scs:
             result_stat_calculators[sc.name] = sc
 

@@ -1,0 +1,4 @@
+estimators:
+  - name: LexicalSimilarity
+    cfg:
+      metric: "rouge1"

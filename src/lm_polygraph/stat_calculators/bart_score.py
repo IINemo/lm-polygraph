@@ -1,15 +1,15 @@
 # %%
+import logging
 import traceback
 from typing import List, Dict, Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn
 from transformers import BartTokenizer, BartForConditionalGeneration
-
 from .stat_calculator import StatCalculator
-
 from lm_polygraph.utils.model import WhiteboxModel
+
+log = logging.getLogger(__name__)
 
 
 class BartScoreCalculator(StatCalculator):
@@ -99,8 +99,8 @@ class BartScoreCalculator(StatCalculator):
 
             except RuntimeError:
                 traceback.print_exc()
-                print(f"source: {src_list}")
-                print(f"target: {tgt_list}")
+                log.error(f"source: {src_list}")
+                log.error(f"target: {tgt_list}")
                 exit(0)
         return score_list
 
@@ -138,7 +138,7 @@ class BartScoreCalculator(StatCalculator):
 
         tgt_list = ["That's stupid.", "What's the problem?", "He is trustworthy."]
 
-        print(self.score(src_list, tgt_list, batch_size))
+        log.info(self.score(src_list, tgt_list, batch_size))
 
     def __call__(
         self,

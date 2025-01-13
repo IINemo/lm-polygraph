@@ -141,18 +141,16 @@ class UEManager:
             model (Model): Model to run benchmark on. Can be either lm_polygraph.WhiteboxModel or
                 lm_polygraph.BlackboxModel
             estimators (List[Estimator]): List of estimators to evaluate at benchmark.
+            builder_env_stat_calc (BuilderEnvironmentStatCalculator): Environment seen by all stat calculators when
+                they are built in polygraph_eval script.
+            available_stat_calculators (List[StatCalculatorContainer]): List of stats calculators to use.
+                Can be initialized automatically with `register_default_stat_calculators`.
             generation_metrics (List[GenerationMetrics]): List of methods to use to calculate ground-truth uncertainty.
             ue_metrics (List[UEMetric]): List of methods to measure correlation between ground-truth uncertainties from
                 `generation_metrics` and uncertainty estimators in `estimators`.
             processors (List[Processor]): List of processors to apply after each batch.
-            train_data (Optional[Dataset]): Dataset to train density-based estimators on. Can be set to None, if
-                no density-based method is used. Default: None.
             ignore_exceptions (bool): If true, exceptions on a new batch will be printed to stderr and
                 the batch will be skipped. Useful to skip CUDA OOM errors on large datasets. Default: True.
-            deberta_batch_size (int): Batch size for DeBERTa model used in some estimators. Default: 10.
-            deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
-                'cpu' otherwise. Default: None.
-            language (str): Language to test in claim-level benchmark, one of 'en', 'zh', 'ar', 'ru'. Default: 'en'.
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """

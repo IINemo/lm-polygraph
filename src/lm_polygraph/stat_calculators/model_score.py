@@ -1,12 +1,13 @@
 import torch
+import logging
 import traceback
 import numpy as np
-
 from torch.nn.utils.rnn import pad_sequence
 from typing import List, Dict, Tuple
-
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
+
+log = logging.getLogger(__name__)
 
 
 def _batch_tokens(tokens_list: List[List[int]], model: WhiteboxModel):
@@ -75,8 +76,8 @@ class ModelScoreCalculator(StatCalculator):
                             )
             except RuntimeError:
                 traceback.print_exc()
-                print(f"source: {src_list}")
-                print(f"target: {tgt_list}")
+                log.error(f"source: {src_list}")
+                log.error(f"target: {tgt_list}")
                 exit(0)
         return score_list
 

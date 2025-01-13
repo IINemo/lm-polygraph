@@ -1,4 +1,5 @@
 import re
+import logging
 
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
@@ -10,6 +11,8 @@ from .claim_level_prompts import CLAIM_EXTRACTION_PROMPTS, MATCHING_PROMPTS
 
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
+
+log = logging.getLogger("lm_polygraph")
 
 
 @dataclass
@@ -37,6 +40,7 @@ class ClaimsExtractor(StatCalculator):
         n_threads: int = 1,
     ):
         super().__init__()
+        log.info(f"Initializing ClaimsExtractor with language={language}")
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
