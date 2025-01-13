@@ -260,6 +260,8 @@ class UEManager:
         cache_path=os.path.expanduser("~") + "/.cache",
         save_stats: List[str] = [],
         entropy_top_k: Optional[int] = None,
+        state: str = 'init',
+        save_path: Optional[str] = None,
     ):
         """
         Parameters:
@@ -315,6 +317,8 @@ class UEManager:
         self.deberta_batch_size = deberta_batch_size
         self.deberta_device = deberta_device
         self.language = language
+        self.state = state
+        self.save_path = save_path
 
 
     def prepare_calculators(self):
@@ -508,10 +512,16 @@ class UEManager:
             torch.cuda.empty_cache()
             gc.collect()
 
+        self.state = 'post_inference'
+        self.save()
+
         self.eval_ue()
+        self.state = 'post_eval'
 
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)
+
+        self.save()
 
         return self.metrics
 
@@ -680,7 +690,7 @@ class UEManager:
 
         return result_train_stat
 
-    def save(self, save_path: str):
+    def save(self):
         """
         Saves the run results in the provided path. Will raise exception, if no results are calculated yet.
         To load the saved manager, see UEManager.load().
@@ -690,14 +700,18 @@ class UEManager:
         """
         if len(self.metrics) == 0:
             raise Exception("Nothing to save. Consider calling manager() first.")
+        if self.save_path is None:
+            raise Exception("No save path provided.")
+
         torch.save(
             {
                 "metrics": self.metrics,
                 "gen_metrics": self.gen_metrics,
                 "estimations": self.estimations,
                 "stats": self.stats,
+                "state": self.state,
             },
-            save_path,
+            self.save_path,
         )
 
     @staticmethod
@@ -723,4 +737,6 @@ class UEManager:
         man.gen_metrics = res_dict.get("gen_metrics", None)
         man.estimations = res_dict.get("estimations", None)
         man.stats = res_dict.get("stats", None)
+        man.state = res_dict.get("state", 'init')
+
         return man
