@@ -99,7 +99,10 @@ class SampledTokenSAR(Estimator):
             ):
                 log_likelihoods = np.array(log_likelihoods)
                 R_t = 1 - token_similarity
-                R_t_norm = R_t / R_t.sum()
+                if R_t.sum() == 0:
+                    R_t_norm = np.zeros_like(R_t)
+                else:
+                    R_t_norm = R_t / R_t.sum()
                 E_t = -log_likelihoods * R_t_norm
                 tokenSAR.append(E_t.sum())
             result.append(tokenSAR[best_id])

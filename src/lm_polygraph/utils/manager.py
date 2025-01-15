@@ -540,6 +540,7 @@ class UEManager:
                             f"Got different number of metrics for {e_name} and {gen_name}: "
                             f"{len(estimator_values)} and {len(generation_metric)}"
                         )
+
                     # TODO: Report how many nans!
                     # This is important to know for a user
                     ue, metric = _delete_nans(estimator_values, generation_metric)

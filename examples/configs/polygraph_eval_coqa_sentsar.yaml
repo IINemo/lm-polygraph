@@ -149,6 +149,10 @@ additional_estimators:
     class_name: SemanticAveMaxprobAveSimilarity
     kwargs: {}
 
+  - module: lm_polygraph.estimators.greedy_semantic_average_ue_average_similarity
+    class_name: GreedySemanticAveMaxprobAveSimilarity
+    kwargs: {}
+
 ignore_exceptions: false
 
 batch_size: 1

@@ -142,7 +142,7 @@ class SemanticAvePPLAveSimilarity(Estimator):
         exp: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init(
+        super().__init__(
             ["sample_sentence_similarity", "sample_log_likelihoods"] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence"
         )
@@ -203,7 +203,7 @@ class SemanticEnrichedPPLAveDissimilarity(Estimator):
         exp: bool = False,  
         sample_strategy: str = "first"
     ):
-        super().__init(
+        super().__init__(
             ["sample_sentence_similarity", "sample_log_likelihoods"] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence"
         )
@@ -308,7 +308,10 @@ class SemanticAveTokenSARAveSimilarity(Estimator):
             ):
                 log_likelihoods = np.array(log_likelihoods)
                 R_t = 1 - token_similarity
-                R_t_norm = R_t / R_t.sum()
+                if R_t.sum() == 0:
+                    R_t_norm = np.zeros_like(R_t)
+                else:
+                    R_t_norm = R_t / R_t.sum()
                 E_t = -log_likelihoods * R_t_norm
                 tokenSAR.append(E_t.sum())
 
@@ -389,7 +392,10 @@ class SemanticEnrichedTokenSARAveDissimilarity(Estimator):
             ):
                 log_likelihoods = np.array(log_likelihoods)
                 R_t = 1 - token_similarity
-                R_t_norm = R_t / R_t.sum()
+                if R_t.sum() == 0:
+                    R_t_norm = np.zeros_like(R_t)
+                else:
+                    R_t_norm = R_t / R_t.sum()
                 E_t = -log_likelihoods * R_t_norm
                 tokenSAR.append(E_t.sum())
 
@@ -427,7 +433,7 @@ class SemanticAveMTEAveSimilarity(Estimator):
         verbose: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init(
+        super().__init__(
             ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence"
         )
@@ -479,7 +485,7 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
         verbose: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init(
+        super().__init__(
             ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence"
         )
@@ -531,7 +537,7 @@ class AveDissimilarity(Estimator):
         verbose: bool = False,
         sample_strategy: str = "first"
     ):
-        super().__init(
+        super().__init__(
             ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
             "sequence"
         )
