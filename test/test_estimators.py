@@ -212,6 +212,6 @@ def test_fisher_rao(model):
 
 
 def focus(model):
-     estimator = Focus()
-     ue = estimate_uncertainty(model, estimator, INPUT)
-     assert isinstance(ue.uncertainty, float)
+    estimator = Focus()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)

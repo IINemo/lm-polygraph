@@ -80,8 +80,8 @@ class GreedyProbsCalculator(StatCalculator):
             "tokenizer",
         ], []
 
-    def __init__(self, 
-                 output_attentions: bool = True, 
+    def __init__(self,
+                 output_attentions: bool = True,
                  n_alternatives: int = 10):
         super().__init__()
         self.output_attentions = output_attentions
@@ -174,8 +174,6 @@ class GreedyProbsCalculator(StatCalculator):
                     key=lambda x: x[0] == cut_sequences[-1][j],
                     reverse=True,
                 )
-        
-            
 
         ll = []
         for i in range(len(texts)):
