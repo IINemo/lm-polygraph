@@ -19,7 +19,7 @@ class GreedySimilarityCalculator(StatCalculator):
             [
                 "greedy_sentence_similarity",
             ],
-            ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens", "greedy_texts"],
+            ["input_texts", "sample_texts", "greedy_texts"],
         )
 
         self.crossencoder_setup = False
@@ -44,16 +44,13 @@ class GreedySimilarityCalculator(StatCalculator):
             self._setup(device=device)
             self.crossencoder_setup = True
 
-        batch_sample_tokens = dependencies["sample_tokens"]
         batch_texts = dependencies["sample_texts"]
         deberta_batch_size = (
             self.nli_model.batch_size
         )
         batch_input_texts = dependencies["input_texts"]
-        batch_greedy_tokens = dependencies["greedy_tokens"]
         batch_greedy_texts = dependencies["greedy_texts"]
 
-        special_tokens = list(model.tokenizer.added_tokens_decoder.keys())
 
         batch_pairs = []
         batch_invs = []

@@ -106,3 +106,5 @@ from .greedy_semantic_average_ue_average_similarity import (
     GreedySemanticEnrichedMTEAveDissimilarity,
 )
 from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE
+from .sum_semantic_entropies import SumSemanticMaxprob, SumSemanticPPL
+from .greedy_sum_semantic_entropies import GreedySumSemanticMaxprob, GreedySumSemanticPPL

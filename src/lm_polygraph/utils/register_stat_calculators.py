@@ -75,6 +75,8 @@ def register_stat_calculators(
         _register(EnsembleTokenLevelDataCalculator())
         _register(CrossEncoderSimilarityMatrixCalculator(nli_model=nli_model))
         _register(GreedySimilarityCalculator(nli_model=nli_model))
+        _register(RougeLSemanticMatrixCalculator())
+        _register(GreedyRougeLSemanticMatrixCalculator())
         _register(GreedyAlternativesNLICalculator(nli_model=nli_model))
         _register(SampleAlternativesNLICalculator(nli_model=nli_model))
         _register(GreedyAlternativesFactPrefNLICalculator(nli_model=nli_model))

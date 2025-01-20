@@ -25,3 +25,6 @@ from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
 from .semantic_classes import SemanticClassesCalculator
 from .greedy_similarity import GreedySimilarityCalculator
+from .greedy_semantic_matrix import GreedySemanticMatrixCalculator
+from .rouge_matrix import RougeLSemanticMatrixCalculator
+from .greedy_rouge_matrix import GreedyRougeLSemanticMatrixCalculator
