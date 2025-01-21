@@ -7,6 +7,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 import torch.nn as nn
 import torch
+from tqdm import tqdm
 
 
 class AlignMatrixCalculator(StatCalculator):
@@ -64,7 +65,7 @@ class AlignMatrixCalculator(StatCalculator):
 
         E = []
 
-        for i, pairs in enumerate(batch_pairs):
+        for i, pairs in tqdm(enumerate(batch_pairs)):
             first_texts, second_texts = zip(*pairs)
             sim_mat = np.array(self.scorer.score(claims=first_texts, contexts=second_texts))
 

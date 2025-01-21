@@ -7,6 +7,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 import torch.nn as nn
 import torch
+from tqdm import tqdm
 
 
 class GreedyAlignMatrixCalculator(StatCalculator):
@@ -48,7 +49,7 @@ class GreedyAlignMatrixCalculator(StatCalculator):
         E_b = []
         E = []
 
-        for i, pairs in enumerate(batch_pairs):
+        for i, pairs in tqdm(enumerate(batch_pairs)):
             sim_mat_f = []
             sim_mat_b = []
             first_texts, second_texts = zip(*pairs)

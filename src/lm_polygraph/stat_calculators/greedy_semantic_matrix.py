@@ -7,6 +7,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 import torch.nn as nn
 import torch
+from tqdm import tqdm
 
 softmax = nn.Softmax(dim=1)
 
@@ -65,7 +66,7 @@ class GreedySemanticMatrixCalculator(StatCalculator):
             probs_f = []
             probs_b = []
 
-            for first_texts, second_texts in dl:
+            for first_texts, second_texts in tqdm(dl):
                 batch = list(zip(first_texts, second_texts))
                 encoded = tokenizer.batch_encode_plus(
                     batch, padding=True, return_tensors="pt"

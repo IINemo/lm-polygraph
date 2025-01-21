@@ -7,6 +7,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 import torch.nn as nn
 import torch
+from tqdm import tqdm
 
 softmax = nn.Softmax(dim=1)
 
@@ -82,7 +83,7 @@ class SemanticMatrixCalculator(StatCalculator):
         C = []
         P = []
 
-        for i, pairs in enumerate(batch_pairs):
+        for i, pairs in tqdm(enumerate(batch_pairs)):
             dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
             probs = []
             for first_texts, second_texts in dl:
