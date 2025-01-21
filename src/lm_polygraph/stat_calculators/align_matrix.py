@@ -58,6 +58,7 @@ class AlignMatrixCalculator(StatCalculator):
         for texts in batch_texts:
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
+            texts = [text if text.strip() != "" else "<empty>" for text in texts]
             unique_texts, inv = np.unique(texts, return_inverse=True)
             batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
             batch_invs.append(inv)
