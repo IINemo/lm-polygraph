@@ -28,3 +28,5 @@ from .greedy_similarity import GreedySimilarityCalculator
 from .greedy_semantic_matrix import GreedySemanticMatrixCalculator
 from .rouge_matrix import RougeLSemanticMatrixCalculator
 from .greedy_rouge_matrix import GreedyRougeLSemanticMatrixCalculator
+from .align_matrix import AlignMatrixCalculator
+from .greedy_align_matrix import GreedyAlignMatrixCalculator

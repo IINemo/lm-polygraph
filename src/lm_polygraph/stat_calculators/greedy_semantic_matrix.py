@@ -19,8 +19,9 @@ class GreedySemanticMatrixCalculator(StatCalculator):
     def __init__(self, nli_model):
         super().__init__(
             [
-                "greedy_semantic_matrix_entail",
-                "greedy_semantic_matrix_contra",
+                "greedy_semantic_matrix_forward",
+                "greedy_semantic_matrix_backward",
+                "greedy_semantic_matrix",
             ],
             ["greedy_texts", "sample_texts"],
         )
@@ -51,38 +52,52 @@ class GreedySemanticMatrixCalculator(StatCalculator):
 
         device = deberta.device
         ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
-        contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
 
         softmax = nn.Softmax(dim=1)
         tokenizer = deberta.deberta_tokenizer
 
+        E_f = []
+        E_b = []
         E = []
-        C = []
 
         for i, pairs in enumerate(batch_pairs):
             dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
-            probs = []
+            probs_f = []
+            probs_b = []
+
             for first_texts, second_texts in dl:
                 batch = list(zip(first_texts, second_texts))
                 encoded = tokenizer.batch_encode_plus(
                     batch, padding=True, return_tensors="pt"
                 ).to(device)
                 logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs.append(softmax(logits).cpu().detach())
-            probs = torch.cat(probs, dim=0)
+                probs_f.append(softmax(logits).cpu().detach())
+
+                batch = list(zip(second_texts, first_texts))
+                encoded = tokenizer.batch_encode_plus(
+                    batch, padding=True, return_tensors="pt"
+                ).to(device)
+                logits = deberta.deberta(**encoded).logits.detach().to(device)
+                probs_b.append(softmax(logits).cpu().detach())
+
+            probs_f = torch.cat(probs_f, dim=0)
+            probs_b = torch.cat(probs_b, dim=0)
 
             inv = batch_invs[i]
 
-            entail_probs = probs[:, ent_id]
-            contra_probs = probs[:, contra_id]
+            entail_probs_f = probs_f[:, ent_id]
+            entail_probs_b = probs_b[:, ent_id]
 
-            E.append(entail_probs[inv].numpy())
-            C.append(contra_probs[inv].numpy())
+            E_f.append(entail_probs_f[inv].numpy())
+            E_b.append(entail_probs_b[inv].numpy())
+            E.append((entail_probs_f[inv].numpy() + entail_probs_b[inv].numpy()) / 2)
 
+        E_f = np.stack(E_f)
+        E_b = np.stack(E_b)
         E = np.stack(E)
-        C = np.stack(C)
 
         return {
-            "greedy_semantic_matrix_entail": E,
-            "greedy_semantic_matrix_contra": C,
+            "greedy_semantic_matrix_forward": E_f,
+            "greedy_semantic_matrix_backward": E_b,
+            "greedy_semantic_matrix": E,
         }

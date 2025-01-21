@@ -7,17 +7,23 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 import torch.nn as nn
 import torch
-from rouge_score import rouge_scorer
 
-class GreedyRougeLSemanticMatrixCalculator(StatCalculator):
-    def __init__(self):
+
+class GreedyAlignMatrixCalculator(StatCalculator):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    """
+
+    def __init__(self, scorer):
         super().__init__(
             [
-                "greedy_rouge_semantic_matrix",
+                "greedy_align_semantic_matrix_forward",
+                "greedy_align_semantic_matrix_backward",
+                "greedy_align_semantic_matrix",
             ],
             ["greedy_texts", "sample_texts"],
         )
-        self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
+        self.scorer = scorer
 
     def __call__(
         self,
@@ -38,21 +44,30 @@ class GreedyRougeLSemanticMatrixCalculator(StatCalculator):
             batch_pairs.append(list(itertools.product([greedy_text], unique_texts)))
             batch_invs.append(inv)
 
-
+        E_f = []
+        E_b = []
         E = []
 
         for i, pairs in enumerate(batch_pairs):
-            sim_mat = []
-            for first_texts, second_texts in pairs:
-                sim_mat.append(self.scorer.score(first_texts, second_texts)['rougeL'].fmeasure)
-
-            sim_mat = np.array(sim_mat)
+            sim_mat_f = []
+            sim_mat_b = []
+            first_texts, second_texts = zip(*pairs)
+            sim_mat_f = np.array(self.scorer.score(claims=first_texts, contexts=second_texts))
+            sim_mat_b = np.array(self.scorer.score(claims=second_texts, contexts=first_texts))
 
             inv = batch_invs[i]
-            E.append(sim_mat[inv])
 
+            E_f.append(sim_mat_f[inv])
+            E_b.append(sim_mat_b[inv])
+            E.append((sim_mat_f[inv] + sim_mat_b[inv]) / 2)
+
+
+        E_f = np.stack(E_f)
+        E_b = np.stack(E_b)
         E = np.stack(E)
 
         return {
-            "greedy_rouge_semantic_matrix": E,
+            "greedy_align_semantic_matrix_forward": E_f,
+            "greedy_align_semantic_matrix_backward": E_b,
+            "greedy_align_semantic_matrix": E,
         }

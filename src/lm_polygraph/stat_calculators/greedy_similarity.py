@@ -17,6 +17,8 @@ class GreedySimilarityCalculator(StatCalculator):
     def __init__(self, nli_model):
         super().__init__(
             [
+                "greedy_sentence_similarity_forward",
+                "greedy_sentence_similarity_backward",
                 "greedy_sentence_similarity",
             ],
             ["input_texts", "sample_texts", "greedy_texts"],
@@ -62,16 +64,26 @@ class GreedySimilarityCalculator(StatCalculator):
             batch_pairs.append(list(itertools.product([greedy_text], unique_texts)))
             batch_invs.append(inv)
 
+        sim_arrays_f = []
+        sim_arrays_b = []
         sim_arrays = []
         for i, pairs in tqdm(enumerate(batch_pairs)):
-            sim_scores = self.crossencoder.predict(pairs, batch_size=deberta_batch_size)
+            pairs_b = [(b, a) for a, b in pairs]
+            sim_scores_f = self.crossencoder.predict(pairs, batch_size=deberta_batch_size)
+            sim_scores_b = self.crossencoder.predict(pairs_b, batch_size=deberta_batch_size)
 
             inv = batch_invs[i]
 
-            sim_arrays.append(sim_scores[inv])
+            sim_arrays_f.append(sim_scores_f[inv])
+            sim_arrays_b.append(sim_scores_b[inv])
+            sim_arrays.append((sim_scores_f[inv] + sim_scores_b[inv]) / 2)
 
+        sim_arrays_f = np.stack(sim_arrays_f)
+        sim_arrays_b = np.stack(sim_arrays_b)
         sim_arrays = np.stack(sim_arrays)
 
         return {
+            "greedy_sentence_similarity_forward": sim_arrays_f,
+            "greedy_sentence_similarity_backward": sim_arrays_b,
             "greedy_sentence_similarity": sim_arrays,
         }
