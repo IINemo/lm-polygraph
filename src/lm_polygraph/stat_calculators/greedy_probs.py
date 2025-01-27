@@ -80,9 +80,11 @@ class GreedyProbsCalculator(StatCalculator):
             "tokenizer",
         ], []
 
-    def __init__(self,
-                 output_attentions: bool = True,
-                 n_alternatives: int = 10):
+    def __init__(
+            self, 
+            output_attentions: bool = True, 
+            n_alternatives: int = 10
+            ):
         super().__init__()
         self.output_attentions = output_attentions
         self.n_alternatives = n_alternatives

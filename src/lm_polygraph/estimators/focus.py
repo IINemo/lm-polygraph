@@ -17,7 +17,6 @@ import random
 from transformers import AutoTokenizer
 
 import spacy
-nlp = spacy.load('en_core_web_sm')
 
 
 def calcu_idf(tokenizer_path, path):
@@ -94,6 +93,7 @@ class Focus(Estimator):
         focus_ue = []
         for greedy_log_prob, attention_weight, greedy_token, greedy_text in \
                 zip(greedy_log_probs, attention_weights, greedy_tokens, greedy_texts):
+            nlp = spacy.load('en_core_web_sm')
             sentence = nlp(greedy_text)
             decodings = tokenizer.batch_decode(greedy_token,
                                                skip_special_tokens=True)
@@ -201,6 +201,7 @@ class FocusClaim(Estimator):
         for greedy_log_prob, attention_weight, greedy_token, greedy_text, claims_i in zip(greedy_log_probs, attention_weights,
                                                                                           greedy_tokens, greedy_texts, claims):
 
+            nlp = spacy.load('en_core_web_sm')
             sentence = nlp(greedy_text)
             decodings = tokenizer.batch_decode(greedy_token, skip_special_tokens=True)
             span_index = 0
@@ -244,4 +245,3 @@ class FocusClaim(Estimator):
                 claim_p_i = focus[tokens]
                 focus_ue[-1].append(claim_p_i.mean())
         return focus_ue
-    
