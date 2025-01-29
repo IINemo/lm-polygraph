@@ -104,7 +104,13 @@ from .greedy_semantic_average_ue_average_similarity import (
     GreedySemanticEnrichedTokenSARAveDissimilarity ,
     GreedySemanticEnrichedMaxprobAveDissimilarity,
     GreedySemanticEnrichedMTEAveDissimilarity,
+    GreedyAveDissimilarity
 )
 from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE
-from .sum_semantic_entropies import SumSemanticMaxprob, SumSemanticPPL
-from .greedy_sum_semantic_entropies import GreedySumSemanticMaxprob, GreedySumSemanticPPL
+
+from .sum_semantic_entropies import SumSemanticMaxprob, SumSemanticPPL, SumSemanticMTE, GreedySumSemanticMaxprob, GreedySumSemanticPPL, GreedySumSemanticMTE
+from .adj_sum_semantic_entropies import AdjustedSumSemanticMaxprob, AdjustedSumSemanticPPL, AdjustedSumSemanticMTE, GreedyAdjustedSumSemanticMaxprob, GreedyAdjustedSumSemanticPPL, GreedyAdjustedSumSemanticMTE
+
+from .prob_cocoa import ProbCocoaMaxprob, ProbCocoaPPL, GreedyProbCocoaMaxprob, GreedyProbCocoaPPL
+
+from .supervised_sum_semantic_entropies import SupSumSemanticMaxprob, SupSumSemanticPPL, SupSumSemanticMTE, GreedySupSumSemanticMaxprob, GreedySupSumSemanticPPL, GreedySupSumSemanticMTE

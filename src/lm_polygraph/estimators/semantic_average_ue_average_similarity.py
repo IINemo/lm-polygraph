@@ -530,7 +530,6 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
         return np.array(best_elements)
 
 
-
 class AveDissimilarity(Estimator):
     def __init__(
         self,

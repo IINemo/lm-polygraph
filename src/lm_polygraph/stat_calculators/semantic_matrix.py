@@ -101,17 +101,17 @@ class SemanticMatrixCalculator(StatCalculator):
 
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
-            unique_E = entail_probs.view(unique_mat_shape).numpy()
-            unique_C = contra_probs.view(unique_mat_shape).numpy()
-            unique_P = class_preds.view(unique_mat_shape).numpy()
+            unique_E = entail_probs.view(unique_mat_shape)
+            unique_C = contra_probs.view(unique_mat_shape)
+            unique_P = class_preds.view(unique_mat_shape)
 
             inv = batch_invs[i]
 
             # Recover full matrices from unques by gathering along both axes
             # using inverse index
-            E.append(unique_E[inv, :][:, inv])
-            C.append(unique_C[inv, :][:, inv])
-            P.append(unique_P[inv, :][:, inv])
+            E.append(unique_E.cpu().numpy()[inv, :][:, inv])
+            C.append(unique_C.cpu().numpy()[inv, :][:, inv])
+            P.append(unique_P.cpu().numpy()[inv, :][:, inv])
 
         E = np.stack(E)
         C = np.stack(C)

@@ -7,7 +7,7 @@ from .estimator import Estimator
 from .common import sample_strategy_to_prefix, best_sample_ids, SAMPLE_SELECTION_STAT_KEYS
 
 
-class SumSemanticMaxprob(Estimator):
+class ProbCocoaMaxprob(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -21,7 +21,7 @@ class SumSemanticMaxprob(Estimator):
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        base = "SumSemanticMaxprob"
+        base = "ProbCocoaMaxprob"
         return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
@@ -37,14 +37,14 @@ class SumSemanticMaxprob(Estimator):
             sim = 1 - sample_sentence_similarity[best_id, :]
             sim[best_id] = 1
             avg_similarity = np.mean(sim)
-            mp = -np.sum(sample_log_probs[best_id])
-            res = mp + avg_similarity
+            mp = 1 - np.exp(np.sum(sample_log_probs[best_id]))
+            res = mp * avg_similarity
             enriched_metrics.append(res)
 
         return np.array(enriched_metrics)
 
 
-class SumSemanticPPL(Estimator):
+class ProbCocoaPPL(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -58,7 +58,7 @@ class SumSemanticPPL(Estimator):
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        base = "SumSemanticPPL"
+        base = "ProbCocoaPPL"
         return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
@@ -74,51 +74,14 @@ class SumSemanticPPL(Estimator):
             sim = 1 - sample_sentence_similarity[best_id, :]
             sim[best_id] = 1
             avg_similarity = np.mean(sim)
-            ppl = -np.mean(sample_log_likelihoods[best_id])
-            res = ppl + avg_similarity
+            ppl = 1 - np.exp(np.mean(sample_log_likelihoods[best_id]))
+            res = ppl * avg_similarity
             enriched_ppl.append(res)
 
         return np.array(enriched_ppl)
 
 
-class SumSemanticMTE(Estimator):
-    def __init__(
-        self,
-        verbose: bool = False,
-        sample_strategy: str = "first"
-    ):
-        super().__init__(
-            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
-        )
-        self.verbose = verbose
-        self.sample_strategy = sample_strategy
-
-    def __str__(self):
-        base = "SumSemanticMTE"
-        return sample_strategy_to_prefix(self.sample_strategy) + base
-
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        batch_entropies = stats["sample_entropy"]
-        batch_sample_sentence_similarity = stats["sample_sentence_similarity"]
-        sample_ids = best_sample_ids(self.sample_strategy, stats)
-
-        enriched_mte = []  
-
-        for best_id, sample_entropies, sample_sentence_similarity in zip(
-            sample_ids, batch_entropies, batch_sample_sentence_similarity
-        ):
-            sim = 1 - sample_sentence_similarity[best_id, :]
-            sim[best_id] = 1
-            avg_similarity = np.mean(sim)
-            mte = sample_entropies[best_id]
-            res = mte + avg_similarity
-            enriched_mte.append(res)
-
-        return np.array(enriched_mte)
-
-
-class GreedySumSemanticMaxprob(Estimator):
+class GreedyProbCocoaMaxprob(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -127,7 +90,7 @@ class GreedySumSemanticMaxprob(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return "GreedySumSemanticMaxprob"
+        return "GreedyProbCocoaMaxprob"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
@@ -138,18 +101,18 @@ class GreedySumSemanticMaxprob(Estimator):
             batch_lls, batch_greedy_sentence_similarity
         ):
             # Compute probabilities (negative log-probs)
-            prob = -greedy_ll
+            prob = 1 - np.exp(greedy_ll)
 
             # Compute row-wise average similarity, excluding self-similarity
             # Diagonal contains self-similarities
             avg_similarity = 1 - np.mean(greedy_sentence_similarity)
 
-            enriched_metrics.append(prob + avg_similarity)
+            enriched_metrics.append(prob * avg_similarity)
 
         return np.array(enriched_metrics)
 
 
-class GreedySumSemanticPPL(Estimator):
+class GreedyProbCocoaPPL(Estimator):
     def __init__(
         self,
         verbose: bool = False,
@@ -158,7 +121,7 @@ class GreedySumSemanticPPL(Estimator):
         self.verbose = verbose
 
     def __str__(self):
-        return "GreedySumSemanticPPL"
+        return "GreedyProbCocoaPPL"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_greedy_log_likelihoods = stats["greedy_log_likelihoods"]
@@ -170,44 +133,12 @@ class GreedySumSemanticPPL(Estimator):
             batch_greedy_log_likelihoods, batch_greedy_sentence_similarity
         ):
             # get PPL for each sample
-            ppl = -np.mean(greedy_log_likelihoods)
+            ppl = 1 - np.exp(np.mean(greedy_log_likelihoods))
 
             #  Compute row-wise average similarity, excluding self-similarity
             avg_similarity = 1 - np.mean(greedy_sentence_similarity)
 
-            enriched_ppl.append(ppl + avg_similarity)
+            enriched_ppl.append(ppl * avg_similarity)
 
 
         return np.array(enriched_ppl)
-
-
-class GreedySumSemanticMTE(Estimator):
-    def __init__(
-        self,
-        verbose: bool = False,
-    ):
-        super().__init__(["greedy_sentence_similarity", "entropy"], "sequence")
-        self.verbose = verbose
-
-    def __str__(self):
-        return "GreedySumSemanticMTE"
-
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        batch_greedy_entropies = stats["greedy_log_likelihoods"]
-        batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
-
-        enriched_mte = []  # To store enriched PPL for each sample
-
-        for greedy_entropies, greedy_sentence_similarity in zip(
-            batch_greedy_entropies, batch_greedy_sentence_similarity
-        ):
-            # get PPL for each sample
-            mte = np.mean(greedy_entropies)
-
-            #  Compute row-wise average similarity, excluding self-similarity
-            avg_similarity = 1 - np.mean(greedy_sentence_similarity)
-
-            enriched_mte.append(mte + avg_similarity)
-
-
-        return np.array(enriched_mte)

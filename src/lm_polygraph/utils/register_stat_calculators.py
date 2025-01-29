@@ -30,15 +30,16 @@ def register_stat_calculators(
     log.info("=" * 100)
     log.info("Loading NLI model...")
 
-    if language == "en":
-        nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
-    elif language in ["zh", "ar", "ru"]:
-        nli_model = MultilingualDeberta(
-            batch_size=deberta_batch_size,
-            device=deberta_device,
-        )
-    else:
-        raise Exception(f"Unsupported language: {language}")
+    #if language == "en":
+    #    nli_model = Deberta(batch_size=deberta_batch_size, device=deberta_device)
+    #elif language in ["zh", "ar", "ru"]:
+    #    nli_model = MultilingualDeberta(
+    #        batch_size=deberta_batch_size,
+    #        device=deberta_device,
+    #    )
+    #else:
+    #    raise Exception(f"Unsupported language: {language}")
+    nli_model = None
 
     log.info("=" * 100)
     log.info("Initializing stat calculators...")

@@ -355,3 +355,30 @@ class GreedySemanticEnrichedMTEAveDissimilarity(Estimator):
             enriched_entropy.append(enriched_value)
 
         return np.array(enriched_entropy)
+
+
+class GreedyAveDissimilarity(Estimator):
+    def __init__(
+        self,
+        verbose: bool = False,
+    ):
+        super().__init__(["greedy_sentence_similarity"], "sequence")
+        self.verbose = verbose
+
+    def __str__(self):
+        return "GreedyAveDissimilarity"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        batch_greedy_entropy = stats["entropy"]
+        batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
+
+        res = []
+
+        for greedy_entropy, greedy_sentence_similarity in zip(
+            batch_greedy_entropy, batch_greedy_sentence_similarity
+        ):
+            #  Compute row-wise average similarity, excluding self-similarity
+            avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
+            res.append(avg_dissimilarity)
+
+        return np.array(res)
