@@ -40,7 +40,7 @@ class ClaimsExtractor(StatCalculator):
         n_threads: int = 1,
     ):
         super().__init__()
-        log.info(f"Initializing ClaimsExtractor with language={language}")
+        log.info(f"Initializing ClaimsExtractor with language={language}, n_threads={n_threads}")
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
