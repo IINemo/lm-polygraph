@@ -550,6 +550,7 @@ class WhiteboxModel(Model):
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
         # Apply chat template if tokenizer has it
+        add_start_symbol = True
         if self.tokenizer.chat_template is not None:
             formatted_texts = []
             for chat in texts:
@@ -561,7 +562,9 @@ class WhiteboxModel(Model):
                 formatted_texts.append(formatted_chat)
             texts = formatted_texts
 
-        return self.tokenizer(texts, padding=True, return_tensors="pt")
+            add_start_symbol = False
+
+        return self.tokenizer(texts, padding=True, return_tensors="pt", add_special_tokens=add_start_symbol)
 
 
 def create_ensemble(
