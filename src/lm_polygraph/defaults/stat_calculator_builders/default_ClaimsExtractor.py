@@ -6,4 +6,8 @@ def load_stat_calculator(config, builder):
     if not hasattr(builder, "chat_model"):
         builder.chat_model = OpenAIChat(config.openai_model, config.cache_path)
 
-    return ClaimsExtractor(builder.chat_model, language=config.language)
+    return ClaimsExtractor(
+        builder.chat_model,
+        language=config.language,
+        n_threads=config.n_threads,
+    )
