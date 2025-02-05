@@ -13,10 +13,12 @@ from torch.nn import NLLLoss
 from datasets import load_dataset
 from collections import defaultdict
 import random
+import logging
 
 from transformers import AutoTokenizer
-
 import spacy
+
+log = logging.getLogger(__name__)
 
 
 def calcu_idf(tokenizer_path, path):
@@ -45,8 +47,6 @@ class Focus(Estimator):
         self,
         gamma: float = 0.9,
         p: float = 0.01,
-        reccurent: bool = False,
-        negative: bool = False,
         model_name: str = "meta-llama/Llama-3.2-1B",
         path: str = 'f"../../../focus_data/token_idf.pkl"'
     ):
@@ -69,13 +69,9 @@ class Focus(Estimator):
         self.start_token_idx = 999999
         self.p = p
         self.gamma = gamma
-        self.reccurent = reccurent
-        self.negative = negative
 
     def __str__(self):
-        rec = ", reccurent" if self.reccurent else ""
-        neg = ", negative" if self.negative else ""
-        return f"Focus (gamma={self.gamma}{rec}{neg})"
+        return f"Focus (gamma={self.gamma})"
 
     def entropy(self, p):
         p_torch = torch.tensor(p)
@@ -108,12 +104,10 @@ class Focus(Estimator):
                     if span.text not in self.NER_type and \
                             (span.ent_type_ in self.NER_type or span.pos_ in self.pos_tag):
                         kw_mask[token_index] = True
-            except:
-                print("Error with indexing")
-                print(decodings, sentence)
+            except Exception as e:
+                log.error(e, exc_info=True)
+                log.info(decodings, sentence)
                 pass
-
-            # kw_mask =  kw_mask.flatten()
 
             prob = np.exp(greedy_log_prob)
             mask = prob < self.p
@@ -126,32 +120,23 @@ class Focus(Estimator):
             prob = prob / np.sum(prob, axis=-1, keepdims=True)
             entropy = np.exp2(self.entropy(prob))
 
-            if self.negative:
-                ll = loss_fct(torch.log(torch.tensor(prob)+1e-10), torch.tensor(greedy_token))
-                hc = ll + entropy
-            else:
-                ll = np.log(np.array([prob[j, greedy_token[j]] for j in range(len(prob))]))
-                hc = ll + entropy
+            ll = loss_fct(torch.log(torch.tensor(prob)+1e-10), torch.tensor(greedy_token))
+            hc = ll + entropy
 
             if not kw_mask.sum():
                 focus_ue.append(hc.mean())
                 continue
             # w(i,j) estimation and penalty estimation for a new gallucination score
             weight = attention_weight[kw_mask] / (np.sum(attention_weight[kw_mask], axis=1, keepdims=True)+1e-6)
-
-            if self.reccurent:
-                token_focus = []
-                for i, token_weights in enumerate(weight):
-                    ue = hc[i]
-                    if len(token_focus):
-                        ue += self.gamma * (np.array(token_focus) * token_weights[:len(token_focus)]).sum()
-                    token_focus.append(ue)
-                focus_ue.append(np.mean(token_focus))
-
-            else:
-                penalty = self.gamma * (hc[None, :] * weight).sum(0)
-                focus = (hc + penalty).mean()
-                focus_ue.append(focus)
+            weight = np.zeros_like(attention_weight)
+            weight[kw_mask] = attention_weight[kw_mask] / (np.sum(attention_weight[kw_mask], axis=1, keepdims=True)+1e-6)
+            token_focus = []
+            for i, token_weights in enumerate(weight):
+                ue = hc[i]
+                if len(token_focus):
+                    ue += self.gamma * (np.array(token_focus) * token_weights[:len(token_focus)]).sum()
+                token_focus.append(ue)
+            focus_ue.append(np.mean(np.array(token_focus)[kw_mask]))
 
         return np.array(focus_ue)
 
@@ -196,6 +181,7 @@ class FocusClaim(Estimator):
         greedy_texts = stats["greedy_texts"]
         tokenizer = stats["tokenizer"]
         claims = stats["claims"]
+        loss_fct = NLLLoss(reduction="none")
 
         focus_ue = []
         for greedy_log_prob, attention_weight, greedy_token, greedy_text, claims_i in zip(greedy_log_probs, attention_weights,
@@ -213,9 +199,9 @@ class FocusClaim(Estimator):
                     span = sentence[span_index]
                     if span.text not in self.NER_type and (span.ent_type_ in self.NER_type or span.pos_ in self.pos_tag):
                         kw_mask[token_index] = True
-            except:
-                print("Error with indexing")
-                print(decodings, sentence)
+            except Exception as e:
+                log.error(e, exc_info=True)
+                log.info(decodings, sentence)
                 pass
 
             prob = np.exp(greedy_log_prob)
@@ -227,7 +213,7 @@ class FocusClaim(Estimator):
                 prob = prob * self.token_idf
             prob = prob / np.sum(prob, axis=-1, keepdims=True)
             entropy = np.exp2(self.entropy(prob))
-            ll = np.log(np.array([prob[j, greedy_token[j]] for j in range(len(prob))]))
+            ll = loss_fct(torch.log(torch.tensor(prob)+1e-10), torch.tensor(greedy_token))
             hc = ll + entropy
 
             if not kw_mask.sum():
@@ -235,13 +221,20 @@ class FocusClaim(Estimator):
 
             kw_mask = kw_mask.flatten()
 
-            weight = attention_weight[kw_mask] / (np.sum(attention_weight[kw_mask], axis=1, keepdims=True)+1e-6)
-            penalty = self.gamma * (hc[None, :] * weight).sum(0)
+            weight = np.zeros_like(attention_weight)
+            weight[kw_mask] = attention_weight[kw_mask] / (np.sum(attention_weight[kw_mask], axis=1, keepdims=True)+1e-6)
 
-            focus = hc + penalty
+            token_focus = []
+            for i, token_weights in enumerate(weight):
+                ue = hc[i]
+                if len(token_focus):
+                    ue += self.gamma * (np.array(token_focus) * token_weights[:len(token_focus)]).sum()
+                token_focus.append(ue)
+            token_focus = np.array(token_focus)    
+
             focus_ue.append([])
             for claim in claims_i:
                 tokens = np.array(claim.aligned_token_ids)
-                claim_p_i = focus[tokens]
+                claim_p_i = token_focus[tokens]
                 focus_ue[-1].append(claim_p_i.mean())
         return focus_ue
