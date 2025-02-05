@@ -95,7 +95,7 @@ MATCHING_PROMPTS = {
         "die zur Ableitung dieser Tatsache beitragen. Listen Sie bitte alle Wörter auf,"
         "die mit der Tatsache in Zusammenhang stehen, in der Reihenfolge, in der sie im"
         "ursprünglichen Satz erscheinen, wobei jedes Wort durch Komma getrennt ist.\n"
-        "Tatsache: {Behauptung}\nSatz: {Gesendet}\nWörter aus dem Satz, die zur Ableitung"
+        "Tatsache: {claim}\nSatz: {sent}\nWörter aus dem Satz, die zur Ableitung"
         "der Tatsache beitragen, durch Komma getrennt: ")
 }
 
