@@ -44,6 +44,17 @@ Claims:
 
 الجملة: \"{sent}\"
 الادعاءات:""",
+    "de": """Bitte zerlegen Sie den Satz in unabhängige Behauptungen.
+
+Beispiel:
+Satz: \"Er wurde in London geboren und bis zu seinem 11. Lebensjahr von seiner Mutter und seinem Vater aufgezogen.\"
+Behauptungen:
+- Er wurde in London geboren.
+- Er wurde von seiner Mutter und seinem Vater aufgezogen.
+- Er wurde bis zu seinem 11. Lebensjahr von seiner Mutter und seinem Vater aufgezogen.
+
+Satz: \"{sent}\"
+Behauptungen:"""
 }
 
 MATCHING_PROMPTS = {
@@ -79,8 +90,14 @@ MATCHING_PROMPTS = {
 الجملة: {sent}
 الكلمات من الجملة التي تساعد في استنتاج الحقيقة، مفصولة بفاصلة: """
     ),
+    "de": (
+        "Identifizieren Sie die entsprechenden Wörter im ursprünglichen Satz, "
+        "die zur Ableitung dieser Tatsache beitragen. Listen Sie bitte alle Wörter auf,"
+        "die mit der Tatsache in Zusammenhang stehen, in der Reihenfolge, in der sie im"
+        "ursprünglichen Satz erscheinen, wobei jedes Wort durch Komma getrennt ist.\n"
+        "Tatsache: {Behauptung}\nSatz: {Gesendet}\nWörter aus dem Satz, die zur Ableitung"
+        "der Tatsache beitragen, durch Komma getrennt: ")
 }
-
 
 OPENAI_FACT_CHECK_PROMPTS = {
     "en": (
@@ -118,6 +135,12 @@ Claim: {claim}
 الادعاء: {claim}
 """
     ),
+    "de": """Frage: {input}
+
+Stellen Sie fest, ob alle bereitgestellten Informationen in der folgenden Behauptung gemäß den neuesten Informationsquellen wahr sind.
+
+Behauptung: {claim}
+"""
 }
 
 OPENAI_FACT_CHECK_SUMMARIZE_PROMPT = {
@@ -170,4 +193,15 @@ Summarize this reply into one word, whether the claim is true: "True", "False" o
 قم بتلخيص هذه الجملة في كلمة واحدة، سواء كان الادعاء صحيح: "صحيح" أو "خطأ" أو "غير معروف".
 """
     ),
+    "de": (
+        """Question: {input}
+
+Claim: {claim}
+
+Is the following claim true?
+
+Reply: {reply}
+
+Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known"."""
+    )
 }
