@@ -124,7 +124,8 @@ def main(args):
                 Logger(),
             ],
             ignore_exceptions=args.ignore_exceptions,
-            max_new_tokens=args.max_new_tokens
+            max_new_tokens=args.max_new_tokens,
+            log_time=args.log_time,
         )
 
         try:
@@ -156,30 +157,23 @@ def get_stat_calculator_names(config):
     output_attentions = getattr(config, "output_attentions", True)
     hf_cache = getattr(config, "hf_cache", None)
 
+    all_stat_calculators = []
     if "auto" in config.stat_calculators:
-        scs = register_default_stat_calculators(model_type, language, hf_cache)
-        for sc in scs:
-            result_stat_calculators[sc.name] = sc
+        all_stat_calculators += register_default_stat_calculators(model_type, language, hf_cache)
 
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":
             continue
+        sc = StatCalculatorContainer(
+            name=stat_calculator.name,
+            cfg=stat_calculator.cfg,
+            stats=stat_calculator.stats,
+            dependencies=stat_calculator.dependencies,
+            builder=stat_calculator.builder,
+        )
+        all_stat_calculators.append(sc)
 
-        else:
-            result_stat_calculators.update(
-                {
-                    s: StatCalculatorContainer(
-                        name=stat_calculator.name,
-                        cfg=stat_calculator.cfg,
-                        stats=stat_calculator.stats,
-                        dependencies=stat_calculator.dependencies,
-                        builder=stat_calculator.builder,
-                    )
-                    for s in stat_calculator.stats
-                }
-            )
-
-    return list(result_stat_calculators.values())
+    return all_stat_calculators
 
 
 def get_ue_methods(config, model):
@@ -228,7 +222,8 @@ def get_generation_metrics(args):
             metric_name = metric["name"]
             metric_class = globals()[metric_name]
             metric_args = metric.get("args", [])
-            result.append(metric_class(*metric_args))
+            metric_kwargs = metric.get("kwargs", {})
+            result.append(metric_class(*metric_args, **metric_kwargs))
 
     process_output_fn = getattr(args, "process_output_fn", None)
     process_target_fn = getattr(args, "process_target_fn", None)
