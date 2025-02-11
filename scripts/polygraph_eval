@@ -119,7 +119,7 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
-            log_time=args.log_time,
+            log_time=getattr(args, "log_time", False),
         )
 
         try:
