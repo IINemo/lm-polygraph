@@ -39,14 +39,15 @@ class OpenAIFactCheck(GenerationMetric):
     def __str__(self):
         return "OpenAIFactCheck"
 
-    def _score_single(self, claim: str, input: str, openai_chat) -> int:
-        reply = openai_chat.ask(
+    def _score_single(self, args: tuple[str, str]) -> int:
+        claim, input = args
+        reply = self.openai_chat.ask(
             self.fact_check_prompts[self.language].format(
                 claim=claim,
                 input=input,
             )
         )
-        reply = openai_chat.ask(
+        reply = self.openai_chat.ask(
             self.fact_check_summarize_prompt[self.language].format(
                 claim=claim,
                 input=input,
@@ -60,20 +61,6 @@ class OpenAIFactCheck(GenerationMetric):
             return 1
         else:
             return np.nan
-
-    def process_instance(self, inp_text, sample_claims):
-        inst_labels = []
-
-        for claim in sample_claims:
-            inst_labels.append(
-                self._score_single(
-                    claim.claim_text,
-                    inp_text,
-                    self.openai_chat,
-                )
-            )
-
-        return inst_labels
 
     def __call__(
         self,
@@ -92,14 +79,25 @@ class OpenAIFactCheck(GenerationMetric):
         """
         input_texts = stats["input_texts"]
 
+        all_inputs = [
+            (claim.claim_text, input_text)
+            for input_text, sample_claims in zip(input_texts, stats["claims"])
+            for claim in sample_claims
+        ]
+
         with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
-            labels = list(
+            all_outputs = list(
                 tqdm(
-                    executor.map(self.process_instance, input_texts, stats["claims"]),
-                    total=len(input_texts),
+                    executor.map(self._score_single, all_inputs),
+                    total=len(all_inputs),
                     desc="Verifying claims",
                     disable=not self.progress_bar,
                 )
             )
 
-        return labels
+        claim_labels = []
+        for sample_claims in stats["claims"]:
+            claim_labels.append(all_outputs[:len(sample_claims)])
+            all_outputs = all_outputs[len(sample_claims):]
+
+        return claim_labels
