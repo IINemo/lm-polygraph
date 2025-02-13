@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
@@ -20,8 +20,24 @@ def get_embeddings_from_output(
     batch_embeddings = None
     batch_embeddings_decoder = None
     batch_size = len(batch["input_ids"])
+    layer_wise_pooling = {}  # Added to store layer-wise pooling
 
     if model_type == "CausalLM":
+        # Store last token pooling from each layer
+        num_layers = len(output.hidden_states[0])
+        for layer_idx in range(num_layers):
+            input_tokens_hs = output.hidden_states[0][layer_idx].cpu().detach()
+            if len(output.hidden_states) > 1:
+                generated_tokens_hs = torch.cat(
+                    [h[layer_idx].cpu().detach() for h in output.hidden_states[1:]],
+                    dim=1,
+                )
+                combined_hs = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1)
+            else:
+                combined_hs = input_tokens_hs
+            
+            layer_wise_pooling[f"layer_{layer_idx}"] = combined_hs[:, -1, :].cpu().detach()
+
         if not all_layers:
             hidden_layer = -1
             input_tokens_hs = output.hidden_states[0][hidden_layer].cpu().detach()
@@ -146,7 +162,7 @@ def get_embeddings_from_output(
     else:
         raise NotImplementedError
 
-    return batch_embeddings, batch_embeddings_decoder
+    return batch_embeddings, batch_embeddings_decoder, layer_wise_pooling
 
 
 def aggregate(x, aggregation_method, axis):
@@ -159,9 +175,17 @@ def aggregate(x, aggregation_method, axis):
 
 
 class EmbeddingsCalculator(StatCalculator):
-    def __init__(self):
-        super().__init__(["train_embeddings", "background_train_embeddings"], [])
-        self.hidden_layer = -1
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return ["train_embeddings", "background_train_embeddings"], []
+
+    def __init__(self, hidden_layer: int = -1):
+        super().__init__()
+        self.hidden_layer = hidden_layer
 
     def __call__(
         self,
@@ -193,13 +217,14 @@ class EmbeddingsCalculator(StatCalculator):
                     ]
                 ),
             )
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+            embeddings_encoder, embeddings_decoder, layer_wise_pooling = get_embeddings_from_output(
                 out, batch, model.model_type
             )
 
         if model.model_type == "CausalLM":
             return {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
+                "layer_wise_pooling": {k: v.cpu().detach().numpy() for k, v in layer_wise_pooling.items()},
             }
         elif model.model_type == "Seq2SeqLM":
             return {
