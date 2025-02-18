@@ -83,7 +83,7 @@ class SemanticMatrixCalculator(StatCalculator):
         C = []
         P = []
 
-        for i, pairs in tqdm(enumerate(batch_pairs)):
+        for i, pairs in enumerate(tqdm(batch_pairs)):
             dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
             probs = []
             for first_texts, second_texts in dl:
@@ -92,7 +92,7 @@ class SemanticMatrixCalculator(StatCalculator):
                     batch, padding=True, return_tensors="pt"
                 ).to(device)
                 logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs.append(softmax(logits).cpu().detach())
+                probs.append(softmax(logits).detach())
             probs = torch.cat(probs, dim=0)
 
             entail_probs = probs[:, ent_id]
