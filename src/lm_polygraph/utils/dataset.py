@@ -273,6 +273,8 @@ class Dataset:
                         )
                     )
                     x.append(formatted_prompt)
+                    print(x) #
+                    break #
                     y.append(answer)
         elif ("babi_qa" in dataset_name.lower()) and len(prompt):
             x, y = [], []

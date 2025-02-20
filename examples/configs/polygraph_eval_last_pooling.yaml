@@ -1,0 +1,40 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+defaults:
+  - model: bloomz-560m
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+task: test_pooling
+dataset: coqa
+text_column: questions
+label_column: answers
+eval_split: validation
+train_split: train
+subsample_eval_dataset: 2
+max_new_tokens: 30
+load_from_disk: false
+
+# Model settings
+model:
+  path: bigscience/bloomz-560m
+  type: Whitebox
+  device_map: cpu
+  ensemble: false
+
+# UE method flags
+use_density_based_ue: false
+use_seq_ue: false #true
+use_tok_ue: false
+use_ens_ue: false
+use_claim_ue: false
+
+# Important: Specify generation metrics to avoid loading unnecessary models
+generation_metrics: []  # Empty list to disable all metrics for testing
+
+ignore_exceptions: false
+batch_size: 2
+seed: 
+  - 1

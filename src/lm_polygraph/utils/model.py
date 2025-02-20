@@ -563,9 +563,7 @@ class WhiteboxModel(Model):
                 )
                 formatted_texts.append(formatted_chat)
             texts = formatted_texts
-
         return self.tokenizer(texts, padding=True, return_tensors="pt", return_token_type_ids=False)
-
 
 def create_ensemble(
     models: List[WhiteboxModel] = [],
