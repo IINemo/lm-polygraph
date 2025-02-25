@@ -14,9 +14,13 @@ def all_pe_estimators():
     return [PEStu(), PESrmi()]
 
 
-def get_seq_level_ue(sequence_level_data: Dict[str, torch.Tensor]) -> Dict[str, np.ndarray]:
+def get_seq_level_ue(
+    sequence_level_data: Dict[str, torch.Tensor]
+) -> Dict[str, np.ndarray]:
     softmax_t = 1
-    model_log_probas = sequence_level_data["log_probas"]  # num_obs x num_models x num_beams
+    model_log_probas = sequence_level_data[
+        "log_probas"
+    ]  # num_obs x num_models x num_beams
     num_models = model_log_probas.shape[1]
     ens_log_probas = (
         torch.tensor(model_log_probas).logsumexp(1) - torch.tensor(num_models).log()
@@ -24,7 +28,7 @@ def get_seq_level_ue(sequence_level_data: Dict[str, torch.Tensor]) -> Dict[str, 
     ens_log_probas = ens_log_probas.numpy()
     ens_probas = np.exp(ens_log_probas)
 
-    ens_probas_exp = ens_probas**softmax_t
+    ens_probas_exp = ens_probas ** softmax_t
     weights = ens_probas_exp / ens_probas_exp.sum(-1, keepdims=True)
 
     tu = (ens_probas * weights).sum(-1)  # num_obs
