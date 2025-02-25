@@ -120,8 +120,8 @@ class GreedyProbsCalculator(StatCalculator):
             logits = torch.stack(out.scores, dim=1)
 
             sequences = out.sequences
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
+            embeddings_encoder, embeddings_decoder, last_pooling, all_layers_embeddings = get_embeddings_from_output(
+                out, batch, model.model_type, save_all_embeddings=True
             )
 
         cut_logits = []
@@ -161,6 +161,8 @@ class GreedyProbsCalculator(StatCalculator):
         if model.model_type == "CausalLM":
             embeddings_dict = {
                 "embeddings_decoder": embeddings_decoder,
+                "last_pooling": last_pooling,
+                "all_layers_embeddings": all_layers_embeddings,
             }
         elif model.model_type == "Seq2SeqLM":
             embeddings_dict = {

@@ -31,6 +31,7 @@ from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.generation_metrics.x_metric_utils import MT5ForRegression
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from lm_polygraph.estimators.last_pooling import LastTokenRepresentationAnalysis
+from lm_polygraph.estimators.embeddings_storage import EmbeddingsStorage
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -387,7 +388,8 @@ def get_ue_methods(args, model):
                 FisherRao(),
 =======
             estimators += [
-                # LastTokenRepresentationAnalysis(),
+                LastTokenRepresentationAnalysis(),
+                EmbeddingsStorage(),
                 # MaximumSequenceProbability(),
                 # Perplexity(),
                 # MeanTokenEntropy(),

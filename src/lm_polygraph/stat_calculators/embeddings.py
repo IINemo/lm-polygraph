@@ -16,11 +16,14 @@ def get_embeddings_from_output(
     use_averaging: bool = True,
     all_layers: bool = False,
     aggregation_method: str = "mean",
+    save_all_embeddings: bool = False,
 ):
     batch_embeddings = None
     batch_embeddings_decoder = None
     batch_size = len(batch["input_ids"])
     layer_wise_pooling = {}  # Added to store layer-wise pooling
+    all_layers_embeddings = {}  # Dict to store all embeddings
+    attention_maps = {}  # Dict to store attention maps from all layers
 
     if model_type == "CausalLM":
         # Store last token pooling from each layer
@@ -37,6 +40,8 @@ def get_embeddings_from_output(
                 combined_hs = input_tokens_hs
             
             layer_wise_pooling[f"layer_{layer_idx}"] = combined_hs[:, -1, :].cpu().detach()
+            # if save_all_embeddings:
+            all_layers_embeddings[f"layer_{layer_idx}"] = combined_hs.cpu().detach()
 
         if not all_layers:
             hidden_layer = -1
@@ -162,7 +167,7 @@ def get_embeddings_from_output(
     else:
         raise NotImplementedError
 
-    return batch_embeddings, batch_embeddings_decoder, layer_wise_pooling
+    return batch_embeddings, batch_embeddings_decoder, layer_wise_pooling, all_layers_embeddings
 
 
 def aggregate(x, aggregation_method, axis):
@@ -176,7 +181,7 @@ def aggregate(x, aggregation_method, axis):
 
 class EmbeddingsCalculator(StatCalculator):
     def __init__(self):
-        super().__init__(["train_embeddings", "background_train_embeddings", "layer_wise_pooling"], [])
+        super().__init__(["train_embeddings", "background_train_embeddings", "layer_wise_pooling", "all_layers_embeddings"], [])
         self.hidden_layer = -1
 
     def __call__(
@@ -209,7 +214,7 @@ class EmbeddingsCalculator(StatCalculator):
                     ]
                 ),
             )
-            embeddings_encoder, embeddings_decoder, layer_wise_pooling = get_embeddings_from_output(
+            embeddings_encoder, embeddings_decoder, layer_wise_pooling, all_layers_embeddings = get_embeddings_from_output(
                 out, batch, model.model_type
             )
 
@@ -217,6 +222,7 @@ class EmbeddingsCalculator(StatCalculator):
             return {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
                 "layer_wise_pooling": {k: v.cpu().detach().numpy() for k, v in layer_wise_pooling.items()},
+                "all_layers_embeddings": {k: v.cpu().detach().numpy() for k, v in all_layers_embeddings.items()}
             }
         elif model.model_type == "Seq2SeqLM":
             return {
