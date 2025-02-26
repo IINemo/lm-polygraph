@@ -42,12 +42,12 @@ class EmbeddingsStorage(Estimator):
             json_compatible_embeddings[key] = value.tolist()
         
         # Save to JSON file
-        embeddings_path = os.path.join(self.save_dir, f"embeddings_batch_{self.sample_count}.json")
-        with open(embeddings_path, 'w') as f:
-            json.dump(json_compatible_embeddings, f)
+        # embeddings_path = os.path.join(self.save_dir, f"embeddings_batch_{self.sample_count}.json")
+        # with open(embeddings_path, 'w') as f:
+        #     json.dump(json_compatible_embeddings, f)
             
-        if self.verbose:
-            print(f"Saved embeddings to {embeddings_path}")
+        # if self.verbose:
+        #     print(f"Saved embeddings to {embeddings_path}")
         
         # Find the final layer
         print(f"Embdngs: {all_embeddings}")

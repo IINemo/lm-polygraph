@@ -35,13 +35,13 @@ def get_embeddings_from_output(
                     [h[layer_idx].cpu().detach() for h in output.hidden_states[1:]],
                     dim=1,
                 )
-                combined_hs = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1)
-            else:
-                combined_hs = input_tokens_hs
+                all_layers_embeddings[f"layer_{layer_idx}"] = generated_tokens_hs.cpu().detach()
+                # combined_hs = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1)
+            # else:
+            #     combined_hs = input_tokens_hs
             
-            layer_wise_pooling[f"layer_{layer_idx}"] = combined_hs[:, -1, :].cpu().detach()
+            # layer_wise_pooling[f"layer_{layer_idx}"] = combined_hs[:, -1, :].cpu().detach()
             # if save_all_embeddings:
-            all_layers_embeddings[f"layer_{layer_idx}"] = combined_hs.cpu().detach()
 
         if not all_layers:
             hidden_layer = -1
@@ -181,7 +181,7 @@ def aggregate(x, aggregation_method, axis):
 
 class EmbeddingsCalculator(StatCalculator):
     def __init__(self):
-        super().__init__(["train_embeddings", "background_train_embeddings", "layer_wise_pooling", "all_layers_embeddings"], [])
+        super().__init__(["train_embeddings", "background_train_embeddings"], [])
         self.hidden_layer = -1
 
     def __call__(

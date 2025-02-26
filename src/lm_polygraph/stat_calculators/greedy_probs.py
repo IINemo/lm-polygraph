@@ -166,6 +166,7 @@ class GreedyProbsCalculator(StatCalculator):
                 "train_greedy_log_likelihoods",
                 "embeddings",
                 "lookback_lens_features",
+                "all_layers_embeddings",
             ],
             [],
         )
