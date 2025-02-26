@@ -1,7 +1,6 @@
+from typing import Dict
 import numpy as np
 import torch
-
-from typing import Dict
 
 from .estimator import Estimator
 
@@ -28,7 +27,7 @@ def get_seq_level_ue(
     ens_log_probas = ens_log_probas.numpy()
     ens_probas = np.exp(ens_log_probas)
 
-    ens_probas_exp = ens_probas ** softmax_t
+    ens_probas_exp = ens_probas**softmax_t
     weights = ens_probas_exp / ens_probas_exp.sum(-1, keepdims=True)
 
     tu = (ens_probas * weights).sum(-1)  # num_obs
