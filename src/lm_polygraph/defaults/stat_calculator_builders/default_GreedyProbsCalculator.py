@@ -1,4 +1,4 @@
-from lm_polygraph.stat_calculators.cross_encoder_similarity import GreedyProbsCalculator
+from lm_polygraph.stat_calculators.greedy_probs import GreedyProbsCalculator
 
 
 def load_stat_calculator(config, builder):
