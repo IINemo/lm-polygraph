@@ -1,7 +1,6 @@
+from typing import Dict
 import numpy as np
 import torch
-
-from typing import Dict
 
 from .estimator import Estimator
 
@@ -15,7 +14,7 @@ def all_pe_estimators():
 
 
 def get_seq_level_ue(
-    sequence_level_data: Dict[str, torch.Tensor]
+    sequence_level_data: Dict[str, torch.Tensor],
 ) -> Dict[str, np.ndarray]:
     softmax_t = 1
     model_log_probas = sequence_level_data[
