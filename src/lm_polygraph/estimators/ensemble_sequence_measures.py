@@ -1,7 +1,6 @@
+from typing import Dict
 import numpy as np
 import torch
-
-from typing import Dict
 
 from .estimator import Estimator
 
