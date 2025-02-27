@@ -61,7 +61,13 @@ def register_default_stat_calculators(
         _register(BlackboxSamplingGenerationCalculator)
 
     elif model_type == "Whitebox":
-        _register(GreedyProbsCalculator)
+        _register(
+            GreedyProbsCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsCalculator",
+            {
+                "output_attentions": True,
+            },
+        )
         _register(EntropyCalculator)
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)

@@ -72,3 +72,4 @@ from .linguistic_1s import Linguistic1S
 from .claim.random_baseline import RandomBaselineClaim
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
+from .focus import Focus, FocusClaim

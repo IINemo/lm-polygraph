@@ -23,6 +23,7 @@ stat_calculators:
       seed: '${seed}'
       size: '${size}'
       bg_size: 100000
+      output_attentions: True
     stats: 
       - "train_embeddings"
       - "background_train_embeddings"
