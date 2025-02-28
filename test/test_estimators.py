@@ -215,3 +215,9 @@ def focus(model):
     estimator = Focus()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_kernel_language_entropy(model):
+    estimator = KernelLanguageEntropy()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
