@@ -4,7 +4,7 @@ import itertools
 from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import Model
 import torch.nn as nn
 import torch
 
@@ -38,7 +38,7 @@ class SemanticMatrixCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Model,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
