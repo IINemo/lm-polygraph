@@ -564,7 +564,12 @@ class WhiteboxModel(Model):
 
             add_start_symbol = False
 
-        return self.tokenizer(texts, padding=True, return_tensors="pt", add_special_tokens=add_start_symbol)
+        return self.tokenizer(
+            texts,
+            padding=True,
+            return_tensors="pt",
+            add_special_tokens=add_start_symbol,
+        )
 
 
 def create_ensemble(
