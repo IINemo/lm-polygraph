@@ -10,8 +10,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 class WhiteboxModelBasic(Model):
     """Basic whitebox model adapter for using in stat calculators and uncertainty estimators."""
 
-    def __init__(self, model: AutoModelForCausalLM, tokenizer: AutoTokenizer, 
-                 tokenizer_args: Dict, parameters: GenerationParameters = GenerationParameters(), model_type=""):
+    def __init__(
+        self,
+        model: AutoModelForCausalLM,
+        tokenizer: AutoTokenizer,
+        tokenizer_args: Dict,
+        parameters: GenerationParameters = GenerationParameters(),
+        model_type="",
+    ):
         self.model = model
         self.tokenizer = tokenizer
         self.tokenizer_args = tokenizer_args

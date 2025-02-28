@@ -156,9 +156,13 @@ def get_stat_calculator_names(config):
     result_stat_calculators = dict()
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
     language = getattr(config, "language", "en")
+
     hf_cache = getattr(config, "hf_cache", None)
 
     all_stat_calculators = []
+
+    output_attentions = getattr(config, "output_attentions", True)
+    
     if "auto" in config.stat_calculators:
         all_stat_calculators += register_default_stat_calculators(model_type, language, hf_cache)
 

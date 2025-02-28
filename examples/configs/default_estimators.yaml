@@ -70,3 +70,4 @@ estimators:
   - name: PPLMDSeq
     cfg:
       md_type: "RMD"
+  - name: Focus
