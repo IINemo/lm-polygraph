@@ -35,6 +35,7 @@ import numpy as np
 
 SAMPLE_SELECTION_STAT_KEYS = ["best_sample_text_ids", "best_normalized_sample_text_ids"]
 
+
 def _get_pairs(lst):
     pairs = []
     for i in range(len(lst)):
