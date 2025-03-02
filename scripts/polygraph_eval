@@ -68,6 +68,10 @@ def main(args):
         )
         wandb.init(dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
+    global hydra_config
+    if hydra_config == Path("."):
+        hydra_config = get_hydra_config_path()
+
     save_path = args.save_path if "save_path" in args else save_path
 
     if args.seed is None or len(args.seed) == 0:
