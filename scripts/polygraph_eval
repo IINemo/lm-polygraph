@@ -35,12 +35,13 @@ from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
 
-def get_hydra_config_path():
+def get_hydra_config_dir():
+    # Get the current Hydra config
     config = HydraConfig.get()
     # Iterate over the list of config sources in the runtime section
     for source in config.get("runtime", {}).get("config_sources", []):
         if source.get("provider") == "command-line":
-            return Path(source.get("path")) / config.job.config_name
+            return source.get("path") 
     return None
 
 
