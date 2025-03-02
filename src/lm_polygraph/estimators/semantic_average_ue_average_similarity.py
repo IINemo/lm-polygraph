@@ -3,19 +3,21 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
-from .common import sample_strategy_to_prefix, best_sample_ids, SAMPLE_SELECTION_STAT_KEYS
+from .common import (
+    sample_strategy_to_prefix,
+    best_sample_ids,
+    SAMPLE_SELECTION_STAT_KEYS,
+)
 
 
 class SemanticEnrichedMaxprobAveDissimilarity(Estimator):
     def __init__(
-        self,
-        verbose: bool = False,
-        exp: bool = False,
-        sample_strategy: str = "first"
+        self, verbose: bool = False, exp: bool = False, sample_strategy: str = "first"
     ):
         super().__init__(
-            ["sample_sentence_similarity", "sample_log_probs"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_log_probs"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.exp = exp
@@ -47,7 +49,9 @@ class SemanticEnrichedMaxprobAveDissimilarity(Estimator):
             row_dissimilarities = []
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
-                sum_dissimilarities = np.sum(1 - row) - (1 - row[i])  # Exclude self-similarity
+                sum_dissimilarities = np.sum(1 - row) - (
+                    1 - row[i]
+                )  # Exclude self-similarity
                 row_dissimilarities.append(sum_dissimilarities)
 
             # Step 3: Normalize by (M - 1)
@@ -74,14 +78,12 @@ class SemanticEnrichedMaxprobAveDissimilarity(Estimator):
 
 class SemanticEnrichedMaxprobTotalDissimilarity(Estimator):
     def __init__(
-        self,
-        verbose: bool = False,
-        exp: bool = False,
-        sample_strategy: str = "first"
+        self, verbose: bool = False, exp: bool = False, sample_strategy: str = "first"
     ):
         super().__init__(
-            ["sample_sentence_similarity", "sample_log_probs"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_log_probs"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.exp = exp
@@ -113,7 +115,9 @@ class SemanticEnrichedMaxprobTotalDissimilarity(Estimator):
             row_dissimilarities = []
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
-                sum_dissimilarities = np.sum(1 - row) - (1 - row[i])  # Exclude self-similarity
+                sum_dissimilarities = np.sum(1 - row) - (
+                    1 - row[i]
+                )  # Exclude self-similarity
                 row_dissimilarities.append(sum_dissimilarities)
 
             # Step 3: Normalize by (M - 1)
@@ -142,14 +146,12 @@ class SemanticEnrichedMaxprobTotalDissimilarity(Estimator):
 
 class SemanticEnrichedPPLAveDissimilarity(Estimator):
     def __init__(
-        self,
-        verbose: bool = False,
-        exp: bool = False,  
-        sample_strategy: str = "first"
+        self, verbose: bool = False, exp: bool = False, sample_strategy: str = "first"
     ):
         super().__init__(
-            ["sample_sentence_similarity", "sample_log_likelihoods"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_log_likelihoods"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.exp = exp
@@ -182,7 +184,9 @@ class SemanticEnrichedPPLAveDissimilarity(Estimator):
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
                 # Compute average dissimilarity, excluding self-similarity
-                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (len(row) - 1)
+                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (
+                    len(row) - 1
+                )
                 row_averages.append(average_dissimilarity)
 
             # Step 3: Enrich each PPL independently by scaling with the average dissimilarity
@@ -193,7 +197,9 @@ class SemanticEnrichedPPLAveDissimilarity(Estimator):
                 enriched_value = ppl_value * avg_dissimilarity
                 enriched_sample_ppl.append(enriched_value)
 
-            enriched_ppl.append(np.array(enriched_sample_ppl))  # Collect enriched PPL values
+            enriched_ppl.append(
+                np.array(enriched_sample_ppl)
+            )  # Collect enriched PPL values
 
         # Return only metric for the best sample for PRR calculation
         best_elements = []
@@ -205,14 +211,12 @@ class SemanticEnrichedPPLAveDissimilarity(Estimator):
 
 class SemanticEnrichedPPLTotalDissimilarity(Estimator):
     def __init__(
-        self,
-        verbose: bool = False,
-        exp: bool = False,  
-        sample_strategy: str = "first"
+        self, verbose: bool = False, exp: bool = False, sample_strategy: str = "first"
     ):
         super().__init__(
-            ["sample_sentence_similarity", "sample_log_likelihoods"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_log_likelihoods"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.exp = exp
@@ -245,7 +249,9 @@ class SemanticEnrichedPPLTotalDissimilarity(Estimator):
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
                 # Compute average dissimilarity, excluding self-similarity
-                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (len(row) - 1)
+                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (
+                    len(row) - 1
+                )
                 row_averages.append(average_dissimilarity)
 
             avg_dissimilarity = np.mean(row_averages)
@@ -258,7 +264,9 @@ class SemanticEnrichedPPLTotalDissimilarity(Estimator):
                 enriched_value = ppl_value * avg_dissimilarity
                 enriched_sample_ppl.append(enriched_value)
 
-            enriched_ppl.append(np.array(enriched_sample_ppl))  # Collect enriched PPL values
+            enriched_ppl.append(
+                np.array(enriched_sample_ppl)
+            )  # Collect enriched PPL values
 
         # Return only metric for the best sample for PRR calculation
         best_elements = []
@@ -269,20 +277,20 @@ class SemanticEnrichedPPLTotalDissimilarity(Estimator):
 
 
 class SemanticEnrichedMTEAveDissimilarity(Estimator):
-    def __init__(
-        self,
-        verbose: bool = False,
-        sample_strategy: str = "first"
-    ):
+    def __init__(self, verbose: bool = False, sample_strategy: str = "first"):
         super().__init__(
-            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_entropy"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return sample_strategy_to_prefix(self.sample_strategy) + "SemanticEnrichedMTEAveDissimilarity"
+        return (
+            sample_strategy_to_prefix(self.sample_strategy)
+            + "SemanticEnrichedMTEAveDissimilarity"
+        )
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]
@@ -298,12 +306,16 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
             row_averages = []
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
-                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (len(row) - 1)
+                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (
+                    len(row) - 1
+                )
                 row_averages.append(average_dissimilarity)
 
             # Enrich each sample's entropy value
             enriched_sample_entropy = []
-            for i, (entropy, avg_dissimilarity) in enumerate(zip(sample_entropy, row_averages)):
+            for i, (entropy, avg_dissimilarity) in enumerate(
+                zip(sample_entropy, row_averages)
+            ):
                 if avg_dissimilarity == 0:
                     avg_dissimilarity = 1e-10  # Avoid division by zero
                 enriched_value = entropy * avg_dissimilarity
@@ -320,20 +332,20 @@ class SemanticEnrichedMTEAveDissimilarity(Estimator):
 
 
 class SemanticEnrichedMTETotalDissimilarity(Estimator):
-    def __init__(
-        self,
-        verbose: bool = False,
-        sample_strategy: str = "first"
-    ):
+    def __init__(self, verbose: bool = False, sample_strategy: str = "first"):
         super().__init__(
-            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_entropy"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return sample_strategy_to_prefix(self.sample_strategy) + "SemanticEnrichedMTETotalDissimilarity"
+        return (
+            sample_strategy_to_prefix(self.sample_strategy)
+            + "SemanticEnrichedMTETotalDissimilarity"
+        )
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]
@@ -349,7 +361,9 @@ class SemanticEnrichedMTETotalDissimilarity(Estimator):
             row_averages = []
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
-                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (len(row) - 1)
+                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (
+                    len(row) - 1
+                )
                 row_averages.append(average_dissimilarity)
 
             avg_dissimilarity = np.mean(row_averages)
@@ -373,14 +387,11 @@ class SemanticEnrichedMTETotalDissimilarity(Estimator):
 
 
 class AveDissimilarity(Estimator):
-    def __init__(
-        self,
-        verbose: bool = False,
-        sample_strategy: str = "first"
-    ):
+    def __init__(self, verbose: bool = False, sample_strategy: str = "first"):
         super().__init__(
-            ["sample_sentence_similarity", "sample_entropy"] + SAMPLE_SELECTION_STAT_KEYS,
-            "sequence"
+            ["sample_sentence_similarity", "sample_entropy"]
+            + SAMPLE_SELECTION_STAT_KEYS,
+            "sequence",
         )
         self.verbose = verbose
         self.sample_strategy = sample_strategy
@@ -402,12 +413,16 @@ class AveDissimilarity(Estimator):
             row_averages = []
             for i in range(sample_sentence_similarity.shape[0]):
                 row = sample_sentence_similarity[i]
-                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (len(row) - 1)
+                average_dissimilarity = (np.sum(1 - row) - (1 - row[i])) / (
+                    len(row) - 1
+                )
                 row_averages.append(average_dissimilarity)
 
             # Enrich each sample's entropy value
             enriched_sample_entropy = []
-            for i, (entropy, avg_dissimilarity) in enumerate(zip(sample_entropy, row_averages)):
+            for i, (entropy, avg_dissimilarity) in enumerate(
+                zip(sample_entropy, row_averages)
+            ):
                 if avg_dissimilarity == 0:
                     avg_dissimilarity = 1e-10  # Avoid division by zero
                 enriched_value = avg_dissimilarity

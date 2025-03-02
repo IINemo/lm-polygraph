@@ -27,7 +27,11 @@ from .claim_level_prompts import (
     OPENAI_FACT_CHECK_PROMPTS,
 )
 from .entropy import EntropyCalculator
-from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator, BestSampleCalculator
+from .sample import (
+    SamplingGenerationCalculator,
+    BlackboxSamplingGenerationCalculator,
+    BestSampleCalculator,
+)
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,
     GreedyAlternativesFactPrefNLICalculator,
