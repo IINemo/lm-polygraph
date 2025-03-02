@@ -6,6 +6,7 @@ import transformers
 from pathlib import Path
 from omegaconf import OmegaConf
 import uuid
+from hydra.core.hydra_config import HydraConfig
 
 import logging
 
@@ -33,6 +34,16 @@ from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
+
+def get_hydra_config_path():
+    config = HydraConfig.get()
+    # Iterate over the list of config sources in the runtime section
+    for source in config.get("runtime", {}).get("config_sources", []):
+        if source.get("provider") == "command-line":
+            return Path(source.get("path")) / config.job.config_name
+    return None
+
+
 @hydra.main(
     version_base=None,
     config_path=str(hydra_config.parent),
@@ -42,6 +53,10 @@ def main(args):
     save_path = os.getcwd()
     log.info(f"Main directory: {save_path}")
     os.chdir(hydra.utils.get_original_cwd())
+
+    global hydra_config
+    if hydra_config == Path("."):
+        hydra_config = get_hydra_config_path()
 
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         import wandb
@@ -296,7 +311,7 @@ def get_blackbox_model(args):
 
 
 def get_whitebox_model(args, cache_kwargs={}):
-    if not "path_to_load_script" in args.model:
+    if not "path_to_load_script" in args.model or not args.model.path_to_load_script:
         log.warning(
             "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
         )
@@ -304,7 +319,7 @@ def get_whitebox_model(args, cache_kwargs={}):
         return WhiteboxModel.from_pretrained(
             args.model.path,
             getattr(args, "generation_params", {}),
-            device_map=args.model.device_map,
+            device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
             **cache_kwargs
         )
