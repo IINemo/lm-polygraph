@@ -10,4 +10,3 @@ estimators:
   - name: ClaimConditionedProbabilityClaim
     cfg:
       nli_context: "fact_pref"
-  - name: FocusClaim

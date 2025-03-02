@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 def calcu_idf(tokenizer_path, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    dataset = load_dataset("togethercomputer/RedPajama-Data-1T-Sample")
+    dataset = load_dataset("togethercomputer/RedPajama-Data-1T-Sample", trust_remote_code=True)
     data = [d for d in dataset["train"]]
     random.seed(42)
     random.shuffle(data)
