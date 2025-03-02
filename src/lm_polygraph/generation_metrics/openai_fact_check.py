@@ -97,7 +97,7 @@ class OpenAIFactCheck(GenerationMetric):
 
         claim_labels = []
         for sample_claims in stats["claims"]:
-            claim_labels.append(all_outputs[:len(sample_claims)])
-            all_outputs = all_outputs[len(sample_claims):]
+            claim_labels.append(all_outputs[: len(sample_claims)])
+            all_outputs = all_outputs[len(sample_claims) :]
 
         return claim_labels
