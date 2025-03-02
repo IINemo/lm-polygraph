@@ -4,6 +4,7 @@ import hydra
 import os
 import transformers
 from pathlib import Path
+from hydra.core.hydra_config import HydraConfig
 
 import logging
 
@@ -31,6 +32,17 @@ from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
+
+def get_hydra_config_dir():
+    # Get the current Hydra config
+    config = HydraConfig.get()
+    # Iterate over the list of config sources in the runtime section
+    for source in config.get("runtime", {}).get("config_sources", []):
+        if source.get("provider") == "command-line":
+            return source.get("path") 
+    return None
+
+
 @hydra.main(
     version_base=None,
     config_path=str(hydra_config.parent),
@@ -40,6 +52,8 @@ def main(args):
     save_path = os.getcwd()
     log.info(f"Main directory: {save_path}")
     os.chdir(hydra.utils.get_original_cwd())
+    if not hydra_config:
+        hydra_config = Path(get_hydra_config_dir()) / "debug.yaml"
 
     save_path = args.save_path if "save_path" in args else save_path
 
@@ -271,14 +285,14 @@ def get_blackbox_model(args):
 
 
 def get_whitebox_model(args, cache_kwargs={}):
-    if not "path_to_load_script" in args.model:
+    if not "path_to_load_script" in args.model or not args.model.path_to_load_script:
         log.warning(
             "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
         )
         return WhiteboxModel.from_pretrained(
             args.model.path,
             getattr(args, "generation_params", {}),
-            device_map=args.model.device_map,
+            device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
             **cache_kwargs
         )
