@@ -54,6 +54,8 @@ def main(args):
     save_path = os.getcwd()
     log.info(f"Main directory: {save_path}")
     os.chdir(hydra.utils.get_original_cwd())
+    if not hydra_config:
+        hydra_config = Path(get_hydra_config_dir()) / "debug.yaml"
 
     global hydra_config
     if hydra_config == Path("."):
