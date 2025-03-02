@@ -180,7 +180,7 @@ To evaluate the performance of uncertainty estimation methods consider a quick e
 ```
 CUDA_VISIBLE_DEVICES=0 polygraph_eval \
     --config-dir=./examples/configs/ \
-    --config-name=polygraph_eval_coqa_cocoa.yaml \
+    --config-name=polygraph_eval_coqa.yaml \
     model.path=meta-llama/Llama-3.1-8B \
     subsample_eval_dataset=100
 ```
