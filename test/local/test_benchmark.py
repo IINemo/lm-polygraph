@@ -161,7 +161,7 @@ def test_mmlu_instruct(reference):
 
 
 def run_claim_eval(dataset):
-    fixed_cache = dc.Cache("fixtures/openai_chat_cache.diskcache")
+    fixed_cache = dc.Cache(f"{pwd()}/fixtures/openai_chat_cache.diskcache")
     with dc.Cache(
         os.path.expanduser("~") + "/.cache/openai_chat_cache.diskcache"
     ) as cache:
