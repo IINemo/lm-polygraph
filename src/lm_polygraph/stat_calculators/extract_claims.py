@@ -117,6 +117,8 @@ class ClaimsExtractor(StatCalculator):
             )
 
         claims: List[List[Claim]] = []
+        claim_texts_concatenated: List[str] = []
+        claim_input_texts_concatenated: List[str] = []
         for i in range(len(texts)):
             claims.append([])
             for sent in range(n_sents[i]):
@@ -126,16 +128,10 @@ class ClaimsExtractor(StatCalculator):
                     for k in range(len(sent_claims[j].aligned_token_ids)):
                         sent_claims[j].aligned_token_ids[k] += sent_position
                 claims[-1] += sent_claims
+                claim_texts_concatenated += sent_claims
+                claim_input_texts_concatenated += [texts[i] for _ in sent_claims]
             claims_from_sent = claims_from_sent[n_sents[i] :]
             all_sent_positions = all_sent_positions[n_sents[i] :]
-
-        claim_texts_concatenated: List[str] = []
-        claim_input_texts_concatenated: List[str] = []
-
-        for c in claims:
-            for claim in c:
-                claim_texts_concatenated.append(claim.claim_text)
-                claim_input_texts_concatenated.append(texts[0])
 
         return {
             "claims": claims,
