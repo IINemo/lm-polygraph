@@ -161,11 +161,12 @@ def test_mmlu_instruct(reference):
 
 
 def run_claim_eval(dataset):
-    with open(f"{pwd()}/fixtures/openai_cache.json", "r") as f:
-        openai_cache = json.load(f)
-    with dc.Cache(os.path.expanduser("~") + "/.cache") as disk_cache:
-        for k in openai_cache:
-            disk_cache[k] = openai_cache[k]
+    fixed_cache = dc.Cache("fixtures/openai_chat_cache.diskcache")
+    with dc.Cache(
+        os.path.expanduser("~") + "/.cache/openai_chat_cache.diskcache"
+    ) as cache:
+        for k in fixed_cache:
+            cache[k] = fixed_cache[k]
 
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \

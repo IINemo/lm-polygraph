@@ -3,7 +3,6 @@ import pathlib
 import subprocess
 import torch
 import json
-import diskcache as dc
 
 from lm_polygraph.utils.manager import UEManager
 
@@ -152,6 +151,4 @@ for dataset in datasets:
 with open("input_output_fixtures.json", "w") as f:
     json.dump(result, f)
 
-openai_cache = dict(dc.Cache(os.path.expanduser("~") + "/.cache/openai_chat_cache.diskcache"))
-with open(f"openai_cache.json", "w") as f:
-    json.dump(openai_cache, f)
+subprocess.run("cp -r ~/.cache/openai_chat_cache.diskcache .", shell=True)
