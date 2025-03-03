@@ -33,13 +33,13 @@ class EmbeddingsStorage(Estimator):
         Returns:
             np.ndarray: Float uncertainty score for each sample.
         """
-        all_embeddings = stats["all_layers_embeddings"]
+        # all_embeddings = stats["all_layers_embeddings"]
         
-        # Save embeddings if requested
-        # if self.save_embeddings:
-        json_compatible_embeddings = {}
-        for key, value in all_embeddings.items():
-            json_compatible_embeddings[key] = value.tolist()
+        # # Save embeddings if requested
+        # # if self.save_embeddings:
+        # json_compatible_embeddings = {}
+        # for key, value in all_embeddings.items():
+        #     json_compatible_embeddings[key] = value.tolist()
         
         # Save to JSON file
         # embeddings_path = os.path.join(self.save_dir, f"embeddings_batch_{self.sample_count}.json")
@@ -49,27 +49,29 @@ class EmbeddingsStorage(Estimator):
         # if self.verbose:
         #     print(f"Saved embeddings to {embeddings_path}")
         
-        # Find the final layer
-        print(f"Embdngs: {all_embeddings}")
-        last_layer_idx = max(int(k.split('_')[1]) for k in all_embeddings.keys())
+        # # Find the final layer
+        # print(f"Embdngs: {all_embeddings}")
+        # last_layer_idx = max(int(k.split('_')[1]) for k in all_embeddings.keys())
         
-        # Get embeddings from the final layer
-        final_layer_embeddings = all_embeddings[f"layer_{last_layer_idx}"]
+        # # Get embeddings from the final layer
+        # # final_layer_embeddings = all_embeddings[f"layer_{last_layer_idx}"]
+        # n = len(all_embeddings[f"layer_{last_layer_idx}"])
         
-        # Compute uncertainty score for each sample
-        batch_size = final_layer_embeddings.shape[0]
-        uncertainty_scores = np.zeros(batch_size)
+        # # Compute uncertainty score for each sample
+        # batch_size = final_layer_embeddings.shape[0]
+        # uncertainty_scores = np.zeros(batch_size)
         
-        for i in range(batch_size):
-            # Get all token embeddings for this sample
-            sample_embeddings = final_layer_embeddings[i]
+        # for i in range(batch_size):
+        #     # Get all token embeddings for this sample
+        #     sample_embeddings = final_layer_embeddings[i]
             
-            # Calculate mean embedding across all tokens
-            mean_embedding = np.mean(sample_embeddings, axis=0)
+        #     # Calculate mean embedding across all tokens
+        #     mean_embedding = np.mean(sample_embeddings, axis=0)
             
-            # Use norm of the mean embedding as uncertainty score (similar to LastTokenRepresentationAnalysis)
-            uncertainty_scores[i] = np.linalg.norm(mean_embedding)
+        #     # Use norm of the mean embedding as uncertainty score (similar to LastTokenRepresentationAnalysis)
+        #     uncertainty_scores[i] = np.linalg.norm(mean_embedding)
         
-        self.sample_count += 1
+        # self.sample_count += 1
             
-        return uncertainty_scores
+        # return uncertainty_scores
+        return np.zeros(2)

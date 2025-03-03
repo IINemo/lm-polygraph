@@ -21,12 +21,11 @@ def get_embeddings_from_output(
     batch_embeddings = None
     batch_embeddings_decoder = None
     batch_size = len(batch["input_ids"])
-    layer_wise_pooling = {}  # Added to store layer-wise pooling
-    all_layers_embeddings = {}  # Dict to store all embeddings
-    attention_maps = {}  # Dict to store attention maps from all layers
+    layer_wise_pooling = {}
+    layers_embeddings = {}
+    all_layers_embeddings = []
 
     if model_type == "CausalLM":
-        # Store last token pooling from each layer
         num_layers = len(output.hidden_states[0])
         for layer_idx in range(num_layers):
             input_tokens_hs = output.hidden_states[0][layer_idx].cpu().detach()
@@ -35,14 +34,14 @@ def get_embeddings_from_output(
                     [h[layer_idx].cpu().detach() for h in output.hidden_states[1:]],
                     dim=1,
                 )
-                all_layers_embeddings[f"layer_{layer_idx}"] = generated_tokens_hs.cpu().detach()
-                # combined_hs = torch.cat([input_tokens_hs, generated_tokens_hs], dim=1)
-            # else:
-            #     combined_hs = input_tokens_hs
-            
-            # layer_wise_pooling[f"layer_{layer_idx}"] = combined_hs[:, -1, :].cpu().detach()
-            # if save_all_embeddings:
-
+                layers_embeddings[f"layer_{layer_idx}"] = generated_tokens_hs.permute(1, 0, 2)
+        num_generated_tokens = len(output.hidden_states[1:])
+        for i in range(num_generated_tokens):
+            token_dict = {}
+            for layer_name, tensor in layers_embeddings.items():
+                token_dict[layer_name] = tensor[i].unsqueeze(0)
+            all_layers_embeddings.append(token_dict)
+        
         if not all_layers:
             hidden_layer = -1
             input_tokens_hs = output.hidden_states[0][hidden_layer].cpu().detach()
@@ -217,7 +216,7 @@ class EmbeddingsCalculator(StatCalculator):
             embeddings_encoder, embeddings_decoder, layer_wise_pooling, all_layers_embeddings = get_embeddings_from_output(
                 out, batch, model.model_type
             )
-
+               
         if model.model_type == "CausalLM":
             return {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),

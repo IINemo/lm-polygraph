@@ -305,7 +305,6 @@ def get_ue_methods(args, model):
     estimators = []
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         if getattr(args, "use_seq_ue", False):
-<<<<<<< HEAD
             bb_estimators = [
                 LexicalSimilarity(metric="rouge1"),
                 LexicalSimilarity(metric="rouge2"),
@@ -321,23 +320,6 @@ def get_ue_methods(args, model):
                 Eccentricity(similarity_score="NLI_score", affinity="entail"),
                 Eccentricity(similarity_score="NLI_score", affinity="contra"),
                 Eccentricity(similarity_score="Jaccard_score"),
-=======
-            estimators += [
-                # LexicalSimilarity(metric="rouge1"),
-                # LexicalSimilarity(metric="rouge2"),
-                # LexicalSimilarity(metric="rougeL"),
-                # LexicalSimilarity(metric="BLEU"),
-                # NumSemSets(),
-                # EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-                # EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-                # EigValLaplacian(similarity_score="Jaccard_score"),
-                # DegMat(similarity_score="NLI_score", affinity="entail"),
-                # DegMat(similarity_score="NLI_score", affinity="contra"),
-                # DegMat(similarity_score="Jaccard_score"),
-                # Eccentricity(similarity_score="NLI_score", affinity="entail"),
-                # Eccentricity(similarity_score="NLI_score", affinity="contra"),
-                # Eccentricity(similarity_score="Jaccard_score"),
->>>>>>> ead9dab (testing last pooling)
             ]
 
             for estimator in bb_estimators:
@@ -354,7 +336,6 @@ def get_ue_methods(args, model):
             raise NotImplementedError('Claim UE methods not applicable for blackbox models')
     else:
         if getattr(args, "use_seq_ue", False):
-<<<<<<< HEAD
             wb_estimators = [
                 MaximumSequenceProbability(),
                 Perplexity(),
@@ -386,41 +367,8 @@ def get_ue_methods(args, model):
                 SentenceSAR(),
                 RenyiNeg(),
                 FisherRao(),
-=======
-            estimators += [
                 LastTokenRepresentationAnalysis(),
                 EmbeddingsStorage(),
-                # MaximumSequenceProbability(),
-                # Perplexity(),
-                # MeanTokenEntropy(),
-                # MeanPointwiseMutualInformation(),
-                # MeanConditionalPointwiseMutualInformation(),
-                # ClaimConditionedProbability(),
-                # PTrue(),
-                # PTrueSampling(),
-                # MonteCarloSequenceEntropy(),
-                # MonteCarloNormalizedSequenceEntropy(),
-                # LexicalSimilarity(metric="rouge1"),
-                # LexicalSimilarity(metric="rouge2"),
-                # LexicalSimilarity(metric="rougeL"),
-                # LexicalSimilarity(metric="BLEU"),
-                # NumSemSets(),
-                # EigValLaplacian(similarity_score="NLI_score", affinity="entail"),
-                # EigValLaplacian(similarity_score="NLI_score", affinity="contra"),
-                # EigValLaplacian(similarity_score="Jaccard_score"),
-                # DegMat(similarity_score="NLI_score", affinity="entail"),
-                # DegMat(similarity_score="NLI_score", affinity="contra"),
-                # DegMat(similarity_score="Jaccard_score"),
-                # Eccentricity(similarity_score="NLI_score", affinity="entail"),
-                # Eccentricity(similarity_score="NLI_score", affinity="contra"),
-                # Eccentricity(similarity_score="Jaccard_score"),
-                # SemanticEntropy(),
-                # SAR(),
-                # TokenSAR(),
-                # SentenceSAR(),
-                # RenyiNeg(),
-                # FisherRao(),
->>>>>>> ead9dab (testing last pooling)
             ]
 
             for estimator in wb_estimators:

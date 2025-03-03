@@ -94,7 +94,6 @@ class FeatureExtractorLookbackLens:
 
         # Output: batch_size x sequence_length x feature_vector
         result = torch.stack(all_features, dim=1)
-        breakpoint()
 
         return result
 
@@ -267,7 +266,7 @@ class GreedyProbsCalculator(StatCalculator):
             embeddings_dict = {
                 "embeddings_decoder": embeddings_decoder,
                 "last_pooling": last_pooling,
-                "all_layers_embeddings": all_layers_embeddings,
+                # "all_layers_embeddings": all_layers_embeddings,
                 "lookback_lens_features": lbl,
             }
         elif model.model_type == "Seq2SeqLM":
@@ -277,7 +276,6 @@ class GreedyProbsCalculator(StatCalculator):
             }
         else:
             raise NotImplementedError
-
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
@@ -285,6 +283,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,
+            "all_layers_embeddings": all_layers_embeddings,
         }
         result_dict.update(embeddings_dict)
 
