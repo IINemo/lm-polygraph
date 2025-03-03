@@ -40,7 +40,9 @@ class ClaimsExtractor(StatCalculator):
         n_threads: int = 1,
     ):
         super().__init__()
-        log.info(f"Initializing ClaimsExtractor with language={language}")
+        log.info(
+            f"Initializing ClaimsExtractor with language={language}, n_threads={n_threads}"
+        )
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
@@ -86,26 +88,49 @@ class ClaimsExtractor(StatCalculator):
                 * 'claim_input_texts_concatenated' (List[str]): for each claim in
                   claim_texts_concatenated, corresponding input text.
         """
-        greedy_texts = dependencies["greedy_texts"]
-        greedy_tokens = dependencies["greedy_tokens"]
-        claims: List[List[Claim]] = []
-        claim_texts_concatenated: List[str] = []
-        claim_input_texts_concatenated: List[str] = []
+
+        all_sent_texts, all_sent_tokens, all_sent_positions, n_sents = [], [], [], []
+        for greedy_text, greedy_tokens in zip(
+            dependencies["greedy_texts"], dependencies["greedy_tokens"]
+        ):
+            sent_texts, sent_tokens, sent_positions = self.split_to_sentences(
+                greedy_text, greedy_tokens, model.tokenizer
+            )
+            n_sents.append(len(sent_texts))
+            all_sent_texts += sent_texts
+            all_sent_tokens += sent_tokens
+            all_sent_positions += sent_positions
 
         with ThreadPoolExecutor(max_workers=self.n_threads) as executor:
-            claims = list(
+            claims_from_sent: List[List[Claim]] = list(
                 tqdm(
                     executor.map(
-                        self.claims_from_text,
-                        greedy_texts,
-                        greedy_tokens,
-                        [model.tokenizer] * len(greedy_texts),
+                        self._claims_from_sentence,
+                        all_sent_texts,
+                        all_sent_tokens,
+                        [model.tokenizer] * len(all_sent_texts),
                     ),
-                    total=len(greedy_texts),
+                    total=len(all_sent_texts),
                     desc="Extracting claims",
                     disable=not self.progress_bar,
                 )
             )
+
+        claims: List[List[Claim]] = []
+        for i in range(len(texts)):
+            claims.append([])
+            for sent in range(n_sents[i]):
+                sent_claims = claims_from_sent[sent]
+                sent_position = all_sent_positions[sent]
+                for j in range(len(sent_claims)):
+                    for k in range(len(sent_claims[j].aligned_token_ids)):
+                        sent_claims[j].aligned_token_ids[k] += sent_position
+                claims[-1] += sent_claims
+            claims_from_sent = claims_from_sent[n_sents[i] :]
+            all_sent_positions = all_sent_positions[n_sents[i] :]
+
+        claim_texts_concatenated: List[str] = []
+        claim_input_texts_concatenated: List[str] = []
 
         for c in claims:
             for claim in c:
@@ -118,7 +143,12 @@ class ClaimsExtractor(StatCalculator):
             "claim_input_texts_concatenated": claim_input_texts_concatenated,
         }
 
-    def claims_from_text(self, text: str, tokens: List[int], tokenizer) -> List[Claim]:
+    def split_to_sentences(
+        self,
+        text: str,
+        tokens: List[int],
+        tokenizer,
+    ) -> Tuple[List[str], List[List[int]], List[int]]:
         sentences = []
         for s in re.split(f"[{self.sent_separators}]", text):
             if len(s) > 0:
@@ -130,7 +160,8 @@ class ClaimsExtractor(StatCalculator):
 
         sent_start_token_idx, sent_end_token_idx = 0, 0
         sent_start_idx, sent_end_idx = 0, 0
-        claims = []
+
+        all_sent_texts, all_sent_tokens, all_sent_positions = [], [], []
         for s in sentences:
             # Find sentence location in text: text[sent_start_idx:sent_end_idx]
             while not text[sent_start_idx:].startswith(s):
@@ -146,15 +177,11 @@ class ClaimsExtractor(StatCalculator):
             while len(tokenizer.decode(tokens[:sent_end_token_idx])) < sent_end_idx:
                 sent_end_token_idx += 1
 
-            # Extract claims from current sentence
-            for c in self._claims_from_sentence(
-                s, tokens[sent_start_token_idx:sent_end_token_idx], tokenizer
-            ):
-                # Correct aligned tokens positions from sentence-level to generation-level
-                for i in range(len(c.aligned_token_ids)):
-                    c.aligned_token_ids[i] += sent_start_token_idx
-                claims.append(c)
-        return claims
+            all_sent_texts.append(s)
+            all_sent_tokens.append(tokens[sent_start_token_idx:sent_end_token_idx])
+            all_sent_positions.append(sent_start_token_idx)
+
+        return all_sent_texts, all_sent_tokens, all_sent_positions
 
     def _claims_from_sentence(
         self,
