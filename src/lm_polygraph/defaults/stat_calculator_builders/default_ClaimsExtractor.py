@@ -9,5 +9,5 @@ def load_stat_calculator(config, builder):
     return ClaimsExtractor(
         builder.chat_model,
         language=config.language,
-        n_threads=config.n_threads,
+        n_threads=getattr(config, "n_threads", 1),
     )
