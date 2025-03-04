@@ -1,3 +1,4 @@
+import time
 import traceback
 import numpy as np
 import torch
@@ -134,6 +135,7 @@ class UEManager:
         ignore_exceptions: bool = True,
         verbose: bool = True,
         max_new_tokens: int = 100,
+        log_time: bool = False,
     ):
         """
         Parameters:
@@ -177,6 +179,7 @@ class UEManager:
 
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
+        self.log_time = log_time
 
         self.init()
 
@@ -245,9 +248,16 @@ class UEManager:
         """
         for stat_calculator in calculators:
             try:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Calculating {stat_calculator}...")
                 new_stats = stat_calculator(
                     batch_stats, inp_texts, self.model, self.max_new_tokens
                 )
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {stat_calculator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 for stat, stat_value in new_stats.items():
                     if stat in batch_stats.keys():
                         continue
@@ -284,7 +294,14 @@ class UEManager:
 
         for estimator in estimators:
             try:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Estimating {estimator}...")
                 e = estimator(batch_stats)
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 if not isinstance(e, list):
                     e = e.tolist()
                 if estimator.level == "claim":
@@ -363,7 +380,14 @@ class UEManager:
 
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Calculating {generation_metric}...")
                 m = generation_metric(batch_stats, target_texts=target_texts)
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {generation_metric} in {round(time.time() - start_time, 2)} secs"
+                    )
                 if not isinstance(m, list):
                     m = m.tolist()
                 if generation_metric.level == "claim":

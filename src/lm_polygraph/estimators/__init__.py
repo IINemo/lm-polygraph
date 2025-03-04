@@ -72,5 +72,11 @@ from .linguistic_1s import Linguistic1S
 from .claim.random_baseline import RandomBaselineClaim
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
+<<<<<<< HEAD
 from .focus import Focus, FocusClaim
+||||||| eb568a6
+=======
+
+# from .focus import Focus, FocusClaim
+>>>>>>> b1af3ba73938f3cda13d885cc250b6b6fffc6674
 from .kernel_language_entropy import KernelLanguageEntropy

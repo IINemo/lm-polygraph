@@ -10,8 +10,13 @@ from lm_polygraph.utils.factory_stat_calculator import (
 def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
+<<<<<<< HEAD
     hf_cache: Optional[str] = None,
     output_attentions: bool = True,
+||||||| eb568a6
+=======
+    hf_cache: str | None = None,
+>>>>>>> b1af3ba73938f3cda13d885cc250b6b6fffc6674
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -51,6 +56,7 @@ def register_default_stat_calculators(
         {
             "nli_model": {
                 "deberta_path": deberta_model_path,
+                "hf_cache": hf_cache,
                 "batch_size": 10,
                 "device": None,
             }
@@ -94,6 +100,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
                     "batch_size": 10,
                     "device": None,
                 }
@@ -105,6 +112,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
                     "batch_size": 10,
                     "device": None,
                 }

@@ -211,12 +211,22 @@ def test_fisher_rao(model):
     assert isinstance(ue.uncertainty, float)
 
 
+<<<<<<< HEAD
 def focus(model):
     estimator = Focus()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
 
+||||||| eb568a6
+=======
+# def focus(model):
+#     estimator = Focus()
+#     ue = estimate_uncertainty(model, estimator, INPUT)
+#     assert isinstance(ue.uncertainty, float)
+
+
+>>>>>>> b1af3ba73938f3cda13d885cc250b6b6fffc6674
 def test_kernel_language_entropy(model):
     estimator = KernelLanguageEntropy()
     ue = estimate_uncertainty(model, estimator, INPUT)

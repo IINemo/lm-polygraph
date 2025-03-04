@@ -87,7 +87,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     gc.collect()
 
             for stat in train_stats.keys():
-                if any(s is None for s in train_stats[stat]):
+                if any(s is None for s in train_stats[stat]) or ("tokenizer" in stat):
                     continue
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[stat] = [
