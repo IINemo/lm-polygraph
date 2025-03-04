@@ -21,11 +21,11 @@ import spacy
 log = logging.getLogger(__name__)
 
 
-def calcu_idf(tokenizer_path, path):
+def calcu_idf(tokenizer_path, path, idf_dataset, trust_remote_code, gamma, p, idf_seed):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    dataset = load_dataset("togethercomputer/RedPajama-Data-1T-Sample")
+    dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
     data = [d for d in dataset["train"]]
-    random.seed(42)
+    random.seed(idf_seed)
     random.shuffle(data)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
     document_frequency = defaultdict(int)
@@ -54,6 +54,10 @@ class Focus(Estimator):
         p: float = 0.01,
         model_name: str = "meta-llama/Llama-3.2-1B",
         path: str = 'f"../../../focus_data/token_idf.pkl"',
+        idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
+        spacy_path: str = '"en_core_web_sm"',
+        trust_remote_code: bool = True,
+        idf_seed: int = 42,
     ):
         super().__init__(
             [
@@ -66,7 +70,7 @@ class Focus(Estimator):
             "sequence",
         )
         if not os.path.exists(path):
-            calcu_idf(model_name, path)
+            calcu_idf(model_name, path, idf_dataset, trust_remote_code, gamma, p, idf_seed)
         self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
@@ -92,6 +96,9 @@ class Focus(Estimator):
         self.start_token_idx = 999999
         self.p = p
         self.gamma = gamma
+        self.idf_dataset = idf_dataset
+        self.trust_remote_code = trust_remote_code
+        self.idf_seed = idf_seed
 
     def __str__(self):
         return f"Focus (gamma={self.gamma})"
@@ -115,7 +122,7 @@ class Focus(Estimator):
         for greedy_log_prob, attention_weight, greedy_token, greedy_text in zip(
             greedy_log_probs, attention_weights, greedy_tokens, greedy_texts
         ):
-            nlp = spacy.load("en_core_web_sm")
+            nlp = spacy.load(self.spacy_path)
             sentence = nlp(greedy_text)
             decodings = tokenizer.batch_decode(greedy_token, skip_special_tokens=True)
             span_index = 0
@@ -188,6 +195,10 @@ class FocusClaim(Estimator):
         p: float = 0.01,
         model_name: str = "meta-llama/Meta-Llama-3-8B",
         path: str = 'f"../../../focus_data/token_idf.pkl"',
+        idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
+        spacy_path: str = '"en_core_web_sm"',
+        trust_remote_code: bool = True,
+        idf_seed: int = 42,
     ):
         super().__init__(
             [
@@ -201,7 +212,7 @@ class FocusClaim(Estimator):
             "claim",
         )
         if not os.path.exists(path):
-            calcu_idf(model_name, path)
+            calcu_idf(model_name, path, idf_dataset, trust_remote_code, gamma, p, idf_seed)
         self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
@@ -226,6 +237,10 @@ class FocusClaim(Estimator):
         self.pos_tag = ["NOUN", "NUM", "PROPN"]
         self.p = p
         self.gamma = gamma
+        self.idf_dataset = idf_dataset
+        self.spacy_path = spacy_path
+        self.trust_remote_code = trust_remote_code
+        self.idf_seed = idf_seed
 
     def __str__(self):
         return f"FocusClaim (gamma={self.gamma})"
@@ -257,7 +272,7 @@ class FocusClaim(Estimator):
             greedy_log_probs, attention_weights, greedy_tokens, greedy_texts, claims
         ):
 
-            nlp = spacy.load("en_core_web_sm")
+            nlp = spacy.load(self.spacy_path)
             sentence = nlp(greedy_text)
             decodings = tokenizer.batch_decode(greedy_token, skip_special_tokens=True)
             span_index = 0

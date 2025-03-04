@@ -61,3 +61,21 @@ estimators:
   - name: SentenceSAR
   - name: RenyiNeg
   - name: FisherRao
+  - name: Focus
+    cfg:
+      idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+      trust_remote_code: True
+      model_name: "meta-llama/Llama-3.2-1B"
+      path: 'f"../../../focus_data/token_idf.pkl"'
+      gamma: 0.9
+      p: 0.01
+  - name: FocusClaim
+    cfg:
+      idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+      trust_remote_code: True
+      model_name: "meta-llama/Llama-3.2-1B"
+      path: 'f"../../../focus_data/token_idf.pkl"'
+      gamma: 0.9
+      p: 0.01
+      
+      

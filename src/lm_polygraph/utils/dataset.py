@@ -139,6 +139,7 @@ class Dataset:
         split: str,
         **kwargs,
     ):
+        print(split)
         load_from_disk = kwargs.pop("load_from_disk", False)
         if load_from_disk:
             dataset_name = path

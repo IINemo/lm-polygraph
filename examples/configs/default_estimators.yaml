@@ -71,3 +71,12 @@ estimators:
     cfg:
       md_type: "RMD"
   - name: Focus
+    cfg:
+        gamma: 0.9,
+        p: 0.01,
+        model_name: "meta-llama/Llama-3.2-1B"
+        path: 'f"../../../focus_data/token_idf.pkl"'
+        idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+        spacy_path: '"en_core_web_sm"'
+        trust_remote_code: True
+        idf_seed: 42
