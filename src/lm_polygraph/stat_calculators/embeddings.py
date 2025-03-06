@@ -11,6 +11,7 @@ def get_embeddings_from_output(
     output,
     batch,
     model_type,
+    pad_token_id: int,
     hidden_state: List[str] = ["encoder", "decoder"],
     ignore_padding: bool = True,
     use_averaging: bool = True,
@@ -21,27 +22,32 @@ def get_embeddings_from_output(
     batch_embeddings = None
     batch_embeddings_decoder = None
     batch_size = len(batch["input_ids"])
-    layer_wise_pooling = {}
-    layers_embeddings = {}
     all_layers_embeddings = []
+
+    gen_token_length = len(output.scores)
+    # we are not interested in the last token, since it does not have embedding
+    gen_tokens = output.sequences[:, -gen_token_length:-1]
+    # this mask selects embeddings of generated tokens that are not trailing pad tokens
+    pad_mask = (gen_tokens != pad_token_id)
 
     if model_type == "CausalLM":
         num_layers = len(output.hidden_states[0])
-        for layer_idx in range(num_layers):
-            input_tokens_hs = output.hidden_states[0][layer_idx].cpu().detach()
-            if len(output.hidden_states) > 1:
-                generated_tokens_hs = torch.cat(
-                    [h[layer_idx].cpu().detach() for h in output.hidden_states[1:]],
-                    dim=1,
-                )
-                layers_embeddings[f"layer_{layer_idx}"] = generated_tokens_hs.permute(1, 0, 2)
-        num_generated_tokens = len(output.hidden_states[1:])
-        for i in range(num_generated_tokens):
-            token_dict = {}
-            for layer_name, tensor in layers_embeddings.items():
-                token_dict[layer_name] = tensor[i].unsqueeze(0)
-            all_layers_embeddings.append(token_dict)
-        
+        for batch_i in range(len(output.sequences)):
+            ith_embeddings = {}
+            for layer_idx in range(num_layers):
+                input_tokens_hs = output.hidden_states[0][layer_idx][batch_i].cpu().detach()
+                if len(output.hidden_states) > 1:
+                    generated_tokens_hs = torch.cat([h[layer_idx][batch_i].cpu().detach() for h in output.hidden_states[1:]], dim=0)[pad_mask[batch_i]]
+                    ith_embeddings[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs
+            all_layers_embeddings.append(ith_embeddings)
+
+        #num_generated_tokens = len(output.hidden_states[1:])
+        #for i in range(num_generated_tokens):
+        #    token_dict = {}
+        #    for layer_name, tensor in layers_embeddings.items():
+        #        token_dict[layer_name] = tensor[i].unsqueeze(0)
+        #    all_layers_embeddings.append(token_dict)
+
         if not all_layers:
             hidden_layer = -1
             input_tokens_hs = output.hidden_states[0][hidden_layer].cpu().detach()
@@ -166,7 +172,7 @@ def get_embeddings_from_output(
     else:
         raise NotImplementedError
 
-    return batch_embeddings, batch_embeddings_decoder, layer_wise_pooling, all_layers_embeddings
+    return batch_embeddings, batch_embeddings_decoder, all_layers_embeddings
 
 
 def aggregate(x, aggregation_method, axis):
@@ -213,16 +219,15 @@ class EmbeddingsCalculator(StatCalculator):
                     ]
                 ),
             )
-            embeddings_encoder, embeddings_decoder, layer_wise_pooling, all_layers_embeddings = get_embeddings_from_output(
+            embeddings_encoder, embeddings_decoder, layers_embeddings = get_embeddings_from_output(
                 out, batch, model.model_type
             )
-               
+
         if model.model_type == "CausalLM":
-            return {
+            result = {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
-                "layer_wise_pooling": {k: v.cpu().detach().numpy() for k, v in layer_wise_pooling.items()},
-                "all_layers_embeddings": {k: v.cpu().detach().numpy() for k, v in all_layers_embeddings.items()}
             }
+            result.update(layers_embeddings())
         elif model.model_type == "Seq2SeqLM":
             return {
                 "embeddings_encoder": embeddings_encoder.cpu().detach().numpy(),

@@ -223,8 +223,12 @@ class GreedyProbsCalculator(StatCalculator):
             logits = torch.stack(out.scores, dim=1)
 
             sequences = out.sequences
-            embeddings_encoder, embeddings_decoder, last_pooling, all_layers_embeddings = get_embeddings_from_output(
-                out, batch, model.model_type, save_all_embeddings=True
+            embeddings_encoder, embeddings_decoder, all_layers_embeddings = get_embeddings_from_output(
+                out,
+                batch,
+                model.model_type,
+                model.model.config.pad_token_id,
+                save_all_embeddings=True
             )
             lbl = lbl_extractor(batch, out)
 
@@ -265,9 +269,7 @@ class GreedyProbsCalculator(StatCalculator):
         if model.model_type == "CausalLM":
             embeddings_dict = {
                 "embeddings_decoder": embeddings_decoder,
-                "last_pooling": last_pooling,
-                # "all_layers_embeddings": all_layers_embeddings,
-                "lookback_lens_features": lbl,
+                "all_layers_embeddings": all_layers_embeddings,
             }
         elif model.model_type == "Seq2SeqLM":
             embeddings_dict = {
@@ -276,6 +278,7 @@ class GreedyProbsCalculator(StatCalculator):
             }
         else:
             raise NotImplementedError
+
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
@@ -283,8 +286,10 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_log_likelihoods": ll,
-            "all_layers_embeddings": all_layers_embeddings,
+            "lookback_lens_features": lbl,
         }
         result_dict.update(embeddings_dict)
+
+        breakpoint()
 
         return result_dict
