@@ -39,7 +39,6 @@ def register_stat_calculators(
         )
     else:
         raise Exception(f"Unsupported language: {language}")
-    nli_model = None
 
     log.info("=" * 100)
     log.info("Initializing stat calculators...")

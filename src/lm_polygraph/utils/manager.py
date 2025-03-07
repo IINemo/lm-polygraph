@@ -342,10 +342,10 @@ class UEManager:
             + [s for m in self.generation_metrics for s in m.stats_dependencies]
             + greedy
         )
-        
+
         # Only calculate stats that are not already calculated
         existing_stats = set(self.stats.keys())
-        stats = list(set(stats) - existing_stats)
+        stats = list((set(stats) | set(self.save_stats)) - existing_stats)
 
         stats, have_stats = _order_calculators(
             stats,

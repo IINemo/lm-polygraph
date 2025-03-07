@@ -290,6 +290,4 @@ class GreedyProbsCalculator(StatCalculator):
         }
         result_dict.update(embeddings_dict)
 
-        breakpoint()
-
         return result_dict

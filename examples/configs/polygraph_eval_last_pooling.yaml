@@ -20,17 +20,12 @@ max_new_tokens: 30
 load_from_disk: false
 save_stats:
   - all_layers_embeddings
-
-# Model settings
-# model:
-#   path: bigscience/bloomz-560m
-#   type: Whitebox
-#   device_map: cpu
-#   ensemble: false
+  - lookback_lens_features
+  - greedy_sentence_similarity
 
 # UE method flags
 use_density_based_ue: false
-use_seq_ue: true
+use_seq_ue: false
 use_tok_ue: false
 use_ens_ue: false
 use_claim_ue: false
