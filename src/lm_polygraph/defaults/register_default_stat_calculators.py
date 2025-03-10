@@ -11,6 +11,7 @@ def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
     hf_cache: str | None = None,
+    blackbox_supports_logprobs: bool = False,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -59,7 +60,12 @@ def register_default_stat_calculators(
     _register(SemanticClassesCalculator)
 
     if model_type == "Blackbox":
-        _register(BlackboxGreedyTextsCalculator)
+        if blackbox_supports_logprobs:
+            # For blackbox models that support logprobs (like OpenAI models)
+            _register(GreyboxGreedyProbsCalculator)
+        else:
+            _register(BlackboxGreedyTextsCalculator)
+        
         _register(BlackboxSamplingGenerationCalculator)
 
     elif model_type == "Whitebox":

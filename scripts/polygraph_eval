@@ -156,10 +156,16 @@ def get_stat_calculator_names(config):
     language = getattr(config, "language", "en")
     output_attentions = getattr(config, "output_attentions", True)
     hf_cache = getattr(config, "hf_cache", None)
+    blackbox_supports_logprobs = model_type == "Blackbox" and getattr(config.model, "supports_logprobs", False)
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
-        all_stat_calculators += register_default_stat_calculators(model_type, language, hf_cache)
+        all_stat_calculators += register_default_stat_calculators(
+            model_type, 
+            language, 
+            hf_cache, 
+            blackbox_supports_logprobs=blackbox_supports_logprobs
+        )
 
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":
@@ -274,6 +280,7 @@ def get_blackbox_model(args):
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key is None:
             raise ValueError("OpenAI API key is not set in the environment variables.")
+        # Create an OpenAI model with logprobs support
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
             model_path=args.model.path
