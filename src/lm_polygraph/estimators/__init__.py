@@ -75,3 +75,4 @@ from .p_true_empirical import PTrueEmpirical
 
 # from .focus import Focus, FocusClaim
 from .kernel_language_entropy import KernelLanguageEntropy
+from .luq import LUQ

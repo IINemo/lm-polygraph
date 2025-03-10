@@ -59,6 +59,8 @@ estimators:
   - name: SAR
   - name: TokenSAR
   - name: SentenceSAR
+  - name: LUQ
+  - name: KernelLanguageEntropy
   - name: RenyiNeg
   - name: FisherRao
   - name: MahalanobisDistanceSeq
