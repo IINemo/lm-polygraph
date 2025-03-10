@@ -86,6 +86,9 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     torch.cuda.empty_cache()
                     gc.collect()
 
+            print('TRAIN STATS', train_stats.keys)
+            print(train_stats.keys)
+
             for stat in train_stats.keys():
                 if any(s is None for s in train_stats[stat]):
                     continue

@@ -55,7 +55,7 @@ class Focus(Estimator):
         model_name: str = "meta-llama/Llama-3.2-1B",
         path: str = 'f"../../../focus_data/token_idf.pkl"',
         idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
-        spacy_path: str = '"en_core_web_sm"',
+        spacy_path: str = "en_core_web_sm",
         trust_remote_code: bool = True,
         idf_seed: int = 42,
     ):
@@ -99,6 +99,7 @@ class Focus(Estimator):
         self.idf_dataset = idf_dataset
         self.trust_remote_code = trust_remote_code
         self.idf_seed = idf_seed
+        self.spacy_path = spacy_path
 
     def __str__(self):
         return f"Focus (gamma={self.gamma})"
@@ -196,7 +197,7 @@ class FocusClaim(Estimator):
         model_name: str = "meta-llama/Meta-Llama-3-8B",
         path: str = 'f"../../../focus_data/token_idf.pkl"',
         idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
-        spacy_path: str = '"en_core_web_sm"',
+        spacy_path: str = "en_core_web_sm",
         trust_remote_code: bool = True,
         idf_seed: int = 42,
     ):
