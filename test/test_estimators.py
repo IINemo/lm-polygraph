@@ -222,6 +222,7 @@ def test_kernel_language_entropy(model):
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
+
 def test_luq(model):
     estimator = LUQ()
     ue = estimate_uncertainty(model, estimator, INPUT)
