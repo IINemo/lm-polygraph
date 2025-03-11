@@ -65,7 +65,7 @@ def register_default_stat_calculators(
             _register(GreyboxGreedyProbsCalculator)
         else:
             _register(BlackboxGreedyTextsCalculator)
-        
+
         _register(BlackboxSamplingGenerationCalculator)
 
     elif model_type == "Whitebox":

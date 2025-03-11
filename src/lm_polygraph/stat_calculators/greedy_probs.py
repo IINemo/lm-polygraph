@@ -67,8 +67,8 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
         return [
             "greedy_texts",
             "greedy_log_probs",
-            "greedy_log_likelihoods", 
-            "greedy_tokens"
+            "greedy_log_likelihoods",
+            "greedy_tokens",
         ], []
 
     def __init__(
@@ -101,8 +101,10 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
                 - 'greedy_tokens' (List[List[str]]): tokens of the generated text.
         """
         if not model.supports_logprobs:
-            raise ValueError("Model must support logprobs for GreyboxGreedyProbsCalculator")
-        
+            raise ValueError(
+                "Model must support logprobs for GreyboxGreedyProbsCalculator"
+            )
+
         # Request text generation with logprobs
         with torch.no_grad():
             sequences = model.generate_texts(
@@ -118,32 +120,36 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
         greedy_log_probs = []
         greedy_log_likelihoods = []
         greedy_tokens = []
-        
+
         # Extract logprobs and tokens from the model's stored data
-        if hasattr(model, 'logprobs') and model.logprobs:
+        if hasattr(model, "logprobs") and model.logprobs:
             for i, logprob_data in enumerate(model.logprobs):
-                if hasattr(logprob_data, 'content'):
+                if hasattr(logprob_data, "content"):
                     # Extract tokens
                     tokens = [item.token for item in logprob_data.content]
                     greedy_tokens.append(tokens)
-                    
+
                     # Extract log probabilities for this generation
                     log_probs_list = []
                     log_likelihoods = []
-                    
+
                     for token_logprobs in logprob_data.content:
                         # Get the top logprobs for this token position from OpenAI API
                         token_logprob_dict = {}
-                        for top_logprob in getattr(token_logprobs, 'top_logprobs', []):
+                        for top_logprob in getattr(token_logprobs, "top_logprobs", []):
                             token_logprob_dict[top_logprob.token] = top_logprob.logprob
-                        
+
                         # Create a sparse representation of the logprobs distribution
-                        # Note: Many uncertainty estimators like MaximumSequenceProbability, Perplexity, 
-                        # and MaximumTokenProbability don't use this full distribution - they only 
+                        # Note: Many uncertainty estimators like MaximumSequenceProbability, Perplexity,
+                        # and MaximumTokenProbability don't use this full distribution - they only
                         # use greedy_log_likelihoods for the chosen tokens.
                         # However, we provide it for estimators that need the full distribution (e.g., entropy-based methods)
-                        sparse_logprobs = np.ones(model.model_path_vocab_size if hasattr(model, 'model_path_vocab_size') else 50000) * -float('inf')
-                        
+                        sparse_logprobs = np.ones(
+                            model.model_path_vocab_size
+                            if hasattr(model, "model_path_vocab_size")
+                            else 50000
+                        ) * -float("inf")
+
                         # Map token strings to positions in the sparse array
                         # This is an approximation since we don't have access to OpenAI's actual token IDs
                         # It only affects estimators that use the full probability distribution,
@@ -151,18 +157,18 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
                         for token_str, logprob in token_logprob_dict.items():
                             token_idx = hash(token_str) % len(sparse_logprobs)
                             sparse_logprobs[token_idx] = logprob
-                        
+
                         log_probs_list.append(sparse_logprobs)
-                        
+
                         # Extract the log probability of the chosen token
                         # This is what's used by MaximumSequenceProbability, Perplexity and similar estimators
                         # and is directly provided by the OpenAI API without any mapping needed
                         chosen_logprob = token_logprobs.logprob
-                        log_likelihoods.append(chosen_logprob)   
-                                         
+                        log_likelihoods.append(chosen_logprob)
+
                     greedy_log_probs.append(log_probs_list)
                     greedy_log_likelihoods.append(log_likelihoods)
-        
+
         # Ensure all outputs have the same length
         while len(greedy_tokens) < len(greedy_texts):
             # If we're missing token data, add placeholder empty lists

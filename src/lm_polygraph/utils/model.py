@@ -116,12 +116,12 @@ class BlackboxModel(Model):
         self.parameters = parameters
         self.openai_api_key = openai_api_key
         self.supports_logprobs = supports_logprobs
-        
+
         if openai_api_key is not None:
             self.openai_api = openai.OpenAI(api_key=openai_api_key)
             # OpenAI models from the API can return logprobs
             self.supports_logprobs = True
-            
+
         self.hf_api_token = hf_api_token
 
     def _query(self, payload):
@@ -150,7 +150,9 @@ class BlackboxModel(Model):
             openai_api_key (Optional[str]): OpenAI API key. Default: None.
             model_path (Optional[str]): model name in OpenAI.
         """
-        return BlackboxModel(openai_api_key=openai_api_key, model_path=model_path, supports_logprobs=True)
+        return BlackboxModel(
+            openai_api_key=openai_api_key, model_path=model_path, supports_logprobs=True
+        )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
@@ -161,10 +163,17 @@ class BlackboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
-        if any(
-            args.get(arg, False)
-            for arg in ["output_scores", "output_attentions", "output_hidden_states"]
-        ) and not self.supports_logprobs:
+        if (
+            any(
+                args.get(arg, False)
+                for arg in [
+                    "output_scores",
+                    "output_attentions",
+                    "output_hidden_states",
+                ]
+            )
+            and not self.supports_logprobs
+        ):
             raise Exception("Cannot access logits for blackbox model")
 
         for delete_key in [
@@ -190,16 +199,16 @@ class BlackboxModel(Model):
             self.last_response = None
             self.logprobs = []
             self.tokens = []
-            
+
             # Check if we need to return logprobs
             return_logprobs = args.pop("output_scores", False)
             logprobs_args = {}
-            
+
             if return_logprobs and self.supports_logprobs:
                 logprobs_args["logprobs"] = True
                 # OpenAI supports returning top logprobs, default to 5
                 logprobs_args["top_logprobs"] = args.pop("top_logprobs", 5)
-                
+
             for prompt in input_texts:
                 if isinstance(prompt, str):
                     # If prompt is a string, create a single message with "user" role
@@ -238,12 +247,15 @@ class BlackboxModel(Model):
                         self.logprobs.append(response.choices[0].logprobs)
                         # Extract token information if available
                         if hasattr(response.choices[0].logprobs, "content"):
-                            tokens = [item.token for item in response.choices[0].logprobs.content]
+                            tokens = [
+                                item.token
+                                for item in response.choices[0].logprobs.content
+                            ]
                             self.tokens.append(tokens)
                 else:
                     texts.append([resp.message.content for resp in response.choices])
                     # For multiple returns, we don't collect logprobs for now
-                
+
                 # Store the last response for later use
                 self.last_response = response
 
@@ -295,13 +307,13 @@ class BlackboxModel(Model):
         if self.supports_logprobs:
             args["output_scores"] = True
             sequences = self.generate_texts(**args)
-            
+
             # Return a simple object with the necessary attributes for compatibility
             class OpenAIGenerationOutput:
                 def __init__(self, sequences, scores):
                     self.sequences = sequences
                     self.scores = scores
-                    
+
             return OpenAIGenerationOutput(sequences, self.logprobs)
         else:
             raise Exception("Cannot access logits of blackbox model")
