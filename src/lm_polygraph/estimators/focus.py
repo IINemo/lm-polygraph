@@ -23,9 +23,7 @@ log = logging.getLogger(__name__)
 
 def calcu_idf(tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    dataset = load_dataset(
-        idf_dataset, trust_remote_code=trust_remote_code
-    )
+    dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
     data = [d for d in dataset["train"]]
     random.seed(idf_seed)
     random.shuffle(data)
@@ -100,7 +98,7 @@ class Focus(Estimator):
         self.p = p
         self.gamma = gamma
         self.nlp = spacy.load(spacy_path)
-        
+
     def __str__(self):
         return f"Focus (gamma={self.gamma})"
 
@@ -195,6 +193,7 @@ class FocusClaim(Estimator):
         p: float = 0.01,
         model_name: str = "meta-llama/Meta-Llama-3-8B",
         path: str = None,
+        idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
         trust_remote_code: bool = True,
         idf_seed: int = 42,
         spacy_path: str = "en_core_web_sm",
@@ -238,7 +237,7 @@ class FocusClaim(Estimator):
         self.p = p
         self.gamma = gamma
         self.nlp = spacy.load(spacy_path)
-     
+
     def __str__(self):
         return f"FocusClaim (gamma={self.gamma})"
 
