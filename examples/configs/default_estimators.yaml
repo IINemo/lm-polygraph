@@ -73,3 +73,9 @@ estimators:
   - name: Focus
     cfg:
       model_name: "facebook/opt-125m"
+      gamma: 0.9
+      p: 0.01
+      idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+      trust_remote_code: True
+      idf_seed: 42
+      spacy_path: "en_core_web_sm"
