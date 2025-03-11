@@ -1,6 +1,6 @@
 from .stat_calculator import StatCalculator
 from .initial_state import InitialStateCalculator
-from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator
+from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator, GreyboxGreedyProbsCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .prompt import PromptCalculator, SamplingPromptCalculator, ClaimPromptCalculator
 from .claim_level_prompts import (
