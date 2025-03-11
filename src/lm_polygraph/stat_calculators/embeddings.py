@@ -37,7 +37,7 @@ def get_embeddings_from_output(
             for layer_idx in range(num_layers):
                 input_tokens_hs = output.hidden_states[0][layer_idx][batch_i].cpu().detach()
                 if len(output.hidden_states) > 1:
-                    generated_tokens_hs = torch.cat([h[layer_idx][batch_i].cpu().detach() for h in output.hidden_states[1:]], dim=0)[pad_mask[batch_i]]
+                    generated_tokens_hs = torch.cat([h[layer_idx][batch_i] for h in output.hidden_states[1:]], dim=0)[pad_mask[batch_i]].cpu().detach()
                     ith_embeddings[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs
             all_layers_embeddings.append(ith_embeddings)
 
