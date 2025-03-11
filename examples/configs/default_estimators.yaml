@@ -70,3 +70,6 @@ estimators:
   - name: PPLMDSeq
     cfg:
       md_type: "RMD"
+  - name: Focus
+    cfg:
+      model_name: "facebook/opt-125m"

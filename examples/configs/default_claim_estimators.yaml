@@ -10,3 +10,6 @@ estimators:
   - name: ClaimConditionedProbabilityClaim
     cfg:
       nli_context: "fact_pref"
+  - name: FocusClaim
+    cfg:
+      model_name: "facebook/opt-125m"

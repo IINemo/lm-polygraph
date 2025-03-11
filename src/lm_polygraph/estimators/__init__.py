@@ -73,5 +73,5 @@ from .claim.random_baseline import RandomBaselineClaim
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
 
-# from .focus import Focus, FocusClaim
+from .focus import Focus, FocusClaim
 from .kernel_language_entropy import KernelLanguageEntropy
