@@ -24,12 +24,6 @@ def get_embeddings_from_output(
     batch_size = len(batch["input_ids"])
     all_layers_embeddings = []
 
-    gen_token_length = len(output.scores)
-    # we are not interested in the last token, since it does not have embedding
-    gen_tokens = output.sequences[:, -gen_token_length:-1]
-    # this mask selects embeddings of generated tokens that are not trailing pad tokens
-    pad_mask = (gen_tokens != pad_token_id)
-
     if model_type == "CausalLM":
         num_layers = len(output.hidden_states[0])
         for batch_i in range(len(output.sequences)):
@@ -37,6 +31,12 @@ def get_embeddings_from_output(
             for layer_idx in range(num_layers):
                 input_tokens_hs = output.hidden_states[0][layer_idx][batch_i].cpu().detach()
                 if len(output.hidden_states) > 1:
+                    gen_token_length = len(output.scores)
+                    # we are not interested in the last token, since it does not have embedding
+                    gen_tokens = output.sequences[:, -gen_token_length:-1]
+                    # this mask selects embeddings of generated tokens that are not trailing pad tokens
+                    pad_mask = (gen_tokens != pad_token_id)
+
                     generated_tokens_hs = torch.cat([h[layer_idx][batch_i] for h in output.hidden_states[1:]], dim=0)[pad_mask[batch_i]].cpu().detach()
                     ith_embeddings[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs
             all_layers_embeddings.append(ith_embeddings)
