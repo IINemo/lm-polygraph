@@ -21,7 +21,7 @@ class GreedySemanticMatrixCalculator(StatCalculator):
         super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
-    
+
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         return [
