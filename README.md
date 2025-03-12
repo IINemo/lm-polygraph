@@ -67,7 +67,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = WhiteboxModel(base_model, tokenizer, model_path=model_path)
 ```
 
-Alternatively, you can use WhiteboxModel#from_pretrained method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
+Alternatively, you can use ```WhiteboxModel.from_pretrained``` method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
 
 ```python
 from lm_polygraph.utils.model import WhiteboxModel
