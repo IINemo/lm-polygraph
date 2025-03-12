@@ -61,6 +61,7 @@ estimators:
   - name: SentenceSAR
   - name: LUQ
   - name: KernelLanguageEntropy
+  - name: EigenScore
   - name: RenyiNeg
   - name: FisherRao
   - name: MahalanobisDistanceSeq
