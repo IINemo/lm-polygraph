@@ -227,7 +227,7 @@ class GreedyProbsCalculator(StatCalculator):
                 out,
                 batch,
                 model.model_type,
-                model.model.config.pad_token_id,
+                model.tokenizer.config.pad_token_id,
                 save_all_embeddings=True
             )
             lbl = lbl_extractor(batch, out)
