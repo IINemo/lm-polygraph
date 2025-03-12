@@ -63,7 +63,7 @@ estimators:
   - name: FisherRao
   - name: Focus
     cfg:
-      model_name: bloomz-560m
+      model_name: "bigscience/bloomz-560m"
       gamma: 0.9
       p: 0.01
       idf_dataset: "rvanova/RedPajama-Data-1K-Sample-For-Test"
