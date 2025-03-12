@@ -8,9 +8,10 @@ class LUQ(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "LUQ: Long-text Uncertainty Quantification for LLMs" as provided in the paper https://aclanthology.org/2024.emnlp-main.299.pdf.
-    This class implements a basic version of LUQ without incorporating sentence splitting or atomic claim decomposition. 
+    This class implements a basic version of LUQ without incorporating sentence splitting or atomic claim decomposition.
     Additionally, this implementation utilizes the default NLI model provided by lm_polygraph.utils.deberta.
     """
+
     def __init__(self):
         super().__init__(
             ["semantic_matrix_entail_logits", "semantic_matrix_contra_logits"],
