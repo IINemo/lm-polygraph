@@ -100,7 +100,7 @@ class Focus(Estimator):
         self.p = p
         self.gamma = gamma
         self.nlp = spacy.load(spacy_path)
-        
+
     def __str__(self):
         return f"Focus (gamma={self.gamma})"
 
