@@ -63,10 +63,10 @@ estimators:
   - name: FisherRao
   - name: Focus
     cfg:
-      model_name: "unsloth/Llama-3.2-1B"
+      model_name: bloomz-560m
       gamma: 0.9
       p: 0.01
-      idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+      idf_dataset: "rvanova/RedPajama-Data-1K-Sample-For-Test"
       trust_remote_code: True
       idf_seed: 42
       spacy_path: "en_core_web_sm"
