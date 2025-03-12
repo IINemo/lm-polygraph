@@ -70,10 +70,11 @@ class Focus(Estimator):
             ],
             "sequence",
         )
+        self.path = path
         spacy.cli.download(spacy_path)
-        if not os.path.exists(path):
-            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
-        self.token_idf = pickle.load(open(path, "rb"))
+        if not os.path.exists(self.path):
+            calcu_idf(model_name, self.path, idf_dataset, trust_remote_code, idf_seed)
+        self.token_idf = pickle.load(open(self.path, "rb"))
         self.NER_type = [
             "PERSON",
             "DATE",
@@ -210,9 +211,10 @@ class FocusClaim(Estimator):
             ],
             "claim",
         )
-        if not os.path.exists(path):
-            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
-        self.token_idf = pickle.load(open(path, "rb"))
+        self.path = path
+        if not os.path.exists(self.path):
+            calcu_idf(model_name, self.path, idf_dataset, trust_remote_code, idf_seed)
+        self.token_idf = pickle.load(open(self.path, "rb"))
         self.NER_type = [
             "PERSON",
             "DATE",
