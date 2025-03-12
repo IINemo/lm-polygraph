@@ -73,10 +73,10 @@ estimators:
   - name: Focus
     cfg:
       model_name: "facebook/opt-125m"
+      path: "../focus_data/token_idf_opt125m.pkl"
       gamma: 0.9
       p: 0.01
       idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
       trust_remote_code: True
       idf_seed: 42
       spacy_path: "en_core_web_sm"
-      path: f"../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
