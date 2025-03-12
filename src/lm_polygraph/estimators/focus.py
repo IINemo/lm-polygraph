@@ -51,14 +51,14 @@ def calcu_idf(tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed):
 class Focus(Estimator):
     def __init__(
         self,
-        gamma: float = 0.9,
-        p: float = 0.01,
-        model_name: str = "meta-llama/Llama-3.2-1B",
-        path: str = None,
-        idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
-        trust_remote_code: bool = True,
-        idf_seed: int = 42,
-        spacy_path: str = "en_core_web_sm",
+        gamma: float,
+        p: float,
+        model_name: str,
+        path: str,
+        idf_dataset: str,
+        trust_remote_code: bool,
+        idf_seed: int,
+        spacy_path: str,
     ):
         super().__init__(
             [
@@ -70,11 +70,10 @@ class Focus(Estimator):
             ],
             "sequence",
         )
-        self.path = path or f"../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
         spacy.cli.download(spacy_path)
-        if not os.path.exists(self.path):
-            calcu_idf(model_name, self.path, idf_dataset, trust_remote_code, idf_seed)
-        self.token_idf = pickle.load(open(self.path, "rb"))
+        if not os.path.exists(path):
+            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
+        self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
             "DATE",
@@ -191,14 +190,14 @@ class Focus(Estimator):
 class FocusClaim(Estimator):
     def __init__(
         self,
-        gamma: float = 0.9,
-        p: float = 0.01,
-        model_name: str = "meta-llama/Meta-Llama-3-8B",
-        path: str = None,
-        idf_dataset: str = "togethercomputer/RedPajama-Data-1T-Sample",
-        trust_remote_code: bool = True,
-        idf_seed: int = 42,
-        spacy_path: str = "en_core_web_sm",
+        gamma: float,
+        p: float,
+        model_name: str,
+        path: str,
+        idf_dataset: str,
+        trust_remote_code: bool,
+        idf_seed: int,
+        spacy_path: str,
     ):
         super().__init__(
             [
@@ -211,10 +210,9 @@ class FocusClaim(Estimator):
             ],
             "claim",
         )
-        self.path = path or f"../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
-        if not os.path.exists(self.path):
-            calcu_idf(model_name, self.path, idf_dataset, trust_remote_code, idf_seed)
-        self.token_idf = pickle.load(open(self.path, "rb"))
+        if not os.path.exists(path):
+            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
+        self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
             "DATE",

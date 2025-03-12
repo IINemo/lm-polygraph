@@ -19,3 +19,4 @@ estimators:
       trust_remote_code: True
       idf_seed: 42
       spacy_path: "en_core_web_sm"
+      path: f"../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
