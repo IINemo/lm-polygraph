@@ -18,6 +18,7 @@ import logging
 from transformers import AutoTokenizer
 import spacy
 
+
 log = logging.getLogger(__name__)
 
 
@@ -70,6 +71,7 @@ class Focus(Estimator):
             "sequence",
         )
         self.path = path or f"../focus_data/token_idf_{model_name.split('/')[-1]}.pkl"
+        spacy.cli.download(spacy_path)
         if not os.path.exists(self.path):
             calcu_idf(model_name, self.path, idf_dataset, trust_remote_code, idf_seed)
         self.token_idf = pickle.load(open(self.path, "rb"))
@@ -98,7 +100,7 @@ class Focus(Estimator):
         self.p = p
         self.gamma = gamma
         self.nlp = spacy.load(spacy_path)
-
+        
     def __str__(self):
         return f"Focus (gamma={self.gamma})"
 
