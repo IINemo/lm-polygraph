@@ -212,7 +212,7 @@ def test_fisher_rao(model):
 
 
 def focus(model):
-    estimator = Focus()
+    estimator = Focus('gamma', 'p', 'model_name', 'path', 'idf_dataset', 'trust_remote_code', 'idf_seed','spacy_path')
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
