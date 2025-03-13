@@ -22,12 +22,16 @@ import spacy
 log = logging.getLogger(__name__)
 
 
-def calcu_idf(tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed):
+def calcu_idf(
+    tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed, idf_dataset_size
+):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
     data = [d for d in dataset["train"]]
     random.seed(idf_seed)
     random.shuffle(data)
+    if (idf_dataset_size > 0) and (idf_dataset_size < len(data)):
+        data = random.sample(data, idf_dataset_size)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
     document_frequency = defaultdict(int)
     offset = 1 if "facebook" in tokenizer_path else 0
@@ -58,6 +62,7 @@ class Focus(Estimator):
         idf_dataset: str,
         trust_remote_code: bool,
         idf_seed: int,
+        idf_dataset_size: int,
         spacy_path: str,
     ):
         super().__init__(
@@ -70,9 +75,17 @@ class Focus(Estimator):
             ],
             "sequence",
         )
-        spacy.cli.download(spacy_path)
+        if not spacy.util.is_package(spacy_path):
+            spacy.cli.download(spacy_path)
         if not os.path.exists(path):
-            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
+            calcu_idf(
+                model_name,
+                path,
+                idf_dataset,
+                trust_remote_code,
+                idf_seed,
+                idf_dataset_size,
+            )
         self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
@@ -197,6 +210,7 @@ class FocusClaim(Estimator):
         idf_dataset: str,
         trust_remote_code: bool,
         idf_seed: int,
+        idf_dataset_size: int,
         spacy_path: str,
     ):
         super().__init__(
@@ -210,8 +224,17 @@ class FocusClaim(Estimator):
             ],
             "claim",
         )
+        if not spacy.util.is_package(spacy_path):
+            spacy.cli.download(spacy_path)
         if not os.path.exists(path):
-            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
+            calcu_idf(
+                model_name,
+                path,
+                idf_dataset,
+                trust_remote_code,
+                idf_seed,
+                idf_dataset_size,
+            )
         self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
