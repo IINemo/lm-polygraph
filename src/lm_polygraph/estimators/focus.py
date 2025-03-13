@@ -18,16 +18,15 @@ import logging
 from transformers import AutoTokenizer
 import spacy
 
+
 log = logging.getLogger(__name__)
 
 
-def calcu_idf(tokenizer_path, path):
+def calcu_idf(tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    dataset = load_dataset(
-        "togethercomputer/RedPajama-Data-1T-Sample", trust_remote_code=True
-    )
+    dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
     data = [d for d in dataset["train"]]
-    random.seed(42)
+    random.seed(idf_seed)
     random.shuffle(data)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
     document_frequency = defaultdict(int)
@@ -52,10 +51,14 @@ def calcu_idf(tokenizer_path, path):
 class Focus(Estimator):
     def __init__(
         self,
-        gamma: float = 0.9,
-        p: float = 0.01,
-        model_name: str = "meta-llama/Llama-3.2-1B",
-        path: str = "../focus_data",
+        gamma: float,
+        p: float,
+        model_name: str,
+        path: str,
+        idf_dataset: str,
+        trust_remote_code: bool,
+        idf_seed: int,
+        spacy_path: str,
     ):
         super().__init__(
             [
@@ -67,10 +70,10 @@ class Focus(Estimator):
             ],
             "sequence",
         )
-        self.path = f"{path}/token_idf_{model_name.split('/')[-1]}.pkl"
-        if not os.path.exists(self.path):
-            calcu_idf(model_name, self.path)
-        self.token_idf = pickle.load(open(self.path, "rb"))
+        spacy.cli.download(spacy_path)
+        if not os.path.exists(path):
+            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
+        self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
             "DATE",
@@ -95,6 +98,7 @@ class Focus(Estimator):
         self.start_token_idx = 999999
         self.p = p
         self.gamma = gamma
+        self.nlp = spacy.load(spacy_path)
 
     def __str__(self):
         return f"Focus (gamma={self.gamma})"
@@ -118,8 +122,7 @@ class Focus(Estimator):
         for greedy_log_prob, attention_weight, greedy_token, greedy_text in zip(
             greedy_log_probs, attention_weights, greedy_tokens, greedy_texts
         ):
-            nlp = spacy.load("en_core_web_sm")
-            sentence = nlp(greedy_text)
+            sentence = self.nlp(greedy_text)
             decodings = tokenizer.batch_decode(greedy_token, skip_special_tokens=True)
             span_index = 0
             kw_mask = np.zeros_like(greedy_token, dtype=bool)
@@ -187,10 +190,14 @@ class Focus(Estimator):
 class FocusClaim(Estimator):
     def __init__(
         self,
-        gamma: float = 0.9,
-        p: float = 0.01,
-        model_name: str = "meta-llama/Meta-Llama-3-8B",
-        path: str = "../focus_data",
+        gamma: float,
+        p: float,
+        model_name: str,
+        path: str,
+        idf_dataset: str,
+        trust_remote_code: bool,
+        idf_seed: int,
+        spacy_path: str,
     ):
         super().__init__(
             [
@@ -203,10 +210,9 @@ class FocusClaim(Estimator):
             ],
             "claim",
         )
-        self.path = f"{path}/token_idf_{model_name.split('/')[-1]}.pkl"
-        if not os.path.exists(self.path):
-            calcu_idf(model_name, self.path)
-        self.token_idf = pickle.load(open(self.path, "rb"))
+        if not os.path.exists(path):
+            calcu_idf(model_name, path, idf_dataset, trust_remote_code, idf_seed)
+        self.token_idf = pickle.load(open(path, "rb"))
         self.NER_type = [
             "PERSON",
             "DATE",
@@ -230,6 +236,7 @@ class FocusClaim(Estimator):
         self.pos_tag = ["NOUN", "NUM", "PROPN"]
         self.p = p
         self.gamma = gamma
+        self.nlp = spacy.load(spacy_path)
 
     def __str__(self):
         return f"FocusClaim (gamma={self.gamma})"
@@ -260,9 +267,7 @@ class FocusClaim(Estimator):
         ) in zip(
             greedy_log_probs, attention_weights, greedy_tokens, greedy_texts, claims
         ):
-
-            nlp = spacy.load("en_core_web_sm")
-            sentence = nlp(greedy_text)
+            sentence = self.nlp(greedy_text)
             decodings = tokenizer.batch_decode(greedy_token, skip_special_tokens=True)
             span_index = 0
             kw_mask = np.zeros_like(greedy_token, dtype=bool)

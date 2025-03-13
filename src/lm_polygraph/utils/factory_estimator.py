@@ -37,12 +37,14 @@ def load_simple_estimators(name: str, config):
         Verbalized2S,
         Linguistic1S,
         MaximumClaimProbability,
+        Focus,
         PerplexityClaim,
         MaxTokenEntropyClaim,
         PointwiseMutualInformationClaim,
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
         RandomBaselineClaim,
+        FocusClaim,
     ]
 
     try:
