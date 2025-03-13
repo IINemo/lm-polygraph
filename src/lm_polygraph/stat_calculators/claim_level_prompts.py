@@ -54,7 +54,7 @@ Behauptungen:
 - Er wurde bis zu seinem 11. Lebensjahr von seiner Mutter und seinem Vater aufgezogen.
 
 Satz: \"{sent}\"
-Behauptungen:"""
+Behauptungen:""",
 }
 
 MATCHING_PROMPTS = {
@@ -96,7 +96,8 @@ MATCHING_PROMPTS = {
         "die mit der Tatsache in Zusammenhang stehen, in der Reihenfolge, in der sie im"
         "ursprünglichen Satz erscheinen, wobei jedes Wort durch Komma getrennt ist.\n"
         "Tatsache: {claim}\nSatz: {sent}\nWörter aus dem Satz, die zur Ableitung"
-        "der Tatsache beitragen, durch Komma getrennt: ")
+        "der Tatsache beitragen, durch Komma getrennt: "
+    ),
 }
 
 OPENAI_FACT_CHECK_PROMPTS = {
@@ -140,7 +141,7 @@ Claim: {claim}
 Stellen Sie fest, ob alle bereitgestellten Informationen in der folgenden Behauptung gemäß den neuesten Informationsquellen wahr sind.
 
 Behauptung: {claim}
-"""
+""",
 }
 
 OPENAI_FACT_CHECK_SUMMARIZE_PROMPT = {
@@ -203,5 +204,5 @@ Is the following claim true?
 Reply: {reply}
 
 Summarize this reply into one word, whether the claim is true: "True", "False" or "Not known"."""
-    )
+    ),
 }

@@ -177,9 +177,11 @@ def get_stat_calculator_names(config):
     all_stat_calculators = []
 
     output_attentions = getattr(config, "output_attentions", True)
-    
+    hf_cache = getattr(config, "hf_cache", None)
+
+    all_stat_calculators = []
     if "auto" in config.stat_calculators:
-        all_stat_calculators += register_default_stat_calculators(model_type, language, hf_cache)
+        all_stat_calculators += register_default_stat_calculators(model_type, language, hf_cache, output_attentions)
 
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":

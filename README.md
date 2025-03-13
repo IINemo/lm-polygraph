@@ -67,7 +67,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = WhiteboxModel(base_model, tokenizer, model_path=model_path)
 ```
 
-Alternatively, you can use WhiteboxModel#from_pretrained method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
+Alternatively, you can use ```WhiteboxModel.from_pretrained``` method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
 
 ```python
 from lm_polygraph.utils.model import WhiteboxModel
@@ -157,6 +157,7 @@ This allows seamless integration with any OpenAI-compatible API service while ma
 | TokenSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                               | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | SentenceSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                            | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | SAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                                    | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
+| EigenScore [(Chen et al., 2024)](https://openreview.net/forum?id=Zj12nzlQbz)                                                                                                                    | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | Sentence-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)                                                                           | White-box   | Ensembling          | High    | High   |         Yes         | sequence       |
 | Token-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)                                                                              | White-box   | Ensembling          | High    | High   |         Yes         | sequence       |
 | Mahalanobis distance (MD) [(Lee et al., 2018)](https://proceedings.neurips.cc/paper/2018/hash/abdeb6f575ac5c6676b747bca8d09cc2-Abstract.html)                                  | White-box   | Density-based       | Low     | Low    |         Yes         | sequence       |
@@ -169,13 +170,14 @@ This allows seamless integration with any OpenAI-compatible API service while ma
 | Degree matrix (Deg) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)                                                                                                     | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
 | Eccentricity (Ecc) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)                                                                                                      | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
 | Lexical similarity (LexSim) [(Fomicheva et al., 2020a)](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00330/96475/Unsupervised-Quality-Estimation-for-Neural-Machine) | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
+| Kernel Language Entropy [(Nikitin et al., 2024)](https://arxiv.org/pdf/2405.20003) | Black-box | Meaning Diversity | High | Low | No | sequence |
+| LUQ [(Zhang et al., 2024)](https://aclanthology.org/2024.emnlp-main.299/)                                                                                                                    | Black-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | Verbalized Uncertainty 1S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Low     | Low    |         No          | sequence       |
 | Verbalized Uncertainty 2S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Medium  | Low    |         No          | sequence       |
-| Kernel Language Entropy [(Nikitin et al., 2024)](https://arxiv.org/pdf/2405.20003) | Black-box | Meaning Diversity | High | Low | No | sequence |
 
 ## Benchmark
 
-To evaluate the performance of uncertainty estimation methods consider a quick example: 
+To evaluate the performance of uncertainty estimation methods consider a quick example:
 
 ```
 CUDA_VISIBLE_DEVICES=0 polygraph_eval \
@@ -191,16 +193,16 @@ A detailed description of the benchmark is in the [documentation](https://lm-pol
 
 ## <a name="demo_web_application"></a>Demo web application
 
- 
+
 <img width="850" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
 
 
 ### Start with Docker
 
 ```sh
-docker run -p 3001:3001 -it \
-    -v $HOME/.cache/huggingface/hub:/root/.cache/huggingface/hub \
-    --gpus all mephodybro/polygraph_demo:0.0.17 polygraph_server
+docker build -t lm-polygraph .
+docker run --rm -it docker.io/library/lm-polygraph
+# If you want to use GPU: docker run --gpus all --rm -it docker.io/library/lm-polygraph
 ```
 The server should be available on `http://localhost:3001`
 

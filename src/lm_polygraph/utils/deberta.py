@@ -66,9 +66,13 @@ class Deberta:
         if self._deberta is not None:
             return
         self._deberta = DebertaForSequenceClassification.from_pretrained(
-            self.deberta_path, problem_type="multi_label_classification", cache_dir=self.hf_cache
+            self.deberta_path,
+            problem_type="multi_label_classification",
+            cache_dir=self.hf_cache,
         )
-        self._deberta_tokenizer = DebertaTokenizer.from_pretrained(self.deberta_path, cache_dir=self.hf_cache)
+        self._deberta_tokenizer = DebertaTokenizer.from_pretrained(
+            self.deberta_path, cache_dir=self.hf_cache
+        )
         self._deberta.to(self.device)
         self._deberta.eval()
 
@@ -112,7 +116,9 @@ class MultilingualDeberta(Deberta):
         """
         if self._deberta is not None:
             return
-        self._deberta_tokenizer = AutoTokenizer.from_pretrained(self.deberta_path, cache_dir=self.hf_cache)
+        self._deberta_tokenizer = AutoTokenizer.from_pretrained(
+            self.deberta_path, cache_dir=self.hf_cache
+        )
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
             self.deberta_path, cache_dir=self.hf_cache
         )

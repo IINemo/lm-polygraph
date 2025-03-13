@@ -254,7 +254,9 @@ class UEManager:
                     batch_stats, inp_texts, self.model, self.max_new_tokens
                 )
                 if self.log_time:
-                    log.info(f"Done calculating {stat_calculator} in {round(time.time() - start_time, 2)} secs")
+                    log.info(
+                        f"Done calculating {stat_calculator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 for stat, stat_value in new_stats.items():
                     if stat in batch_stats.keys():
                         continue
@@ -296,7 +298,9 @@ class UEManager:
                     log.info(f"Estimating {estimator}...")
                 e = estimator(batch_stats)
                 if self.log_time:
-                    log.info(f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs")
+                    log.info(
+                        f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 if not isinstance(e, list):
                     e = e.tolist()
                 if estimator.level == "claim":
@@ -380,7 +384,9 @@ class UEManager:
                     log.info(f"Calculating {generation_metric}...")
                 m = generation_metric(batch_stats, target_texts=target_texts)
                 if self.log_time:
-                    log.info(f"Done calculating {generation_metric} in {round(time.time() - start_time, 2)} secs")
+                    log.info(
+                        f"Done calculating {generation_metric} in {round(time.time() - start_time, 2)} secs"
+                    )
                 if not isinstance(m, list):
                     m = m.tolist()
                 if generation_metric.level == "claim":

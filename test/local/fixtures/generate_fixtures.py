@@ -118,11 +118,8 @@ for dataset in datasets:
 
 
 datasets = [
-    "person_bio_en",
-    "person_bio_ru",
-    "person_bio_ar",
+    "person_bio_en_mistral",
     "person_bio_zh",
-    "wiki_bio",
 ]
 
 
@@ -153,3 +150,5 @@ for dataset in datasets:
 
 with open("input_output_fixtures.json", "w") as f:
     json.dump(result, f)
+
+subprocess.run("cp -r ~/.cache/openai_chat_cache.diskcache .", shell=True)

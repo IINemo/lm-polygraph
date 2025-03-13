@@ -40,7 +40,9 @@ class ClaimsExtractor(StatCalculator):
         n_threads: int = 1,
     ):
         super().__init__()
-        log.info(f"Initializing ClaimsExtractor with language={language}, n_threads={n_threads}")
+        log.info(
+            f"Initializing ClaimsExtractor with language={language}, n_threads={n_threads}"
+        )
         self.language = language
         self.openai_chat = openai_chat
         self.sent_separators = sent_separators
@@ -88,8 +90,12 @@ class ClaimsExtractor(StatCalculator):
         """
 
         all_sent_texts, all_sent_tokens, all_sent_positions, n_sents = [], [], [], []
-        for greedy_text, greedy_tokens in zip(dependencies["greedy_texts"], dependencies["greedy_tokens"]):
-            sent_texts, sent_tokens, sent_positions = self.split_to_sentences(greedy_text, greedy_tokens, model.tokenizer)
+        for greedy_text, greedy_tokens in zip(
+            dependencies["greedy_texts"], dependencies["greedy_tokens"]
+        ):
+            sent_texts, sent_tokens, sent_positions = self.split_to_sentences(
+                greedy_text, greedy_tokens, model.tokenizer
+            )
             n_sents.append(len(sent_texts))
             all_sent_texts += sent_texts
             all_sent_tokens += sent_tokens
@@ -111,6 +117,8 @@ class ClaimsExtractor(StatCalculator):
             )
 
         claims: List[List[Claim]] = []
+        claim_texts_concatenated: List[str] = []
+        claim_input_texts_concatenated: List[str] = []
         for i in range(len(texts)):
             claims.append([])
             for sent in range(n_sents[i]):
@@ -120,16 +128,10 @@ class ClaimsExtractor(StatCalculator):
                     for k in range(len(sent_claims[j].aligned_token_ids)):
                         sent_claims[j].aligned_token_ids[k] += sent_position
                 claims[-1] += sent_claims
-            claims_from_sent = claims_from_sent[n_sents[i]:]
-            all_sent_positions = all_sent_positions[n_sents[i]:]
-
-        claim_texts_concatenated: List[str] = []
-        claim_input_texts_concatenated: List[str] = []
-
-        for c in claims:
-            for claim in c:
-                claim_texts_concatenated.append(claim.claim_text)
-                claim_input_texts_concatenated.append(texts[0])
+                claim_texts_concatenated += sent_claims
+                claim_input_texts_concatenated += [texts[i] for _ in sent_claims]
+            claims_from_sent = claims_from_sent[n_sents[i] :]
+            all_sent_positions = all_sent_positions[n_sents[i] :]
 
         return {
             "claims": claims,

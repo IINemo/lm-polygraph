@@ -61,3 +61,13 @@ estimators:
   - name: SentenceSAR
   - name: RenyiNeg
   - name: FisherRao
+  - name: Focus
+    cfg:
+      model_name: "bigscience/bloomz-560m"
+      path: "../focus_data/token_idf_opt125m.pkl"
+      gamma: 0.9
+      p: 0.01
+      idf_dataset: "rvanova/RedPajama-Data-1K-Sample-For-Test" #cutted dataset
+      trust_remote_code: True
+      idf_seed: 42
+      spacy_path: "en_core_web_sm"

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from omegaconf import OmegaConf
 
 from lm_polygraph.stat_calculators import *
@@ -10,7 +10,8 @@ from lm_polygraph.utils.factory_stat_calculator import (
 def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
-    hf_cache: str | None = None,
+    hf_cache: Optional[str] = None,
+    output_attentions: bool = True,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and

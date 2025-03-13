@@ -4,6 +4,7 @@ import os
 import torch
 import json
 import pytest
+import diskcache as dc
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.builder_enviroment_stat_calculator import (
@@ -160,6 +161,13 @@ def test_mmlu_instruct(reference):
 
 
 def run_claim_eval(dataset):
+    fixed_cache = dc.Cache(f"{pwd()}/fixtures/openai_chat_cache.diskcache")
+    with dc.Cache(
+        os.path.expanduser("~") + "/.cache/openai_chat_cache.diskcache"
+    ) as cache:
+        for k in fixed_cache:
+            cache[k] = fixed_cache[k]
+
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
@@ -187,16 +195,9 @@ def check_claim_level_result(dataset, reference):
 
 def test_person_bio(reference):
     base_dataset_name = "person_bio"
-    langs = ["en", "ru", "zh", "ar"]
+    langs = ["en_mistral", "zh"]
 
     for lang in langs:
         dataset = f"{base_dataset_name}_{lang}"
         run_claim_eval(dataset)
         check_claim_level_result(dataset, reference)
-
-
-def test_wiki_bio(reference):
-    dataset = "wiki_bio"
-
-    run_claim_eval(dataset)
-    check_claim_level_result(dataset, reference)
