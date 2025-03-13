@@ -25,6 +25,7 @@ def load_simple_estimators(name: str, config):
         SentenceSAR,
         LUQ,
         KernelLanguageEntropy,
+        EigenScore,
         RenyiNeg,
         FisherRao,
         MahalanobisDistanceSeq,
