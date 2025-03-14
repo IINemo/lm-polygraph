@@ -28,8 +28,6 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
-from vllm import LLM, SamplingParams
-
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
@@ -330,18 +328,25 @@ def get_whitebox_model(args, cache_kwargs={}):
     return model
 
 def get_vllm_model(args):
-    llm = LLM(model=args.model.path, 
-              gpu_memory_utilization=args.model.load_model_args.gpu_memory_utilization)
     
+    path_to_load_script = get_abs_path_from_hydra_config(
+            args.model.path_to_load_script
+        )
+    load_module = load_external_module(path_to_load_script)
+
+    load_model_args = {'model_path': args.model.path, 
+                       'max_tokens': args.max_new_tokens, 
+                       'logprobs': args.model.logprobs}
+    
+    load_model_args.update(args.model.load_model_args)
+    base_model, sampling_params = load_module.load_model(**load_model_args)
     generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
-    sampling_params = SamplingParams(max_tokens=args.max_new_tokens, 
-                                     logprobs=args.model.logprobs)
     
-    model = WhiteboxModelvLLM(model=llm, 
+    model = WhiteboxModelvLLM(model=base_model, 
                               sampling_params=sampling_params,
                               generation_parameters=generation_parameters,
                               device=args.model.device)
-
+    
     return model
 
 

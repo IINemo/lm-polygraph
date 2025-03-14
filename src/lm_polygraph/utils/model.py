@@ -19,7 +19,6 @@ from transformers import (
     StoppingCriteriaList,
     PreTrainedTokenizer,
 )
-from vllm import LLM, SamplingParams
 from transformers.generation import GenerateDecoderOnlyOutput
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
@@ -579,8 +578,8 @@ class WhiteboxModelvLLM(Model):
 
     def __init__(
         self,
-        model: LLM,
-        sampling_params: SamplingParams = SamplingParams(),
+        model,
+        sampling_params,
         generation_parameters: GenerationParameters = GenerationParameters(),
         device: str = "cuda",
     ):
