@@ -74,9 +74,8 @@
     md_type: "RMD"
 - name: Focus
   cfg:
-    cache_path: ./workdir/output
     model_name: '${model.path}'
-    path: "{cache_path}/{model_name}/token_idf.pkl"
+    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
     gamma: 0.9
     p: 0.01
     idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
