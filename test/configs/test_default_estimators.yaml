@@ -66,11 +66,12 @@ estimators:
   - name: Focus
     cfg:
       model_name: '${model.path}'
-      path: "../focus_data/${model.path}/token_idf.pkl"
+      path: "${hydra:run.dir}/${model.path}/token_idf.pkl"
       gamma: 0.9
       p: 0.01
-      idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+      idf_dataset: "LM-Polygraph/RedPajama-Data-100-Sample-For-Test"
       trust_remote_code: True
       idf_seed: 42
       idf_dataset_size: 1000
       spacy_path: "en_core_web_sm"
+      
