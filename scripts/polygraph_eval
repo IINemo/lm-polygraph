@@ -15,7 +15,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, WhiteboxModelvLLM
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
+from lm_polygraph.model_adapters import WhiteboxModelvLLM
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
@@ -370,7 +371,7 @@ def get_vllm_model(args):
     load_module = load_external_module(path_to_load_script)
 
     load_model_args = {'model_path': args.model.path, 
-                       'max_tokens': args.max_new_tokens, 
+                       'max_new_tokens': args.max_new_tokens, 
                        'logprobs': args.model.logprobs}
     
     load_model_args.update(args.model.load_model_args)
