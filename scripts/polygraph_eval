@@ -449,72 +449,6 @@ def get_generation_metrics(args):
     if not generation_metrics:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         batch_size = 16
-        ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt"
-        align_scorer = AlignScorer(
-            model="roberta-large",
-            batch_size=batch_size,
-            device=device,
-            ckpt_path=ckpt_path,
-            evaluation_mode="nli_sp",
-        )
-        api_key =getattr(args, "openai_api_key", '') 
-        result = [
-            RougeMetric("rougeL"),
-            BLEUMetric(),
-            AccuracyMetric(
-                target_ignore_regex = getattr(args, "target_ignore_regex", None),
-                output_ignore_regex = getattr(args, "output_ignore_regex", None),
-                normalize = getattr(args, "normalize", False),
-            ),
-            AlignScore(align_scorer),
-            AlignScore(align_scorer, target_is_claims=False),
-            AlignScore(align_scorer, ignore_target=True),
-            # Sample-based metrics
-            RougeMetric("rougeL", sample=True),
-            BLEUMetric(sample=True),
-            AccuracyMetric(
-                target_ignore_regex = getattr(args, "target_ignore_regex", None),
-                output_ignore_regex = getattr(args, "output_ignore_regex", None),
-                normalize = getattr(args, "normalize", False),
-                sample=True,
-            ),
-            AlignScore(align_scorer, sample=True),
-            AlignScore(align_scorer, target_is_claims=False, sample=True),
-            AlignScore(align_scorer, ignore_target=True, sample=True),
-            # Best sample-based metrics
-            RougeMetric("rougeL", sample=True, sample_strategy="Best"),
-            BLEUMetric(sample=True, sample_strategy="Best"),
-            AccuracyMetric(
-                target_ignore_regex = getattr(args, "target_ignore_regex", None),
-                output_ignore_regex = getattr(args, "output_ignore_regex", None),
-                normalize = getattr(args, "normalize", False),
-                sample=True,
-                sample_strategy="Best",
-            ),
-            AlignScore(align_scorer, sample=True, sample_strategy="Best"),
-            AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="Best"),
-            AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="Best"),
-            # Best normalized sample-based metrics
-            RougeMetric("rougeL", sample=True, sample_strategy="BestNormalized"),
-            BLEUMetric(sample=True, sample_strategy="BestNormalized"),
-            AccuracyMetric(
-                target_ignore_regex = getattr(args, "target_ignore_regex", None),
-                output_ignore_regex = getattr(args, "output_ignore_regex", None),
-                normalize = getattr(args, "normalize", False),
-                sample=True,
-                sample_strategy="BestNormalized",
-            ),
-            AlignScore(align_scorer, sample=True, sample_strategy="BestNormalized"),
-            AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="BestNormalized"),
-            AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="BestNormalized"),
-            GptAccuracyMetric( api_key=api_key),
-            GptAccuracyMetric( api_key=api_key,sample=True, sample_strategy="Best"),
-            GptAccuracyMetric( api_key=api_key, sample=True, sample_strategy="First"),
-        ]
-
-        if getattr(args.model, "type", "Whitebox") != "Blackbox":
-            if getattr(args, "use_claim_ue", False):
-                result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
             comet_scorer = load("comet")
@@ -537,6 +471,73 @@ def get_generation_metrics(args):
                        XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True),
                        XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Best"),
                        XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized")]
+        else:
+            ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt"
+            align_scorer = AlignScorer(
+                model="roberta-large",
+                batch_size=batch_size,
+                device=device,
+                ckpt_path=ckpt_path,
+                evaluation_mode="nli_sp",
+            )
+
+            result = [
+                RougeMetric("rougeL"),
+                BLEUMetric(),
+                AccuracyMetric(
+                    target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                    output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                    normalize = getattr(args, "normalize", False),
+                ),
+                AlignScore(align_scorer),
+                AlignScore(align_scorer, target_is_claims=False),
+                AlignScore(align_scorer, ignore_target=True),
+                # Sample-based metrics
+                RougeMetric("rougeL", sample=True),
+                BLEUMetric(sample=True),
+                AccuracyMetric(
+                    target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                    output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                    normalize = getattr(args, "normalize", False),
+                    sample=True,
+                ),
+                AlignScore(align_scorer, sample=True),
+                AlignScore(align_scorer, target_is_claims=False, sample=True),
+                AlignScore(align_scorer, ignore_target=True, sample=True),
+                # Best sample-based metrics
+                RougeMetric("rougeL", sample=True, sample_strategy="Best"),
+                BLEUMetric(sample=True, sample_strategy="Best"),
+                AccuracyMetric(
+                    target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                    output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                    normalize = getattr(args, "normalize", False),
+                    sample=True,
+                    sample_strategy="Best",
+                ),
+                AlignScore(align_scorer, sample=True, sample_strategy="Best"),
+                AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="Best"),
+                AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="Best"),
+                # Best normalized sample-based metrics
+                RougeMetric("rougeL", sample=True, sample_strategy="BestNormalized"),
+                BLEUMetric(sample=True, sample_strategy="BestNormalized"),
+                AccuracyMetric(
+                    target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                    output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                    normalize = getattr(args, "normalize", False),
+                    sample=True,
+                    sample_strategy="BestNormalized",
+                ),
+                AlignScore(align_scorer, sample=True, sample_strategy="BestNormalized"),
+                AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="BestNormalized"),
+                AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="BestNormalized"),
+                GptAccuracyMetric( api_key=api_key),
+                GptAccuracyMetric( api_key=api_key,sample=True, sample_strategy="Best"),
+                GptAccuracyMetric( api_key=api_key, sample=True, sample_strategy="First"),
+            ]
+
+            if getattr(args.model, "type", "Whitebox") != "Blackbox":
+                if getattr(args, "use_claim_ue", False):
+                    result += [OpenAIFactCheck(cache_path=args.cache_path, language=getattr(args, "language", "en"))]
     else:
         result = []
         for metric in generation_metrics:
