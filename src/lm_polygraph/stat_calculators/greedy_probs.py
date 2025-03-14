@@ -137,13 +137,15 @@ class GreedyProbsCalculator(StatCalculator):
                 ),
             )
             logits = torch.stack(out.scores, dim=1)
-
+            if model.model_type == "vLLMCausalLM":
+                logits = logits.transpose(1, 0)
             sequences = out.sequences
             if self.output_attentions:
                 attentions = out.attentions
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
-            )
+            if model.model_type != "vLLMCausalLM":
+                embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                    out, batch, model.model_type
+                )
 
         cut_logits = []
         cut_sequences = []
@@ -153,6 +155,8 @@ class GreedyProbsCalculator(StatCalculator):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]
                 seq = sequences[i, idx:].cpu()
+            elif model.model_type == "vLLMCausalLM":
+                seq = sequences[i].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -185,7 +189,7 @@ class GreedyProbsCalculator(StatCalculator):
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
-        if self.output_attentions:
+        if self.output_attentions and (model.model_type != "vLLMCausalLM"):
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
                 attn_mask = np.zeros(
@@ -219,6 +223,8 @@ class GreedyProbsCalculator(StatCalculator):
                 "embeddings_encoder": embeddings_encoder.cpu().detach().numpy(),
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }
+        elif model.model_type == "vLLMCausalLM":
+            embeddings_dict = {}
         else:
             raise NotImplementedError
 
@@ -231,7 +237,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_log_likelihoods": ll,
         }
         result_dict.update(embeddings_dict)
-        if self.output_attentions:
+        if self.output_attentions and (model.model_type != "vLLMCausalLM"):
             result_dict.update({"attention_all": attention_all})
             result_dict.update({"tokenizer": model.tokenizer})
         return result_dict
