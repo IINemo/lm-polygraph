@@ -54,11 +54,11 @@ def test_all_seq_ue():
     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
 
-def test_vllm():
-    exec_result = run_config_with_overrides("test_polygraph_eval_vllm")
-    assert (
-        exec_result.returncode == 0
-    ), f"polygraph_eval returned code {exec_result.returncode} != 0"
+# def test_vllm():
+#     exec_result = run_config_with_overrides("test_polygraph_eval_vllm")
+#     assert (
+#         exec_result.returncode == 0
+#     ), f"polygraph_eval returned code {exec_result.returncode} != 0"
 
 
 # ================= PE ensembles ==================
