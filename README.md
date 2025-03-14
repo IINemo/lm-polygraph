@@ -188,6 +188,19 @@ CUDA_VISIBLE_DEVICES=0 polygraph_eval \
     subsample_eval_dataset=100
 ```
 
+To evaluate the performance of uncertainty estimation methods using vLLM for generation, consider the following example:
+
+```
+CUDA_VISIBLE_DEVICES=0 polygraph_eval \
+    --config-dir=./examples/configs/ \
+    --config-name=polygraph_eval_coqa.yaml \
+    model=vllm \
+    model.path=meta-llama/Llama-3.1-8B \
+    estimators=default_estimators_vllm \
+    stat_calculators=default_calculators_vllm \
+    subsample_eval_dataset=100
+```
+
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) or [`result_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/result_tables.ipynb) to generate the summarizing tables for an experiment.
 
 A detailed description of the benchmark is in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
