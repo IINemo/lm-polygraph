@@ -1,0 +1,6 @@
+estimators:
+  - name: MaximumSequenceProbability
+  - name: MonteCarloNormalizedSequenceEntropy
+  - name: LexicalSimilarity
+    cfg:
+      metric: "rouge1"
