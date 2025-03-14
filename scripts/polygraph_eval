@@ -15,7 +15,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
+from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel, WhiteboxModelvLLM
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
@@ -30,6 +30,7 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
+from vllm import LLM, SamplingParams
 
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
@@ -291,6 +292,8 @@ def get_generation_metrics(args):
 def get_model(args):
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         return get_blackbox_model(args)
+    elif getattr(args.model, "type", "Whitebox") == "vLLMCausalLM":
+        return get_vllm_model(args)
     else:
         cache_kwargs = {
             "cache_dir": getattr(args, "hf_cache", None),
@@ -358,6 +361,21 @@ def get_whitebox_model(args, cache_kwargs={}):
     model = WhiteboxModel(
         base_model, tokenizer, args.model.path, args.model.type, generation_params
     )
+
+    return model
+
+def get_vllm_model(args):
+    llm = LLM(model=args.model.path, 
+              gpu_memory_utilization=args.model.load_model_args.gpu_memory_utilization)
+    
+    generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
+    sampling_params = SamplingParams(max_tokens=args.max_new_tokens, 
+                                     logprobs=args.model.logprobs)
+    
+    model = WhiteboxModelvLLM(model=llm, 
+                              sampling_params=sampling_params,
+                              generation_parameters=generation_parameters,
+                              device=args.model.device)
 
     return model
 
