@@ -1,0 +1,11 @@
+defaults:
+  - default
+
+path: facebook/opt-350m
+type: vLLMCausalLM
+logprobs: 20
+
+load_model_args:
+  gpu_memory_utilization: 0.8
+
+device: cuda
