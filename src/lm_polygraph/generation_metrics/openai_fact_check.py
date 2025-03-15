@@ -30,7 +30,9 @@ class OpenAIFactCheck(GenerationMetric):
         n_threads: int = 1,
     ):
         super().__init__(["input_texts"], "claim")
-        self.openai_chat = OpenAIChat(base_url=llm_url, openai_model=openai_model, cache_path=cache_path)
+        self.openai_chat = OpenAIChat(
+            base_url=llm_url, openai_model=openai_model, cache_path=cache_path
+        )
         self.language = language
         self.progress_bar = progress_bar
         self.fact_check_prompts = fact_check_prompts
