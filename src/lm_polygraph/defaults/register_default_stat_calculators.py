@@ -51,6 +51,7 @@ def register_default_stat_calculators(
         {
             "nli_model": {
                 "deberta_path": deberta_model_path,
+                "hf_cache": hf_cache,
                 "batch_size": 10,
                 "device": None,
             }
@@ -94,6 +95,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
                     "batch_size": 10,
                     "device": None,
                 }
@@ -105,6 +107,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
                     "batch_size": 10,
                     "device": None,
                 }
