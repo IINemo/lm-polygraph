@@ -48,7 +48,8 @@ def _check_unique_names(xs):
 def _delete_nans(ue, metric):
     metric = np.asarray(metric)
 
-    clipped_ue = np.nan_to_num(ue, nan=-1e7, neginf=-1e7, posinf=1e7) # TODO: fix problem with nans
+    # Clipping, because some evaluation metrics cannot work with nan ue scores.
+    clipped_ue = np.nan_to_num(ue, nan=-1e7, neginf=-1e7, posinf=1e7)
 
     is_nan_metric_mask = np.isnan(metric)
     clipped_ue = clipped_ue[~is_nan_metric_mask]
@@ -420,8 +421,6 @@ class UEManager:
                             f"Got different number of metrics for {e_name} and {gen_name}: "
                             f"{len(estimator_values)} and {len(generation_metric)}"
                         )
-                    # TODO: Report how many nans!
-                    # This is important to know for a user
 
                     n_nans = np.sum(~np.isfinite(estimator_values))
                     if n_nans > 0:
