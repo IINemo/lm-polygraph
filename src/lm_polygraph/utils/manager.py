@@ -428,7 +428,9 @@ class UEManager:
 
                     n_nans = np.sum(~np.isfinite(generation_metric))
                     if n_nans > 0:
-                        log.warning(f"We got {n_nans} nans in {gen_name} generation metric.")
+                        log.warning(
+                            f"We got {n_nans} nans in {gen_name} generation metric."
+                        )
 
                     ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
