@@ -12,7 +12,6 @@ from transformers import (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
-    AutoConfig,
     LogitsProcessorList,
     BartForConditionalGeneration,
     StoppingCriteria,

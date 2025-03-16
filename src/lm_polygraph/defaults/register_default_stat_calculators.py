@@ -115,6 +115,14 @@ def register_default_stat_calculators(
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
             {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
         )
+    elif model_type == "VisualLM":
+        _register(
+            GreedyProbsVisualCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsVisualCalculator",
+            {
+                "output_attentions": True,
+            },
+        )
 
     else:
         raise NotImplementedError(f"Unknown model type: {model_type}")
