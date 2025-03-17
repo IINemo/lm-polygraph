@@ -142,16 +142,21 @@ class BlackboxModel(Model):
         return BlackboxModel(hf_api_token=hf_api_token, model_path=hf_model_id)
 
     @staticmethod
-    def from_openai(openai_api_key: str, model_path: str, **kwargs):
+    def from_openai(
+        openai_api_key: str, model_path: str, supports_logprobs: bool = False, **kwargs
+    ):
         """
         Initializes a blackbox model from OpenAI API.
 
         Parameters:
             openai_api_key (Optional[str]): OpenAI API key. Default: None.
             model_path (Optional[str]): model name in OpenAI.
+            supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
         """
         return BlackboxModel(
-            openai_api_key=openai_api_key, model_path=model_path, supports_logprobs=True
+            openai_api_key=openai_api_key,
+            model_path=model_path,
+            supports_logprobs=supports_logprobs,
         )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:

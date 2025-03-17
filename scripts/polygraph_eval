@@ -279,10 +279,10 @@ def get_blackbox_model(args):
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key is None:
             raise ValueError("OpenAI API key is not set in the environment variables.")
-        # Create an OpenAI model with logprobs support
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
-            model_path=args.model.path
+            model_path=args.model.path,
+            supports_logprobs=args.supports_logprobs
         )
     elif provider == "huggingface":
         hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
