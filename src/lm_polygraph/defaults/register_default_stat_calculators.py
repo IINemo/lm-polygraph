@@ -63,6 +63,8 @@ def register_default_stat_calculators(
         if blackbox_supports_logprobs:
             # For blackbox models that support logprobs (like OpenAI models)
             _register(GreyboxGreedyProbsCalculator)
+            _register(GreyboxGreedyLMProbsCalculator)
+            _register(EntropyCalculator)
         else:
             _register(BlackboxGreedyTextsCalculator)
 

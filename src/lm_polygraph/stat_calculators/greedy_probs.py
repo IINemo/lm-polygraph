@@ -42,12 +42,11 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         Returns:
             Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'greedy_texts' key.
         """
-        with torch.no_grad():
-            sequences = model.generate_texts(
-                input_texts=texts,
-                max_new_tokens=max_new_tokens,
-                n=1,
-            )
+        sequences = model.generate_texts(
+            input_texts=texts,
+            max_new_tokens=max_new_tokens,
+            n=1,
+        )
 
         return {"greedy_texts": sequences}
 
@@ -106,14 +105,13 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
             )
 
         # Request text generation with logprobs
-        with torch.no_grad():
-            sequences = model.generate_texts(
-                input_texts=texts,
-                max_new_tokens=max_new_tokens,
-                n=1,
-                output_scores=True,
-                top_logprobs=self.top_logprobs,
-            )
+        sequences = model.generate_texts(
+            input_texts=texts,
+            max_new_tokens=max_new_tokens,
+            n=1,
+            output_scores=True,
+            top_logprobs=self.top_logprobs,
+        )
 
         # Process the results to match the expected format for downstream estimators
         greedy_texts = sequences
