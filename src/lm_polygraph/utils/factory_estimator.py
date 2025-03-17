@@ -23,6 +23,9 @@ def load_simple_estimators(name: str, config):
         SAR,
         TokenSAR,
         SentenceSAR,
+        LUQ,
+        KernelLanguageEntropy,
+        EigenScore,
         RenyiNeg,
         FisherRao,
         MahalanobisDistanceSeq,
@@ -35,12 +38,14 @@ def load_simple_estimators(name: str, config):
         Verbalized2S,
         Linguistic1S,
         MaximumClaimProbability,
+        Focus,
         PerplexityClaim,
         MaxTokenEntropyClaim,
         PointwiseMutualInformationClaim,
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
         RandomBaselineClaim,
+        FocusClaim,
     ]
 
     try:

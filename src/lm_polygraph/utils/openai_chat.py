@@ -16,6 +16,7 @@ class OpenAIChat:
     def __init__(
         self,
         openai_model: str = "gpt-4o",
+        base_url: str = None,
         cache_path: str = os.path.expanduser("~") + "/.cache",
     ):
         """
@@ -32,6 +33,8 @@ class OpenAIChat:
         self.cache_path = os.path.join(cache_path, "openai_chat_cache.diskcache")
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
+
+        self.base_url = base_url
 
     def ask(self, message: str) -> str:
         cache_settings = dc.DEFAULT_SETTINGS.copy()
@@ -73,7 +76,7 @@ class OpenAIChat:
         sleep_time_values = (5, 10, 30, 60, 120)
         for i in range(len(sleep_time_values)):
             try:
-                return openai.OpenAI().chat.completions.create(
+                return openai.OpenAI(base_url=self.base_url).chat.completions.create(
                     model=self.openai_model,
                     messages=messages,
                     temperature=0,  # for deterministic outputs
@@ -85,7 +88,7 @@ class OpenAIChat:
                 )
                 time.sleep(sleep_time)
 
-        return openai.OpenAI().chat.completions.create(
+        return openai.OpenAI(base_url=self.base_url).chat.completions.create(
             model=self.openai_model,
             messages=messages,
             temperature=0,  # for deterministic outputs

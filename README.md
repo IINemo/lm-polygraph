@@ -67,7 +67,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = WhiteboxModel(base_model, tokenizer, model_path=model_path)
 ```
 
-Alternatively, you can use WhiteboxModel#from_pretrained method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
+Alternatively, you can use ```WhiteboxModel.from_pretrained``` method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
 
 ```python
 from lm_polygraph.utils.model import WhiteboxModel
@@ -152,11 +152,13 @@ This allows seamless integration with any OpenAI-compatible API service while ma
 | Conditional PMI [(van der Poel et al., 2022)](https://aclanthology.org/2022.emnlp-main.399/)                                                                                   | White-box   | Information-based   | Medium  | Medium |         No          | sequence       |
 | Rényi divergence [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                                                                                        | White-box   | Information-based   | Low     | Low    |         No          | sequence       |
 | Fisher-Rao distance [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                                                                                     | White-box   | Information-based   | Low     | Low    |         No          | sequence       |
+| Focus [(Zhang et al., 2023)](https://aclanthology.org/2023.emnlp-main.58/)                                                                                     | White-box   | Information-based   | Medium     | Low    |         No          | sequence/claim       |
 | Semantic entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                                                                                            | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | Claim-Conditioned Probability [(Fadeeva et al., 2024)](https://arxiv.org/abs/2403.04696)                                                                                       | White-box   | Meaning diversity   | Low     | Low    |         No          | sequence/claim |
 | TokenSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                               | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | SentenceSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                            | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | SAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                                    | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
+| EigenScore [(Chen et al., 2024)](https://openreview.net/forum?id=Zj12nzlQbz)                                                                                                                    | White-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | Sentence-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)                                                                           | White-box   | Ensembling          | High    | High   |         Yes         | sequence       |
 | Token-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)                                                                              | White-box   | Ensembling          | High    | High   |         Yes         | sequence       |
 | Mahalanobis distance (MD) [(Lee et al., 2018)](https://proceedings.neurips.cc/paper/2018/hash/abdeb6f575ac5c6676b747bca8d09cc2-Abstract.html)                                  | White-box   | Density-based       | Low     | Low    |         Yes         | sequence       |
@@ -169,9 +171,10 @@ This allows seamless integration with any OpenAI-compatible API service while ma
 | Degree matrix (Deg) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)                                                                                                     | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
 | Eccentricity (Ecc) [(Lin et al., 2023)](https://arxiv.org/abs/2305.19187)                                                                                                      | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
 | Lexical similarity (LexSim) [(Fomicheva et al., 2020a)](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00330/96475/Unsupervised-Quality-Estimation-for-Neural-Machine) | Black-box   | Meaning Diversity   | High    | Low    |         No          | sequence       |
+| Kernel Language Entropy [(Nikitin et al., 2024)](https://arxiv.org/pdf/2405.20003) | Black-box | Meaning Diversity | High | Low | No | sequence |
+| LUQ [(Zhang et al., 2024)](https://aclanthology.org/2024.emnlp-main.299/)                                                                                                                    | Black-box   | Meaning diversity   | High    | Low    |         No          | sequence       |
 | Verbalized Uncertainty 1S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Low     | Low    |         No          | sequence       |
 | Verbalized Uncertainty 2S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Medium  | Low    |         No          | sequence       |
-| Kernel Language Entropy [(Nikitin et al., 2024)](https://arxiv.org/pdf/2405.20003) | Black-box | Meaning Diversity | High | Low | No | sequence |
 
 ## Benchmark
 

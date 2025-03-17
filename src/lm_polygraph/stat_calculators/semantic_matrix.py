@@ -26,6 +26,8 @@ class SemanticMatrixCalculator(StatCalculator):
             "semantic_matrix_entail",
             "semantic_matrix_contra",
             "semantic_matrix_classes",
+            "semantic_matrix_entail_logits",
+            "semantic_matrix_contra_logits",
             "entailment_id",
         ], ["sample_texts"]
 
@@ -57,6 +59,10 @@ class SemanticMatrixCalculator(StatCalculator):
                     n_samples x n_samples, with probabilities of 'ENTAILMENT' output of DeBERTa.
                 - 'semantic_matrix_contra' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with probabilities of 'CONTRADICTION' output of DeBERTa.
+                - 'semantic_matrix_entail_logits' (List[np.array]): for each input text: quadratic matrix of size
+                    n_samples x n_samples, with logits of 'ENTAILMENT' output of DeBERTa.
+                - 'semantic_matrix_contra_logits' (List[np.array]): for each input text: quadratic matrix of size
+                    n_samples x n_samples, with logits of 'CONTRADICTION' output of DeBERTa.
                 - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
@@ -85,11 +91,14 @@ class SemanticMatrixCalculator(StatCalculator):
 
         E = []
         C = []
+        E_logits = []
+        C_logits = []
         P = []
 
         for i, pairs in enumerate(batch_pairs):
             dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
             probs = []
+            logits_all = []
             for first_texts, second_texts in dl:
                 batch = list(zip(first_texts, second_texts))
                 encoded = tokenizer.batch_encode_plus(
@@ -97,16 +106,22 @@ class SemanticMatrixCalculator(StatCalculator):
                 ).to(device)
                 logits = deberta.deberta(**encoded).logits.detach().to(device)
                 probs.append(softmax(logits).cpu().detach())
+                logits_all.append(logits.cpu().detach())
             probs = torch.cat(probs, dim=0)
+            logits_all = torch.cat(logits_all, dim=0)
 
             entail_probs = probs[:, ent_id]
             contra_probs = probs[:, contra_id]
+            entail_logits = logits_all[:, ent_id]
+            contra_logits = logits_all[:, contra_id]
             class_preds = probs.argmax(-1)
 
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
             unique_E = entail_probs.view(unique_mat_shape).numpy()
             unique_C = contra_probs.view(unique_mat_shape).numpy()
+            unique_E_logits = entail_logits.view(unique_mat_shape).numpy()
+            unique_C_logits = contra_logits.view(unique_mat_shape).numpy()
             unique_P = class_preds.view(unique_mat_shape).numpy()
 
             inv = batch_invs[i]
@@ -115,15 +130,21 @@ class SemanticMatrixCalculator(StatCalculator):
             # using inverse index
             E.append(unique_E[inv, :][:, inv])
             C.append(unique_C[inv, :][:, inv])
+            E_logits.append(unique_E_logits[inv, :][:, inv])
+            C_logits.append(unique_C_logits[inv, :][:, inv])
             P.append(unique_P[inv, :][:, inv])
 
         E = np.stack(E)
         C = np.stack(C)
+        E_logits = np.stack(E_logits)
+        C_logits = np.stack(C_logits)
         P = np.stack(P)
 
         return {
             "semantic_matrix_entail": E,
             "semantic_matrix_contra": C,
+            "semantic_matrix_entail_logits": E_logits,
+            "semantic_matrix_contra_logits": C_logits,
             "semantic_matrix_classes": P,
             "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
         }
