@@ -46,16 +46,16 @@ def _check_unique_names(xs):
 
 
 def _delete_nans(ue, metric):
-    new_ue, new_metric = [], []
-    for i in range(len(metric)):
-        if not np.isnan(metric[i]) and not np.isnan(ue[i]):
-            if not isinstance(ue[i], complex):
-                new_ue.append(ue[i])
-            else:
-                new_ue.append(ue[i].real)
-            new_metric.append(metric[i])
+    metric = np.asarray(metric)
 
-    return np.array(new_ue), np.array(new_metric)
+    # Clipping, because some evaluation metrics cannot work with nan ue scores.
+    clipped_ue = np.nan_to_num(ue, nan=-1e7, neginf=-1e7, posinf=1e7)
+
+    is_nan_metric_mask = np.isnan(metric)
+    clipped_ue = clipped_ue[~is_nan_metric_mask]
+    new_metric = metric[~is_nan_metric_mask]
+
+    return clipped_ue, new_metric
 
 
 def order_calculators(
@@ -405,6 +405,8 @@ class UEManager:
 
         for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
             for ue_metric in self.ue_metrics:
+                log.info(f"Metric: {ue_metric}")
+
                 oracle_score_all = ue_metric(
                     -np.array(generation_metric), np.array(generation_metric)
                 )
@@ -419,8 +421,17 @@ class UEManager:
                             f"Got different number of metrics for {e_name} and {gen_name}: "
                             f"{len(estimator_values)} and {len(generation_metric)}"
                         )
-                    # TODO: Report how many nans!
-                    # This is important to know for a user
+
+                    n_nans = np.sum(~np.isfinite(estimator_values))
+                    if n_nans > 0:
+                        log.warning(f"We got {n_nans} nans in {e_name} estimator.")
+
+                    n_nans = np.sum(~np.isfinite(generation_metric))
+                    if n_nans > 0:
+                        log.warning(
+                            f"We got {n_nans} nans in {gen_name} generation metric."
+                        )
+
                     ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
