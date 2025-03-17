@@ -8,7 +8,7 @@ from hydra.core.hydra_config import HydraConfig
 
 import logging
 
-log = logging.getLogger('lm_polygraph')
+log = logging.getLogger("lm_polygraph")
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from lm_polygraph.utils.manager import UEManager
@@ -24,7 +24,7 @@ from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
 from lm_polygraph.utils.builder_enviroment_stat_calculator import (
-    BuilderEnvironmentStatCalculator
+    BuilderEnvironmentStatCalculator,
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
@@ -62,8 +62,8 @@ def main(args):
         args.seed = [1]
 
     cache_kwargs = {}
-    if os.environ.get('HF_DATASETS_OFFLINE', '').strip() == '1':
-        cache_kwargs = {'cache_dir': args.cache_path}
+    if os.environ.get("HF_DATASETS_OFFLINE", "").strip() == "1":
+        cache_kwargs = {"cache_dir": args.cache_path}
 
     for seed in args.seed:
         log.info("=" * 100)
@@ -92,11 +92,11 @@ def main(args):
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             trust_remote_code=getattr(args, "trust_remote_code", False),
-            **cache_kwargs
+            **cache_kwargs,
         )
         log.info("Done with loading eval data.")
 
-        log.info("="*100)
+        log.info("=" * 100)
         log.info("Initializing UE estimators...")
         estimators = []
         estimators += get_ue_methods(args, model)
@@ -108,7 +108,7 @@ def main(args):
         generation_metrics = get_generation_metrics(args)
 
         ue_metrics = get_ue_metrics(args)
-        
+
         builder_env_stat_calc = BuilderEnvironmentStatCalculator(model=model)
         available_stat_calculators = get_stat_calculator_names(args)
 
@@ -151,19 +151,25 @@ def get_ue_metrics(args):
 
 def get_stat_calculator_names(config):
     result_stat_calculators = dict()
-    model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
+    model_type = (
+        "Whitebox"
+        if getattr(config.model, "type", "Whitebox") != "Blackbox"
+        else "Blackbox"
+    )
     language = getattr(config, "language", "en")
     output_attentions = getattr(config, "output_attentions", True)
     hf_cache = getattr(config, "hf_cache", None)
-    blackbox_supports_logprobs = model_type == "Blackbox" and getattr(config.model, "supports_logprobs", False)
+    blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
+        config.model, "supports_logprobs", False
+    )
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
         all_stat_calculators += register_default_stat_calculators(
-            model_type, 
-            language, 
-            hf_cache, 
-            blackbox_supports_logprobs=blackbox_supports_logprobs
+            model_type,
+            language,
+            hf_cache,
+            blackbox_supports_logprobs=blackbox_supports_logprobs,
         )
 
     for stat_calculator in config.stat_calculators:
@@ -192,7 +198,7 @@ def get_ue_methods(config, model):
 
 
 def get_generation_metrics(args):
-    log.info("="*100)
+    log.info("=" * 100)
     log.info("Initializing generation metrics...")
 
     generation_metrics = getattr(args, "generation_metrics", None)
@@ -202,25 +208,27 @@ def get_generation_metrics(args):
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
             BLEUMetric(),
-            BertScoreMetric('rh'),
+            BertScoreMetric("rh"),
             SbertMetric(),
             AccuracyMetric(
-                target_ignore_regex = getattr(args, "target_ignore_regex", None),
-                output_ignore_regex = getattr(args, "output_ignore_regex", None),
-                normalize = getattr(args, "normalize", False),
+                target_ignore_regex=getattr(args, "target_ignore_regex", None),
+                output_ignore_regex=getattr(args, "output_ignore_regex", None),
+                normalize=getattr(args, "normalize", False),
             ),
             AlignScore(target_is_claims=False if args.task == "ats" else True),
         ]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
             if getattr(args, "use_claim_ue", False):
-                result += [OpenAIFactCheck(
-                    cache_path=args.cache_path,
-                    language=getattr(args, "language", "en"),
-                    n_threads=getattr(args, "n_threads", 1),
-                )]
+                result += [
+                    OpenAIFactCheck(
+                        cache_path=args.cache_path,
+                        language=getattr(args, "language", "en"),
+                        n_threads=getattr(args, "n_threads", 1),
+                    )
+                ]
         if args.task == "nmt":
             ignore_regex = getattr(args, "source_ignore_regex", None)
-            result += [Comet(source_ignore_regex = ignore_regex)]
+            result += [Comet(source_ignore_regex=ignore_regex)]
     else:
         result = []
         for metric in generation_metrics:
@@ -233,10 +241,14 @@ def get_generation_metrics(args):
     process_output_fn = getattr(args, "process_output_fn", None)
     process_target_fn = getattr(args, "process_target_fn", None)
     if process_target_fn or process_output_fn:
-        if (getattr(args, "target_ignore_regex", None) or
-            getattr(args, "output_ignore_regex", None) or
-            getattr(args, "normalize", False)):
-            raise ValueError("Specifying ignore_regex or normalize simultaneously with process scripts is not allowed.")
+        if (
+            getattr(args, "target_ignore_regex", None)
+            or getattr(args, "output_ignore_regex", None)
+            or getattr(args, "normalize", False)
+        ):
+            raise ValueError(
+                "Specifying ignore_regex or normalize simultaneously with process scripts is not allowed."
+            )
 
         def load_process_fn(fn_config):
             if not fn_config:
@@ -248,7 +260,10 @@ def get_generation_metrics(args):
         process_output_fn = load_process_fn(process_output_fn)
         process_target_fn = load_process_fn(process_target_fn)
 
-        result = [PreprocessOutputTarget(metric, process_output_fn, process_target_fn) for metric in result]
+        result = [
+            PreprocessOutputTarget(metric, process_output_fn, process_target_fn)
+            for metric in result
+        ]
 
     if getattr(args, "multiref", False):
         # Wrap each metric in AggregatedMetric
@@ -264,8 +279,8 @@ def get_model(args):
         return get_blackbox_model(args)
     else:
         cache_kwargs = {
-            "cache_dir": getattr(args, 'hf_cache', None),
-            "token": getattr(args, 'hf_token', None),
+            "cache_dir": getattr(args, "hf_cache", None),
+            "token": getattr(args, "hf_token", None),
         }
         return get_whitebox_model(args, cache_kwargs)
 
@@ -273,7 +288,9 @@ def get_model(args):
 def get_blackbox_model(args):
     provider = getattr(args.model, "provider", "")
     if provider is None or provider.strip() == "":
-        raise ValueError("Blackbox model provider cannot be empty or None. Please specify a valid provider.")
+        raise ValueError(
+            "Blackbox model provider cannot be empty or None. Please specify a valid provider."
+        )
 
     if provider == "openai":
         openai_api_key = os.environ.get("OPENAI_API_KEY")
@@ -282,15 +299,16 @@ def get_blackbox_model(args):
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
             model_path=args.model.path,
-            supports_logprobs=args.supports_logprobs
+            supports_logprobs=args.supports_logprobs,
         )
     elif provider == "huggingface":
         hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
         if hf_api_key is None:
-            raise ValueError("HuggingFace API key is not set in the environment variables.")
+            raise ValueError(
+                "HuggingFace API key is not set in the environment variables."
+            )
         return BlackboxModel.from_huggingface(
-            hf_api_token=hf_api_key,
-            hf_model_id=args.model.path
+            hf_api_token=hf_api_key, hf_model_id=args.model.path
         )
     else:
         raise ValueError(f"Unsupported black-box model provider: {provider}")
@@ -307,29 +325,25 @@ def get_whitebox_model(args, cache_kwargs={}):
             getattr(args, "generation_params", {}),
             device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
-            **cache_kwargs
+            **cache_kwargs,
         )
 
-    path_to_load_script = get_abs_path_from_hydra_config(
-            args.model.path_to_load_script
-        )
+    path_to_load_script = get_abs_path_from_hydra_config(args.model.path_to_load_script)
     load_module = load_external_module(path_to_load_script)
 
-    load_model_args = {'model_path': args.model.path}
+    load_model_args = {"model_path": args.model.path}
     load_model_args.update(args.model.load_model_args)
     base_model = load_module.load_model(**load_model_args)
 
-    load_tok_args = {'model_path': args.model.path}
+    load_tok_args = {"model_path": args.model.path}
     load_tok_args.update(args.model.load_tokenizer_args)
     tokenizer = load_module.load_tokenizer(**load_tok_args)
 
     generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
 
-    model = WhiteboxModel(base_model,
-                          tokenizer,
-                          args.model.path,
-                          args.model.type,
-                          generation_params)
+    model = WhiteboxModel(
+        base_model, tokenizer, args.model.path, args.model.type, generation_params
+    )
 
     return model
 
