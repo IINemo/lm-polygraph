@@ -4,6 +4,8 @@ import hydra
 import os
 import transformers
 from pathlib import Path
+from omegaconf import OmegaConf
+import uuid
 from hydra.core.hydra_config import HydraConfig
 
 import logging
@@ -55,6 +57,13 @@ def main(args):
     global hydra_config
     if hydra_config == Path("."):
         hydra_config = get_hydra_config_path()
+
+    if hasattr(args, "report_to_wandb") and args.report_to_wandb:
+        import wandb
+        wandb.config = OmegaConf.to_container(
+        args, resolve=True, throw_on_missing=True
+        )
+        wandb.init(dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
     save_path = args.save_path if "save_path" in args else save_path
 
@@ -125,6 +134,7 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
+            log_time=getattr(args, "log_time", False),
         )
 
         try:
@@ -134,6 +144,14 @@ def main(args):
             raise e
         finally:
             man.save(save_path + f"/ue_manager_seed{seed}")
+
+        if hasattr(args, "report_to_wandb") and args.report_to_wandb:
+            wandb.log({str(k) : v for k, v in man.gen_metrics})
+            wandb.log({str(k) : v for k, v in man.metrics.items()})
+    
+    if hasattr(args, "report_to_wandb") and args.report_to_wandb:
+        wandb.finish()
+        
 
 
 def get_ue_metrics(args):
@@ -150,9 +168,9 @@ def get_ue_metrics(args):
 
 
 def get_stat_calculator_names(config):
-    result_stat_calculators = dict()
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
     language = getattr(config, "language", "en")
+
     output_attentions = getattr(config, "output_attentions", True)
     hf_cache = getattr(config, "hf_cache", None)
 
