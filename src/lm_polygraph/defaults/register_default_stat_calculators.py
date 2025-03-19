@@ -60,14 +60,11 @@ def register_default_stat_calculators(
     _register(SemanticClassesCalculator)
 
     if model_type == "Blackbox":
+        _register(BlackboxGreedyTextsCalculator)
+        _register(BlackboxSamplingGenerationCalculator)
         if blackbox_supports_logprobs:
             # For blackbox models that support logprobs (like OpenAI models)
-            _register(GreyboxGreedyProbsCalculator)
             _register(EntropyCalculator)
-        else:
-            _register(BlackboxGreedyTextsCalculator)
-
-        _register(BlackboxSamplingGenerationCalculator)
 
     elif model_type == "Whitebox":
         _register(
