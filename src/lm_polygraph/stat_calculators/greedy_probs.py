@@ -10,52 +10,9 @@ from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 
 class BlackboxGreedyTextsCalculator(StatCalculator):
     """
-    Calculates generation texts for Blackbox model (lm_polygraph.BlackboxModel).
-    """
-
-    @staticmethod
-    def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
-
-        return ["greedy_texts"], []
-
-    def __init__(self):
-        super().__init__()
-
-    def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: BlackboxModel,
-        max_new_tokens: int = 100,
-    ) -> Dict[str, np.ndarray]:
-        """
-        Calculates generation texts for Blackbox model on the input batch.
-
-        Parameters:
-            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
-            texts (List[str]): Input texts batch used for model generation.
-            model (Model): Model used for generation.
-            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
-        Returns:
-            Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'greedy_texts' key.
-        """
-        sequences = model.generate_texts(
-            input_texts=texts,
-            max_new_tokens=max_new_tokens,
-            n=1,
-        )
-
-        return {"greedy_texts": sequences}
-
-
-class GreyboxGreedyProbsCalculator(StatCalculator):
-    """
-    Calculates generation texts and log probabilities for BlackboxModel that supports logprobs
-    (such as OpenAI models via their API). This calculator enables "greybox" behavior, where
-    we have partial access to model internals through the API.
+    A calculator that handles both blackbox and greybox model generation.
+    If the model supports logprobs, it provides full greybox functionality (texts, logprobs, etc.).
+    Otherwise, it falls back to basic blackbox functionality (texts only).
     """
 
     @staticmethod
@@ -85,42 +42,47 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
-        Calculates generation texts and log probabilities for BlackboxModel supporting logprobs.
+        Calculates generation texts and log probabilities for the model.
+        Provides full greybox functionality if the model supports logprobs,
+        otherwise falls back to basic blackbox functionality.
 
         Parameters:
             dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
             texts (List[str]): Input texts batch used for model generation.
-            model (BlackboxModel): Model used for generation (must have supports_logprobs=True).
+            model (BlackboxModel): Model used for generation.
             max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
         Returns:
-            Dict[str, np.ndarray]: dictionary with the following items:
+            Dict[str, np.ndarray]: dictionary with model generations and, if supported, probability data:
                 - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
-                - 'greedy_log_probs' (List[List[np.array]]): logits for the top k tokens,
-                - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens,
-                - 'greedy_tokens' (List[List[str]]): tokens of the generated text.
+                - 'greedy_log_probs' (List[List[np.array]]): logits for the top k tokens (greybox only),
+                - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of generated tokens (greybox only),
+                - 'greedy_tokens' (List[List[str]]): tokens of the generated text (greybox only).
         """
-        if not model.supports_logprobs:
-            raise ValueError(
-                "Model must support logprobs for GreyboxGreedyProbsCalculator"
+        if model.supports_logprobs:
+            # Greybox path: generate with logprobs
+            sequences = model.generate_texts(
+                input_texts=texts,
+                max_new_tokens=max_new_tokens,
+                n=1,
+                output_scores=True,
+                top_logprobs=self.top_logprobs,
+            )
+        else:
+            # Blackbox path: generate just the text
+            sequences = model.generate_texts(
+                input_texts=texts,
+                max_new_tokens=max_new_tokens,
+                n=1,
             )
 
-        # Request text generation with logprobs
-        sequences = model.generate_texts(
-            input_texts=texts,
-            max_new_tokens=max_new_tokens,
-            n=1,
-            output_scores=True,
-            top_logprobs=self.top_logprobs,
-        )
-
-        # Process the results to match the expected format for downstream estimators
+        # Process the results
         greedy_texts = sequences
         greedy_log_probs = []
         greedy_log_likelihoods = []
         greedy_tokens = []
 
-        # Extract logprobs and tokens from the model's stored data
-        if hasattr(model, "logprobs") and model.logprobs:
+        # Extract logprobs and tokens from the model's stored data if available
+        if model.supports_logprobs and hasattr(model, "logprobs") and model.logprobs:
             for i, logprob_data in enumerate(model.logprobs):
                 if hasattr(logprob_data, "content"):
                     # Extract tokens
@@ -138,10 +100,6 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
                             token_logprob_dict[top_logprob.token] = top_logprob.logprob
 
                         # Create a sparse representation of the logprobs distribution
-                        # Note: Many uncertainty estimators like MaximumSequenceProbability, Perplexity,
-                        # and MaximumTokenProbability don't use this full distribution - they only
-                        # use greedy_log_likelihoods for the chosen tokens.
-                        # However, we provide it for estimators that need the full distribution (e.g., entropy-based methods)
                         sparse_logprobs = np.ones(
                             model.model_path_vocab_size
                             if hasattr(model, "model_path_vocab_size")
@@ -149,9 +107,6 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
                         ) * -float("inf")
 
                         # Map token strings to positions in the sparse array
-                        # This is an approximation since we don't have access to OpenAI's actual token IDs
-                        # It only affects estimators that use the full probability distribution,
-                        # not ones that just use the logprob of the chosen token
                         for token_str, logprob in token_logprob_dict.items():
                             token_idx = hash(token_str) % len(sparse_logprobs)
                             sparse_logprobs[token_idx] = logprob
@@ -159,27 +114,44 @@ class GreyboxGreedyProbsCalculator(StatCalculator):
                         log_probs_list.append(sparse_logprobs)
 
                         # Extract the log probability of the chosen token
-                        # This is what's used by MaximumSequenceProbability, Perplexity and similar estimators
-                        # and is directly provided by the OpenAI API without any mapping needed
                         chosen_logprob = token_logprobs.logprob
                         log_likelihoods.append(chosen_logprob)
 
                     greedy_log_probs.append(log_probs_list)
                     greedy_log_likelihoods.append(log_likelihoods)
 
-        # Ensure all outputs have the same length
-        while len(greedy_tokens) < len(greedy_texts):
-            # If we're missing token data, add placeholder empty lists
-            greedy_tokens.append([])
-            greedy_log_probs.append([])
-            greedy_log_likelihoods.append([])
+            # Ensure all outputs have the same length for greybox case
+            while len(greedy_tokens) < len(greedy_texts):
+                # If we're missing token data, add placeholder empty lists
+                greedy_tokens.append([])
+                greedy_log_probs.append([])
+                greedy_log_likelihoods.append([])
 
-        return {
-            "greedy_texts": greedy_texts,
-            "greedy_log_probs": greedy_log_probs,
-            "greedy_log_likelihoods": greedy_log_likelihoods,
-            "greedy_tokens": greedy_tokens,
-        }
+            result = {
+                "greedy_texts": greedy_texts,
+                "greedy_log_probs": greedy_log_probs,
+                "greedy_log_likelihoods": greedy_log_likelihoods,
+                "greedy_tokens": greedy_tokens,
+            }
+        else:
+            # For blackbox models, only return the generated texts
+            result = {"greedy_texts": greedy_texts}
+
+            # If user explicitly requests logprobs functionality but model doesn't support it, raise error
+            if any(
+                key in dependencies
+                for key in [
+                    "greedy_log_probs",
+                    "greedy_log_likelihoods",
+                    "greedy_tokens",
+                ]
+            ):
+                raise ValueError(
+                    "Model must support logprobs for retrieving probability information. "
+                    "The current model only supports text generation."
+                )
+
+        return result
 
 
 class GreedyProbsCalculator(StatCalculator):
