@@ -13,7 +13,7 @@ estimators:
   - name: FocusClaim
     cfg:
       model_name: '${model.path}'
-      path: "../focus_data/${model.path}/token_idf.pkl"
+      path: "${cache_path}/focus/token_idf.pkl"
       gamma: 0.9
       p: 0.01
       idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
