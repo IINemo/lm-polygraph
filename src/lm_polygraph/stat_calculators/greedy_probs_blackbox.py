@@ -23,6 +23,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
             "greedy_log_probs",
             "greedy_log_likelihoods",
             "greedy_tokens",
+            "greedy_tokens_alternatives",
         ], []
 
     def __init__(
@@ -54,7 +55,8 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
                 - 'greedy_log_probs' (List[List[np.array]]): logits for the top k tokens (greybox only),
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of generated tokens (greybox only),
-                - 'greedy_tokens' (List[List[str]]): tokens of the generated text (greybox only).
+                - 'greedy_tokens' (List[List[str]]): tokens of the generated text (greybox only),
+                - 'greedy_tokens_alternatives' (List[List[List[Tuple[str, float]]]]): alternative tokens with logprobs.
         """
         if model.supports_logprobs:
             # Greybox path: generate with logprobs
@@ -78,6 +80,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         greedy_log_probs = []
         greedy_log_likelihoods = []
         greedy_tokens = []
+        greedy_tokens_alternatives = []
 
         # Extract logprobs and tokens from the model's stored data if available
         if model.supports_logprobs and hasattr(model, "logprobs") and model.logprobs:
@@ -91,18 +94,35 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                     log_probs_list = []
                     log_likelihoods = []
 
+                    # Initialize alternatives structure for this generation
+                    generation_alternatives = []
+
                     for token_logprobs in logprob_data.content:
                         # Get the top logprobs for this token position from OpenAI API
                         token_logprob_dict = {}
+
+                        # Build alternatives for this token position
+                        position_alternatives = []
+
+                        # First add the chosen token with its logprob
+                        chosen_token = token_logprobs.token
+                        chosen_logprob = token_logprobs.logprob
+                        position_alternatives.append((chosen_token, chosen_logprob))
+
+                        # Then add the remaining top alternatives
                         for top_logprob in getattr(token_logprobs, "top_logprobs", []):
                             token_logprob_dict[top_logprob.token] = top_logprob.logprob
+                            # Only add alternatives that are different from the chosen token
+                            if top_logprob.token != chosen_token:
+                                position_alternatives.append(
+                                    (top_logprob.token, top_logprob.logprob)
+                                )
+
+                        # Add alternatives for this position to the generation alternatives
+                        generation_alternatives.append(position_alternatives)
 
                         # Create a sparse representation of the logprobs distribution
-                        sparse_logprobs = np.ones(
-                            model.model_path_vocab_size
-                            if hasattr(model, "model_path_vocab_size")
-                            else 50000
-                        ) * -float("inf")
+                        sparse_logprobs = np.ones(50000) * -float("inf")
 
                         # Map token strings to positions in the sparse array
                         for token_str, logprob in token_logprob_dict.items():
@@ -110,13 +130,11 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                             sparse_logprobs[token_idx] = logprob
 
                         log_probs_list.append(sparse_logprobs)
-
-                        # Extract the log probability of the chosen token
-                        chosen_logprob = token_logprobs.logprob
                         log_likelihoods.append(chosen_logprob)
 
                     greedy_log_probs.append(log_probs_list)
                     greedy_log_likelihoods.append(log_likelihoods)
+                    greedy_tokens_alternatives.append(generation_alternatives)
 
             # Ensure all outputs have the same length for greybox case
             while len(greedy_tokens) < len(greedy_texts):
@@ -124,12 +142,14 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 greedy_tokens.append([])
                 greedy_log_probs.append([])
                 greedy_log_likelihoods.append([])
+                greedy_tokens_alternatives.append([])
 
             result = {
                 "greedy_texts": greedy_texts,
                 "greedy_log_probs": greedy_log_probs,
                 "greedy_log_likelihoods": greedy_log_likelihoods,
                 "greedy_tokens": greedy_tokens,
+                "greedy_tokens_alternatives": greedy_tokens_alternatives,
             }
         else:
             # For blackbox models, only return the generated texts
@@ -142,6 +162,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                     "greedy_log_probs",
                     "greedy_log_likelihoods",
                     "greedy_tokens",
+                    "greedy_tokens_alternatives",
                 ]
             ):
                 raise ValueError(
