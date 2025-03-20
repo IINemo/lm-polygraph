@@ -72,6 +72,6 @@ estimators:
       idf_dataset: "LM-Polygraph/RedPajama-Data-100-Sample-For-Test"
       trust_remote_code: True
       idf_seed: 42
-      idf_dataset_size: 1000
+      idf_dataset_size: 50
       spacy_path: "en_core_web_sm"
       
