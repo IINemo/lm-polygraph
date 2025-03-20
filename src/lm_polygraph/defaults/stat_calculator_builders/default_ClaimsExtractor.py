@@ -7,7 +7,7 @@ def load_stat_calculator(config, builder):
         builder.chat_model = OpenAIChat(
             openai_model=config.openai_model,
             base_url=getattr(config, "base_url", None),
-            cache_path=config.cache_path
+            cache_path=config.cache_path,
         )
 
     return ClaimsExtractor(
