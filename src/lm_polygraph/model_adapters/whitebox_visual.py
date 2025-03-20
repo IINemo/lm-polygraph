@@ -25,9 +25,7 @@ class VisualWhiteboxModel(Model):
     Examples:
 
     ```python
-    >>> from lm_polygraph import WhiteboxModel
-    >>> model = WhiteboxModel.from_pretrained(
-    ...     "bigscience/bloomz-3b",
+    >>> from lm_polygraph import VisualWhiteboxModel
     ... )
     ```
     """
@@ -58,7 +56,7 @@ class VisualWhiteboxModel(Model):
         self.generation_parameters = generation_parameters
         if image_urls:
             self.images = [Image.open(requests.get(img_url, stream=True).raw) for img_url in image_urls]
-        elif image_pathes:
+        elif image_paths:
             self.images = [Image.open(img_path) for img_path in image_paths]
         else:
             raise ValueError("Either image_path or image_url must be provided")

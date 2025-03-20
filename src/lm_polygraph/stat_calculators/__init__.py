@@ -3,6 +3,10 @@ from .initial_state import InitialStateCalculator
 from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .greedy_visual_probs import GreedyProbsVisualCalculator
+from .sample_visual import SamplingGenerationVisualCalculator
+from .greedy_lm_visual_probs import GreedyLMProbsVisualCalculator
+from .cross_encoder_visual_similarity import CrossEncoderSimilarityMatrixVisualCalculator
+from .prompt_visual import PromptVisualCalculator, SamplingPromptVisualCalculator, ClaimPromptVisualCalculator
 from .prompt import PromptCalculator, SamplingPromptCalculator, ClaimPromptCalculator
 from .claim_level_prompts import (
     CLAIM_EXTRACTION_PROMPTS,

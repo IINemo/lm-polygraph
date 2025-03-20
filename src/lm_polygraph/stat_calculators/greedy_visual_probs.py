@@ -5,7 +5,6 @@ from typing import Dict, List, Tuple
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.model_adapters.whitebox_visual import VisualWhiteboxModel
 
 
@@ -147,7 +146,7 @@ class GreedyProbsVisualCalculator(StatCalculator):
 
         attention_all = []
         if self.output_attentions:
-            num_heads = getattr(model.model.config, "num_attention_heads", 16)  # Default to 16
+            num_heads = getattr(model.model.config, "num_attention_heads", 32)  # Default to 16
             num_layers = getattr(model.model.config, "num_hidden_layers", 24)  # Default to 24
             for i in range(len(texts)):
                 c = len(cut_sequences[i])

@@ -171,22 +171,6 @@ def get_embeddings_from_output(
 import torch
 
 
-   
-    
-#     # Handling image embeddings
-#     if hasattr(output, "vision_hidden_states"):
-#         vision_features = output.vision_hidden_states[-1].cpu().detach()  # Last layer hidden states for vision
-#         vision_embeddings = vision_features.mean(dim=1)  # Aggregate across tokens if needed
-
-#         # Concatenate or fuse with text embeddings
-#         if batch_embeddings is not None:
-#             batch_embeddings = torch.cat([batch_embeddings, vision_embeddings], dim=-1)
-#         else:
-#             batch_embeddings = vision_embeddings
-
-#     return batch_embeddings, batch_embeddings_decoder
-
-
 def aggregate(x, aggregation_method, axis):
     if aggregation_method == "max":
         return x.max(axis=axis).values
@@ -243,7 +227,7 @@ class EmbeddingsCalculator(StatCalculator):
                 out, batch, model.model_type
             )
 
-        if model.model_type == "CausalLM":
+        if model.model_type in ["CausalLM", "VisualLM"]:
             return {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }

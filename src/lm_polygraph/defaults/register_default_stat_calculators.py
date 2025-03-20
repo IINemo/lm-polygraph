@@ -123,6 +123,51 @@ def register_default_stat_calculators(
                 "output_attentions": True,
             },
         )
+        _register(EntropyCalculator)
+        _register(GreedyLMProbsVisualCalculator)
+        _register(PromptVisualCalculator)
+        _register(SamplingGenerationVisualCalculator)
+        _register(BartScoreCalculator)
+        _register(ModelScoreCalculator)
+        _register(EnsembleTokenLevelDataCalculator)
+        _register(PromptVisualCalculator)
+        _register(SamplingPromptVisualCalculator)
+        _register(ClaimPromptVisualCalculator)
+        _register(
+            CrossEncoderSimilarityMatrixVisualCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixVisualCalculator",
+            {
+                "batch_size": 10,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
+            GreedyAlternativesNLICalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "batch_size": 10,
+                    "device": None,
+                }
+            },
+        )
+        _register(
+            GreedyAlternativesFactPrefNLICalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "batch_size": 10,
+                    "device": None,
+                }
+            },
+        )
+        _register(
+            ClaimsExtractor,
+            "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
+            {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
+        )
 
     else:
         raise NotImplementedError(f"Unknown model type: {model_type}")
