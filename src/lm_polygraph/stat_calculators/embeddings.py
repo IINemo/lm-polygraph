@@ -22,12 +22,15 @@ def get_embeddings_from_output(
     batch_embeddings = None
     batch_embeddings_decoder = None
     batch_size = len(batch["input_ids"])
-    all_layers_embeddings = []
+    # all_layers_embeddings = []
+    mean_all_layers_embeddings = []
+    last_all_layers_embeddings = []
 
     if model_type == "CausalLM":
         num_layers = len(output.hidden_states[0])
         for batch_i in range(len(output.sequences)):
-            ith_embeddings = {}
+            ith_embeddings_mean = {}
+            ith_embeddings_last = {}
             for layer_idx in range(num_layers):
                 input_tokens_hs = output.hidden_states[0][layer_idx][batch_i].cpu().detach()
                 if len(output.hidden_states) > 1:
@@ -38,8 +41,11 @@ def get_embeddings_from_output(
                     pad_mask = (gen_tokens != pad_token_id)
 
                     generated_tokens_hs = torch.cat([h[layer_idx][batch_i] for h in output.hidden_states[1:]], dim=0)[pad_mask[batch_i]].cpu().detach()
-                    ith_embeddings[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs
-            all_layers_embeddings.append(ith_embeddings)
+                    ith_embeddings_mean[f"layer_{layer_idx}_embeddings"] = np.mean(generated_tokens_hs)
+                    ith_embeddings_last[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs[-1]
+            # all_layers_embeddings.append(ith_embeddings)
+            mean_all_layers_embeddings.append(ith_embeddings_mean)
+            last_all_layers_embeddings.append(ith_embeddings_last)
 
         #num_generated_tokens = len(output.hidden_states[1:])
         #for i in range(num_generated_tokens):
@@ -172,7 +178,7 @@ def get_embeddings_from_output(
     else:
         raise NotImplementedError
 
-    return batch_embeddings, batch_embeddings_decoder, all_layers_embeddings
+    return batch_embeddings, batch_embeddings_decoder, mean_all_layers_embeddings, last_all_layers_embeddings
 
 
 def aggregate(x, aggregation_method, axis):

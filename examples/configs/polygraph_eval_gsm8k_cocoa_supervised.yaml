@@ -50,7 +50,8 @@ save_stats:
   - best_normalized_sample_text_ids
   - lookback_lens_features
   - greedy_sentence_similarity
-  - all_layers_embeddings
+  - mean_all_layers_embeddings
+  - last_all_layers_embeddings
 entropy_top_k: 50
 
 target_ignore_regex: "(?s).*#### "

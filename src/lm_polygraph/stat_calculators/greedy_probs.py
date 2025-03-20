@@ -165,7 +165,8 @@ class GreedyProbsCalculator(StatCalculator):
                 "train_greedy_log_likelihoods",
                 "embeddings",
                 "lookback_lens_features",
-                "all_layers_embeddings",
+                "mean_all_layers_embeddings",
+                "last_all_layers_embeddings",
             ],
             [],
         )
@@ -223,7 +224,7 @@ class GreedyProbsCalculator(StatCalculator):
             logits = torch.stack(out.scores, dim=1)
 
             sequences = out.sequences
-            embeddings_encoder, embeddings_decoder, all_layers_embeddings = get_embeddings_from_output(
+            embeddings_encoder, embeddings_decoder, mean_all_layers_embeddings, last_all_layers_embeddings = get_embeddings_from_output(
                 out,
                 batch,
                 model.model_type,
@@ -269,7 +270,8 @@ class GreedyProbsCalculator(StatCalculator):
         if model.model_type == "CausalLM":
             embeddings_dict = {
                 "embeddings_decoder": embeddings_decoder,
-                "all_layers_embeddings": all_layers_embeddings,
+                "mean_all_layers_embeddings": mean_all_layers_embeddings,
+                "last_all_layers_embeddings": last_all_layers_embeddings,
             }
         elif model.model_type == "Seq2SeqLM":
             embeddings_dict = {
