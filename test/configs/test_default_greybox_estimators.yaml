@@ -1,0 +1,3 @@
+estimators:
+  - name: MaximumSequenceProbability
+  - name: Perplexity
