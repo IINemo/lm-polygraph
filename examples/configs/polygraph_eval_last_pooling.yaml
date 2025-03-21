@@ -19,7 +19,8 @@ subsample_eval_dataset: 2
 max_new_tokens: 30
 load_from_disk: false
 save_stats:
-  - all_layers_embeddings
+  - mean_all_layers_embeddings
+  - last_all_layers_embeddings
   - lookback_lens_features
   - greedy_sentence_similarity
 
