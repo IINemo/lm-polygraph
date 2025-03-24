@@ -215,7 +215,7 @@ def test_focus(model):
     model_name = model.model.config._name_or_path
     estimator = Focus(
         model_name=model_name,
-        path=f"${cache_path}/{model_name}/token_idf.pkl",
+        path="../token_idf/{model_name}/token_idf.pkl",
         gamma=0.9,
         p=0.01,
         idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test",
