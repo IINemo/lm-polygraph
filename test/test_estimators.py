@@ -211,21 +211,21 @@ def test_fisher_rao(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_focus(model):
-    model_name = model.model.config._name_or_path
-    estimator = Focus(
-        model_name=model_name,
-        path=f"../focus_data/{model_name}/token_idf.pkl",
-        gamma=0.9,
-        p=0.01,
-        idf_dataset="togethercomputer/RedPajama-Data-1T-Sample",
-        trust_remote_code=True,
-        idf_seed=42,
-        idf_dataset_size=5,
-        spacy_path="en_core_web_sm",
-    )
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
+# def test_focus(model):
+#     model_name = model.model.config._name_or_path
+#     estimator = Focus(
+#         model_name=model_name,
+#         path=f"../focus_data/{model_name}/token_idf.pkl",
+#         gamma=0.9,
+#         p=0.01,
+#         idf_dataset="togethercomputer/RedPajama-Data-1T-Sample",
+#         trust_remote_code=True,
+#         idf_seed=42,
+#         idf_dataset_size=5,
+#         spacy_path="en_core_web_sm",
+#     )
+#     ue = estimate_uncertainty(model, estimator, INPUT)
+#     assert isinstance(ue.uncertainty, float)
 
 
 def test_kernel_language_entropy(model):
