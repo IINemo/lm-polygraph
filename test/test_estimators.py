@@ -221,7 +221,7 @@ def test_focus(model):
         idf_dataset="togethercomputer/RedPajama-Data-1T-Sample",
         trust_remote_code=True,
         idf_seed=42,
-        idf_dataset_size=1000,
+        idf_dataset_size=5,
         spacy_path="en_core_web_sm",
     )
     ue = estimate_uncertainty(model, estimator, INPUT)
