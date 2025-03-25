@@ -11,7 +11,7 @@ stat_calculators:
       few_shot_split: "train"
       train_split: '${train_split}'
       load_from_disk: '${load_from_disk}'
-      subsample_train_dataset: 1000
+      subsample_train_dataset: 50
       n_shot: 5
       background_train_dataset: allenai/c4
       background_train_dataset_text_column: text

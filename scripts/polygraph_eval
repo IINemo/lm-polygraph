@@ -168,13 +168,8 @@ def get_ue_metrics(args):
 
 
 def get_stat_calculator_names(config):
-    result_stat_calculators = dict()
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
     language = getattr(config, "language", "en")
-
-    hf_cache = getattr(config, "hf_cache", None)
-
-    all_stat_calculators = []
 
     output_attentions = getattr(config, "output_attentions", True)
     hf_cache = getattr(config, "hf_cache", None)
