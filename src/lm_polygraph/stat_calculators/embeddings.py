@@ -57,7 +57,6 @@ def get_embeddings_from_output(
                 )
         else:
             batch_embeddings_decoder = input_tokens_hs.mean(axis=1).cpu().detach()
-        batch_embeddings = None
 
         if hasattr(output, "vision_hidden_states"):
             vision_features = output.vision_hidden_states[-1].cpu().detach()

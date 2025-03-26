@@ -106,7 +106,7 @@ class GreedyProbsVisualCalculator(StatCalculator):
                 attentions = out.attentions
             embeddings_decoder = get_embeddings_from_output(
                 out, batch, model.model_type
-            )
+            )[1]
 
         cut_logits = []
         cut_sequences = []
@@ -146,7 +146,7 @@ class GreedyProbsVisualCalculator(StatCalculator):
         if self.output_attentions:
             num_heads = getattr(
                 model.model.config, "num_attention_heads", 32
-            )  # Default to 16
+            )  # Default to 32
             num_layers = getattr(
                 model.model.config, "num_hidden_layers", 24
             )  # Default to 24
