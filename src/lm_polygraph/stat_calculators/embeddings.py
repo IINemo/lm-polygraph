@@ -171,9 +171,6 @@ def get_embeddings_from_output(
     return batch_embeddings, batch_embeddings_decoder
 
 
-import torch
-
-
 def aggregate(x, aggregation_method, axis):
     if aggregation_method == "max":
         return x.max(axis=axis).values

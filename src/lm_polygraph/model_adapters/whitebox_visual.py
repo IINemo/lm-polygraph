@@ -1,21 +1,22 @@
 import torch
 import requests
-from lm_polygraph.utils.model import Model, WhiteboxModel, _validate_args
+from lm_polygraph.utils.model import Model, _validate_args
 from PIL import Image
 from typing import List, Optional, Dict, Union
 from dataclasses import asdict
+import logging
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from transformers import (
-    AutoTokenizer,
     AutoModelForVision2Seq,
     AutoProcessor,
-    AutoConfig,
     LogitsProcessorList,
     StoppingCriteria,
     StoppingCriteriaList,
     PreTrainedTokenizer,
 )
+
+log = logging.getLogger("lm_polygraph")
 
 
 class VisualWhiteboxModel(Model):
@@ -191,12 +192,8 @@ class VisualWhiteboxModel(Model):
         if self.tokenizer.chat_template is not None:
             decode_args["skip_special_tokens"] = True
 
-        # for seq in sequences:
-        #     if self.model_type == "CausalLM":
-        texts.append(self.processor_visual.decode(seq[input_len:], **decode_args))
-        # else:
-        #     texts.append(self.tokenizer.decode(seq[1:], **decode_args))
-
+        for seq in sequences:
+            texts.append(self.processor_visual.decode(seq[input_len:], **decode_args))
         return texts
 
     def __call__(self, **args):
@@ -217,6 +214,9 @@ class VisualWhiteboxModel(Model):
     @staticmethod
     def from_pretrained(
         model_path: str,
+        model_type: str,
+        image_urls: list,
+        image_paths: list,
         generation_params: Optional[Dict] = {},
         add_bos_token: bool = True,
         **kwargs,
@@ -234,9 +234,6 @@ class VisualWhiteboxModel(Model):
             "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
         )
 
-        config = AutoConfig.from_pretrained(
-            model_path, trust_remote_code=True, **kwargs
-        )
         generation_params = GenerationParameters(**generation_params)
         model = AutoModelForVision2Seq.from_pretrained(model_path, **kwargs)
 
@@ -248,9 +245,8 @@ class VisualWhiteboxModel(Model):
         )
 
         model.eval()
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
-
+        if processor_visual.tokenizer.pad_token is None:
+            processor_visual.tokenizer.pad_token = processor_visual.tokenizer.eos_token
         instance = VisualWhiteboxModel(
             model,
             processor_visual,

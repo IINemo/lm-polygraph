@@ -90,10 +90,6 @@ class GreedyProbsVisualCalculator(StatCalculator):
             key: torch.cat(value, dim=0) for key, value in batches.items()
         }
 
-        input_ids = (batch["input_ids"],)
-        attention_mask = (batch["attention_mask"],)
-        image_embeds_position_mask = batch["image_embeds_position_mask"]
-
         with torch.no_grad():
             out = model.generate(
                 **batch,
@@ -108,7 +104,7 @@ class GreedyProbsVisualCalculator(StatCalculator):
             sequences = out.sequences
             if self.output_attentions:
                 attentions = out.attentions
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+            embeddings_decoder = get_embeddings_from_output(
                 out, batch, model.model_type
             )
 
@@ -117,7 +113,6 @@ class GreedyProbsVisualCalculator(StatCalculator):
         cut_texts = []
         cut_alternatives = []
         for i in range(len(texts)):
-            idx = batch["input_ids"].shape[1]
             seq = sequences[i, -logits.shape[1] :].cpu()
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):
