@@ -221,7 +221,7 @@ def test_focus(model):
         path="../token_idf/{model_name}/token_idf.pkl",
         gamma=0.9,
         p=0.01,
-        idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test",
+        idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test", #sample for test on github
         trust_remote_code=True,
         idf_seed=42,
         idf_dataset_size=5,
