@@ -176,13 +176,13 @@ class VisualWhiteboxModel(Model):
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
         args = _validate_args(args)
-        # args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.processor_visual(
             text=input_texts,
             images=self.images,
             return_tensors="pt",
         )
         batch = {k: v.to(self.device()) for k, v in batch.items()}
+        args.pop("return_dict", None)
         sequences = self.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
