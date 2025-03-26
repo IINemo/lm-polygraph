@@ -216,7 +216,7 @@ def test_fisher_rao(model):
 
 def test_focus(model):
     model_name = model.model.config._name_or_path
-        estimator = Focus(
+    estimator = Focus(
         model_name=model_name,
         path="../token_idf/{model_name}/token_idf.pkl",
         gamma=0.9,
