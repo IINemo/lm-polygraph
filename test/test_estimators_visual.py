@@ -13,7 +13,9 @@ INPUT = "<grounding>An image of?"
 @pytest.fixture(scope="module")
 def model():
     model_path = "microsoft/kosmos-2-patch14-224"
-    image_urls = ["https://huggingface.co/microsoft/kosmos-2-patch14-224/resolve/main/snowman.png"]
+    image_urls = [
+        "https://huggingface.co/microsoft/kosmos-2-patch14-224/resolve/main/snowman.png"
+    ]
 
     if torch.cuda.is_available():
         device = "cuda"

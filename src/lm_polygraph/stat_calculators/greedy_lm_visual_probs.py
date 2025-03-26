@@ -53,8 +53,8 @@ class GreedyLMProbsVisualCalculator(StatCalculator):
             batches = {}
             for text, image in zip(texts, model.images):
                 batch = model.processor_visual(
-                    text=str(text), 
-                    images=image, 
+                    text=str(text),
+                    images=image,
                     return_tensors="pt",
                     return_dict=True,
                 )
@@ -64,15 +64,19 @@ class GreedyLMProbsVisualCalculator(StatCalculator):
                 else:
                     for key in batch:
                         batches[key].append(batch[key])
-            batch: Dict[str, torch.Tensor] = {key: torch.cat(value, dim=0) for key, value in batches.items()}
-            
+            batch: Dict[str, torch.Tensor] = {
+                key: torch.cat(value, dim=0) for key, value in batches.items()
+            }
+
             with torch.no_grad():
                 logprobs = model.model(**batch).logits.log_softmax(-1)
             greedy_lm_log_probs = []
             greedy_lm_ll = []
             for i in range(len(tokens)):
                 if len(logprobs[i]) < len(tokens[i]):
-                    raise ValueError("tokenizer(tokenizer.processor_visual.decode(t)) != t")
+                    raise ValueError(
+                        "tokenizer(tokenizer.processor_visual.decode(t)) != t"
+                    )
                 greedy_lm_log_probs.append(
                     logprobs[i, -len(tokens[i]) : -1].cpu().numpy()
                 )

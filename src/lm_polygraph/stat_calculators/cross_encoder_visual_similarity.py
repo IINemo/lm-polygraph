@@ -58,6 +58,7 @@ class CrossEncoderSimilarityMatrixVisualCalculator(StatCalculator):
         batch_greedy_tokens = dependencies["greedy_tokens"]
 
         special_tokens = list(tokenizer.tokenizer.added_tokens_decoder.keys())
+
         def normalize_text(text):
             if isinstance(text, list):
                 return " ".join([str(t) for t in text])
@@ -83,11 +84,20 @@ class CrossEncoderSimilarityMatrixVisualCalculator(StatCalculator):
                 cropped_tokens = list(itertools.combinations(tokens, len(tokens) - 1))[
                     ::-1
                 ]
-                raw_text = " ".join(input_texts) + " " + tokenizer.tokenizer.decode(tokens, skip_special_tokens=True)
+                raw_text = (
+                    " ".join(input_texts)
+                    + " "
+                    + tokenizer.tokenizer.decode(tokens, skip_special_tokens=True)
+                )
                 batches = [
-            (raw_text, " ".join(input_texts) + " " + tokenizer.tokenizer.decode(t, skip_special_tokens=True))
-            for t in cropped_tokens
-        ]
+                    (
+                        raw_text,
+                        " ".join(input_texts)
+                        + " "
+                        + tokenizer.tokenizer.decode(t, skip_special_tokens=True),
+                    )
+                    for t in cropped_tokens
+                ]
                 token_scores = self.crossencoder.predict(
                     batches, batch_size=self.batch_size
                 )
@@ -113,7 +123,7 @@ class CrossEncoderSimilarityMatrixVisualCalculator(StatCalculator):
         for sample_tokens, input_texts in zip(batch_sample_tokens, batch_input_texts):
             samples_token_scores = []
             input_texts = normalize_text(input_texts)
-    
+
             for tokens in sample_tokens:
                 if len(tokens) > 1:
                     is_special_tokens = np.isin(tokens, special_tokens)
@@ -130,7 +140,9 @@ class CrossEncoderSimilarityMatrixVisualCalculator(StatCalculator):
                             raw_text,
                             input_texts
                             + " "
-                            + tokenizer.tokenizer.decode(list(t), skip_special_tokens=True),
+                            + tokenizer.tokenizer.decode(
+                                list(t), skip_special_tokens=True
+                            ),
                         )
                         for t in cropped_tokens
                     ]

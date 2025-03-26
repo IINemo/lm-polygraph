@@ -15,7 +15,6 @@ class OutputWrapper:
     decoder_hidden_states = None
 
 
-
 def _gen_samples(n_samples, model, batch, **kwargs):
     batch_size = len(batch["input_ids"])
     logits, sequences, embeddings = (
@@ -69,7 +68,7 @@ class SamplingGenerationVisualCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model:  VisualWhiteboxModel,
+        model: VisualWhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
@@ -92,8 +91,8 @@ class SamplingGenerationVisualCalculator(StatCalculator):
 
         for text, image in zip(texts, model.images):
             batch = model.processor_visual(
-                text=str(text), 
-                images=image, 
+                text=str(text),
+                images=image,
                 return_tensors="pt",
                 return_dict=True,
             )
@@ -103,7 +102,9 @@ class SamplingGenerationVisualCalculator(StatCalculator):
             else:
                 for key in batch:
                     batches[key].append(batch[key])
-        batch: Dict[str, torch.Tensor] = {key: torch.cat(value, dim=0) for key, value in batches.items()}
+        batch: Dict[str, torch.Tensor] = {
+            key: torch.cat(value, dim=0) for key, value in batches.items()
+        }
         sequences, logits, embeddings = _gen_samples(
             self.samples_n,
             model,
@@ -151,7 +152,9 @@ class SamplingGenerationVisualCalculator(StatCalculator):
             log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
-            texts[int(i / self.samples_n)].append(model.processor_visual.tokenizer.decode(toks))
+            texts[int(i / self.samples_n)].append(
+                model.processor_visual.tokenizer.decode(toks)
+            )
 
         out = OutputWrapper()
         batch_size = len(batch["input_ids"])

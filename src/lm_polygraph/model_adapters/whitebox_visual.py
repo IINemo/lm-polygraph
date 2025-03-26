@@ -7,8 +7,8 @@ from dataclasses import asdict
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from transformers import (
-    AutoTokenizer, 
-    AutoModelForVision2Seq, 
+    AutoTokenizer,
+    AutoModelForVision2Seq,
     AutoProcessor,
     AutoConfig,
     LogitsProcessorList,
@@ -55,13 +55,15 @@ class VisualWhiteboxModel(Model):
         self.tokenizer = self.processor_visual.tokenizer
         self.generation_parameters = generation_parameters
         if image_urls:
-            self.images = [Image.open(requests.get(img_url, stream=True).raw) for img_url in image_urls]
+            self.images = [
+                Image.open(requests.get(img_url, stream=True).raw)
+                for img_url in image_urls
+            ]
         elif image_paths:
             self.images = [Image.open(img_path) for img_path in image_paths]
         else:
             raise ValueError("Either image_path or image_url must be provided")
         self.generation_parameters = generation_parameters or GenerationParameters()
-
 
     class _ScoresProcessor:
         # Stores original token scores instead of the ones modified with generation parameters
@@ -163,7 +165,7 @@ class VisualWhiteboxModel(Model):
 
         return generation
 
-    #TODO прописать инпут
+    # TODO прописать инпут
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
         Generates a list of model answers using input texts batch.
@@ -176,9 +178,9 @@ class VisualWhiteboxModel(Model):
         args = _validate_args(args)
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.processor_visual(
-                 text=input_texts,
-                 images=self.images,
-                 return_tensors="pt",
+            text=input_texts,
+            images=self.images,
+            return_tensors="pt",
         )
         batch = {k: v.to(self.device()) for k, v in batch.items()}
         sequences = self.generate(**batch, **args).sequences.cpu()
@@ -192,8 +194,8 @@ class VisualWhiteboxModel(Model):
         # for seq in sequences:
         #     if self.model_type == "CausalLM":
         texts.append(self.processor_visual.decode(seq[input_len:], **decode_args))
-            # else:
-            #     texts.append(self.tokenizer.decode(seq[1:], **decode_args))
+        # else:
+        #     texts.append(self.tokenizer.decode(seq[1:], **decode_args))
 
         return texts
 
@@ -250,7 +252,13 @@ class VisualWhiteboxModel(Model):
             tokenizer.pad_token = tokenizer.eos_token
 
         instance = VisualWhiteboxModel(
-            model, processor_visual, model_path, model_type, image_urls, image_paths, generation_params
+            model,
+            processor_visual,
+            model_path,
+            model_type,
+            image_urls,
+            image_paths,
+            generation_params,
         )
 
         return instance

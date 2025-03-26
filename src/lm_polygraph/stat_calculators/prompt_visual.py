@@ -91,8 +91,8 @@ class BasePromptVisualCalculator(StatCalculator):
 
         for text, image in zip(texts, model.images):
             batch = model.processor_visual(
-                text=str(text), 
-                images=image, 
+                text=str(text),
+                images=image,
                 return_tensors="pt",
                 return_dict=True,
             )
@@ -102,7 +102,9 @@ class BasePromptVisualCalculator(StatCalculator):
             else:
                 for key in batch:
                     batches[key].append(batch[key])
-        batch: Dict[str, torch.Tensor] = {key: torch.cat(value, dim=0) for key, value in batches.items()}
+        batch: Dict[str, torch.Tensor] = {
+            key: torch.cat(value, dim=0) for key, value in batches.items()
+        }
 
         with torch.no_grad():
             out = model.generate(

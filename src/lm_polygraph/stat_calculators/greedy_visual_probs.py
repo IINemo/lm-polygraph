@@ -37,15 +37,14 @@ class GreedyProbsVisualCalculator(StatCalculator):
 
     def __init__(
         self,
-        output_attentions: bool = True, 
+        output_attentions: bool = True,
         n_alternatives: int = 10,
-        samples_n: int = 10
+        samples_n: int = 10,
     ):
         super().__init__()
         self.samples_n = samples_n
         self.output_attentions = output_attentions
         self.n_alternatives = n_alternatives
-    
 
     def __call__(
         self,
@@ -70,14 +69,14 @@ class GreedyProbsVisualCalculator(StatCalculator):
                 - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
                 - 'greedy_tokens' (List[List[int]]): tokenized model generations,
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
-                - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.       
+                - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
         batches = {}
 
         for text, image in zip(texts, model.images):
             batch = model.processor_visual(
-                text=str(text), 
-                images=image, 
+                text=str(text),
+                images=image,
                 return_tensors="pt",
                 return_dict=True,
             )
@@ -87,15 +86,17 @@ class GreedyProbsVisualCalculator(StatCalculator):
             else:
                 for key in batch:
                     batches[key].append(batch[key])
-        batch: Dict[str, torch.Tensor] = {key: torch.cat(value, dim=0) for key, value in batches.items()}
+        batch: Dict[str, torch.Tensor] = {
+            key: torch.cat(value, dim=0) for key, value in batches.items()
+        }
 
-        input_ids=batch["input_ids"],
-        attention_mask=batch["attention_mask"],
-        image_embeds_position_mask=batch["image_embeds_position_mask"]
+        input_ids = (batch["input_ids"],)
+        attention_mask = (batch["attention_mask"],)
+        image_embeds_position_mask = batch["image_embeds_position_mask"]
 
         with torch.no_grad():
             out = model.generate(
-                **batch, 
+                **batch,
                 output_scores=True,
                 output_logits=True,
                 return_dict_in_generate=True,
@@ -117,7 +118,7 @@ class GreedyProbsVisualCalculator(StatCalculator):
         cut_alternatives = []
         for i in range(len(texts)):
             idx = batch["input_ids"].shape[1]
-            seq = sequences[i, -logits.shape[1]:].cpu()
+            seq = sequences[i, -logits.shape[1] :].cpu()
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):
                 if seq[j] == model.processor_visual.tokenizer.eos_token_id:
@@ -135,7 +136,9 @@ class GreedyProbsVisualCalculator(StatCalculator):
                 best_tokens = best_tokens[ln - self.n_alternatives : ln]
                 for t in best_tokens:
                     cut_alternatives[-1][j].append((t.item(), lt[t].item()))
-                cut_alternatives[-1][j].sort(key=lambda x: x[0] == cut_sequences[-1][j],reverse=True)
+                cut_alternatives[-1][j].sort(
+                    key=lambda x: x[0] == cut_sequences[-1][j], reverse=True
+                )
 
         ll = []
         for i in range(len(texts)):
@@ -146,32 +149,41 @@ class GreedyProbsVisualCalculator(StatCalculator):
 
         attention_all = []
         if self.output_attentions:
-            num_heads = getattr(model.model.config, "num_attention_heads", 32)  # Default to 16
-            num_layers = getattr(model.model.config, "num_hidden_layers", 24)  # Default to 24
+            num_heads = getattr(
+                model.model.config, "num_attention_heads", 32
+            )  # Default to 16
+            num_layers = getattr(
+                model.model.config, "num_hidden_layers", 24
+            )  # Default to 24
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
                 attn_mask = np.zeros((num_heads * num_layers, c, c))
-            
+
                 for j in range(1, c):
-                    stacked_attn = torch.vstack(
-                        [
-                            attentions[j][layer][0][head][-j:].reshape(-1, 1)  
-                            for layer in range(len(attentions[j]))
-                            for head in range(len(attentions[j][layer][0]))
-                        ]
-                    ).cpu().numpy()
-            
+                    stacked_attn = (
+                        torch.vstack(
+                            [
+                                attentions[j][layer][0][head][-j:].reshape(-1, 1)
+                                for layer in range(len(attentions[j]))
+                                for head in range(len(attentions[j][layer][0]))
+                            ]
+                        )
+                        .cpu()
+                        .numpy()
+                    )
+
                     expected_shape = attn_mask[:, j, :j].shape
                     actual_shape = stacked_attn.shape
-            
+
                     if actual_shape == expected_shape:
                         attn_mask[:, j, :j] = stacked_attn
                     else:
-                        attn_mask[:, j, :j] = stacked_attn[:expected_shape[0], :expected_shape[1]]
-            
-                attention_all.append(attn_mask.max(0)) 
-               
-                
+                        attn_mask[:, j, :j] = stacked_attn[
+                            : expected_shape[0], : expected_shape[1]
+                        ]
+
+                attention_all.append(attn_mask.max(0))
+
         embeddings_dict = {
             "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
         }
