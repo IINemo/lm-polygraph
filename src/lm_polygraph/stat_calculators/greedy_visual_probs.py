@@ -78,7 +78,6 @@ class GreedyProbsVisualCalculator(StatCalculator):
                 text=str(text),
                 images=image,
                 return_tensors="pt",
-                return_dict=True,
             )
             batch = {k: v.to(model.device()) for k, v in batch.items()}
             if not batches:
