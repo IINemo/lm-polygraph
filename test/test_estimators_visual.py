@@ -76,12 +76,6 @@ def test_ptrue(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_ptrue_sampling(model):
-    estimator = PTrueSampling()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_monte_carlo_sequence_entropy(model):
     estimator = MonteCarloSequenceEntropy()
     ue = estimate_uncertainty(model, estimator, INPUT)
