@@ -166,7 +166,6 @@ class VisualWhiteboxModel(Model):
 
         return generation
 
-    # TODO прописать инпут
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
         Generates a list of model answers using input texts batch.
@@ -177,7 +176,7 @@ class VisualWhiteboxModel(Model):
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
         args = _validate_args(args)
-        args["return_dict_in_generate"] = True
+        # args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.processor_visual(
             text=input_texts,
             images=self.images,
