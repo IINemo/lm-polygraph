@@ -187,7 +187,6 @@ class ConcatSemanticMatrixCalculator(StatCalculator):
         batch_counts = []
         for input_text, texts in zip(input_texts, batch_texts):
             texts = [input_text + text for text in texts]
-            breakpoint()
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
             unique_texts, inv = np.unique(texts, return_inverse=True)
