@@ -6,7 +6,6 @@ from typing import List, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-
 class WhiteboxModelBasic(Model):
     """Basic whitebox model adapter for using in stat calculators and uncertainty estimators."""
 
@@ -29,7 +28,7 @@ class WhiteboxModelBasic(Model):
 
     def tokenize(self, *args, **kwargs):
         return self.tokenizer(*args, **self.tokenizer_args, **kwargs)
-    
+
     def device(self):
         """
         Returns the device the model is currently loaded on.

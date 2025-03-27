@@ -42,7 +42,7 @@ def calcu_idf(
         unique_tokens = set(tokenized_doc)
         for token in unique_tokens:
             document_frequency[token] += 1
-    
+
     total_documents = len(data)
     pickle.dump(
         np.array(
