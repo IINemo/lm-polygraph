@@ -11,7 +11,7 @@ from transformers import TrainingArguments, Trainer
 
 class XMetric(GenerationMetric):
     """
-    Calculates X-MERTIC (https://aclanthology.org/2023.wmt-1.63/)
+    Calculates X-METRIC (https://aclanthology.org/2023.wmt-1.63/)
     between model-generated texts and ground truth texts.
     """
 
@@ -73,7 +73,7 @@ class XMetric(GenerationMetric):
 
     
     def _prepare_inputs(self, translations: List[str], references: List[str]):
-        """Prepares the input data for X-MERTIC scoring."""
+        """Prepares the input data for X-METRIC scoring."""
         inputs = [
             f"candidate: {hyp} reference: {ref}" 
             for hyp, ref in zip(translations, references)
@@ -106,7 +106,7 @@ class XMetric(GenerationMetric):
         target_texts: List[str],
     ) -> np.ndarray:
         """
-        Calculates X-MERTIC between stats['greedy_texts'] and target_texts.
+        Calculates X-METRIC between stats['greedy_texts'] and target_texts.
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, including:
