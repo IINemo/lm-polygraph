@@ -28,6 +28,8 @@ from lm_polygraph.estimators.ensemble_token_measures import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module
 from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.generation_metrics.x_metric_utils import MT5ForRegression
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 hydra_config = Path(os.environ["HYDRA_CONFIG"])
 
@@ -513,6 +515,21 @@ def get_generation_metrics(args):
                        Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True),
                        Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Best"),
                        Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized")]
+            model_name_or_path="google/metricx-24-hybrid-large-v2p6"
+            tokenizer_name="google/mt5-large"
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            model_xmetric = MT5ForRegression.from_pretrained(model_name_or_path)
+            model_xmetric.to(device)
+            model_xmetric.eval()
+
+            tokenizer_xmetric = AutoTokenizer.from_pretrained(
+                tokenizer_name if tokenizer_name else model_name_or_path
+            )
+
+            result += [XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex),
+                       XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True),
+                       XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Best"),
+                       XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized")]
     else:
         result = []
         for metric in generation_metrics:
