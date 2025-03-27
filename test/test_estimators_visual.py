@@ -40,12 +40,6 @@ def test_maximum_sequence_probability(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_maximum_sequence_probability(model):
-    estimator = MaximumSequenceProbability()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_perplexity(model):
     estimator = Perplexity()
     ue = estimate_uncertainty(model, estimator, INPUT)
