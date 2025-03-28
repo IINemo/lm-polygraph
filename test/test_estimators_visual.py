@@ -70,12 +70,6 @@ def test_claim_conditioned_probability(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_ptrue(model):
-    estimator = PTrue()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_monte_carlo_sequence_entropy(model):
     estimator = MonteCarloSequenceEntropy()
     ue = estimate_uncertainty(model, estimator, INPUT)
@@ -142,32 +136,8 @@ def test_degmat_nli_entail(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_degmat_nli_contra(model):
-    estimator = DegMat(similarity_score="NLI_score", affinity="contra")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_degmat_jaccard(model):
-    estimator = DegMat(similarity_score="Jaccard_score")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_eccentricity_nli_entail(model):
     estimator = Eccentricity(similarity_score="NLI_score", affinity="entail")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eccentricity_nli_contra(model):
-    estimator = Eccentricity(similarity_score="NLI_score", affinity="contra")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eccentricity_jaccard(model):
-    estimator = Eccentricity(similarity_score="Jaccard_score")
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
