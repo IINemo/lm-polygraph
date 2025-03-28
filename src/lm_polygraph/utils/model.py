@@ -9,10 +9,10 @@ from dataclasses import asdict
 from typing import List, Dict, Optional, Union
 from abc import abstractmethod, ABC
 from transformers import (
+    AutoConfig,
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
-    AutoConfig,
     LogitsProcessorList,
     BartForConditionalGeneration,
     StoppingCriteria,
