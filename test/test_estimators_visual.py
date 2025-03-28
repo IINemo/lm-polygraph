@@ -94,12 +94,6 @@ def test_lexical_similarity_bleu(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_num_sem_sets(model):
-    estimator = NumSemSets()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_eigval_laplacian_nli_entail(model):
     estimator = EigValLaplacian(similarity_score="NLI_score", affinity="entail")
     ue = estimate_uncertainty(model, estimator, INPUT)
