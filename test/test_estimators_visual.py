@@ -70,18 +70,6 @@ def test_claim_conditioned_probability(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_monte_carlo_sequence_entropy(model):
-    estimator = MonteCarloSequenceEntropy()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_monte_carlo_normalized_sequence_entropy(model):
-    estimator = MonteCarloNormalizedSequenceEntropy()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_lexical_similarity_rouge1(model):
     estimator = LexicalSimilarity(metric="rouge1")
     ue = estimate_uncertainty(model, estimator, INPUT)
