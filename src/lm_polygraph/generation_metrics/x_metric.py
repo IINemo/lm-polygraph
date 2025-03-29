@@ -40,6 +40,7 @@ class XMetric(GenerationMetric):
         self.training_args = TrainingArguments(
             output_dir=".",
             per_device_eval_batch_size=1,
+            disable_tqdm=False,
             dataloader_pin_memory=False,
         )
 
@@ -49,7 +50,6 @@ class XMetric(GenerationMetric):
             model=self.model,
             args=self.training_args,
             data_collator=data_collator,
-            disable_tqdm=False
         )
         self.sample = sample
         self.sample_strategy=sample_strategy
