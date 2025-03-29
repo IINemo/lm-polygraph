@@ -48,7 +48,8 @@ class XMetric(GenerationMetric):
         self.trainer = Trainer(
             model=self.model,
             args=self.training_args,
-            data_collator=data_collator
+            data_collator=data_collator,
+            disable_tqdm=False
         )
         self.sample = sample
         self.sample_strategy=sample_strategy
