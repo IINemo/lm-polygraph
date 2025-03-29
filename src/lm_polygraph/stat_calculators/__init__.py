@@ -20,12 +20,12 @@ from .bart_score import BartScoreCalculator
 from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
-from .semantic_matrix import SemanticMatrixCalculator
+from .semantic_matrix import SemanticMatrixCalculator, ConcatSemanticMatrixCalculator
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
 from .semantic_classes import SemanticClassesCalculator
 from .greedy_similarity import GreedySimilarityCalculator
-from .greedy_semantic_matrix import GreedySemanticMatrixCalculator
+from .greedy_semantic_matrix import GreedySemanticMatrixCalculator, ConcatGreedySemanticMatrixCalculator
 from .rouge_matrix import RougeLSemanticMatrixCalculator
 from .greedy_rouge_matrix import GreedyRougeLSemanticMatrixCalculator
 from .align_matrix import AlignMatrixCalculator
