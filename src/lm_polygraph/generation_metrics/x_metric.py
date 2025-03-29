@@ -62,16 +62,6 @@ class XMetric(GenerationMetric):
                 return f"{self.sample_strategy}Samplexmetric"
         return "xmetric"
 
-    def _filter_source(self, text: str, ignore_regex: re.Pattern) -> str:
-        if ignore_regex is not None:
-            try:
-                return ignore_regex.findall(text)[-1]
-            except IndexError:
-                raise ValueError(
-                    f"Source text '{text}' does not match the ignore regex '{ignore_regex}'"
-                )
-        return text
-
     def _filter_translation(self, text: str, ignore_regex: re.Pattern) -> str:
         return ignore_regex.sub("", text).strip() if ignore_regex else text.strip()
 
