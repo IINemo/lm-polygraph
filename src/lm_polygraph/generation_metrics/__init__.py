@@ -11,3 +11,4 @@ from .sbert import SbertMetric
 from .aggregated_metric import AggregatedMetric
 from .preprocess_output_target import PreprocessOutputTarget
 from .x_metric import XMetric
+from .gpt_judge_accuracy import GptAccuracyMetric
