@@ -7,7 +7,7 @@ from transformers import AutoTokenizer
 from .x_metric_utils import MT5ForRegression
 import torch 
 import datasets 
-from transformers import TrainingArguments, Trainer
+from transformers import TrainingArguments, DataCollatorWithPadding, Trainer
 
 class XMetric(GenerationMetric):
     """
@@ -36,15 +36,20 @@ class XMetric(GenerationMetric):
         self.translation_ignore_regex = (
             re.compile(translation_ignore_regex) if translation_ignore_regex else None
         )
+
         self.training_args = TrainingArguments(
             output_dir=".",
             per_device_eval_batch_size=1,
+            disable_tqdm=False,
             dataloader_pin_memory=False,
         )
+
+        data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer)
 
         self.trainer = Trainer(
             model=self.model,
             args=self.training_args,
+            data_collator=data_collator,
         )
         self.sample = sample
         self.sample_strategy=sample_strategy
@@ -58,25 +63,25 @@ class XMetric(GenerationMetric):
                 return f"{self.sample_strategy}Samplexmetric"
         return "xmetric"
 
-    def _filter_source(self, text: str, ignore_regex: re.Pattern) -> str:
-        if ignore_regex is not None:
-            try:
-                return ignore_regex.findall(text)[-1]
-            except IndexError:
-                raise ValueError(
-                    f"Source text '{text}' does not match the ignore regex '{ignore_regex}'"
-                )
-        return text
-
     def _filter_translation(self, text: str, ignore_regex: re.Pattern) -> str:
         return ignore_regex.sub("", text).strip() if ignore_regex else text.strip()
 
-    
-    def _prepare_inputs(self, translations: List[str], references: List[str]):
-        """Prepares the input data for X-METRIC scoring."""
+    def _filter_text(self, text: str, ignore_regex: re.Pattern) -> str:
+        if ignore_regex is not None:
+            processed_text = ignore_regex.search(text)
+            if processed_text:
+                return processed_text.group(1)
+            else:
+                raise ValueError(
+                    f"Source text {text} does not match the ignore regex {ignore_regex}"
+                )
+        return text
+
+    def _prepare_inputs(self, translations: List[str], references: List[str], sources: List[str]):
+        """Prepares the input data for X-MERTIC scoring."""
         inputs = [
-            f"candidate: {hyp} reference: {ref}" 
-            for hyp, ref in zip(translations, references)
+            f"source: {source} candidate: {hyp} reference: {ref}" 
+            for hyp, ref, source in zip(translations, references, sources)
         ]
         tokenized = self.tokenizer(
             inputs, 
@@ -138,7 +143,12 @@ class XMetric(GenerationMetric):
             for tr in gen_texts
         ]
 
-        inputs = self._prepare_inputs(translations, references)
+        sources = [
+            self._filter_text(src, self.source_ignore_regex)
+            for src in stats["input_texts"]
+        ]
+
+        inputs = self._prepare_inputs(translations, references, sources)
         scores, _, _ = self.trainer.predict(test_dataset=inputs)
         for i, score in enumerate(scores):
             scores[i] = (25 - score) / 25
