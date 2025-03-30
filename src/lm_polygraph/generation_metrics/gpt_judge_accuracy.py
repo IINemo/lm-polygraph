@@ -33,7 +33,10 @@ class GptAccuracyMetric(GenerationMetric):
 
     def __str__(self):
         if self.sample == True:
-            return f"GptAccuracy_{self.model}_{self.sample_strategy}"
+            if self.sample_strategy == "First":
+                return f"SampleGptAccuracy_{self.model}"
+            else:
+                return f"{self.sample_strategy}GptAccuracy_{self.model}"
         return f"GptAccuracy_{self.model}"
 
     def _filter_input(self, input):
