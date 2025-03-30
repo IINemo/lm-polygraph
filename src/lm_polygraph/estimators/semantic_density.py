@@ -94,7 +94,7 @@ class GreedySemanticDensity(Estimator):
         batch_sample_texts = stats["sample_texts"]
         batch_semantic_matrix_contra = stats["concat_greedy_semantic_matrix_contra_forward"]
         batch_semantic_matrix_neutral = stats["concat_greedy_semantic_matrix_neutral_forward"]
-        batch_greedy_log_likelihoods = stats["concat_greedy_log_likelihoods"]
+        batch_greedy_log_likelihoods = stats["greedy_log_likelihoods"]
 
         semantic_density = []
         for batch_data in zip(
