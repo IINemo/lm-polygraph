@@ -67,7 +67,7 @@ class SemanticDensity(Estimator):
 
             semantic_density.append(np.sum(numerator) / np.sum(denominator))
 
-        return np.array(semantic_density)
+        return -np.array(semantic_density)
 
 
 class GreedySemanticDensity(Estimator):
@@ -134,4 +134,4 @@ class GreedySemanticDensity(Estimator):
 
             semantic_density.append(np.sum(numerator) / np.sum(denominator))
 
-        return np.array(semantic_density)
+        return -np.array(semantic_density)
