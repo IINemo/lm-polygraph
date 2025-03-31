@@ -24,7 +24,7 @@ class GptAccuracyMetric(GenerationMetric):
                 "sequence")
         else:
             super().__init__(["no_fewshot_input_texts", "greedy_texts", "input_texts"], "sequence")
-
+        self.binary = True
         self.sample = sample
         self.sample_strategy = sample_strategy
         self.model = model

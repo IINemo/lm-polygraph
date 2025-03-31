@@ -27,6 +27,7 @@ class AccuracyMetric(GenerationMetric):
             "sequence")
         else:
             super().__init__(["greedy_texts"], "sequence")
+        self.binary = True
         self.sample = sample
         self.sample_strategy = sample_strategy
         self.target_ignore_regex = (

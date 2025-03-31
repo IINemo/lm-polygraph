@@ -26,6 +26,7 @@ class GenerationMetric(ABC):
         assert level in ["sequence", "claim", "token"]
         self.level = level
         self.stats_dependencies = stats_dependencies
+        self.binary = False
 
     @abstractmethod
     def __str__(self):
