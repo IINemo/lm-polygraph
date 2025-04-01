@@ -100,6 +100,8 @@ class GreedyProbsCalculator(StatCalculator):
             embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
                 out, batch, model.model_type
             )
+            if embeddings_decoder.dtype != torch.float16:
+                embeddings_decoder = embeddings_decoder.to(torch.float16) # Numpy does not support bfloat16
 
         cut_logits = []
         cut_sequences = []
@@ -153,17 +155,16 @@ class GreedyProbsCalculator(StatCalculator):
                     )
                 )
                 for j in range(1, c):
-                    attn_mask[:, j, :j] = (
-                        torch.vstack(
-                            [
+                    stacked = torch.vstack(
+                        [
                                 attentions[j][layer][0][head][0][-j:]
                                 for layer in range(len(attentions[j]))
                                 for head in range(len(attentions[j][layer][0]))
                             ]
-                        )
-                        .cpu()
-                        .numpy()
                     )
+                    if stacked.dtype != torch.float16:
+                        stacked = stacked.to(torch.float16)  # Numpy does not support bfloat16
+                    attn_mask[:, j, :j] = stacked.cpu().numpy()
                 attention_all.append(attn_mask.max(0))
 
         if model.model_type == "CausalLM":
