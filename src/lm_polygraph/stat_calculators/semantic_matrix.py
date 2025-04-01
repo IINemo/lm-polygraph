@@ -1,27 +1,23 @@
 import numpy as np
-
-import itertools
 from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import Model
 import torch.nn as nn
 import torch
-
-softmax = nn.Softmax(dim=1)
+from tqdm import tqdm  # 添加进度条
 
 
 class SemanticMatrixCalculator(StatCalculator):
     """
-    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    计算生成样本的NLI语义矩阵，使用DeBERTa模型的内存优化版本。
     """
 
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
-        Returns the statistics and dependencies for the calculator.
+        返回计算器的统计数据和依赖项。
         """
-
         return [
             "semantic_matrix_entail",
             "semantic_matrix_contra",
@@ -31,10 +27,12 @@ class SemanticMatrixCalculator(StatCalculator):
             "entailment_id",
         ], ["sample_texts"]
 
-    def __init__(self, nli_model):
+    def __init__(self, nli_model, max_pairs_per_batch=256):
         super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
+        # 控制批处理大小以避免内存溢出
+        self.max_pairs_per_batch = max_pairs_per_batch
 
     def __call__(
         self,
@@ -44,107 +42,136 @@ class SemanticMatrixCalculator(StatCalculator):
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
-        Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+        使用DeBERTa模型计算生成样本的NLI语义矩阵，内存优化版本。
 
         Parameters:
-            dependencies (Dict[str, np.ndarray]): input statistics, containing:
-                - 'sample_texts' (List[List[str]]): several sampling generations
-                    for each input text in the batch.
-            texts (List[str]): Input texts batch used for model generation.
-            model (Model): Model used for generation.
-            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
+            dependencies (Dict[str, np.ndarray]): 输入统计信息，包含：
+                - 'sample_texts' (List[List[str]]): 批处理中每个输入文本的多个采样生成。
+            texts (List[str]): 用于模型生成的输入文本批次。
+            model (Model): 用于生成的模型。
+            max_new_tokens (int): 模型生成的最大新令牌数。默认：100。
         Returns:
-            Dict[str, np.ndarray]: dictionary with the following items:
-                - 'semantic_matrix_entail' (List[np.array]): for each input text: quadratic matrix of size
-                    n_samples x n_samples, with probabilities of 'ENTAILMENT' output of DeBERTa.
-                - 'semantic_matrix_contra' (List[np.array]): for each input text: quadratic matrix of size
-                    n_samples x n_samples, with probabilities of 'CONTRADICTION' output of DeBERTa.
-                - 'semantic_matrix_entail_logits' (List[np.array]): for each input text: quadratic matrix of size
-                    n_samples x n_samples, with logits of 'ENTAILMENT' output of DeBERTa.
-                - 'semantic_matrix_contra_logits' (List[np.array]): for each input text: quadratic matrix of size
-                    n_samples x n_samples, with logits of 'CONTRADICTION' output of DeBERTa.
-                - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
-                    n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
+            Dict[str, np.ndarray]: 包含以下项目的字典：
+                - 'semantic_matrix_entail' (List[np.array]): 每个输入文本的n_samples x n_samples大小的矩阵，
+                  包含DeBERTa 'ENTAILMENT'输出的概率。
+                - 'semantic_matrix_contra' (List[np.array]): 每个输入文本的n_samples x n_samples大小的矩阵，
+                  包含DeBERTa 'CONTRADICTION'输出的概率。
+                - 'semantic_matrix_entail_logits' (List[np.array]): 每个输入文本的n_samples x n_samples大小的矩阵，
+                  包含DeBERTa 'ENTAILMENT'输出的logits。
+                - 'semantic_matrix_contra_logits' (List[np.array]): 每个输入文本的n_samples x n_samples大小的矩阵，
+                  包含DeBERTa 'CONTRADICTION'输出的logits。
+                - 'semantic_matrix_classes' (List[np.array]): 每个输入文本的n_samples x n_samples大小的矩阵，
+                  包含对应于DeBERTa预测的NLI标签ID。
         """
-
+        # 设置基本组件
         deberta = self.nli_model
-        deberta_batch_size = deberta.batch_size
-        batch_texts = dependencies["sample_texts"]
-
-        batch_pairs = []
-        batch_invs = []
-        batch_counts = []
-        for texts in batch_texts:
-            # Sampling from LLM often produces significant number of identical
-            # outputs. We only need to score pairs of unqiue outputs
-            unique_texts, inv = np.unique(texts, return_inverse=True)
-            batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
-            batch_invs.append(inv)
-            batch_counts.append(len(unique_texts))
-
         device = deberta.device
+        tokenizer = deberta.deberta_tokenizer
         ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
         contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
-
         softmax = nn.Softmax(dim=1)
-        tokenizer = deberta.deberta_tokenizer
 
-        E = []
-        C = []
-        E_logits = []
-        C_logits = []
-        P = []
+        batch_texts = dependencies["sample_texts"]
 
-        for i, pairs in enumerate(batch_pairs):
-            dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
-            probs = []
-            logits_all = []
-            for first_texts, second_texts in dl:
-                batch = list(zip(first_texts, second_texts))
-                encoded = tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs.append(softmax(logits).cpu().detach())
-                logits_all.append(logits.cpu().detach())
-            probs = torch.cat(probs, dim=0)
-            logits_all = torch.cat(logits_all, dim=0)
+        # 结果容器
+        all_E = []
+        all_C = []
+        all_E_logits = []
+        all_C_logits = []
+        all_P = []
 
-            entail_probs = probs[:, ent_id]
-            contra_probs = probs[:, contra_id]
-            entail_logits = logits_all[:, ent_id]
-            contra_logits = logits_all[:, contra_id]
-            class_preds = probs.argmax(-1)
+        # 处理每组文本
+        for texts_idx, texts in enumerate(batch_texts):
+            print(f"处理文本集 {texts_idx+1}/{len(batch_texts)}")
 
-            unique_mat_shape = (batch_counts[i], batch_counts[i])
+            # 找出唯一文本以减少计算量
+            unique_texts, inv = np.unique(texts, return_inverse=True)
+            unique_count = len(unique_texts)
 
-            unique_E = entail_probs.view(unique_mat_shape).numpy()
-            unique_C = contra_probs.view(unique_mat_shape).numpy()
-            unique_E_logits = entail_logits.view(unique_mat_shape).numpy()
-            unique_C_logits = contra_logits.view(unique_mat_shape).numpy()
-            unique_P = class_preds.view(unique_mat_shape).numpy()
+            # 使用float16初始化矩阵以节省内存
+            unique_E = np.zeros((unique_count, unique_count), dtype=np.float16)
+            unique_C = np.zeros((unique_count, unique_count), dtype=np.float16)
+            unique_E_logits = np.zeros(
+                (unique_count, unique_count), dtype=np.float16)
+            unique_C_logits = np.zeros(
+                (unique_count, unique_count), dtype=np.float16)
+            unique_P = np.zeros((unique_count, unique_count), dtype=np.int8)
 
-            inv = batch_invs[i]
+            # 按行处理矩阵，避免一次性生成所有组合
+            for i in tqdm(range(unique_count), desc=f"批次 {texts_idx+1}/{len(batch_texts)}"):
+                # 按小批次处理每行，以避免内存溢出
+                for j_start in range(0, unique_count, self.max_pairs_per_batch):
+                    j_end = min(
+                        j_start + self.max_pairs_per_batch, unique_count)
 
-            # Recover full matrices from unques by gathering along both axes
-            # using inverse index
-            E.append(unique_E[inv, :][:, inv])
-            C.append(unique_C[inv, :][:, inv])
-            E_logits.append(unique_E_logits[inv, :][:, inv])
-            C_logits.append(unique_C_logits[inv, :][:, inv])
-            P.append(unique_P[inv, :][:, inv])
+                    # 创建当前批次的文本对
+                    first_texts = [unique_texts[i]] * (j_end - j_start)
+                    second_texts = [unique_texts[j]
+                                    for j in range(j_start, j_end)]
 
-        E = np.stack(E)
-        C = np.stack(C)
-        E_logits = np.stack(E_logits)
-        C_logits = np.stack(C_logits)
-        P = np.stack(P)
+                    # 跳过空批次
+                    if not first_texts or not second_texts:
+                        continue
 
+                    # 使用自动混合精度
+                    with torch.amp.autocast(device_type='cuda'):
+                        # 编码文本对
+                        encoded = tokenizer.batch_encode_plus(
+                            list(zip(first_texts, second_texts)),
+                            padding=True,
+                            truncation=True,
+                            max_length=512,  # 限制序列长度
+                            return_tensors="pt"
+                        ).to(device)
+
+                        # 无梯度推理
+                        with torch.no_grad():
+                            outputs = deberta.deberta(**encoded)
+                            logits = outputs.logits
+
+                        # 计算概率
+                        probs = softmax(logits)
+
+                        # 获取特定值并移至CPU
+                        entail_probs = probs[:,
+                                                ent_id].cpu().detach().numpy()
+                        contra_probs = probs[:, contra_id].cpu(
+                        ).detach().numpy()
+                        entail_logits = logits[:,
+                                                ent_id].cpu().detach().numpy()
+                        contra_logits = logits[:, contra_id].cpu(
+                        ).detach().numpy()
+                        class_preds = probs.argmax(
+                            dim=1).cpu().detach().numpy()
+
+                        # 更新矩阵
+                        for idx, j in enumerate(range(j_start, j_end)):
+                            unique_E[i, j] = entail_probs[idx]
+                            unique_C[i, j] = contra_probs[idx]
+                            unique_E_logits[i, j] = entail_logits[idx]
+                            unique_C_logits[i, j] = contra_logits[idx]
+                            unique_P[i, j] = class_preds[idx]
+
+            # 恢复完整矩阵并转换回原始精度
+            full_E = unique_E[inv, :][:, inv].astype(np.float32)
+            full_C = unique_C[inv, :][:, inv].astype(np.float32)
+            full_E_logits = unique_E_logits[inv, :][:, inv].astype(np.float32)
+            full_C_logits = unique_C_logits[inv, :][:, inv].astype(np.float32)
+            full_P = unique_P[inv, :][:, inv].astype(np.int64)
+
+            # 存储结果
+            all_E.append(full_E)
+            all_C.append(full_C)
+            all_E_logits.append(full_E_logits)
+            all_C_logits.append(full_C_logits)
+            all_P.append(full_P)
+
+        # 堆叠最终结果
         return {
-            "semantic_matrix_entail": E,
-            "semantic_matrix_contra": C,
-            "semantic_matrix_entail_logits": E_logits,
-            "semantic_matrix_contra_logits": C_logits,
-            "semantic_matrix_classes": P,
-            "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
+            "semantic_matrix_entail": np.stack(all_E),
+            "semantic_matrix_contra": np.stack(all_C),
+            "semantic_matrix_entail_logits": np.stack(all_E_logits),
+            "semantic_matrix_contra_logits": np.stack(all_C_logits),
+            "semantic_matrix_classes": np.stack(all_P),
+            "entailment_id": ent_id,
         }
