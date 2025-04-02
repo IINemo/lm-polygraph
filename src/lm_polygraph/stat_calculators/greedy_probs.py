@@ -104,6 +104,10 @@ class GreedyProbsCalculator(StatCalculator):
                 embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
                     out, batch, model.model_type
                 )
+                if embeddings_decoder.dtype == torch.bfloat16:
+                    embeddings_decoder = embeddings_decoder.to(
+                        torch.float16
+                    )  # numpy does not support bfloat16
 
         cut_logits = []
         cut_sequences = []
@@ -159,17 +163,19 @@ class GreedyProbsCalculator(StatCalculator):
                     )
                 )
                 for j in range(1, c):
-                    attn_mask[:, j, :j] = (
-                        torch.vstack(
-                            [
-                                attentions[j][layer][0][head][0][-j:]
-                                for layer in range(len(attentions[j]))
-                                for head in range(len(attentions[j][layer][0]))
-                            ]
-                        )
-                        .cpu()
-                        .numpy()
+                    stacked_attention = torch.vstack(
+                        [
+                            attentions[j][layer][0][head][0][-j:]
+                            for layer in range(len(attentions[j]))
+                            for head in range(len(attentions[j][layer][0]))
+                        ]
                     )
+                    if stacked_attention.dtype == torch.bfloat16:
+                        stacked_attention = stacked_attention.to(
+                            torch.float16
+                        )  # numpy does not support bfloat16
+
+                    attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
                 attention_all.append(attn_mask.max(0))
 
         if not self.output_hidden_states:
