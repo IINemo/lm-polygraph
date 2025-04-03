@@ -93,7 +93,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                     )
                     for t in cropped_tokens
                 ]
-                with torch.no_grad():
+                with torch.inference_mode():
                     with torch.amp.autocast(device_type='cuda'):
                         token_scores = self.crossencoder.predict(
                             batches, batch_size=self.batch_size
@@ -105,7 +105,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         sim_matrices = []
         for i, pairs in enumerate(batch_pairs):
-            with torch.no_grad():
+            with torch.inference_mode():
                 with torch.amp.autocast(device_type='cuda'):
                     sim_scores = self.crossencoder.predict(pairs, batch_size=self.batch_size).astype(np.float32)
             unique_mat_shape = (batch_counts[i], batch_counts[i])
@@ -141,7 +141,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                         )
                         for t in cropped_tokens
                     ]
-                    with torch.no_grad():
+                    with torch.inference_mode():
                         with torch.amp.autocast(device_type='cuda'):
                             token_scores = self.crossencoder.predict(
                                 batches, batch_size=self.batch_size

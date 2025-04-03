@@ -35,7 +35,8 @@ class SemanticMatrixCalculator(StatCalculator):
         super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
-        self.nli_model.batch_size = batch_size
+        self.batch_size = batch_size
+        self.nli_model.batch_size = self.batch_size
 
     def __call__(
         self,
@@ -67,9 +68,8 @@ class SemanticMatrixCalculator(StatCalculator):
                 - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
-
         deberta = self.nli_model
-        deberta_batch_size = deberta.batch_size
+        deberta_batch_size = self.batch_size
         batch_texts = dependencies["sample_texts"]
 
         batch_pairs = []

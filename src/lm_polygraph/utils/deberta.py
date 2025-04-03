@@ -128,3 +128,4 @@ class MultilingualDeberta(Deberta):
         self._deberta.deberta.config.label2id = {
             k.upper(): v for k, v in self._deberta.deberta.config.label2id.items()
         }
+        self._deberta = torch.compile(self._deberta)

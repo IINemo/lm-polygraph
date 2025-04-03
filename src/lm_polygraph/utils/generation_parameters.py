@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
 
 
 @dataclass
@@ -32,5 +33,5 @@ class GenerationParameters:
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    generate_until: tuple = ()
+    generate_until: List[str] = field(default_factory=list)
     allow_newlines: bool = True
