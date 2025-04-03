@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 import itertools
 from typing import Dict, List, Tuple
@@ -29,14 +30,15 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         self,
         batch_size: int = 10,
         cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+        device: str = "cuda",
     ):
         super().__init__()
         self.crossencoder_setup = False
         self.batch_size = batch_size
         self.cross_encoder_name = cross_encoder_name
-
+        self.device = device
     def _setup(self, device="cuda"):
-        self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
+        self.crossencoder = CrossEncoder(self.cross_encoder_name, device=self.device)
 
     def __call__(
         self,
@@ -91,9 +93,11 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                     )
                     for t in cropped_tokens
                 ]
-                token_scores = self.crossencoder.predict(
-                    batches, batch_size=self.batch_size
-                )
+                with torch.no_grad():
+                    with torch.amp.autocast(device_type='cuda'):
+                        token_scores = self.crossencoder.predict(
+                            batches, batch_size=self.batch_size
+                        ).astype(np.float32)
                 token_scores[is_special_tokens] = 1
             else:
                 token_scores = np.array([0.5] * len(tokens))
@@ -101,7 +105,9 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
 
         sim_matrices = []
         for i, pairs in enumerate(batch_pairs):
-            sim_scores = self.crossencoder.predict(pairs, batch_size=self.batch_size)
+            with torch.no_grad():
+                with torch.amp.autocast(device_type='cuda'):
+                    sim_scores = self.crossencoder.predict(pairs, batch_size=self.batch_size).astype(np.float32)
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
             sim_scores_matrix = sim_scores.reshape(unique_mat_shape)
@@ -135,9 +141,11 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                         )
                         for t in cropped_tokens
                     ]
-                    token_scores = self.crossencoder.predict(
-                        batches, batch_size=self.batch_size
-                    )
+                    with torch.no_grad():
+                        with torch.amp.autocast(device_type='cuda'):
+                            token_scores = self.crossencoder.predict(
+                                batches, batch_size=self.batch_size
+                            ).astype(np.float32)
                     token_scores[is_special_tokens] = 1
                 else:
                     token_scores = np.array([0.5] * len(tokens))

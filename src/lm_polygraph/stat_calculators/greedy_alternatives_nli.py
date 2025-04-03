@@ -8,6 +8,7 @@ from lm_polygraph.utils.deberta import Deberta
 from collections import defaultdict
 import torch.nn as nn
 import string
+import torch
 
 
 def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[str]:
@@ -20,7 +21,9 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
         encoded = deberta.deberta_tokenizer.batch_encode_plus(
             batch, padding=True, return_tensors="pt"
         ).to(deberta.device)
-        logits = deberta.deberta(**encoded).logits
+        with torch.no_grad():
+            with torch.amp.autocast(device_type='cuda'):
+                logits = deberta.deberta(**encoded).logits.float()
         logits = logits.detach().to(deberta.device)
         for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
             w_probs[wi][wj] = prob
@@ -49,9 +52,10 @@ class GreedyAlternativesNLICalculator(StatCalculator):
         """
         return ["greedy_tokens_alternatives_nli"], ["greedy_tokens_alternatives"]
 
-    def __init__(self, nli_model):
+    def __init__(self, nli_model, batch_size: int = 10):
         super().__init__()
         self.nli_model = nli_model
+        self.nli_model.batch_size = batch_size
 
     def _strip(self, w: str):
         return w.strip(string.punctuation + " \n")
