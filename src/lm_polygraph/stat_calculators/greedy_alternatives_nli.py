@@ -12,20 +12,20 @@ import torch
 
 from cachetools import LRUCache
 
+
 def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[str]:
     nli_set = list(set(nli_queue))
 
     softmax = nn.Softmax(dim=1)
     w_probs = defaultdict(lambda: defaultdict(lambda: None))
     for k in range(0, len(nli_set), deberta.batch_size):
-        batch = nli_set[k : k + deberta.batch_size]
+        batch = nli_set[k: k + deberta.batch_size]
         encoded = deberta.deberta_tokenizer.batch_encode_plus(
             batch, padding=True, return_tensors="pt"
         ).to(deberta.device)
         with torch.inference_mode():
             with torch.amp.autocast(device_type='cuda'):
                 logits = deberta.deberta(**encoded).logits.float().detach()
-        #logits = logits.detach().to(deberta.device)
         for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
             w_probs[wi][wj] = prob
 
@@ -44,61 +44,67 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
         classes.append(str_class)
     return classes
 
-# Optimize `_eval_nli_model` by LRU cache
+
 class NLIEvaluator:
-    def __init__(self, deberta, max_cache_size: int = 1_000_000):
+    def __init__(self, deberta, max_cache_size: int = 10_000_000):
         self.deberta = deberta
-        self.cache = LRUCache(maxsize=max_cache_size)  # LRU 缓存
+        self.max_cache_size = max_cache_size
+        # Get entailment / contradiction label ids
+        self.ent_id = self.deberta.deberta.config.label2id["ENTAILMENT"]
+        self.contra_id = self.deberta.deberta.config.label2id["CONTRADICTION"]
 
     def __call__(self, nli_queue: List[Tuple[str, str]]) -> List[str]:
-        uncached_pairs = []
-        results = []
-
-        # Identify uncached
+        self.cache = LRUCache(maxsize=self.max_cache_size)
+        # 1. Set default cache for self-entailing pairs (x, x)
         for pair in nli_queue:
-            if pair not in self.cache:
-                uncached_pairs.append(pair)
+            if pair[0] == pair[1] and pair not in self.cache:
+                self.cache[pair] = "entail"
 
-        # Deduplicate
-        batch_input = list(set(uncached_pairs))
+        # 2. Find uncached pairs (preserve order + no deduplication)
+        uncached_pairs = [pair for pair in nli_queue if pair not in self.cache]
 
-        # Run inference
-        if batch_input:
-            import torch
-            import torch.nn as nn
-
+        if uncached_pairs:
             softmax = nn.Softmax(dim=1)
-            w_probs = defaultdict(lambda: defaultdict(lambda: None))
+            probs_list = []
 
-            for k in range(0, len(batch_input), self.deberta.batch_size):
-                batch = batch_input[k : k + self.deberta.batch_size]
+            # 3. Process in batches with DeBERTa
+            for i in range(0, len(uncached_pairs), self.deberta.batch_size):
+                batch = uncached_pairs[i: i + self.deberta.batch_size]
+
                 encoded = self.deberta.deberta_tokenizer.batch_encode_plus(
                     batch, padding=True, return_tensors="pt"
                 ).to(self.deberta.device)
 
                 with torch.inference_mode():
                     with torch.amp.autocast(device_type='cuda'):
-                        logits = self.deberta.deberta(**encoded).logits.float().detach()
+                        logits = self.deberta.deberta(
+                            **encoded).logits.float().detach()
 
-                for (wi, wj), prob in zip(batch, softmax(logits).cpu()):
-                    w_probs[wi][wj] = prob
+                # Softmax probabilities
+                probs = softmax(logits).cpu()
+                probs_list.extend(probs)
 
-            for wi, wj in batch_input:
-                pr = w_probs[wi][wj]
-                id = pr.argmax().item()
-                ent_id = self.deberta.deberta.config.label2id["ENTAILMENT"]
-                contra_id = self.deberta.deberta.config.label2id["CONTRADICTION"]
-
-                if id == ent_id:
+            # 4. Write prediction results to cache
+            for pair, prob in zip(uncached_pairs, probs_list):
+                pred_id = prob.argmax().item()
+                if pred_id == self.ent_id:
                     label = "entail"
-                elif id == contra_id:
+                elif pred_id == self.contra_id:
                     label = "contra"
                 else:
                     label = "neutral"
+                self.cache[pair] = label
 
-                self.cache[(wi, wj)] = label
+        # 5. Read cache and return results. If not cached (rare), issue warning
+        results = []
+        for pair in nli_queue:
+            if pair not in self.cache:
+                print(
+                    f"Warning: Pair {pair} still not in cache after processing, defaulting to neutral")
+                self.cache[pair] = "neutral"
+            results.append(self.cache[pair])
 
-        return [self.cache[pair] for pair in nli_queue]
+        return results
 
 
 class GreedyAlternativesNLICalculator(StatCalculator):
@@ -138,7 +144,8 @@ class GreedyAlternativesNLICalculator(StatCalculator):
                         for alt, prob in word_alternatives
                     ]
                 words = [self._strip(alt[0]) for alt in word_alternatives]
-                queue_meta.append((sample_idx, word_idx, word_alternatives, words))
+                queue_meta.append(
+                    (sample_idx, word_idx, word_alternatives, words))
                 for wi in words:
                     all_nli_queue.append((words[0], wi))
                     all_nli_queue.append((wi, words[0]))
@@ -146,7 +153,6 @@ class GreedyAlternativesNLICalculator(StatCalculator):
         # Step 2: Call NLI evaluator once
         if not hasattr(self, "_nli_evaluator"):
             self._nli_evaluator = NLIEvaluator(self.nli_model)
-        # nli_classes = _eval_nli_model(nli_queue, self.nli_model)
         all_nli_classes = self._nli_evaluator(all_nli_queue)
 
         # Step 3: Fill results
@@ -215,11 +221,13 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
             nli_queue = []
             for claim in sample_claims:
                 tokens = [sample_tokens[t] for t in claim.aligned_token_ids]
-                alts = [sample_alternatives[t] for t in claim.aligned_token_ids]
+                alts = [sample_alternatives[t]
+                        for t in claim.aligned_token_ids]
                 for i in range(len(tokens)):
                     for j in range(len(alts[i])):
                         text1 = model.tokenizer.decode(tokens[: i + 1])
-                        text2 = model.tokenizer.decode(tokens[:i] + [alts[i][j][0]])
+                        text2 = model.tokenizer.decode(
+                            tokens[:i] + [alts[i][j][0]])
                         nli_queue.append((text1, text2))
                         nli_queue.append((text2, text1))
 
@@ -229,7 +237,8 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
             for claim in sample_claims:
                 nli_matrixes.append([])
                 tokens = [sample_tokens[t] for t in claim.aligned_token_ids]
-                alts = [sample_alternatives[t] for t in claim.aligned_token_ids]
+                alts = [sample_alternatives[t]
+                        for t in claim.aligned_token_ids]
                 for i in range(len(tokens)):
                     nli_matrix = []
                     for _ in range(len(alts[i])):
