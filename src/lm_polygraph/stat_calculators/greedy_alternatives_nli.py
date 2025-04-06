@@ -46,12 +46,55 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
 
 
 class NLIEvaluator:
-    def __init__(self, deberta, max_cache_size: int = 10_000_000):
+    def __init__(self, deberta, max_cache_size: int = 100_000):
         self.deberta = deberta
         self.max_cache_size = max_cache_size
         # Get entailment / contradiction label ids
         self.ent_id = self.deberta.deberta.config.label2id["ENTAILMENT"]
         self.contra_id = self.deberta.deberta.config.label2id["CONTRADICTION"]
+    
+    def _run_inference(self, pairs: List[Tuple[str, str]]) -> List[Tuple[Tuple[str, str], str]]:
+        """
+        Perform NLI inference on the given text pairs
+        
+        Args:
+            pairs: List of text pairs to perform inference on
+            
+        Returns:
+            List of inference results, each element is (text_pair, label)
+        """
+        if not pairs:
+            return []
+            
+        softmax = nn.Softmax(dim=1)
+        results = []
+        
+        # Batch processing
+        for i in range(0, len(pairs), self.deberta.batch_size):
+            batch = pairs[i: i + self.deberta.batch_size]
+            
+            encoded = self.deberta.deberta_tokenizer.batch_encode_plus(
+                batch, padding=True, return_tensors="pt"
+            ).to(self.deberta.device)
+            
+            with torch.inference_mode():
+                with torch.amp.autocast(device_type='cuda'):
+                    logits = self.deberta.deberta(**encoded).logits.float().detach()
+            
+            # Calculate probabilities and get labels
+            probs = softmax(logits).cpu()
+            
+            for pair, prob in zip(batch, probs):
+                pred_id = prob.argmax().item()
+                if pred_id == self.ent_id:
+                    label = "entail"
+                elif pred_id == self.contra_id:
+                    label = "contra"
+                else:
+                    label = "neutral"
+                results.append((pair, label))
+                
+        return results
 
     def __call__(self, nli_queue: List[Tuple[str, str]]) -> List[str]:
         self.cache = LRUCache(maxsize=self.max_cache_size)
@@ -64,46 +107,29 @@ class NLIEvaluator:
         uncached_pairs = [pair for pair in nli_queue if pair not in self.cache]
 
         if uncached_pairs:
-            softmax = nn.Softmax(dim=1)
-            probs_list = []
-
-            # 3. Process in batches with DeBERTa
-            for i in range(0, len(uncached_pairs), self.deberta.batch_size):
-                batch = uncached_pairs[i: i + self.deberta.batch_size]
-
-                encoded = self.deberta.deberta_tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(self.deberta.device)
-
-                with torch.inference_mode():
-                    with torch.amp.autocast(device_type='cuda'):
-                        logits = self.deberta.deberta(
-                            **encoded).logits.float().detach()
-
-                # Softmax probabilities
-                probs = softmax(logits).cpu()
-                probs_list.extend(probs)
-
-            # 4. Write prediction results to cache
-            for pair, prob in zip(uncached_pairs, probs_list):
-                pred_id = prob.argmax().item()
-                if pred_id == self.ent_id:
-                    label = "entail"
-                elif pred_id == self.contra_id:
-                    label = "contra"
-                else:
-                    label = "neutral"
+            # 3. Use the abstracted inference function to process uncached pairs
+            inference_results = self._run_inference(uncached_pairs)
+            
+            # 4. Write results to cache
+            for pair, label in inference_results:
                 self.cache[pair] = label
 
-        # 5. Read cache and return results. If not cached (rare), issue warning
+        # 5. Read cache and return results, run inference again for any still uncached pairs
         results = []
+        still_uncached = []
+        
         for pair in nli_queue:
             if pair not in self.cache:
-                print(
-                    f"Warning: Pair {pair} still not in cache after processing, defaulting to neutral")
-                self.cache[pair] = "neutral"
-            results.append(self.cache[pair])
-
+                still_uncached.append(pair)
+                
+        if still_uncached:
+            print(f"Warning: {len(still_uncached)} pairs not in cache after processing, running model again")
+            inference_results = self._run_inference(still_uncached)
+            for pair, label in inference_results:
+                self.cache[pair] = label
+                
+        # Now all pairs should be in the cache
+        results = [self.cache[pair] for pair in nli_queue]
         return results
 
 
