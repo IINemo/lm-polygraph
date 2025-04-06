@@ -102,6 +102,12 @@ from .greedy_semantic_average_ue_average_similarity import (
     GreedySemanticEnrichedMTETotalDissimilarity,
     GreedyAveDissimilarity
 )
+from .greedy_supervised_cocoa import (
+    SupervisedCocoaMSP,
+    SupervisedCocoaPPL,
+    SupervisedCocoaMTE,
+    SupervisedCocoa
+)
 from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE
 
 from .sum_semantic_entropies import SumSemanticMaxprob, SumSemanticPPL, SumSemanticMTE, GreedySumSemanticMaxprob, GreedySumSemanticPPL, GreedySumSemanticMTE
