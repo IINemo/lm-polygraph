@@ -16,6 +16,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
+from lm_polygraph.model_adapters import WhiteboxModelvLLM
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
@@ -30,7 +31,6 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
-
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
@@ -170,8 +170,8 @@ def get_ue_metrics(args):
 def get_stat_calculator_names(config):
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
     language = getattr(config, "language", "en")
-
-    output_attentions = getattr(config, "output_attentions", True)
+    output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
+    output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
     hf_cache = getattr(config, "hf_cache", None)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
         config.model, "supports_logprobs", False
@@ -179,12 +179,7 @@ def get_stat_calculator_names(config):
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
-        all_stat_calculators += register_default_stat_calculators(
-            model_type,
-            language,
-            hf_cache,
-            blackbox_supports_logprobs=blackbox_supports_logprobs,
-        )
+        all_stat_calculators += register_default_stat_calculators(model_type, language, hf_cache, output_attentions, output_hidden_states)
 
     for stat_calculator in config.stat_calculators:
         if stat_calculator == "auto":
@@ -291,6 +286,8 @@ def get_generation_metrics(args):
 def get_model(args):
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         return get_blackbox_model(args)
+    elif getattr(args.model, "type", "Whitebox") == "vLLMCausalLM":
+        return get_vllm_model(args)
     else:
         cache_kwargs = {
             "cache_dir": getattr(args, "hf_cache", None),
@@ -355,10 +352,34 @@ def get_whitebox_model(args, cache_kwargs={}):
 
     generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
 
-    model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params
-    )
+    model = WhiteboxModel(base_model,
+                          tokenizer,
+                          args.model.path,
+                          args.model.type,
+                          generation_params)
 
+    return model
+
+def get_vllm_model(args):
+    
+    path_to_load_script = get_abs_path_from_hydra_config(
+            args.model.path_to_load_script
+        )
+    load_module = load_external_module(path_to_load_script)
+
+    load_model_args = {'model_path': args.model.path, 
+                       'max_new_tokens': args.max_new_tokens, 
+                       'logprobs': args.model.logprobs}
+    
+    load_model_args.update(args.model.load_model_args)
+    base_model, sampling_params = load_module.load_model(**load_model_args)
+    generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
+    
+    model = WhiteboxModelvLLM(model=base_model, 
+                              sampling_params=sampling_params,
+                              generation_parameters=generation_parameters,
+                              device=args.model.device)
+    
     return model
 
 

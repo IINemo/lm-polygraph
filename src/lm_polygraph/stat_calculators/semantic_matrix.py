@@ -31,10 +31,12 @@ class SemanticMatrixCalculator(StatCalculator):
             "entailment_id",
         ], ["sample_texts"]
 
-    def __init__(self, nli_model):
+    def __init__(self, nli_model, batch_size: int = 10):
         super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
+        self.batch_size = batch_size
+        self.nli_model.batch_size = self.batch_size
 
     def __call__(
         self,
@@ -66,9 +68,8 @@ class SemanticMatrixCalculator(StatCalculator):
                 - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
-
         deberta = self.nli_model
-        deberta_batch_size = deberta.batch_size
+        deberta_batch_size = self.batch_size
         batch_texts = dependencies["sample_texts"]
 
         batch_pairs = []
@@ -104,7 +105,9 @@ class SemanticMatrixCalculator(StatCalculator):
                 encoded = tokenizer.batch_encode_plus(
                     batch, padding=True, return_tensors="pt"
                 ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
+                with torch.no_grad():
+                    with torch.amp.autocast(device_type='cuda'):
+                        logits = deberta.deberta(**encoded).logits.float().to(device)
                 probs.append(softmax(logits).cpu().detach())
                 logits_all.append(logits.cpu().detach())
             probs = torch.cat(probs, dim=0)

@@ -1,0 +1,35 @@
+hydra:
+  run:
+    dir: ${cache_path}/test/
+
+defaults:
+  - model: vllm
+  - test_default_estimators_vllm
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+
+dataset: LM-Polygraph/trivia_qa_tiny
+train_split: train
+eval_split: test
+text_column: input
+load_from_disk: false
+label_column: output
+prompt: ""
+
+ignore_exceptions: false
+generation_metrics:
+  - name: RougeMetric
+    args: ["rouge1"]
+
+stat_calculators:
+  - auto
+
+subsample_eval_dataset: 10
+batch_size: 2
+seed: null
+device: null
+max_new_tokens: 256
