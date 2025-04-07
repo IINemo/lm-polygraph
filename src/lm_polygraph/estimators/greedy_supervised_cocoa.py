@@ -13,7 +13,7 @@ class SupervisedCocoaMSP(Estimator):
         verbose: bool = False,
         exp: bool = False,
     ):
-        super().__init__(["greedy_sentence_similarity", "greedy_log_likelihoods"], "sequence")
+        super().__init__(["greedy_sentence_similarity_supervised", "greedy_log_likelihoods"], "sequence")
         self.verbose = verbose
         self.exp = exp
 
@@ -45,7 +45,7 @@ class SupervisedCocoaPPL(Estimator):
         verbose: bool = False,
         exp: bool = False,
     ):
-        super().__init__(["greedy_sentence_similarity", "greedy_log_likelihoods"], "sequence")
+        super().__init__(["greedy_sentence_similarity_supervised", "greedy_log_likelihoods"], "sequence")
         self.verbose = verbose
         self.exp = exp
 
@@ -79,7 +79,7 @@ class SupervisedCocoaMTE(Estimator):
         self,
         verbose: bool = False,
     ):
-        super().__init__(["greedy_sentence_similarity", "entropy"], "sequence")
+        super().__init__(["greedy_sentence_similarity_supervised", "entropy"], "sequence")
         self.verbose = verbose
 
     def __str__(self):
@@ -107,7 +107,7 @@ class SupervisedCocoa(Estimator):
         self,
         verbose: bool = False,
     ):
-        super().__init__(["greedy_sentence_similarity"], "sequence")
+        super().__init__(["greedy_sentence_similarity_supervised"], "sequence")
         self.verbose = verbose
 
     def __str__(self):
