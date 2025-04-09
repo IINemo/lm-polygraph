@@ -48,7 +48,6 @@ save_stats:
   - best_sample_text_ids
   - best_normalized_sample_texts
   - best_normalized_sample_text_ids
-  - lookback_lens_features
   - mean_all_layers_embeddings
   - last_all_layers_embeddings
 entropy_top_k: 50
