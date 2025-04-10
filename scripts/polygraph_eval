@@ -536,9 +536,9 @@ def get_generation_metrics(args):
             ]
 
             if api_key:
-                result += [GptAccuracyMetric( api_key=api_key),
-                GptAccuracyMetric( api_key=api_key,sample=True, sample_strategy="Best"),
-                GptAccuracyMetric( api_key=api_key, sample=True, sample_strategy="First"),]
+                result += [GptAccuracyMetric(api_key=api_key),
+                GptAccuracyMetric(api_key=api_key,sample=True, sample_strategy="Best"),
+                GptAccuracyMetric(api_key=api_key, sample=True, sample_strategy="First"),]
 
             if getattr(args.model, "type", "Whitebox") != "Blackbox":
                 if getattr(args, "use_claim_ue", False):
