@@ -482,7 +482,7 @@ def get_generation_metrics(args):
                 evaluation_mode="nli_sp",
             )
 
-            api_key = getattr(args, "OPENAI_API_KEY", None) if getattr(args, "OPENAI_API_KEY", None) else os.getenv("OPENAI_API_KEY", None)
+            api_key = getattr(args, "openai_api_key", None) if getattr(args, "OPENAI_API_KEY", None) else os.getenv("OPENAI_API_KEY", None)
 
             result = [
                 RougeMetric("rougeL"),
