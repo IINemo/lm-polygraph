@@ -482,6 +482,8 @@ def get_generation_metrics(args):
                 evaluation_mode="nli_sp",
             )
 
+            api_key = getattr(args, "openai_api_key", None) if getattr(args, "OPENAI_API_KEY", None) else os.getenv("OPENAI_API_KEY", None)
+
             result = [
                 RougeMetric("rougeL"),
                 BLEUMetric(),
@@ -531,10 +533,12 @@ def get_generation_metrics(args):
                 AlignScore(align_scorer, sample=True, sample_strategy="BestNormalized"),
                 AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="BestNormalized"),
                 AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="BestNormalized"),
-                GptAccuracyMetric( api_key=api_key),
-                GptAccuracyMetric( api_key=api_key,sample=True, sample_strategy="Best"),
-                GptAccuracyMetric( api_key=api_key, sample=True, sample_strategy="First"),
             ]
+
+            if api_key:
+                result += [GptAccuracyMetric(api_key=api_key),
+                GptAccuracyMetric(api_key=api_key,sample=True, sample_strategy="Best"),
+                GptAccuracyMetric(api_key=api_key, sample=True, sample_strategy="First"),]
 
             if getattr(args.model, "type", "Whitebox") != "Blackbox":
                 if getattr(args, "use_claim_ue", False):
