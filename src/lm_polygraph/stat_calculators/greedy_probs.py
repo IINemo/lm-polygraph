@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
@@ -51,7 +51,7 @@ class GreedyProbsCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Union[WhiteboxModel, WhiteboxModelvLLM],
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
