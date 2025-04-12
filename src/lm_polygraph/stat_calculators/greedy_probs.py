@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple, Union
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters import WhiteboxModel, WhiteboxModelvLLM
 
 
 class GreedyProbsCalculator(StatCalculator):
