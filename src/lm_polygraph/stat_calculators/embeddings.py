@@ -42,7 +42,7 @@ def get_embeddings_from_output(
 
                     generated_tokens_hs = torch.cat([h[layer_idx][batch_i] for h in output.hidden_states[1:]], dim=0)[pad_mask[batch_i]].cpu().detach()
                     ith_embeddings_mean[f"layer_{layer_idx}_embeddings"] = torch.mean(generated_tokens_hs, dim=0)
-                    ith_embeddings_last[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs[-1]
+                    ith_embeddings_last[f"layer_{layer_idx}_embeddings"] = generated_tokens_hs[-1].clone()
             # all_layers_embeddings.append(ith_embeddings)
             mean_all_layers_embeddings.append(ith_embeddings_mean)
             last_all_layers_embeddings.append(ith_embeddings_last)
