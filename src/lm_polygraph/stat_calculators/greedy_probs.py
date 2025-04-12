@@ -1,11 +1,11 @@
 import torch
 import numpy as np
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters import WhiteboxModel, WhiteboxModelvLLM
 
 
 class GreedyProbsCalculator(StatCalculator):
@@ -39,17 +39,19 @@ class GreedyProbsCalculator(StatCalculator):
     def __init__(
         self,
         output_attentions: bool = True,
+        output_hidden_states: bool = False,
         n_alternatives: int = 10,
     ):
         super().__init__()
         self.output_attentions = output_attentions
+        self.output_hidden_states = output_hidden_states
         self.n_alternatives = n_alternatives
 
     def __call__(
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Union[WhiteboxModel, WhiteboxModelvLLM],
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
@@ -80,7 +82,7 @@ class GreedyProbsCalculator(StatCalculator):
                 max_new_tokens=max_new_tokens,
                 min_new_tokens=2,
                 output_attentions=self.output_attentions,
-                output_hidden_states=True,
+                output_hidden_states=self.output_hidden_states,
                 num_return_sequences=1,
                 suppress_tokens=(
                     []
@@ -93,13 +95,15 @@ class GreedyProbsCalculator(StatCalculator):
                 ),
             )
             logits = torch.stack(out.scores, dim=1)
-
+            if model.model_type == "vLLMCausalLM":
+                logits = logits.transpose(1, 0)
             sequences = out.sequences
             if self.output_attentions:
                 attentions = out.attentions
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
-            )
+            if self.output_hidden_states:
+                embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                    out, batch, model.model_type
+                )
 
         cut_logits = []
         cut_sequences = []
@@ -109,6 +113,8 @@ class GreedyProbsCalculator(StatCalculator):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]
                 seq = sequences[i, idx:].cpu()
+            elif model.model_type == "vLLMCausalLM":
+                seq = sequences[i].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -141,7 +147,7 @@ class GreedyProbsCalculator(StatCalculator):
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
-        if self.output_attentions:
+        if self.output_attentions and (model.model_type != "vLLMCausalLM"):
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
                 attn_mask = np.zeros(
@@ -166,7 +172,9 @@ class GreedyProbsCalculator(StatCalculator):
                     )
                 attention_all.append(attn_mask.max(0))
 
-        if model.model_type == "CausalLM":
+        if not self.output_hidden_states:
+            embeddings_dict = {}
+        elif model.model_type == "CausalLM":
             embeddings_dict = {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }
