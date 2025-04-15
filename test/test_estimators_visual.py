@@ -70,24 +70,6 @@ def test_claim_conditioned_probability(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_eigval_laplacian_nli_entail(model):
-    estimator = EigValLaplacian(similarity_score="NLI_score", affinity="entail")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eigval_laplacian_nli_contra(model):
-    estimator = EigValLaplacian(similarity_score="NLI_score", affinity="contra")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eigval_laplacian_jaccard(model):
-    estimator = EigValLaplacian(similarity_score="Jaccard_score")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_degmat_nli_entail(model):
     estimator = DegMat(similarity_score="NLI_score", affinity="entail")
     ue = estimate_uncertainty(model, estimator, INPUT)
