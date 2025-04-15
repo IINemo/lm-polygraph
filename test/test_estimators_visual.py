@@ -5,7 +5,7 @@ from transformers import AutoModelForVision2Seq, AutoProcessor
 
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
-from lm_polygraph.model_adapters.whitebox_visual import VisualWhiteboxModel
+from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 
 INPUT = "<grounding>An image of?"
 
