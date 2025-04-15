@@ -1,6 +1,11 @@
 from .stat_calculator import StatCalculator
 from .initial_state import InitialStateCalculator
-from .greedy_probs import GreedyProbsCalculator, BlackboxGreedyTextsCalculator
+from .greedy_probs import (
+    GreedyProbsCalculator,
+)
+from .greedy_probs_blackbox import (
+    BlackboxGreedyTextsCalculator,
+)
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .greedy_visual_probs import GreedyProbsVisualCalculator
 from .sample_visual import SamplingGenerationVisualCalculator

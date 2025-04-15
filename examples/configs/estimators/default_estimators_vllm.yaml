@@ -1,0 +1,60 @@
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: ClaimConditionedProbability
+- name: MonteCarloSequenceEntropy
+- name: MonteCarloNormalizedSequenceEntropy
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge1"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge2"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rougeL"
+- name: LexicalSimilarity
+  cfg:
+    metric: "BLEU"
+- name: NumSemSets
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: DegMat
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: Eccentricity
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: SemanticEntropy
+- name: SAR
+- name: TokenSAR
+- name: SentenceSAR
+- name: LUQ
+- name: KernelLanguageEntropy
+- name: RenyiNeg
+- name: FisherRao

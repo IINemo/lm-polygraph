@@ -1,0 +1,49 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: gpt-4o-mini-greybox
+  - test_default_greybox_estimators
+  - test_default_calculators
+  
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+
+dataset: LM-Polygraph/trivia_qa_tiny
+train_split: train
+eval_split: test
+text_column: input
+load_from_disk: false
+label_column: output
+prompt: ""
+max_new_tokens: 100
+generation_params:
+  generate_until:
+    - "\n"
+
+
+train_dataset: null
+train_test_split: false
+test_split_size: 1
+
+subsample_eval_dataset: 3
+
+use_density_based_ue: false
+use_seq_ue: true
+use_tok_ue: false
+use_ens_ue: false
+use_claim_ue: false
+ens_type:
+
+ignore_exceptions: false
+
+batch_size: 1
+deberta_batch_size: 1
+
+seed:
+    - 1

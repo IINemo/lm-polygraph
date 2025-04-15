@@ -4,8 +4,8 @@ hydra:
 
 defaults:
   - model: bloomz-560m
-  - default_estimators
-  - default_calculators
+  - estimators: default_estimators
+  - stat_calculators: default_calculators
   - _self_
 
 cache_path: ./workdir/output
