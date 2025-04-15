@@ -240,6 +240,9 @@ class SamplingGenerationCalculator(StatCalculator):
                     hidden_layer=int(model.model.config.num_hidden_layers // 2),
                 )
 
+                if cur_token_embeddings.dtype == torch.bfloat16:
+                    cur_token_embeddings = cur_token_embeddings.to(torch.float16)
+
                 for i in range(batch_size):
                     if len(cur_token_embeddings.shape) > 2:
                         embeddings_last_token[i].append(
