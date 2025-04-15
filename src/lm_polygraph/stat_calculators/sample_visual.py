@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from .embeddings import get_embeddings_from_output
-from lm_polygraph.model_adapters.whitebox_visual import VisualWhiteboxModel
+from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 
 
 class OutputWrapper:

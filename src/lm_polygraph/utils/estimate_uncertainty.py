@@ -2,7 +2,7 @@ from typing import List, Union
 from dataclasses import dataclass
 
 from lm_polygraph.utils.model import Model, WhiteboxModel
-from lm_polygraph.model_adapters.whitebox_visual import VisualWhiteboxModel
+from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
