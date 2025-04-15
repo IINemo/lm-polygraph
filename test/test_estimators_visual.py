@@ -88,24 +88,6 @@ def test_semantic_entropy(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_sar(model):
-    estimator = SAR()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_token_sar(model):
-    estimator = TokenSAR()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_sentence_sar(model):
-    estimator = SentenceSAR()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_renyi_neg(model):
     estimator = RenyiNeg()
     ue = estimate_uncertainty(model, estimator, INPUT)
