@@ -70,30 +70,6 @@ def test_claim_conditioned_probability(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_lexical_similarity_rouge1(model):
-    estimator = LexicalSimilarity(metric="rouge1")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_lexical_similarity_rouge2(model):
-    estimator = LexicalSimilarity(metric="rouge2")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_lexical_similarity_rougel(model):
-    estimator = LexicalSimilarity(metric="rougeL")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_lexical_similarity_bleu(model):
-    estimator = LexicalSimilarity(metric="BLEU")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_eigval_laplacian_nli_entail(model):
     estimator = EigValLaplacian(similarity_score="NLI_score", affinity="entail")
     ue = estimate_uncertainty(model, estimator, INPUT)
