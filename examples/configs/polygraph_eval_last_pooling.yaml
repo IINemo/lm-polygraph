@@ -21,8 +21,8 @@ load_from_disk: false
 save_stats:
   - mean_all_layers_embeddings
   - last_all_layers_embeddings
-  - lookback_lens_features
-  - greedy_sentence_similarity
+  - sample_mean_all_layers_embeddings
+  - sample_last_all_layers_embeddings
 
 # UE method flags
 use_density_based_ue: false

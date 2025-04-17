@@ -5,6 +5,7 @@ from typing import Dict, List
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
+from lm_polygraph.stat_calculators.embeddings import get_embeddings_from_output
 
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
@@ -67,15 +68,29 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
 def _gen_samples(n_samples, model, batch, **kwargs):
     batch_size = len(batch["input_ids"])
     logits, sequences = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
+    mean_embeddings = [[] for _ in range(batch_size)]
+    last_embeddings = [[] for _ in range(batch_size)]
+
     with torch.no_grad():
         for k in range(n_samples):
             out = model.generate(**batch, **kwargs)
             cur_logits = torch.stack(out.scores, dim=1)
+
+            _, _, mean_emb, last_emb = get_embeddings_from_output(
+                out,
+                batch,
+                model.model_type,
+                model.tokenizer.pad_token_id
+            )
+
             for i in range(batch_size):
                 sequences[i].append(out.sequences[i])
                 logits[i].append(cur_logits[i])
+                mean_embeddings[i].append(mean_emb[i])
+                last_embeddings[i].append(last_emb[i])
+
     sequences = [s for sample_seqs in sequences for s in sample_seqs]
-    return sequences, sum(logits, [])
+    return sequences, sum(logits, []), mean_embeddings, last_embeddings
 
 
 class SamplingGenerationCalculator(StatCalculator):
@@ -130,7 +145,7 @@ class SamplingGenerationCalculator(StatCalculator):
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
-        sequences, logits = _gen_samples(
+        sequences, logits, mean_embeddings, last_embeddings = _gen_samples(
             self.samples_n,
             model,
             batch,
@@ -205,6 +220,8 @@ class SamplingGenerationCalculator(StatCalculator):
             "sample_texts": texts,
             "sample_tokens_distributions": token_distributions,
             "sample_tokens_alternatives": alternatives,
+            "sample_mean_all_layers_embeddings": mean_embeddings,
+            "sample_last_all_layers_embeddings": last_embeddings,
         }
 
 class FirstSampleCalculator(StatCalculator):
