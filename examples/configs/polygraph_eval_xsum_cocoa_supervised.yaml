@@ -50,6 +50,8 @@ save_stats:
   - best_normalized_sample_text_ids
   - mean_all_layers_embeddings
   - last_all_layers_embeddings
+  - best_mean_all_layers_embeddings
+  - best_last_all_layers_embeddings
 entropy_top_k: 50
 
 train_dataset: null

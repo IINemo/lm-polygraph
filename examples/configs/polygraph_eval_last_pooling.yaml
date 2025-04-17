@@ -15,14 +15,14 @@ description: "The following are stories and questions about them. Each story is 
 prompt: "Question: {question}\nAnswer:{answer}"
 eval_split: validation
 train_split: train
-subsample_eval_dataset: 2
+subsample_eval_dataset: 3
 max_new_tokens: 30
 load_from_disk: false
 save_stats:
   - mean_all_layers_embeddings
   - last_all_layers_embeddings
-  - sample_mean_all_layers_embeddings
-  - sample_last_all_layers_embeddings
+  - best_mean_all_layers_embeddings
+  - best_last_all_layers_embeddings
 
 # UE method flags
 use_density_based_ue: false

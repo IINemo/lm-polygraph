@@ -75,7 +75,7 @@ def _gen_samples(n_samples, model, batch, **kwargs):
         for k in range(n_samples):
             out = model.generate(**batch, **kwargs)
             cur_logits = torch.stack(out.scores, dim=1)
-
+            
             _, _, mean_emb, last_emb = get_embeddings_from_output(
                 out,
                 batch,
@@ -116,6 +116,8 @@ class SamplingGenerationCalculator(StatCalculator):
                 "sample_log_likelihoods",
                 "sample_tokens_distributions",
                 "sample_tokens_alternatives",
+                "sample_mean_all_layers_embeddings",
+                "sample_last_all_layers_embeddings",
             ],
             [],
         )
@@ -153,6 +155,8 @@ class SamplingGenerationCalculator(StatCalculator):
             return_dict_in_generate=True,
             max_new_tokens=max_new_tokens,
             min_new_tokens=2,
+            output_attentions=False,
+            output_hidden_states=True,
             do_sample=True,
             num_beams=1,
             num_return_sequences=1,
@@ -257,11 +261,15 @@ class BestSampleCalculator(StatCalculator):
                 "best_sample_text_ids",
                 "best_normalized_sample_texts",
                 "best_normalized_sample_text_ids",
+                "best_mean_all_layers_embeddings",
+                "best_last_all_layers_embeddings",
             ],
             [
                 "sample_texts",
                 "sample_log_probs",
                 "sample_log_likelihoods",
+                "sample_mean_all_layers_embeddings",
+                "sample_last_all_layers_embeddings",
             ]
         )
 
@@ -276,11 +284,21 @@ class BestSampleCalculator(StatCalculator):
         best_sample_text_ids = []
         best_normalized_sample_texts = []
         best_normalized_sample_text_ids = []
+        best_mean_embeddings = []
+        best_last_embeddings = []
 
-        for batch_i, (sample_texts, sample_log_probs, sample_log_likelihoods) in enumerate(zip(dependencies["sample_texts"], dependencies["sample_log_probs"], dependencies["sample_log_likelihoods"])):
+        for batch_i, (sample_texts, sample_log_probs, sample_log_likelihoods, mean_embs, last_embs) in enumerate(zip(
+            dependencies["sample_texts"], 
+            dependencies["sample_log_probs"], 
+            dependencies["sample_log_likelihoods"],
+            dependencies["sample_mean_all_layers_embeddings"],
+            dependencies["sample_last_all_layers_embeddings"],
+        )):
             best_i = np.argmax(sample_log_probs)
             best_sample_texts.append(sample_texts[best_i])
             best_sample_text_ids.append(best_i)
+            best_mean_embeddings.append(mean_embs[best_i])
+            best_last_embeddings.append(last_embs[best_i])
 
             ppls = [np.mean(ll) for ll in sample_log_likelihoods]
             best_ppl_i = np.argmax(ppls)
@@ -292,4 +310,6 @@ class BestSampleCalculator(StatCalculator):
             "best_sample_text_ids": best_sample_text_ids,
             "best_normalized_sample_texts": best_normalized_sample_texts,
             "best_normalized_sample_text_ids": best_normalized_sample_text_ids,
+            "best_mean_all_layers_embeddings": best_mean_embeddings,
+            "best_last_all_layers_embeddings": best_last_embeddings,
         }
