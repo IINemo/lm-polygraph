@@ -62,6 +62,9 @@ def _validate_args(args, model_type="WhiteboxModel"):
             "top_k",
             "repetition_penalty",
             "min_new_tokens",
+            "num_beams",
+            "generate_until",
+            "allow_newlines",
         ]:
             args_copy.pop(delete_key, None)
 
