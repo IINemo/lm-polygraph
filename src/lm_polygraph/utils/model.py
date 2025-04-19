@@ -27,6 +27,58 @@ from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 log = logging.getLogger("lm_polygraph")
 
 
+def _validate_args(args, model_type="WhiteboxModel"):
+    """
+    Validates and adapts arguments for model generation based on model type.
+
+    Parameters:
+        args (dict): The arguments to validate.
+        model_type (str): The type of model for which to validate arguments.
+
+    Returns:
+        dict: Validated and adapted arguments.
+    """
+    args_copy = args.copy()
+
+    if model_type == "WhiteboxModel":
+        # WhiteboxModel specific validation
+        if "presence_penalty" in args_copy and args_copy["presence_penalty"] != 0.0:
+            sys.stderr.write(
+                "Skipping requested argument presence_penalty={}".format(
+                    args_copy["presence_penalty"]
+                )
+            )
+
+        # Remove arguments that are not supported by the HF model.generate function
+        keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
+        for key in keys_to_remove:
+            args_copy.pop(key, None)
+
+    elif model_type == "BlackboxModel":
+        # BlackboxModel specific validation
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+        ]:
+            args_copy.pop(delete_key, None)
+
+        # Map HF argument names to OpenAI/HF API argument names
+        key_mapping = {
+            "num_return_sequences": "n",
+            "max_length": "max_tokens",
+            "max_new_tokens": "max_tokens",
+        }
+        for key, replace_key in key_mapping.items():
+            if key in args_copy:
+                args_copy[replace_key] = args_copy[key]
+                args_copy.pop(key)
+
+    return args_copy
+
+
 class Model(ABC):
     """
     Abstract model class. Used as base class for both White-box models and Black-box models.
@@ -100,7 +152,7 @@ class BlackboxModel(Model):
         openai_api_key: str = None,
         model_path: str = None,
         hf_api_token: str = None,
-        parameters: GenerationParameters = GenerationParameters(),
+        generation_parameters: GenerationParameters = GenerationParameters(),
         supports_logprobs: bool = False,
     ):
         """
@@ -109,11 +161,11 @@ class BlackboxModel(Model):
             model_path (Optional[str]): Unique model path. Openai model name, if `openai_api_key` is specified,
                 huggingface path, if `hf_api_token` is specified. Default: None.
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
-            parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
             supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
         """
         super().__init__(model_path, "Blackbox")
-        self.parameters = parameters
+        self.generation_parameters = generation_parameters
         self.openai_api_key = openai_api_key
         self.supports_logprobs = supports_logprobs
 
@@ -137,7 +189,14 @@ class BlackboxModel(Model):
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             hf_model_id (Optional[str]): model path in huggingface.
         """
-        return BlackboxModel(hf_api_token=hf_api_token, model_path=hf_model_id)
+        generation_parameters = kwargs.pop(
+            "generation_parameters", GenerationParameters()
+        )
+        return BlackboxModel(
+            hf_api_token=hf_api_token,
+            model_path=hf_model_id,
+            generation_parameters=generation_parameters,
+        )
 
     @staticmethod
     def from_openai(
@@ -151,10 +210,14 @@ class BlackboxModel(Model):
             model_path (Optional[str]): model name in OpenAI.
             supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
         """
+        generation_parameters = kwargs.pop(
+            "generation_parameters", GenerationParameters()
+        )
         return BlackboxModel(
             openai_api_key=openai_api_key,
             model_path=model_path,
             supports_logprobs=supports_logprobs,
+            generation_parameters=generation_parameters,
         )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
@@ -166,6 +229,12 @@ class BlackboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
+        # Apply default parameters first, then override with provided args
+        default_params = asdict(self.generation_parameters)
+        default_params.update(args)
+        args = _validate_args(default_params, model_type="BlackboxModel")
+
+        # Check if we're trying to access features that require logprobs support
         if (
             any(
                 args.get(arg, False)
@@ -179,22 +248,6 @@ class BlackboxModel(Model):
         ):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in [
-            "do_sample",
-            "min_length",
-            "top_k",
-            "repetition_penalty",
-            "min_new_tokens",
-        ]:
-            args.pop(delete_key, None)
-        for key, replace_key in [
-            ("num_return_sequences", "n"),
-            ("max_length", "max_tokens"),
-            ("max_new_tokens", "max_tokens"),
-        ]:
-            if key in args.keys():
-                args[replace_key] = args[key]
-                args.pop(key)
         texts = []
 
         if self.openai_api_key is not None:
@@ -308,6 +361,11 @@ class BlackboxModel(Model):
             Exception: If the model doesn't support logprobs.
         """
         if self.supports_logprobs:
+            # Apply default parameters first, then override with provided args
+            default_params = asdict(self.generation_parameters)
+            default_params.update(args)
+            args = _validate_args(default_params, model_type="BlackboxModel")
+
             args["output_scores"] = True
             sequences = self.generate_texts(**args)
 
@@ -332,22 +390,6 @@ class BlackboxModel(Model):
         Not implemented for blackbox models.
         """
         raise Exception("Cannot access logits of blackbox model")
-
-
-def _validate_args(args):
-    if "presence_penalty" in args.keys() and args["presence_penalty"] != 0.0:
-        sys.stderr.write(
-            "Skipping requested argument presence_penalty={}".format(
-                args["presence_penalty"]
-            )
-        )
-
-    # remove arguments that are not supported by the HF model.generate function
-    keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
-    for key in keys_to_remove:
-        args.pop(key, None)
-
-    return args
 
 
 class WhiteboxModel(Model):
@@ -476,7 +518,7 @@ class WhiteboxModel(Model):
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-        args = _validate_args(args)
+        args = _validate_args(args, model_type="WhiteboxModel")
 
         generation = self.model.generate(**args)
 
@@ -495,7 +537,11 @@ class WhiteboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
-        args = _validate_args(args)
+        # Apply default parameters first, then override with provided args
+        default_params = asdict(self.generation_parameters)
+        default_params.update(args)
+        args = _validate_args(default_params, model_type="WhiteboxModel")
+
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
