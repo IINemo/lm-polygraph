@@ -1,6 +1,5 @@
 import requests
 import torch
-import sys
 import openai
 import time
 import logging
@@ -25,61 +24,6 @@ from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerat
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
 log = logging.getLogger("lm_polygraph")
-
-
-def _validate_args(args, model_type="WhiteboxModel"):
-    """
-    Validates and adapts arguments for model generation based on model type.
-
-    Parameters:
-        args (dict): The arguments to validate.
-        model_type (str): The type of model for which to validate arguments.
-
-    Returns:
-        dict: Validated and adapted arguments.
-    """
-    args_copy = args.copy()
-
-    if model_type == "WhiteboxModel":
-        # WhiteboxModel specific validation
-        if "presence_penalty" in args_copy and args_copy["presence_penalty"] != 0.0:
-            log.warning(
-                "Skipping requested argument presence_penalty={}".format(
-                    args_copy["presence_penalty"]
-                )
-            )
-
-        # Remove arguments that are not supported by the HF model.generate function
-        keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
-        for key in keys_to_remove:
-            args_copy.pop(key, None)
-
-    elif model_type == "BlackboxModel":
-        # BlackboxModel specific validation
-        for delete_key in [
-            "do_sample",
-            "min_length",
-            "top_k",
-            "repetition_penalty",
-            "min_new_tokens",
-            "num_beams",
-            "generate_until",
-            "allow_newlines",
-        ]:
-            args_copy.pop(delete_key, None)
-
-        # Map HF argument names to OpenAI/HF API argument names
-        key_mapping = {
-            "num_return_sequences": "n",
-            "max_length": "max_tokens",
-            "max_new_tokens": "max_tokens",
-        }
-        for key, replace_key in key_mapping.items():
-            if key in args_copy:
-                args_copy[replace_key] = args_copy[key]
-                args_copy.pop(key)
-
-    return args_copy
 
 
 class Model(ABC):
@@ -177,6 +121,44 @@ class BlackboxModel(Model):
 
         self.hf_api_token = hf_api_token
 
+    def _validate_args(self, args):
+        """
+        Validates and adapts arguments for BlackboxModel generation.
+
+        Parameters:
+            args (dict): The arguments to validate.
+
+        Returns:
+            dict: Validated and adapted arguments.
+        """
+        args_copy = args.copy()
+
+        # BlackboxModel specific validation
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+            "num_beams",
+            "generate_until",
+            "allow_newlines",
+        ]:
+            args_copy.pop(delete_key, None)
+
+        # Map HF argument names to OpenAI/HF API argument names
+        key_mapping = {
+            "num_return_sequences": "n",
+            "max_length": "max_tokens",
+            "max_new_tokens": "max_tokens",
+        }
+        for key, replace_key in key_mapping.items():
+            if key in args_copy:
+                args_copy[replace_key] = args_copy[key]
+                args_copy.pop(key)
+
+        return args_copy
+
     def _query(self, payload):
         API_URL = f"https://api-inference.huggingface.co/models/{self.model_path}"
         headers = {"Authorization": f"Bearer {self.hf_api_token}"}
@@ -235,7 +217,7 @@ class BlackboxModel(Model):
         # Apply default parameters first, then override with provided args
         default_params = asdict(self.generation_parameters)
         default_params.update(args)
-        args = _validate_args(default_params, model_type="BlackboxModel")
+        args = self._validate_args(default_params)
 
         # Check if we're trying to access features that require logprobs support
         if (
@@ -367,7 +349,7 @@ class BlackboxModel(Model):
             # Apply default parameters first, then override with provided args
             default_params = asdict(self.generation_parameters)
             default_params.update(args)
-            args = _validate_args(default_params, model_type="BlackboxModel")
+            args = self._validate_args(default_params)
 
             args["output_scores"] = True
             sequences = self.generate_texts(**args)
@@ -429,6 +411,33 @@ class WhiteboxModel(Model):
         self.model = model
         self.tokenizer = tokenizer
         self.generation_parameters = generation_parameters
+
+    def _validate_args(self, args):
+        """
+        Validates and adapts arguments for WhiteboxModel generation.
+
+        Parameters:
+            args (dict): The arguments to validate.
+
+        Returns:
+            dict: Validated and adapted arguments.
+        """
+        args_copy = args.copy()
+
+        # WhiteboxModel specific validation
+        if "presence_penalty" in args_copy and args_copy["presence_penalty"] != 0.0:
+            log.warning(
+                "Skipping requested argument presence_penalty={}".format(
+                    args_copy["presence_penalty"]
+                )
+            )
+
+        # Remove arguments that are not supported by the HF model.generate function
+        keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
+        for key in keys_to_remove:
+            args_copy.pop(key, None)
+
+        return args_copy
 
     class _ScoresProcessor:
         # Stores original token scores instead of the ones modified with generation parameters
@@ -521,7 +530,7 @@ class WhiteboxModel(Model):
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-        args = _validate_args(args, model_type="WhiteboxModel")
+        args = self._validate_args(args)
 
         generation = self.model.generate(**args)
 
@@ -543,7 +552,7 @@ class WhiteboxModel(Model):
         # Apply default parameters first, then override with provided args
         default_params = asdict(self.generation_parameters)
         default_params.update(args)
-        args = _validate_args(default_params, model_type="WhiteboxModel")
+        args = self._validate_args(default_params)
 
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
