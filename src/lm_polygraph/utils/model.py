@@ -119,8 +119,6 @@ class BlackboxModel(Model):
 
         if openai_api_key is not None:
             self.openai_api = openai.OpenAI(api_key=openai_api_key)
-            # OpenAI models from the API can return logprobs
-            self.supports_logprobs = True
 
         self.hf_api_token = hf_api_token
 
