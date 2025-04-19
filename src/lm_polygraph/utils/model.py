@@ -43,7 +43,7 @@ def _validate_args(args, model_type="WhiteboxModel"):
     if model_type == "WhiteboxModel":
         # WhiteboxModel specific validation
         if "presence_penalty" in args_copy and args_copy["presence_penalty"] != 0.0:
-            sys.stderr.write(
+            log.warning(
                 "Skipping requested argument presence_penalty={}".format(
                     args_copy["presence_penalty"]
                 )
