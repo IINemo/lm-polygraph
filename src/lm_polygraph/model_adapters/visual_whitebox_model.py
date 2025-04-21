@@ -1,6 +1,6 @@
 import torch
 import requests
-from lm_polygraph.utils.model import Model, _validate_args
+from lm_polygraph.utils.model import Model
 from PIL import Image
 from typing import List, Optional, Dict, Union
 from dataclasses import asdict
@@ -14,8 +14,9 @@ from transformers import (
     StoppingCriteria,
     StoppingCriteriaList,
     PreTrainedTokenizer,
+    GenerationConfig,
 )
-from transformers import GenerationConfig
+
 
 log = logging.getLogger("lm_polygraph")
 
@@ -66,6 +67,33 @@ class VisualWhiteboxModel(Model):
         else:
             raise ValueError("Either image_path or image_url must be provided")
         self.generation_parameters = generation_parameters or GenerationParameters()
+
+    def _validate_args(self, args):
+        """
+        Validates and adapts arguments for WhiteboxModel generation.
+
+        Parameters:
+            args (dict): The arguments to validate.
+
+        Returns:
+            dict: Validated and adapted arguments.
+        """
+        args_copy = args.copy()
+
+        # WhiteboxModel specific validation
+        if "presence_penalty" in args_copy and args_copy["presence_penalty"] != 0.0:
+            log.warning(
+                "Skipping requested argument presence_penalty={}".format(
+                    args_copy["presence_penalty"]
+                )
+            )
+
+        # Remove arguments that are not supported by the HF model.generate function
+        keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines", "return_dict"]
+        for key in keys_to_remove:
+            args_copy.pop(key, None)
+
+        return args_copy
 
     class _ScoresProcessor:
         # Stores original token scores instead of the ones modified with generation parameters
@@ -158,35 +186,28 @@ class VisualWhiteboxModel(Model):
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-        args = _validate_args(args)
+        args = self._validate_args(args)
         if "generation_config" not in args:
-            generation_config = GenerationConfig(
-                **{
-                    k: v
-                    for k, v in args.items()
-                    if k in GenerationConfig.__annotations__
-                }
-            )
-            # Remove generation parameters that are now in the config
-            args = {
-                k: v
-                for k, v in args.items()
-                if k not in GenerationConfig.__annotations__
-            }
+            generation_config = GenerationConfig(**{k: v for k, v in args.items() 
+                                                    if k in GenerationConfig.__annotations__})
+        # Remove generation parameters that are now in the config
+            args = {k: v for k, v in args.items() 
+                    if k not in GenerationConfig.__annotations__}
             args["generation_config"] = generation_config
-
-        # Ensure we're not passing return_dict at all
+    
+    # Ensure we're not passing return_dict at all
         args.pop("return_dict", None)
         if "generation_config" in args:
             args["generation_config"].return_dict_in_generate = True
 
         generation = self.model.generate(**args)
 
-        if hasattr(generation, "scores"):
+        if hasattr(generation, 'scores'):
             generation.generation_scores = generation.scores
             generation.scores = processor.scores
 
         return generation
+
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
@@ -197,7 +218,7 @@ class VisualWhiteboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
-        args = _validate_args(args)
+        args = self._validate_args(args)
         batch: Dict[str, torch.Tensor] = self.processor_visual(
             text=input_texts,
             images=self.images,
