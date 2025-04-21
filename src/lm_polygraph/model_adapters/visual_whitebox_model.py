@@ -15,6 +15,7 @@ from transformers import (
     StoppingCriteriaList,
     PreTrainedTokenizer,
 )
+from transformers import GenerationConfig
 
 log = logging.getLogger("lm_polygraph")
 
@@ -114,7 +115,7 @@ class VisualWhiteboxModel(Model):
             for i, done in enumerate(self.done_tracker):
                 if not done:
                     self.done_tracker[i] = self.sequence in lookback_tokens_batch[i]
-            return False not in self.done_tracke
+            return False not in self.done_tracker
 
     def get_stopping_criteria(self, input_ids: torch.Tensor):
         eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
@@ -140,7 +141,8 @@ class VisualWhiteboxModel(Model):
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
         default_params = asdict(self.generation_parameters)
-        if len(self.generation_parameters.generate_until) > 0:
+        args.pop("return_dict", None)
+        if "input_ids" in args and len(self.generation_parameters.generate_until) > 0:
             args["stopping_criteria"] = self.get_stopping_criteria(args["input_ids"])
 
         # add ScoresProcessor to collect original scores
@@ -157,14 +159,27 @@ class VisualWhiteboxModel(Model):
         default_params.update(args)
         args = default_params
         args = _validate_args(args)
+        if "generation_config" not in args:
+            generation_config = GenerationConfig(**{k: v for k, v in args.items() 
+                                                    if k in GenerationConfig.__annotations__})
+        # Remove generation parameters that are now in the config
+            args = {k: v for k, v in args.items() 
+                    if k not in GenerationConfig.__annotations__}
+            args["generation_config"] = generation_config
+    
+    # Ensure we're not passing return_dict at all
+        args.pop("return_dict", None)
+        if "generation_config" in args:
+            args["generation_config"].return_dict_in_generate = True
 
         generation = self.model.generate(**args)
 
-        # override generation.scores with original scores from model
-        generation.generation_scores = generation.scores
-        generation.scores = processor.scores
+        if hasattr(generation, 'scores'):
+            generation.generation_scores = generation.scores
+            generation.scores = processor.scores
 
         return generation
+
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
@@ -183,7 +198,7 @@ class VisualWhiteboxModel(Model):
         )
         batch = {k: v.to(self.device()) for k, v in batch.items()}
         args.pop("return_dict", None)
-        sequences = self.generate(**batch, **args, return_dict=False).sequences.cpu()
+        sequences = self.generate(**batch, **args).sequences.cpu()
         input_len = batch["input_ids"].shape[1]
         texts = []
 
