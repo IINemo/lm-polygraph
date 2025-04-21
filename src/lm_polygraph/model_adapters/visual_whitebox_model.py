@@ -89,7 +89,12 @@ class VisualWhiteboxModel(Model):
             )
 
         # Remove arguments that are not supported by the HF model.generate function
-        keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines", "return_dict"]
+        keys_to_remove = [
+            "presence_penalty",
+            "generate_until",
+            "allow_newlines",
+            "return_dict",
+        ]
         for key in keys_to_remove:
             args_copy.pop(key, None)
 
@@ -188,26 +193,33 @@ class VisualWhiteboxModel(Model):
         args = default_params
         args = self._validate_args(args)
         if "generation_config" not in args:
-            generation_config = GenerationConfig(**{k: v for k, v in args.items() 
-                                                    if k in GenerationConfig.__annotations__})
-        # Remove generation parameters that are now in the config
-            args = {k: v for k, v in args.items() 
-                    if k not in GenerationConfig.__annotations__}
+            generation_config = GenerationConfig(
+                **{
+                    k: v
+                    for k, v in args.items()
+                    if k in GenerationConfig.__annotations__
+                }
+            )
+            # Remove generation parameters that are now in the config
+            args = {
+                k: v
+                for k, v in args.items()
+                if k not in GenerationConfig.__annotations__
+            }
             args["generation_config"] = generation_config
-    
-    # Ensure we're not passing return_dict at all
+
+        # Ensure we're not passing return_dict at all
         args.pop("return_dict", None)
         if "generation_config" in args:
             args["generation_config"].return_dict_in_generate = True
 
         generation = self.model.generate(**args)
 
-        if hasattr(generation, 'scores'):
+        if hasattr(generation, "scores"):
             generation.generation_scores = generation.scores
             generation.scores = processor.scores
 
         return generation
-
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
