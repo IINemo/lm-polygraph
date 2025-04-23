@@ -23,7 +23,7 @@ def get_embeddings_from_output(
     batch_embeddings_decoder = None
     batch_size = len(batch["input_ids"])
 
-    if model_type == "CausalLM":
+    if model_type in ["CausalLM", "VisualLM"]:
         input_tokens_hs = output.hidden_states[0][hidden_layer].cpu().detach()
         if not all_layers:
             if len(output.hidden_states) > 1:
@@ -57,7 +57,17 @@ def get_embeddings_from_output(
                 )
         else:
             batch_embeddings_decoder = input_tokens_hs.mean(axis=1).cpu().detach()
-        batch_embeddings = None
+
+        if hasattr(output, "vision_hidden_states"):
+            vision_features = output.vision_hidden_states[-1].cpu().detach()
+            vision_embeddings = vision_features.mean(dim=1)
+            if batch_embeddings is not None:
+                batch_embeddings = torch.cat(
+                    [batch_embeddings, vision_embeddings], dim=-1
+                )
+            else:
+                batch_embeddings = vision_embeddings
+
     elif model_type == "Seq2SeqLM":
         if use_averaging:
             if "decoder" in hidden_state:
@@ -216,7 +226,7 @@ class EmbeddingsCalculator(StatCalculator):
                 out, batch, model.model_type
             )
 
-        if model.model_type == "CausalLM":
+        if model.model_type in ["CausalLM", "VisualLM"]:
             return {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }
