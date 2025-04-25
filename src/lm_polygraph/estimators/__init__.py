@@ -111,6 +111,13 @@ from .greedy_supervised_cocoa import (
     SupervisedCocoaMTE,
     SupervisedCocoa
 )
+from .sample_supervised_cocoa import (
+    SampledSupervisedCocoaMSP,
+    SampledSupervisedCocoaPPL,
+    SampledSupervisedCocoaMTE,
+    SampledSupervisedCocoa
+)
+
 from .semantic_median_ue import SemanticMedianMaxprob, SemanticMedianPPL, SemanticMedianTokenSAR, SemanticMedianMTE
 
 from .sum_semantic_entropies import SumSemanticMaxprob, SumSemanticPPL, SumSemanticMTE, GreedySumSemanticMaxprob, GreedySumSemanticPPL, GreedySumSemanticMTE
