@@ -38,7 +38,7 @@ class SampledSupervisedCocoaMSP(Estimator):
             if self.exp:
                 prob = -np.exp(-prob)
 
-            dissim = 1 - sim  # already corresponds to best_id
+            dissim = sim
             enriched_metric = prob * dissim
             results.append(enriched_metric)
 
@@ -76,7 +76,7 @@ class SampledSupervisedCocoaPPL(Estimator):
             if self.exp:
                 ppl = -np.exp(-ppl)
 
-            dissim = 1 - sim
+            dissim = sim
             enriched = ppl * dissim
 
             results.append(enriched)
@@ -108,7 +108,7 @@ class SampledSupervisedCocoaMTE(Estimator):
 
         for entropy_list, sim, best_id in zip(batch_sample_entropy, sim_scores, sample_ids):
             entropy = entropy_list[best_id]
-            dissim = 1 - sim
+            dissim = sim
             enriched_value = entropy * dissim
             results.append(enriched_value)
 
