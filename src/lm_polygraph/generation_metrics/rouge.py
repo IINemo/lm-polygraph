@@ -27,7 +27,8 @@ class RougeMetric(GenerationMetric):
             super().__init__([
                 "first_sample_texts",
                 "best_sample_texts",
-                "best_normalized_sample_texts"],
+                "best_normalized_sample_texts",
+                "mbr_sample_texts"],
             "sequence")
         else:
             super().__init__(["greedy_texts"], "sequence")
@@ -73,6 +74,8 @@ class RougeMetric(GenerationMetric):
                 gen_texts = stats["best_sample_texts"]
             elif self.sample_strategy == "BestNormalized":
                 gen_texts = stats["best_normalized_sample_texts"]
+            elif self.sample_strategy == "Mbr":
+                gen_texts = stats["mbr_sample_texts"]
             else:
                 raise ValueError(f"Invalid sample strategy: {self.sample_strategy}")
         else:

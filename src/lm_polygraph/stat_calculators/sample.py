@@ -253,6 +253,7 @@ class FirstSampleCalculator(StatCalculator):
             "first_sample_texts": first_sample_texts,
         }
 
+
 class BestSampleCalculator(StatCalculator):
     def __init__(self):
         super().__init__(
@@ -284,32 +285,104 @@ class BestSampleCalculator(StatCalculator):
         best_sample_text_ids = []
         best_normalized_sample_texts = []
         best_normalized_sample_text_ids = []
-        best_mean_embeddings = []
-        best_last_embeddings = []
 
-        for batch_i, (sample_texts, sample_log_probs, sample_log_likelihoods, mean_embs, last_embs) in enumerate(zip(
+        for sample_texts, sample_log_probs, sample_log_likelihoods in zip(
             dependencies["sample_texts"], 
             dependencies["sample_log_probs"], 
             dependencies["sample_log_likelihoods"],
-            dependencies["sample_mean_all_layers_embeddings"],
-            dependencies["sample_last_all_layers_embeddings"],
-        )):
+        ):
             best_i = np.argmax(sample_log_probs)
             best_sample_texts.append(sample_texts[best_i])
             best_sample_text_ids.append(best_i)
-            best_mean_embeddings.append(mean_embs[best_i])
-            best_last_embeddings.append(last_embs[best_i])
 
             ppls = [np.mean(ll) for ll in sample_log_likelihoods]
             best_ppl_i = np.argmax(ppls)
             best_normalized_sample_texts.append(sample_texts[best_ppl_i])
             best_normalized_sample_text_ids.append(best_ppl_i)
-
-        return {
+        
+        result = {
             "best_sample_texts": best_sample_texts,
             "best_sample_text_ids": best_sample_text_ids,
             "best_normalized_sample_texts": best_normalized_sample_texts,
             "best_normalized_sample_text_ids": best_normalized_sample_text_ids,
-            "best_mean_all_layers_embeddings": best_mean_embeddings,
-            "best_last_all_layers_embeddings": best_last_embeddings,
         }
+
+        if "sample_mean_all_layers_embeddings" in dependencies:
+            best_mean_embeddings = []
+            best_last_embeddings = []
+
+            for best_i, mean_embs, last_embs in zip(
+                best_sample_text_ids,
+                dependencies["sample_mean_all_layers_embeddings"],
+                dependencies["sample_last_all_layers_embeddings"],
+            ):
+                best_mean_embeddings.append(mean_embs[best_i])
+                best_last_embeddings.append(last_embs[best_i])
+
+            result.update({
+                "best_mean_all_layers_embeddings": best_mean_embeddings,
+                "best_last_all_layers_embeddings": best_last_embeddings,
+            })
+
+        return result
+
+
+class MbrSampleCalculator(StatCalculator):
+    def __init__(self):
+        super().__init__(
+            [
+                "mbr_sample_texts",
+                "mbr_sample_text_ids",
+                "mbr_mean_all_layers_embeddings",
+                "mbr_last_all_layers_embeddings",
+            ],
+            [
+                "sample_texts",
+                "sample_sentence_similarity",
+                "sample_mean_all_layers_embeddings",
+                "sample_last_all_layers_embeddings",
+            ]
+        )
+
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
+        best_sample_texts = []
+        best_sample_text_ids = []
+
+        for sample_texts, sample_similarities in zip(
+            dependencies["sample_texts"],
+            dependencies["sample_sentence_similarity"],
+        ):
+            best_i = np.argmax(np.mean(sample_similarities, axis=-1))
+
+            best_sample_texts.append(sample_texts[best_i])
+            best_sample_text_ids.append(best_i)
+
+        result = {
+            "mbr_sample_texts": best_sample_texts,
+            "mbr_sample_text_ids": best_sample_text_ids,
+        }
+
+        if "sample_mean_all_layers_embeddings" in dependencies:
+            best_mean_embeddings = []
+            best_last_embeddings = []
+
+            for best_i, mean_embs, last_embs in zip(
+                best_sample_text_ids,
+                dependencies["sample_mean_all_layers_embeddings"],
+                dependencies["sample_last_all_layers_embeddings"],
+            ):
+                best_mean_embeddings.append(mean_embs[best_i])
+                best_last_embeddings.append(last_embs[best_i])
+
+            result.update({
+                "mbr_mean_all_layers_embeddings": best_mean_embeddings,
+                "mbr_last_all_layers_embeddings": best_last_embeddings,
+            })
+
+        return result

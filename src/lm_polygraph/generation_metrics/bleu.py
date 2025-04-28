@@ -59,6 +59,8 @@ class BLEUMetric(GenerationMetric):
                 gen_texts = stats["best_sample_texts"]
             elif self.sample_strategy == "BestNormalized":
                 gen_texts = stats["best_normalized_sample_texts"]
+            elif self.sample_strategy == "Mbr":
+                gen_texts = stats["mbr_sample_texts"]
             else:
                 raise ValueError(f"Invalid sample strategy: {self.sample_strategy}")
         else:

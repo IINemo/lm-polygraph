@@ -455,7 +455,8 @@ def get_generation_metrics(args):
             result = [Comet(comet_scorer, source_ignore_regex = ignore_regex),
                       Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True),
                       Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Best"),
-                      Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized")]
+                      Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized"),
+                      Comet(comet_scorer, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Mbr")]
 
             model_name_or_path="google/metricx-24-hybrid-large-v2p6"
             tokenizer_name="google/mt5-large"
@@ -471,7 +472,8 @@ def get_generation_metrics(args):
             result += [XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex),
                        XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True),
                        XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Best"),
-                       XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized")]
+                       XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="BestNormalized"),
+                       XMetric(model=model_xmetric, tokenizer=tokenizer_xmetric, source_ignore_regex = ignore_regex, sample=True, sample_strategy="Mbr")]
         else:
             ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt"
             align_scorer = AlignScorer(
@@ -533,12 +535,26 @@ def get_generation_metrics(args):
                 AlignScore(align_scorer, sample=True, sample_strategy="BestNormalized"),
                 AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="BestNormalized"),
                 AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="BestNormalized"),
+                # MBR sample-based metrics
+                RougeMetric("rougeL", sample=True, sample_strategy="Mbr"),
+                BLEUMetric(sample=True, sample_strategy="Mbr"),
+                AccuracyMetric(
+                    target_ignore_regex = getattr(args, "target_ignore_regex", None),
+                    output_ignore_regex = getattr(args, "output_ignore_regex", None),
+                    normalize = getattr(args, "normalize", False),
+                    sample=True,
+                    sample_strategy="Mbr",
+                ),
+                AlignScore(align_scorer, sample=True, sample_strategy="Mbr"),
+                AlignScore(align_scorer, target_is_claims=False, sample=True, sample_strategy="Mbr"),
+                AlignScore(align_scorer, ignore_target=True, sample=True, sample_strategy="Mbr"),
             ]
 
             if api_key:
                 result += [GptAccuracyMetric(api_key=api_key),
                 GptAccuracyMetric(api_key=api_key,sample=True, sample_strategy="Best"),
-                GptAccuracyMetric(api_key=api_key, sample=True, sample_strategy="First"),]
+                GptAccuracyMetric(api_key=api_key, sample=True, sample_strategy="BestNormalized"),
+                GptAccuracyMetric(api_key=api_key, sample=True, sample_strategy="Mbr"),]
 
             if getattr(args.model, "type", "Whitebox") != "Blackbox":
                 if getattr(args, "use_claim_ue", False):
