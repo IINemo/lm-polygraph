@@ -17,6 +17,7 @@ class Comet(GenerationMetric):
                 "first_sample_texts",
                 "best_sample_texts",
                 "best_normalized_sample_texts",
+                "mbr_sample_texts",
                 "input_texts"],
             "sequence")
         else:
