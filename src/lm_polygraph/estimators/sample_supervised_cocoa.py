@@ -23,7 +23,7 @@ class SampledSupervisedCocoaMSP(Estimator):
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        base = "SampledSupervisedCocoaPPLexp" if self.exp else "SampledSupervisedCocoaPPL"
+        base = "SampledSupervisedCocoaMSPexp" if self.exp else "SampledSupervisedCocoaMSP"
         return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
@@ -61,7 +61,7 @@ class SampledSupervisedCocoaPPL(Estimator):
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        base = "SemanticEnrichedPPLAveDissimilarityexp" if self.exp else "SemanticEnrichedPPLAveDissimilarity"
+        base = "SampledSupervisedCocoaPPLexp" if self.exp else "SampledSupervisedCocoaPPL"
         return sample_strategy_to_prefix(self.sample_strategy) + base
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
@@ -97,7 +97,7 @@ class SampledSupervisedCocoaMTE(Estimator):
         self.sample_strategy = sample_strategy
 
     def __str__(self):
-        return sample_strategy_to_prefix(self.sample_strategy) + "SemanticEnrichedMTEAveDissimilarity"
+        return sample_strategy_to_prefix(self.sample_strategy) + "SampledSupervisedCocoaMTE"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_entropy = stats["sample_entropy"]  # shape: (batch_size, num_samples)
