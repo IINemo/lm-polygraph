@@ -29,7 +29,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
         self.train_dataset = train_dataset
         self.background_train_dataset = background_train_dataset
         self.statistics_extracted = False
-        self.base_calculators = [GreedyProbsCalculator()]
+        self.base_calculators = [GreedyProbsCalculator(output_hidden_states=True)]
 
     def __call__(
         self,
@@ -96,4 +96,5 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                 else:
                     result_train_stat[stat] = np.concatenate(train_stats[stat])
             self.statistics_extracted = True
+
             return result_train_stat
