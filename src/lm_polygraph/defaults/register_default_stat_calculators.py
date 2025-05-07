@@ -136,6 +136,7 @@ def register_default_stat_calculators(
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
             {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
         )
+        _register(AttentionForwardPassCalculator)
     elif model_type == "VisualLM":
         _register(
             GreedyProbsVisualCalculator,
