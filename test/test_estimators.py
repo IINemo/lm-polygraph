@@ -245,6 +245,7 @@ def test_eigenscore(model):
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
+
 def test_attentionscore(model):
     estimator = AttentionScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
