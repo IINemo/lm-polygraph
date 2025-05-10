@@ -20,3 +20,6 @@
     idf_seed: 42
     idf_dataset_size: -1
     spacy_path: "en_core_web_sm"
+- name: AttentionScoreClaim
+  cfg:
+    layer: 16
