@@ -109,6 +109,34 @@ export OPENAI_API_TYPE="open_ai"                  # Use "open_ai" for OpenAI-com
 
 This allows seamless integration with any OpenAI-compatible API service while maintaining the same interface and functionality.
 
+## Greybox Models Support
+
+LM-Polygraph supports "greybox" models - a middle ground between whitebox and blackbox models. Greybox models (like OpenAI models via API) provide access to token-level probabilities through logprobs while not requiring full model access. To use greybox capabilities with OpenAI models:
+
+```python
+from lm_polygraph import BlackboxModel
+from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
+
+# Create a model with greybox capabilities
+model = BlackboxModel.from_openai(
+    openai_api_key='YOUR_API_KEY',
+    model_path='gpt-3.5-turbo',
+    supports_logprobs=True  # Enable greybox capabilities
+)
+
+# Use information-based estimators normally only available to whitebox models
+ue_method = Perplexity()  # or MaximumSequenceProbability(), MeanTokenEntropy(), etc.
+```
+
+With greybox support, you can use several information-based uncertainty estimators that would otherwise require full model access. Currently, the following estimators work in greybox mode in addition to standard blackbox methods:
+
+- **MaximumSequenceProbability**
+- **Perplexity**
+- **MeanTokenEntropy**
+- **ClaimConditionedProbability**
+
+This significantly enhances uncertainty estimation options for API-based models.
+
 ### Other examples:
 
 * [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb): simple examples of scoring individual queries;
@@ -185,6 +213,19 @@ CUDA_VISIBLE_DEVICES=0 polygraph_eval \
     --config-dir=./examples/configs/ \
     --config-name=polygraph_eval_coqa.yaml \
     model.path=meta-llama/Llama-3.1-8B \
+    subsample_eval_dataset=100
+```
+
+To evaluate the performance of uncertainty estimation methods using vLLM for generation, consider the following example:
+
+```
+CUDA_VISIBLE_DEVICES=0 polygraph_eval \
+    --config-dir=./examples/configs/ \
+    --config-name=polygraph_eval_coqa.yaml \
+    model=vllm \
+    model.path=meta-llama/Llama-3.1-8B \
+    estimators=default_estimators_vllm \
+    stat_calculators=default_calculators_vllm \
     subsample_eval_dataset=100
 ```
 
