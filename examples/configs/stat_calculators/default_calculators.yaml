@@ -10,7 +10,7 @@
     few_shot_split: "train"
     train_split: '${train_split}'
     load_from_disk: '${load_from_disk}'
-    subsample_train_dataset: 10
+    subsample_train_dataset: 1000
     n_shot: 5
     background_train_dataset: allenai/c4
     background_train_dataset_text_column: text
