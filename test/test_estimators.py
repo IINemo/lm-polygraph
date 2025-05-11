@@ -5,6 +5,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
+from lm_polygraph.estimators.focus import Focus
+from lm_polygraph.estimators.mars import MARS
 from lm_polygraph.utils.model import WhiteboxModel
 
 INPUT = "When was Julius Caesar born?"
@@ -244,3 +246,10 @@ def test_eigenscore(model):
     estimator = EigenScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+def test_mars(model):
+    estimator = MARS()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
