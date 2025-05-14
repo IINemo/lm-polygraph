@@ -92,5 +92,5 @@ class AttentionScoreClaim(Estimator):
                     attn = attn[-len(greedy_tokens[k]) :, -len(greedy_tokens[k]) :]
                     ue_i += np.sum(np.log(np.diag(attn)[tokens]))
                 ue_i /= len(attention_weight[self.layer])
-                ue[-1].append(ue_i)
-        return -np.array(ue)
+                ue[-1].append(-ue_i)
+        return ue
