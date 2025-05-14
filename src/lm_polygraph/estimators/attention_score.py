@@ -34,7 +34,7 @@ class AttentionScore(Estimator):
         layer: int = 16,
         gen_only: bool = False,
     ):
-        super().__init__(["forwardpass_attention_weights"], "sequence")
+        super().__init__(["forwardpass_attention_weights", "greedy_tokens"], "sequence")
         self.layer = layer
         self.gen_only = gen_only
 
@@ -67,7 +67,7 @@ class AttentionScore(Estimator):
 
 class AttentionScoreClaim(Estimator):
     def __init__(self, layer: int = 16):
-        super().__init__(["forwardpass_attention_weights"], "claim")
+        super().__init__(["forwardpass_attention_weights", "greedy_tokens", "claims"], "claim")
         self.layer = layer
 
     def __str__(self):
