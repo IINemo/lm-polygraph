@@ -95,7 +95,7 @@ class FocusClaim(Estimator):
         for token_focus, claims_i in zip(all_token_focus, claims):
             focus_ue.append([])
             for claim in claims_i:
-                tokens = np.array(claim.aligned_token_ids)
-                claim_p_i = token_focus[tokens]
+                tokens = np.array(claim.aligned_token_ids).astype(int)
+                claim_p_i = np.array(token_focus)[tokens]
                 focus_ue[-1].append(claim_p_i.mean())
         return focus_ue
