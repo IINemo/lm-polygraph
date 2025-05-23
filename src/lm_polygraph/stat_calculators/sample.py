@@ -49,13 +49,28 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         Returns:
             Dict[str, np.ndarray]: dictionary with List[List[str]] sampled texts at 'sample_texts' key.
         """
-
         if isinstance(model, BlackboxModel):
             samples = model.generate_texts(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
                 n=self.samples_n,
             )
+                
+            final_samples = [[] for _ in range(len(texts))]
+
+            for i, s in enumerate(samples):
+                final_samples[i].extend(s)
+                missing = self.samples_n - len(s)
+                if missing > 0:
+                    extra_samples = model.generate_texts(
+                        input_texts=[texts[i]] * missing,
+                        max_new_tokens=max_new_tokens,
+                        n=missing,
+                    )
+                    if isinstance(extra_samples[0], str):
+                        extra_samples = [extra_samples]
+                    final_samples[i].extend(extra_samples[0])
+            samples = final_samples
         else:
             samples = [[] for _ in range(len(texts))]
             out = model.generate_texts(
