@@ -5,6 +5,9 @@ from .claim.p_true import PTrueClaim
 from .claim.perplexity import PerplexityClaim
 from .claim.token_entropy import MaxTokenEntropyClaim
 from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
+from .claim.focus import FocusClaim
+from .claim.frequency_scoring import FrequencyScoringClaim
+from .claim.token_sar import TokenSARClaim
 from .max_probability import (
     MaximumSequenceProbability,
     MaximumTokenProbability,
@@ -73,7 +76,7 @@ from .claim.random_baseline import RandomBaselineClaim
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
 
-from .focus import Focus, FocusClaim
+from .focus import Focus
 from .kernel_language_entropy import KernelLanguageEntropy
 from .luq import LUQ
 from .eigenscore import EigenScore
