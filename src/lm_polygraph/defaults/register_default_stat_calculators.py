@@ -132,6 +132,17 @@ def register_default_stat_calculators(
             },
         )
         _register(
+            SemanticClassesClaimToSamplesCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticClassesClaimToSamplesCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "batch_size": 10,
+                    "device": None,
+                }
+            },
+        )
+        _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
             {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
