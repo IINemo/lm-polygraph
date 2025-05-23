@@ -2,6 +2,7 @@ from .estimator import Estimator
 from .claim.claim_conditioned_probability import ClaimConditionedProbabilityClaim
 from .claim.max_probability import MaximumClaimProbability
 from .claim.p_true import PTrueClaim
+from .claim.attention_score import AttentionScoreClaim
 from .claim.perplexity import PerplexityClaim
 from .claim.token_entropy import MaxTokenEntropyClaim
 from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
@@ -12,6 +13,7 @@ from .max_probability import (
     MaximumSequenceProbability,
     MaximumTokenProbability,
 )
+from .attention_score import AttentionScore
 from .claim_conditioned_probability import ClaimConditionedProbability
 from .token_entropy import MeanTokenEntropy, TokenEntropy
 from .pointwise_mutual_information import (
