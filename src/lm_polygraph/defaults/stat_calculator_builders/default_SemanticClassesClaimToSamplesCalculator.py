@@ -1,4 +1,6 @@
-from lm_polygraph.stat_calculators.semantic_classes_claim_to_samples import SemanticClassesClaimToSamplesCalculator
+from lm_polygraph.stat_calculators.semantic_classes_claim_to_samples import (
+    SemanticClassesClaimToSamplesCalculator,
+)
 from .utils import load_nli_model
 
 
