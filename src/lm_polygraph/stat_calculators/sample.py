@@ -55,7 +55,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                 max_new_tokens=max_new_tokens,
                 n=self.samples_n,
             )
-                
+
             final_samples = [[] for _ in range(len(texts))]
 
             for i, s in enumerate(samples):
