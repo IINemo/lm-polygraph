@@ -27,7 +27,7 @@ class TokenSARClaim(Estimator):
     """
 
     def __init__(self):
-        super().__init__(["token_similarity", "greedy_log_likelihoods"], "sequence")
+        super().__init__(["token_similarity", "greedy_log_likelihoods"], "claim")
 
     def __str__(self):
         return "TokenSARClaim"
