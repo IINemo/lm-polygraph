@@ -10,7 +10,10 @@ import torch.nn as nn
 import string
 
 
-def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[str]:
+def eval_nli_model(
+    nli_queue: List[Tuple[str, str]],
+    deberta: Deberta,
+) -> List[Dict[str, float]]:
     nli_set = list(set(nli_queue))
 
     softmax = nn.Softmax(dim=1)
@@ -28,16 +31,16 @@ def _eval_nli_model(nli_queue: List[Tuple[str, str]], deberta: Deberta) -> List[
     classes = []
     for w1, w2 in nli_queue:
         pr = w_probs[w1][w2]
-        id = pr.argmax()
         ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
         contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
-        if id == ent_id:
-            str_class = "entail"
-        elif id == contra_id:
-            str_class = "contra"
-        else:
-            str_class = "neutral"
-        classes.append(str_class)
+        neutral_id = deberta.deberta.config.label2id["NEUTRAL"]
+        classes.append(
+            {
+                "entail": pr[ent_id].item(),
+                "contra": pr[contra_id].item(),
+                "neutral": pr[neutral_id].item(),
+            }
+        )
     return classes
 
 
@@ -87,10 +90,13 @@ class GreedyAlternativesNLICalculator(StatCalculator):
                     nli_queue.append((words[0], wi))
                     nli_queue.append((wi, words[0]))
 
-                nli_classes = _eval_nli_model(nli_queue, self.nli_model)
-                nli_class = defaultdict(lambda: None)
+                nli_classes: List[Dict[str, float]] = eval_nli_model(
+                    nli_queue,
+                    self.nli_model,
+                )
+                nli_class: Dict[Tuple[str, str], str | None] = defaultdict(lambda: None)
                 for nli_cl, (w1, w2) in zip(nli_classes, nli_queue):
-                    nli_class[w1, w2] = nli_cl
+                    nli_class[w1, w2] = max(nli_cl, key=nli_cl.get)
 
                 for i, wi in enumerate(words):
                     for j, wj in enumerate(words):
@@ -153,21 +159,25 @@ class GreedyAlternativesFactPrefNLICalculator(StatCalculator):
                         nli_queue.append((text1, text2))
                         nli_queue.append((text2, text1))
 
-            nli_classes = _eval_nli_model(nli_queue, self.nli_model)
+            nli_classes: List[Dict[str, float]] = eval_nli_model(
+                nli_queue,
+                self.nli_model,
+            )
 
-            nli_matrixes = []
+            nli_matrixes: List[List[List[List[str | None]]]] = []
             for claim in sample_claims:
                 nli_matrixes.append([])
                 tokens = [sample_tokens[t] for t in claim.aligned_token_ids]
                 alts = [sample_alternatives[t] for t in claim.aligned_token_ids]
                 for i in range(len(tokens)):
-                    nli_matrix = []
+                    nli_matrix: List[List[str | None]] = []
                     for _ in range(len(alts[i])):
                         nli_matrix.append([])
                         for j in range(len(alts[i])):
                             nli_matrix[-1].append(None)
                     for j in range(len(alts[i])):
-                        nli_matrix[0][j], nli_matrix[j][0] = nli_classes[:2]
+                        nli_matrix[0][j] = max(nli_classes[0], key=nli_classes[0].get)
+                        nli_matrix[j][0] = max(nli_classes[1], key=nli_classes[1].get)
                         nli_classes = nli_classes[2:]
                     nli_matrixes[-1].append(nli_matrix)
             greedy_alternatives_nli.append(nli_matrixes)
