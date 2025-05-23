@@ -8,7 +8,9 @@ from lm_polygraph.estimators.attention_score import unpad_attentions
 
 class AttentionScoreClaim(Estimator):
     def __init__(self, layer: int = 16):
-        super().__init__(["forwardpass_attention_weights", "greedy_tokens", "claims"], "claim")
+        super().__init__(
+            ["forwardpass_attention_weights", "greedy_tokens", "claims"], "claim"
+        )
         self.layer = layer
 
     def __str__(self):

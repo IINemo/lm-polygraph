@@ -25,11 +25,11 @@ class AttentionForwardPassCalculator(StatCalculator):
         super().__init__()
 
     def __call__(
-            self,
-            dependencies: Dict[str, np.array],
-            texts: List[str],
-            model: WhiteboxModel,
-            max_new_tokens: int = 100,
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of probabilities at each token position in the generation.
@@ -52,27 +52,45 @@ class AttentionForwardPassCalculator(StatCalculator):
 
         for i in range(len(texts)):
             input_ids = torch.cat(
-                [batch['input_ids'][i].unsqueeze(0), torch.tensor([cut_sequences[i]]).to(model.device())], axis=1)
+                [
+                    batch["input_ids"][i].unsqueeze(0),
+                    torch.tensor([cut_sequences[i]]).to(model.device()),
+                ],
+                axis=1,
+            )
             with torch.no_grad():
-                forwardpass_attentions = model.model(input_ids, output_attentions=True).attentions
-                forwardpass_attentions = tuple(attention.to("cpu") for attention in forwardpass_attentions)
-                forwardpass_attentions = torch.cat(forwardpass_attentions).float().numpy()
+                forwardpass_attentions = model.model(
+                    input_ids, output_attentions=True
+                ).attentions
+                forwardpass_attentions = tuple(
+                    attention.to("cpu") for attention in forwardpass_attentions
+                )
+                forwardpass_attentions = (
+                    torch.cat(forwardpass_attentions).float().numpy()
+                )
             forwardpass_attention_weights.append(forwardpass_attentions)
         try:
             forwardpass_attention_weights = np.array(forwardpass_attention_weights)
-        except:
+        except Exception:
             # in this case we have various len of input_ids+greedy_tokens in batch, so pad before concat
-            max_seq_length = np.max([el.shape[-1] for el in forwardpass_attention_weights])
+            max_seq_length = np.max(
+                [el.shape[-1] for el in forwardpass_attention_weights]
+            )
             forwardpass_attention_weights_padded = []
             for el in forwardpass_attention_weights:
                 buf_el = el
                 if el.shape[-1] != max_seq_length:
-                    pad_mask = ((0, 0), (0, 0), (0, max_seq_length - el.shape[-1]), (0, max_seq_length - el.shape[-1]))
+                    pad_mask = (
+                        (0, 0),
+                        (0, 0),
+                        (0, max_seq_length - el.shape[-1]),
+                        (0, max_seq_length - el.shape[-1]),
+                    )
                     buf_el = np.pad(el, pad_mask, constant_values=np.nan)
                 forwardpass_attention_weights_padded.append(buf_el)
-            forwardpass_attention_weights = np.array(forwardpass_attention_weights_padded)
+            forwardpass_attention_weights = np.array(
+                forwardpass_attention_weights_padded
+            )
 
-        result_dict = {
-            "forwardpass_attention_weights": forwardpass_attention_weights
-        }
+        result_dict = {"forwardpass_attention_weights": forwardpass_attention_weights}
         return result_dict
