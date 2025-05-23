@@ -48,6 +48,8 @@ def load_simple_estimators(name: str, config):
         FrequencyScoringClaim,
         TokenSARClaim,
         FocusClaim,
+        AttentionScore,
+        AttentionScoreClaim,
     ]
 
     try:

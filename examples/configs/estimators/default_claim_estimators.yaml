@@ -9,6 +9,9 @@
 - name: ClaimConditionedProbabilityClaim
   cfg:
     nli_context: "fact_pref"
+- name: AttentionScoreClaim
+  cfg:
+    layer: 16
 - name: FocusClaim
   cfg:
     model_name: '${model.path}'
