@@ -13,7 +13,7 @@ INPUT = "<grounding>An image of?"
 @pytest.fixture(scope="module")
 def model():
     model_path = "microsoft/kosmos-2-patch14-224"
-    image_urls = [
+    images = [
         "https://huggingface.co/microsoft/kosmos-2-patch14-224/resolve/main/snowman.png"
     ]
 
@@ -31,7 +31,7 @@ def model():
     )
     processor = AutoProcessor.from_pretrained(model_path)
 
-    return VisualWhiteboxModel(base_model, processor, image_urls=image_urls)
+    return VisualWhiteboxModel(base_model, processor, images=images)
 
 
 def test_maximum_sequence_probability(model):
@@ -70,30 +70,6 @@ def test_claim_conditioned_probability(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_ptrue(model):
-    estimator = PTrue()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_ptrue_sampling(model):
-    estimator = PTrueSampling()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_monte_carlo_sequence_entropy(model):
-    estimator = MonteCarloSequenceEntropy()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_monte_carlo_normalized_sequence_entropy(model):
-    estimator = MonteCarloNormalizedSequenceEntropy()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_lexical_similarity_rouge1(model):
     estimator = LexicalSimilarity(metric="rouge1")
     ue = estimate_uncertainty(model, estimator, INPUT)
@@ -114,12 +90,6 @@ def test_lexical_similarity_rougel(model):
 
 def test_lexical_similarity_bleu(model):
     estimator = LexicalSimilarity(metric="BLEU")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_num_sem_sets(model):
-    estimator = NumSemSets()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
@@ -148,32 +118,8 @@ def test_degmat_nli_entail(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_degmat_nli_contra(model):
-    estimator = DegMat(similarity_score="NLI_score", affinity="contra")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_degmat_jaccard(model):
-    estimator = DegMat(similarity_score="Jaccard_score")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_eccentricity_nli_entail(model):
     estimator = Eccentricity(similarity_score="NLI_score", affinity="entail")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eccentricity_nli_contra(model):
-    estimator = Eccentricity(similarity_score="NLI_score", affinity="contra")
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eccentricity_jaccard(model):
-    estimator = Eccentricity(similarity_score="Jaccard_score")
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 

@@ -5,6 +5,7 @@ from PIL import Image
 from typing import List, Optional, Dict, Union
 from dataclasses import asdict
 import logging
+import io
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from transformers import (
@@ -39,8 +40,7 @@ class VisualWhiteboxModel(Model):
         processor_visual: AutoProcessor,
         model_path: str = None,
         model_type: str = "VisualLM",
-        image_urls: list = None,
-        image_paths: list = None,
+        images: list = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
     ):
         """
@@ -57,15 +57,40 @@ class VisualWhiteboxModel(Model):
         self.processor_visual = processor_visual
         self.tokenizer = self.processor_visual.tokenizer
         self.generation_parameters = generation_parameters
-        if image_urls:
-            self.images = [
-                Image.open(requests.get(img_url, stream=True).raw)
-                for img_url in image_urls
-            ]
-        elif image_paths:
-            self.images = [Image.open(img_path) for img_path in image_paths]
-        else:
-            raise ValueError("Either image_path or image_url must be provided")
+        imgs = []
+        for image_input in images:
+            if isinstance(image_input, Image.Image):
+                imgs.append(image_input)
+
+            elif isinstance(image_input, str):
+                if image_input.startswith("http"):
+                    try:
+                        response = requests.get(image_input, stream=True)
+                        response.raise_for_status()
+                        imgs.append(Image.open(io.BytesIO(response.content)))
+                    except Exception as e:
+                        print(
+                            f"Warning: Failed to load image from URL {image_input}: {e}"
+                        )
+
+                else:
+                    try:
+                        imgs.append(Image.open(image_input))
+                    except Exception as e:
+                        print(
+                            f"Warning: Failed to load image from path {image_input}: {e}"
+                        )
+
+            elif isinstance(image_input, bytes):
+                try:
+                    imgs.append(Image.open(io.BytesIO(image_input)))
+                except Exception as e:
+                    print(f"Warning: Failed to load image from bytes: {e}")
+
+            else:
+                print(f"Warning: Unsupported image input format for {image_input}")
+
+        self.images = imgs
         self.generation_parameters = generation_parameters or GenerationParameters()
 
     def _validate_args(self, args):
@@ -135,7 +160,7 @@ class VisualWhiteboxModel(Model):
             # and stopping generation immediately as a result. With only 2 extra tokens of lookback, this risk is minimized
             # Additionally, in lookback_ids_batch we should prevent ever looking back into the inputs as described.
             self.sequence_id_len = len(self.sequence_ids) + 2
-            self.tokenizer = self.processor_visual.tokenizer
+            self.tokenizer = tokenizer
 
         def __call__(self, input_ids, scores, **kwargs) -> bool:
             # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
