@@ -7,6 +7,7 @@ def load_stat_calculator(config, builder):
         builder.chat_model = OpenAIChat(
             openai_model=config.openai_model,
             base_url=getattr(config, "base_url", None),
+            timeout=getattr(config, "timeout", 600),
             cache_path=config.cache_path,
         )
 
