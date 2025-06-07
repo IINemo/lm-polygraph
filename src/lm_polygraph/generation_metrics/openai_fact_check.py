@@ -28,10 +28,18 @@ class OpenAIFactCheck(GenerationMetric):
             str, str
         ] = OPENAI_FACT_CHECK_SUMMARIZE_PROMPT,
         n_threads: int = 1,
+        timeout: int = 600,
+        max_tokens: int = None,
+        rewrite_cache: bool = False,
     ):
         super().__init__(["input_texts"], "claim")
         self.openai_chat = OpenAIChat(
-            base_url=llm_url, openai_model=openai_model, cache_path=cache_path
+            base_url=llm_url,
+            openai_model=openai_model,
+            cache_path=cache_path,
+            timeout=timeout,
+            max_tokens=max_tokens,
+            rewrite_cache=rewrite_cache,
         )
         self.language = language
         self.progress_bar = progress_bar
