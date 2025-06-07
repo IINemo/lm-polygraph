@@ -40,8 +40,8 @@ class AttentionScore(Estimator):
 
     def __str__(self):
         if self.gen_only:
-            return f"LLMCheckAttentionGEN Layer {self.layer}"
-        return f"LLMCheckAttention Layer {self.layer}"
+            return f"AttentionScore gen-only (layer={self.layer})"
+        return f"AttentionScore (layer={self.layer})"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         forwardpass_attention_weights_original = stats["forwardpass_attention_weights"]
@@ -63,34 +63,3 @@ class AttentionScore(Estimator):
             ue_i /= len(attention_weight[self.layer])
             ue.append(ue_i)
         return -np.array(ue)
-
-
-class AttentionScoreClaim(Estimator):
-    def __init__(self, layer: int = 16):
-        super().__init__(["forwardpass_attention_weights", "greedy_tokens", "claims"], "claim")
-        self.layer = layer
-
-    def __str__(self):
-        return f"LLMCheckAttentionClaim Layer {self.layer}"
-
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        forwardpass_attention_weights_original = stats["forwardpass_attention_weights"]
-        # check nan and unpad
-        forwardpass_attention_weights = unpad_attentions(
-            forwardpass_attention_weights_original
-        )
-        greedy_tokens = stats["greedy_tokens"]
-        claims = stats["claims"]
-
-        ue = []
-        for k, attention_weight in enumerate(forwardpass_attention_weights):
-            ue.append([])
-            for claim in claims[k]:
-                ue_i = 0
-                tokens = np.array(claim.aligned_token_ids)
-                for attn in attention_weight[self.layer]:
-                    attn = attn[-len(greedy_tokens[k]) :, -len(greedy_tokens[k]) :]
-                    ue_i += np.sum(np.log(np.diag(attn)[tokens]))
-                ue_i /= len(attention_weight[self.layer])
-                ue[-1].append(-ue_i)
-        return ue

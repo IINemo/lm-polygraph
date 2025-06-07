@@ -6,6 +6,8 @@ from .greedy_probs import (
 from .greedy_probs_blackbox import (
     BlackboxGreedyTextsCalculator,
 )
+from .semantic_classes_claim_to_samples import SemanticClassesClaimToSamplesCalculator
+from .attention_forward_pass import AttentionForwardPassCalculator
 from .greedy_lm_probs import GreedyLMProbsCalculator
 from .greedy_visual_probs import GreedyProbsVisualCalculator
 from .sample_visual import SamplingGenerationVisualCalculator

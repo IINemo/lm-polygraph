@@ -69,12 +69,13 @@ class AttentionForwardPassCalculator(StatCalculator):
                     torch.cat(forwardpass_attentions).float().numpy()
                 )
             forwardpass_attention_weights.append(forwardpass_attentions)
-        attn_shapes = [el.shape[-1] for el in forwardpass_attention_weights]
-        if len(set(attn_shapes)) == 1:
+        try:
             forwardpass_attention_weights = np.array(forwardpass_attention_weights)
-        else:
+        except Exception:
             # in this case we have various len of input_ids+greedy_tokens in batch, so pad before concat
-            max_seq_length = np.max(attn_shapes)
+            max_seq_length = np.max(
+                [el.shape[-1] for el in forwardpass_attention_weights]
+            )
             forwardpass_attention_weights_padded = []
             for el in forwardpass_attention_weights:
                 buf_el = el

@@ -45,6 +45,8 @@ def load_simple_estimators(name: str, config):
         PTrueClaim,
         ClaimConditionedProbabilityClaim,
         RandomBaselineClaim,
+        FrequencyScoringClaim,
+        TokenSARClaim,
         FocusClaim,
         AttentionScore,
         AttentionScoreClaim,

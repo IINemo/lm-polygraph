@@ -78,4 +78,3 @@ estimators:
     cfg:
       layer: 16
       gen_only: False
-  
