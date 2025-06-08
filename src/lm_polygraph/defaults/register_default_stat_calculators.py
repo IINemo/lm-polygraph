@@ -1,5 +1,6 @@
 from typing import List, Optional
 from omegaconf import OmegaConf
+from pathlib import Path
 
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.factory_stat_calculator import (
@@ -145,7 +146,7 @@ def register_default_stat_calculators(
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
+            {"openai_model": "gpt-4o", "cache_path": str(Path.home() / ".cache"), "language": language},
         )
         _register(AttentionForwardPassCalculator)
     elif model_type == "VisualLM":
@@ -199,7 +200,7 @@ def register_default_stat_calculators(
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
+            {"openai_model": "gpt-4o", "cache_path": str(Path.home() / ".cache"), "language": language},
         )
 
     else:
