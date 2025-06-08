@@ -146,7 +146,11 @@ def register_default_stat_calculators(
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": str(Path.home() / ".cache"), "language": language},
+            {
+                "openai_model": "gpt-4o",
+                "cache_path": str(Path.home() / ".cache"),
+                "language": language,
+            },
         )
         _register(AttentionForwardPassCalculator)
     elif model_type == "VisualLM":
@@ -200,7 +204,11 @@ def register_default_stat_calculators(
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": str(Path.home() / ".cache"), "language": language},
+            {
+                "openai_model": "gpt-4o",
+                "cache_path": str(Path.home() / ".cache"),
+                "language": language,
+            },
         )
 
     else:
