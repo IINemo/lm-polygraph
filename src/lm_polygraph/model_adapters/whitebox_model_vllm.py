@@ -22,9 +22,10 @@ class WhiteboxModelvLLM(Model):
         self.sampling_params = sampling_params
         self.generation_parameters = generation_parameters
 
-        self.sampling_params.stop = list(getattr(
-            self.generation_parameters, "generate_until", list()))
-        
+        self.sampling_params.stop = list(
+            getattr(self.generation_parameters, "generate_until", list())
+        )
+
         for param in [
             "presence_penalty",
             "repetition_penalty",
@@ -102,5 +103,7 @@ class WhiteboxModelvLLM(Model):
                 logits.append(log_prob)
                 sequences.append(sequence)
 
-        standard_output = GenerateDecoderOnlyOutput(sequences=sequences, logits=logits, scores=logits)
+        standard_output = GenerateDecoderOnlyOutput(
+            sequences=sequences, logits=logits, scores=logits
+        )
         return standard_output
