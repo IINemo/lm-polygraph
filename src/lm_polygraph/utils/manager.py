@@ -86,8 +86,7 @@ def order_calculators(
             stats = stats[1:]
             ordered.append(stat)
             for new_stat in stat_calculators[stat].meta_info()[0]:
-                have_stats.add(new_stat)
-
+               have_stats.add(new_stat)
     return ordered, have_stats
 
 
@@ -226,7 +225,6 @@ class UEManager:
                 )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
             )
         ]  # below in calculate() we copy X in blackbox_X
-
         self.stat_calculators = self.factory_stat_calc(
             [self.stat_calculators_dict[c] for c in stats]
         )
