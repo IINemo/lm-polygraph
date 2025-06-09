@@ -39,14 +39,13 @@ seed:
     - 1
 
 estimators:
-  - name: MaximumSequenceProbability
-  - name: Perplexity
-  - name: MeanTokenEntropy
-  - name: ClaimConditionedProbability
-  - name: LexicalSimilarity
-    cfg:
-      metric: "rouge1"
-  - name: lm_polygraph.estimators.semantic_average_ue_average_similarity
-    cfg:
-      name: SemanticEnrichedMaxprobAveDissimilarity
-      sample_strategy: "best"
+  #- name: MaximumSequenceProbability
+  #- name: Perplexity
+  #- name: MeanTokenEntropy
+  #- name: ClaimConditionedProbability
+  #- name: LexicalSimilarity
+  #  cfg:
+  #    metric: "rouge1"
+  - name: CocoaMSP
+  - name: CocoaPPL
+  - name: CocoaMTE

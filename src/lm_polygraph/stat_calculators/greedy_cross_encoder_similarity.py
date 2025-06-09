@@ -1,7 +1,7 @@
 import numpy as np
 
 import itertools
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from tqdm import tqdm
 
 from .stat_calculator import StatCalculator
