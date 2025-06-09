@@ -1,7 +1,6 @@
 import numpy as np
 
 from typing import Dict
-from copy import deepcopy
 
 from .estimator import Estimator
 
@@ -10,14 +9,21 @@ class CocoaMSP(Estimator):
     def __init__(
         self,
     ):
-        super().__init__(["greedy_sentence_similarity", "greedy_log_likelihoods"], "sequence")
+        super().__init__(
+            ["greedy_sentence_similarity", "greedy_log_likelihoods"], "sequence"
+        )
 
     def __str__(self):
         return "CocoaMSP"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
-        batch_lls = np.array([np.sum(log_likelihood) for log_likelihood in stats["greedy_log_likelihoods"]])
+        batch_lls = np.array(
+            [
+                np.sum(log_likelihood)
+                for log_likelihood in stats["greedy_log_likelihoods"]
+            ]
+        )
 
         enriched_metrics = []  # To store enriched metrics for each sample
         for greedy_ll, greedy_sentence_similarity in zip(
@@ -40,7 +46,9 @@ class CocoaPPL(Estimator):
     def __init__(
         self,
     ):
-        super().__init__(["greedy_sentence_similarity", "greedy_log_likelihoods"], "sequence")
+        super().__init__(
+            ["greedy_sentence_similarity", "greedy_log_likelihoods"], "sequence"
+        )
 
     def __str__(self):
         return "CocoaPPL"
@@ -60,7 +68,7 @@ class CocoaPPL(Estimator):
             # Compute row-wise average similarity, excluding self-similarity
             avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
 
-            enriched_value = ppl *  avg_dissimilarity
+            enriched_value = ppl * avg_dissimilarity
             enriched_ppl.append(enriched_value)
 
         return np.array(enriched_ppl)
