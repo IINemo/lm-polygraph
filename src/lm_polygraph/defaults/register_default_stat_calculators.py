@@ -100,10 +100,17 @@ def register_default_stat_calculators(
         _register(PromptCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
-        _register(BestSampleCalculator)
         _register(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": 10,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
+            GreedyCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyCrossEncoderSimilarityMatrixCalculator",
             {
                 "batch_size": 10,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",

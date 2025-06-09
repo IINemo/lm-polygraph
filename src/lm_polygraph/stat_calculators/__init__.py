@@ -30,7 +30,6 @@ from .entropy import EntropyCalculator
 from .sample import (
     SamplingGenerationCalculator,
     BlackboxSamplingGenerationCalculator,
-    BestSampleCalculator,
 )
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,
@@ -43,6 +42,7 @@ from .statistic_extraction import TrainingStatisticExtractionCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
+from .greedy_cross_encoder_similarity import GreedyCrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
 from .infer_causal_lm_calculator import InferCausalLMCalculator
 from .semantic_classes import SemanticClassesCalculator
