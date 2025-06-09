@@ -72,26 +72,66 @@ class Model(ABC):
 
 class BlackboxModel(Model):
     """
-    Black-box model class. Have no access to model scores and logits.
-    Currently implemented blackbox models: OpenAI models, Huggingface models.
-
+    Black-box model wrapper for LLMs without access to internal scores and logits.
+    
+    This class provides a unified interface for uncertainty estimation with models
+    accessed through APIs (OpenAI, HuggingFace Inference API) or other services
+    where internal model states are not available. Despite the black-box nature,
+    some uncertainty estimation methods can still be applied using multiple
+    generations or analyzing output patterns.
+    
+    The class supports:
+    - OpenAI API models (GPT-3.5, GPT-4, etc.)
+    - HuggingFace Inference API models
+    - Models with optional logprob support (e.g., newer OpenAI models)
+    - Custom generation parameters per request
+    
+    Limitations:
+    - Cannot access token probabilities (unless supports_logprobs=True)
+    - Cannot use white-box uncertainty methods
+    - Limited to methods like LexicalSimilarity, NumSemSets, EigValLaplacian
+    
+    Attributes:
+        model_path (str): Model identifier (OpenAI model name or HF model path)
+        model_type (str): Always "Blackbox" for this class
+        generation_parameters (GenerationParameters): Default generation settings
+        openai_api_key (str): API key for OpenAI models
+        hf_api_token (str): API token for HuggingFace models
+        supports_logprobs (bool): Whether the model API returns log probabilities
+        
     Examples:
-
-    ```python
-    >>> from lm_polygraph import BlackboxModel
-    >>> model = BlackboxModel.from_openai(
-    ...     'YOUR_OPENAI_TOKEN',
-    ...     'gpt-3.5-turbo'
-    ... )
-    ```
-
-    ```python
-    >>> from lm_polygraph import BlackboxModel
-    >>> model = BlackboxModel.from_huggingface(
-    ...     hf_api_token='YOUR_API_TOKEN',
-    ...     hf_model_id='google/t5-large-ssm-nqo'
-    ... )
-    ```
+        OpenAI model usage:
+        >>> from lm_polygraph import BlackboxModel
+        >>> model = BlackboxModel.from_openai(
+        ...     'YOUR_OPENAI_TOKEN',
+        ...     'gpt-3.5-turbo'
+        ... )
+        >>> texts = model.generate_texts(["What is AI?"])
+        
+        OpenAI with logprobs support:
+        >>> model = BlackboxModel.from_openai(
+        ...     'YOUR_OPENAI_TOKEN',
+        ...     'gpt-4',
+        ...     supports_logprobs=True  # Enable for compatible models
+        ... )
+        
+        HuggingFace model usage:
+        >>> model = BlackboxModel.from_huggingface(
+        ...     hf_api_token='YOUR_API_TOKEN',
+        ...     hf_model_id='google/flan-t5-base'
+        ... )
+        
+        With custom generation parameters:
+        >>> from lm_polygraph.utils.generation_parameters import GenerationParameters
+        >>> params = GenerationParameters(temperature=0.7, max_new_tokens=100)
+        >>> model = BlackboxModel.from_openai(
+        ...     'YOUR_TOKEN', 'gpt-3.5-turbo',
+        ...     generation_parameters=params
+        ... )
+    
+    See Also:
+        WhiteboxModel: For models with full access to logits
+        GenerationParameters: For configuring generation behavior
     """
 
     def __init__(
@@ -207,12 +247,56 @@ class BlackboxModel(Model):
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
-        Generates a list of model answers using input texts batch.
-
+        Generate text completions for a batch of input texts.
+        
+        High-level text generation method that handles tokenization, generation,
+        and decoding automatically. This is the primary method for getting text
+        outputs from the model.
+        
         Parameters:
-            input_texts (List[str]): input texts batch.
-        Return:
-            List[str]: corresponding model generations. Have the same length as `input_texts`.
+            input_texts: List of input prompts as strings
+            **args: Generation parameters that override defaults:
+                - max_new_tokens (int): Maximum new tokens to generate
+                - temperature (float): Sampling temperature (0.0 = greedy)
+                - top_k (int): Top-k sampling parameter
+                - top_p (float): Nucleus sampling parameter  
+                - do_sample (bool): Use sampling instead of greedy decoding
+                - num_beams (int): Beam search width (1 = no beam search)
+                - repetition_penalty (float): Penalty for repeated tokens
+                - num_return_sequences (int): Sequences per input
+                - pad_token_id (int): Override padding token ID
+                - eos_token_id (int): Override end-of-sequence token ID
+                
+        Returns:
+            List[str]: Generated texts corresponding to each input prompt.
+                If num_return_sequences > 1, returns List[List[str]].
+                
+        Examples:
+            Simple generation:
+            >>> texts = model.generate_texts(["Once upon a time"])
+            >>> print(texts[0])
+            
+            Sampling with temperature:
+            >>> texts = model.generate_texts(
+            ...     ["Explain quantum computing"],
+            ...     do_sample=True,
+            ...     temperature=0.8,
+            ...     max_new_tokens=100
+            ... )
+            
+            Multiple sequences per input:
+            >>> texts = model.generate_texts(
+            ...     ["Write a haiku about AI"],
+            ...     do_sample=True,
+            ...     num_return_sequences=3
+            ... )
+            >>> # texts[0] contains 3 different haikus
+            
+        Note:
+            - Automatically handles batch padding
+            - Applies model-specific token fixing if needed
+            - Uses default generation parameters unless overridden
+            - For token-level access, use the generate() method instead
         """
         # Apply default parameters first, then override with provided args
         default_params = asdict(self.generation_parameters)
@@ -379,16 +463,64 @@ class BlackboxModel(Model):
 
 class WhiteboxModel(Model):
     """
-    White-box model class. Have access to model scores and logits. Currently implemented only for Huggingface models.
-
+    White-box model wrapper for HuggingFace models with full access to logits and hidden states.
+    
+    This class provides a unified interface for uncertainty estimation methods that require
+    access to model internals such as token probabilities, attention weights, and hidden states.
+    It wraps HuggingFace transformers models and provides additional functionality for
+    uncertainty quantification research and applications.
+    
+    The class supports:
+    - All HuggingFace CausalLM models (GPT, LLaMA, Falcon, etc.)
+    - All HuggingFace Seq2Seq models (T5, BART, etc.)
+    - Custom generation parameters and stopping criteria
+    - Ensemble generation for uncertainty estimation
+    - Access to raw logits and attention scores
+    - Multiple decoding strategies (greedy, sampling, beam search)
+    
+    Key features:
+    - Full access to model logits and probabilities
+    - Support for custom generation parameters
+    - Efficient batch processing
+    - Compatible with all white-box uncertainty estimation methods
+    - Automatic handling of special tokens
+    
+    Attributes:
+        model: The underlying HuggingFace model
+        tokenizer: HuggingFace tokenizer for the model
+        model_path (str): Path or identifier of the model
+        model_type (str): Type of model architecture ('CausalLM' or 'Seq2Seq')
+        generation_parameters: Default parameters for text generation
+        
     Examples:
-
-    ```python
-    >>> from lm_polygraph import WhiteboxModel
-    >>> model = WhiteboxModel.from_pretrained(
-    ...     "bigscience/bloomz-3b",
-    ... )
-    ```
+        Basic initialization from pretrained:
+        >>> from lm_polygraph import WhiteboxModel
+        >>> model = WhiteboxModel.from_pretrained("gpt2")
+        >>> text = model.generate_texts(["Hello, my name is"])[0]
+        
+        With custom device and parameters:
+        >>> model = WhiteboxModel.from_pretrained(
+        ...     "meta-llama/Llama-2-7b-hf",
+        ...     device_map="auto",
+        ...     load_in_8bit=True,
+        ...     generation_params={"temperature": 0.7, "max_new_tokens": 100}
+        ... )
+        
+        Using existing HuggingFace objects:
+        >>> from transformers import AutoModelForCausalLM, AutoTokenizer
+        >>> base_model = AutoModelForCausalLM.from_pretrained("gpt2")
+        >>> tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        >>> model = WhiteboxModel(base_model, tokenizer, model_path="gpt2")
+        
+        For uncertainty estimation:
+        >>> from lm_polygraph.estimators import TokenEntropy
+        >>> estimator = TokenEntropy()
+        >>> uncertainty = estimate_uncertainty(model, estimator, "Explain quantum physics")
+        
+    See Also:
+        BlackboxModel: For models without logit access
+        GenerationParameters: For configuring generation behavior
+        create_ensemble: For creating ensemble models
     """
 
     def __init__(
@@ -505,12 +637,59 @@ class WhiteboxModel(Model):
 
     def generate(self, **args):
         """
-        Generates the model output with scores from batch formed by HF Tokenizer.
-
+        Generate model outputs with full access to scores and internal states.
+        
+        This method provides low-level generation with access to token probabilities,
+        attention weights, and hidden states. It's primarily used by uncertainty
+        estimation methods that need detailed model outputs.
+        
         Parameters:
-            **args: Any arguments that can be passed to model.generate function from HuggingFace.
+            input_ids (torch.Tensor): Tokenized input sequences
+            attention_mask (torch.Tensor, optional): Attention mask for inputs
+            **args: HuggingFace generation parameters:
+                - max_new_tokens (int): Maximum tokens to generate
+                - min_new_tokens (int): Minimum tokens to generate
+                - temperature (float): Sampling temperature
+                - top_k (int): Top-k sampling parameter
+                - top_p (float): Nucleus sampling parameter
+                - do_sample (bool): Whether to use sampling
+                - num_beams (int): Number of beams for beam search
+                - num_return_sequences (int): Sequences to generate per input
+                - output_scores (bool): Return token probabilities
+                - output_attentions (bool): Return attention weights
+                - output_hidden_states (bool): Return hidden states
+                - return_dict_in_generate (bool): Return ModelOutput object
+                - stopping_criteria: Custom stopping criteria
+                - logits_processor: Custom logits processors
+                
         Returns:
-            ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
+            ModelOutput: HuggingFace generation output containing:
+                - sequences: Generated token IDs
+                - scores: Token probabilities (if output_scores=True)
+                - attentions: Attention weights (if output_attentions=True)
+                - hidden_states: Hidden states (if output_hidden_states=True)
+                
+        Examples:
+            Basic generation:
+            >>> inputs = model.tokenizer("Hello", return_tensors="pt")
+            >>> outputs = model.generate(**inputs, max_new_tokens=20)
+            >>> text = model.tokenizer.decode(outputs.sequences[0])
+            
+            With scores for uncertainty:
+            >>> outputs = model.generate(
+            ...     **inputs,
+            ...     max_new_tokens=50,
+            ...     output_scores=True,
+            ...     do_sample=True,
+            ...     temperature=0.8
+            ... )
+            >>> # Access token probabilities in outputs.scores
+            
+        Note:
+            - This method preserves original token probabilities before any
+              processing by generation parameters
+            - Custom stopping criteria from generation_parameters are applied
+            - The method is primarily for internal use by estimators
         """
         default_params = asdict(self.generation_parameters)
 
@@ -542,12 +721,56 @@ class WhiteboxModel(Model):
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
-        Generates a list of model answers using input texts batch.
-
+        Generate text completions for a batch of input texts.
+        
+        High-level text generation method that handles tokenization, generation,
+        and decoding automatically. This is the primary method for getting text
+        outputs from the model.
+        
         Parameters:
-            input_texts (List[str]): input texts batch.
-        Return:
-            List[str]: corresponding model generations. Have the same length as `input_texts`.
+            input_texts: List of input prompts as strings
+            **args: Generation parameters that override defaults:
+                - max_new_tokens (int): Maximum new tokens to generate
+                - temperature (float): Sampling temperature (0.0 = greedy)
+                - top_k (int): Top-k sampling parameter
+                - top_p (float): Nucleus sampling parameter  
+                - do_sample (bool): Use sampling instead of greedy decoding
+                - num_beams (int): Beam search width (1 = no beam search)
+                - repetition_penalty (float): Penalty for repeated tokens
+                - num_return_sequences (int): Sequences per input
+                - pad_token_id (int): Override padding token ID
+                - eos_token_id (int): Override end-of-sequence token ID
+                
+        Returns:
+            List[str]: Generated texts corresponding to each input prompt.
+                If num_return_sequences > 1, returns List[List[str]].
+                
+        Examples:
+            Simple generation:
+            >>> texts = model.generate_texts(["Once upon a time"])
+            >>> print(texts[0])
+            
+            Sampling with temperature:
+            >>> texts = model.generate_texts(
+            ...     ["Explain quantum computing"],
+            ...     do_sample=True,
+            ...     temperature=0.8,
+            ...     max_new_tokens=100
+            ... )
+            
+            Multiple sequences per input:
+            >>> texts = model.generate_texts(
+            ...     ["Write a haiku about AI"],
+            ...     do_sample=True,
+            ...     num_return_sequences=3
+            ... )
+            >>> # texts[0] contains 3 different haikus
+            
+        Note:
+            - Automatically handles batch padding
+            - Applies model-specific token fixing if needed
+            - Uses default generation parameters unless overridden
+            - For token-level access, use the generate() method instead
         """
         # Apply default parameters first, then override with provided args
         default_params = asdict(self.generation_parameters)
@@ -596,13 +819,68 @@ class WhiteboxModel(Model):
         **kwargs,
     ):
         """
-        Initializes the model from HuggingFace. Automatically determines model type.
-
+        Create a WhiteboxModel from a pretrained HuggingFace model.
+        
+        This is the primary factory method for creating WhiteboxModel instances.
+        It automatically detects the model type (CausalLM vs Seq2Seq), loads the
+        appropriate model and tokenizer, and configures generation parameters.
+        
         Parameters:
-            model_path (str): model path in HuggingFace.
-            generation_params (Dict): generation arguments for
-                lm_polygraph.utils.generation_parametersGenerationParameters
-            add_bos_token (bool): tokenizer argument. Default: True.
+            model_path: HuggingFace model identifier or local path. Examples:
+                - "gpt2", "meta-llama/Llama-2-7b-hf", "google/flan-t5-base"
+            generation_params: Default generation parameters as a dict:
+                - temperature (float): Sampling temperature
+                - max_new_tokens (int): Maximum new tokens to generate
+                - top_p (float): Nucleus sampling parameter
+                - See GenerationParameters for full list
+            add_bos_token: Whether to add beginning-of-sequence token if the
+                tokenizer doesn't add it automatically. Default: True
+            **kwargs: Additional arguments passed to from_pretrained:
+                - device_map (str/dict): Device placement strategy
+                - load_in_8bit (bool): Use 8-bit quantization
+                - load_in_4bit (bool): Use 4-bit quantization
+                - torch_dtype: Override model dtype (e.g., torch.float16)
+                - cache_dir (str): Directory for caching models
+                - local_files_only (bool): Only use local files
+                - revision (str): Model revision/branch to use
+                - trust_remote_code (bool): Allow custom model code
+                
+        Returns:
+            WhiteboxModel: Configured model ready for generation and uncertainty estimation
+            
+        Examples:
+            Basic usage:
+            >>> model = WhiteboxModel.from_pretrained("gpt2")
+            
+            With custom device and dtype:
+            >>> model = WhiteboxModel.from_pretrained(
+            ...     "meta-llama/Llama-2-7b-hf",
+            ...     device_map="auto",
+            ...     torch_dtype=torch.float16
+            ... )
+            
+            With 8-bit quantization:
+            >>> model = WhiteboxModel.from_pretrained(
+            ...     "EleutherAI/gpt-j-6B",
+            ...     load_in_8bit=True,
+            ...     device_map="auto"
+            ... )
+            
+            With custom generation parameters:
+            >>> model = WhiteboxModel.from_pretrained(
+            ...     "google/flan-t5-large",
+            ...     generation_params={
+            ...         "temperature": 0.7,
+            ...         "max_new_tokens": 200,
+            ...         "do_sample": True
+            ...     }
+            ... )
+            
+        Note:
+            - Automatically detects encoder-decoder vs decoder-only models
+            - Sets appropriate padding tokens if missing
+            - Configures tokenizer for batch generation
+            - For models requiring trust_remote_code, explicitly set it to True
         """
         log.warning(
             "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."

@@ -1,3 +1,56 @@
+"""
+Uncertainty estimation methods for language models.
+
+This module provides a comprehensive collection of uncertainty estimation methods
+for both white-box models (with access to logits) and black-box models (text-only).
+Each estimator inherits from the base Estimator class and implements a specific
+approach to quantifying model uncertainty.
+
+Categories of Estimators:
+
+Information-Based (White-box only):
+    - Perplexity: Average negative log-likelihood
+    - TokenEntropy/MeanTokenEntropy: Shannon entropy of token distributions
+    - MaximumSequenceProbability: Joint probability of generated sequence
+    - PointwiseMutualInformation: Information-theoretic measure
+    - ConditionalPointwiseMutualInformation: Conditional variant of PMI
+
+Meaning Diversity (Black-box compatible):
+    - SemanticEntropy: Entropy over semantic equivalence classes
+    - LexicalSimilarity: ROUGE-based similarity between samples
+    - NumSemSets: Number of distinct semantic clusters
+    - EigValLaplacian: Eigenvalue analysis of semantic graph
+    - SAR/TokenSAR/SentenceSAR: Self-alignment rate metrics
+
+Density-Based (White-box, requires training):
+    - MahalanobisDistance: Distance in feature space
+    - RelativeMahalanobisDistance: Normalized Mahalanobis distance
+    - RDE: Robust density estimation
+    - PPLMDSeq: Combined perplexity and Mahalanobis
+
+Reflexive (Model self-evaluation):
+    - PTrue: Probability of "True" when asked about correctness
+    - PTrueSampling: PTrue with multiple samples
+    - Verbalized1S/2S: Verbal confidence expressions
+    - Linguistic1S: Linguistic uncertainty cues
+
+Ensemble-Based (Requires multiple models):
+    - Various EPT/PET methods for token and sequence level
+
+Usage Example:
+    >>> from lm_polygraph import WhiteboxModel
+    >>> from lm_polygraph.estimators import TokenEntropy
+    >>> from lm_polygraph.utils.estimate_uncertainty import estimate_uncertainty
+    >>> 
+    >>> model = WhiteboxModel.from_pretrained("gpt2")
+    >>> estimator = TokenEntropy()
+    >>> result = estimate_uncertainty(model, estimator, "What is AI?")
+    >>> print(f"Uncertainty: {result.uncertainty}")
+
+See the documentation for each estimator class for detailed information
+about requirements, parameters, and appropriate use cases.
+"""
+
 from .estimator import Estimator
 from .claim.claim_conditioned_probability import ClaimConditionedProbabilityClaim
 from .claim.max_probability import MaximumClaimProbability
