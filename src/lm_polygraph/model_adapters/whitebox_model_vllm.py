@@ -22,9 +22,10 @@ class WhiteboxModelvLLM(Model):
         self.sampling_params = sampling_params
         self.generation_parameters = generation_parameters
 
-        self.sampling_params.stop = getattr(
-            self.generation_parameters, "generate_until", None
+        self.sampling_params.stop = list(
+            getattr(self.generation_parameters, "generate_until", list())
         )
+
         for param in [
             "presence_penalty",
             "repetition_penalty",
@@ -47,6 +48,7 @@ class WhiteboxModelvLLM(Model):
         texts = self.tokenizer.batch_decode(
             kwargs["input_ids"], skip_special_tokens=True
         )
+        sampling_params.stop = []
         output = self.model.generate(*args, texts, sampling_params)
         return self.post_processing(output)
 
@@ -70,8 +72,6 @@ class WhiteboxModelvLLM(Model):
         return texts
 
     def post_processing(self, outputs):
-
-        standard_output = GenerateDecoderOnlyOutput()
         vocab_size = max(
             self.tokenizer.vocab_size, max(self.tokenizer.added_tokens_decoder.keys())
         )
@@ -103,8 +103,7 @@ class WhiteboxModelvLLM(Model):
                 logits.append(log_prob)
                 sequences.append(sequence)
 
-        standard_output.logits = logits
-        standard_output.scores = logits
-        standard_output.sequences = sequences
-
+        standard_output = GenerateDecoderOnlyOutput(
+            sequences=sequences, logits=logits, scores=logits
+        )
         return standard_output
