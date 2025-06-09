@@ -53,12 +53,43 @@ Enhanced documentation for both model types:
 - Improved `generate_texts` high-level method documentation
 - Comprehensive `from_pretrained` factory method docs
 
-### 3. Core Functions
+### 3. Model Adapters (NEW)
+Added comprehensive documentation for specialized model adapters:
+
+#### WhiteboxModelBasic (`src/lm_polygraph/model_adapters/whitebox_model_basic.py`)
+- Lightweight adapter for simple use cases
+- Direct pass-through to model methods
+- Clear differentiation from full WhiteboxModel
+
+#### WhiteboxModelvLLM (`src/lm_polygraph/model_adapters/whitebox_model_vllm.py`)
+- High-performance vLLM integration
+- Detailed performance benefits documentation
+- Output format conversion explained
+
+#### VisualWhiteboxModel (`src/lm_polygraph/model_adapters/visual_whitebox_model.py`)
+- Comprehensive multimodal support documentation
+- Image handling (URLs and local paths)
+- VLM-specific examples and use cases
+
+### 4. Core Functions
 - **estimate_uncertainty** (`src/lm_polygraph/utils/estimate_uncertainty.py`)
   - Complete rewrite with detailed parameter descriptions
   - Added comprehensive examples for different use cases
   - Included cross-references to related functions
   - Documented return value structure
+
+### 5. Module-Level Documentation
+- Added comprehensive docstrings to `__init__.py` files:
+  - `src/lm_polygraph/__init__.py` - Main package overview
+  - `src/lm_polygraph/estimators/__init__.py` - Estimator categories
+  - `src/lm_polygraph/model_adapters/__init__.py` - Adapter comparison
+
+### 6. Additional Documentation Created
+- **estimator_selection_guide.md** - Comprehensive guide for choosing estimators
+  - Decision tree for quick selection
+  - Use case recommendations
+  - Method comparison table
+  - Practical examples
 
 ## Documentation Standards Established
 
@@ -82,11 +113,20 @@ Enhanced documentation for both model types:
 - Clarified complex types (Dict, List, Union)
 - Documented expected shapes for arrays
 
+## Key Improvements Made
+
+1. **User-Friendly**: Documentation now explains not just "what" but "why" and "when" to use each method
+2. **Comprehensive Examples**: Each class has practical examples that users can adapt
+3. **Cross-References**: Methods now reference related approaches
+4. **Theory Integration**: Added paper references and theoretical context
+5. **Error Guidance**: Better error messages and parameter validation
+6. **Model Adapter Coverage**: All specialized model adapters now fully documented
+
 ## Remaining Documentation Tasks
 
 ### High Priority
 1. **Statistical Calculators**: Document what each calculator computes
-2. **Other Estimators**: Apply same documentation standards to remaining estimators
+2. **Other Estimators**: Apply same documentation standards to remaining ~25 estimators
 3. **Generation Parameters**: Document all available parameters
 4. **Error Classes**: Add helpful error messages with solutions
 
@@ -101,20 +141,36 @@ Enhanced documentation for both model types:
 2. **Test Files**: Add docstrings to test cases
 3. **Scripts**: Document utility scripts
 
-## Key Improvements Made
+## Files Updated Summary
 
-1. **User-Friendly**: Documentation now explains not just "what" but "why" and "when" to use each method
-2. **Comprehensive Examples**: Each class has practical examples that users can adapt
-3. **Cross-References**: Methods now reference related approaches
-4. **Theory Integration**: Added paper references and theoretical context
-5. **Error Guidance**: Better error messages and parameter validation
+### Core Model Files
+- `src/lm_polygraph/utils/model.py` - BlackboxModel, WhiteboxModel
+- `src/lm_polygraph/utils/estimate_uncertainty.py` - Main estimation function
 
-## Next Steps
+### Model Adapters
+- `src/lm_polygraph/model_adapters/whitebox_model_basic.py`
+- `src/lm_polygraph/model_adapters/whitebox_model_vllm.py`
+- `src/lm_polygraph/model_adapters/visual_whitebox_model.py`
+- `src/lm_polygraph/model_adapters/__init__.py`
 
-1. Continue applying these documentation standards to remaining files
-2. Create the "Which Estimator Should I Use?" guide
-3. Add computational complexity information to estimators
-4. Create visual diagrams for the documentation
-5. Set up documentation linting in CI/CD
+### Estimators
+- `src/lm_polygraph/estimators/perplexity.py`
+- `src/lm_polygraph/estimators/label_prob.py`
+- `src/lm_polygraph/estimators/token_entropy.py`
+- `src/lm_polygraph/estimators/max_probability.py`
+- `src/lm_polygraph/estimators/p_true.py`
+- `src/lm_polygraph/estimators/lexical_similarity.py`
+- `src/lm_polygraph/estimators/__init__.py`
 
-This documentation update significantly improves the developer experience and makes the library more accessible to new users while maintaining depth for advanced users.
+### Package Files
+- `src/lm_polygraph/__init__.py`
+
+## Impact
+
+This documentation update significantly improves the developer experience by:
+- Making all model types (standard and adapters) equally well-documented
+- Providing clear guidance on when to use each component
+- Offering practical examples for all major use cases
+- Establishing consistent documentation standards for future contributions
+
+The project now has comprehensive documentation for its core APIs, making it more accessible to new users while maintaining depth for advanced users.

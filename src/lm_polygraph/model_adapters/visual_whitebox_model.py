@@ -1,3 +1,12 @@
+"""
+Visual language model adapter for uncertainty estimation with multimodal inputs.
+
+This module provides support for vision-language models (VLMs) in the LM-Polygraph
+framework, enabling uncertainty estimation for models that process both text and
+image inputs. It extends the whitebox model interface to handle multimodal generation
+tasks while maintaining compatibility with uncertainty estimators.
+"""
+
 import torch
 import requests
 from lm_polygraph.utils.model import Model
@@ -23,14 +32,81 @@ log = logging.getLogger("lm_polygraph")
 
 class VisualWhiteboxModel(Model):
     """
-    White-box model class. Have access to model scores and logits. Currently implemented only for Huggingface models.
-
+    Whitebox model adapter for vision-language models with uncertainty estimation.
+    
+    This class enables uncertainty quantification for multimodal models that process
+    both images and text. It provides full access to model internals (logits, attention)
+    while handling the complexities of multimodal input processing.
+    
+    Supported model types include:
+    - BLIP-2 (Salesforce/blip2-*)
+    - LLaVA (llava-hf/*)
+    - Flamingo-style models
+    - Other HuggingFace Vision2Seq models
+    
+    Key features:
+    - Combined image-text input processing
+    - Access to token probabilities for uncertainty estimation
+    - Support for multiple images per batch
+    - Custom stopping criteria for generation
+    - Compatible with all whitebox uncertainty methods
+    
+    Attributes:
+        model: The underlying Vision2Seq model
+        processor_visual: Multimodal processor for images and text
+        tokenizer: Text tokenizer (extracted from processor)
+        model_path: Model identifier or path
+        model_type: Set to "VisualLM"
+        images: Loaded PIL images for generation
+        generation_parameters: Default generation settings
+        
     Examples:
-
-    ```python
-    >>> from lm_polygraph import VisualWhiteboxModel
-    ... )
-    ```
+        Basic usage with image URL:
+        >>> from lm_polygraph.model_adapters import VisualWhiteboxModel
+        >>> model = VisualWhiteboxModel.from_pretrained(
+        ...     "Salesforce/blip2-opt-2.7b",
+        ...     model_type="VisualLM",
+        ...     image_urls=["https://example.com/image.jpg"]
+        ... )
+        >>> 
+        >>> # Generate description with uncertainty
+        >>> from lm_polygraph.estimators import TokenEntropy
+        >>> estimator = TokenEntropy()
+        >>> result = estimate_uncertainty(
+        ...     model, estimator,
+        ...     "Describe this image in detail:"
+        ... )
+        
+        With local images:
+        >>> model = VisualWhiteboxModel.from_pretrained(
+        ...     "llava-hf/llava-1.5-7b-hf",
+        ...     model_type="VisualLM",
+        ...     image_paths=["path/to/image1.jpg", "path/to/image2.jpg"]
+        ... )
+        >>> 
+        >>> # Ask questions about images
+        >>> texts = model.generate_texts([
+        ...     "What objects are in this image?",
+        ...     "What is the main color?"
+        ... ])
+        
+        Direct initialization:
+        >>> from transformers import AutoModelForVision2Seq, AutoProcessor
+        >>> base_model = AutoModelForVision2Seq.from_pretrained("model-name")
+        >>> processor = AutoProcessor.from_pretrained("model-name")
+        >>> model = VisualWhiteboxModel(
+        ...     base_model, processor,
+        ...     image_paths=["image.jpg"]
+        ... )
+        
+    See Also:
+        WhiteboxModel: Standard text-only model adapter
+        BlackboxModel: For API-based multimodal models
+        
+    Note:
+        - Images are loaded once during initialization for efficiency
+        - All text inputs in a batch use the same set of images
+        - Different VLMs may have different prompt formats
     """
 
     def __init__(
@@ -44,12 +120,27 @@ class VisualWhiteboxModel(Model):
         generation_parameters: GenerationParameters = GenerationParameters(),
     ):
         """
+        Initialize visual whitebox model for multimodal uncertainty estimation.
+        
         Parameters:
-            model (AutoModelForCausalLM): HuggingFace model.
-            tokenizer (AutoTokenizer): HuggingFace tokenizer.
-            model_path (Optional[str]): Unique model path in HuggingFace.
-            model_type (str): Additional model specifications.
-            parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            model: Pre-loaded HuggingFace Vision2Seq model
+            processor_visual: Corresponding multimodal processor that handles
+                both image and text inputs
+            model_path: Model identifier or path for tracking
+            model_type: Type identifier, typically "VisualLM"
+            image_urls: List of image URLs to download and use. Mutually
+                exclusive with image_paths
+            image_paths: List of local image file paths. Mutually exclusive
+                with image_urls
+            generation_parameters: Default generation settings
+            
+        Raises:
+            ValueError: If neither image_urls nor image_paths is provided
+            
+        Note:
+            Images are downloaded (if URLs) or loaded immediately during
+            initialization. For dynamic image loading, create new model
+            instances or modify the images attribute directly.
         """
         super().__init__(model_path, model_type)
         self.model = model
@@ -166,12 +257,46 @@ class VisualWhiteboxModel(Model):
 
     def generate(self, **args):
         """
-        Generates the model output with scores from batch formed by HF Tokenizer.
-
+        Generate model outputs with scores for multimodal inputs.
+        
+        Processes combined image-text inputs through the vision-language model,
+        returning detailed generation outputs including token probabilities for
+        uncertainty estimation. Handles proper formatting of multimodal inputs
+        and preserves original probability scores.
+        
         Parameters:
-            **args: Any arguments that can be passed to model.generate function from HuggingFace.
+            **args: Generation arguments including:
+                - input_ids: Tokenized text input sequences
+                - pixel_values: Processed image tensors (if required by model)
+                - attention_mask: Attention mask for text inputs
+                - max_new_tokens: Maximum tokens to generate
+                - temperature: Sampling temperature
+                - do_sample: Whether to use sampling
+                - output_scores: Return token probabilities (default: True)
+                - stopping_criteria: Custom stopping conditions
+                - Other HuggingFace generation parameters
+                
         Returns:
-            ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
+            ModelOutput: Generation output containing:
+                - sequences: Generated token IDs including input
+                - scores: Original token log probabilities (not modified)
+                - generation_scores: Modified scores (if any processing applied)
+                - attentions: Attention weights (if requested)
+                
+        Examples:
+            >>> # Tokenize with images
+            >>> inputs = model.processor_visual(
+            ...     text=["What do you see?"],
+            ...     images=model.images,
+            ...     return_tensors="pt"
+            ... )
+            >>> outputs = model.generate(**inputs, max_new_tokens=50)
+            >>> # outputs.scores contains probabilities for uncertainty
+            
+        Note:
+            The method preserves original token scores before any generation
+            parameter modifications, which is crucial for accurate uncertainty
+            estimation.
         """
         default_params = asdict(self.generation_parameters)
         args.pop("return_dict", None)
@@ -223,12 +348,57 @@ class VisualWhiteboxModel(Model):
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
-        Generates a list of model answers using input texts batch.
-
+        Generate text completions for prompts with associated images.
+        
+        High-level method that handles the complete pipeline of multimodal
+        generation: processes text prompts with pre-loaded images, generates
+        responses, and decodes them to readable text.
+        
         Parameters:
-            input_texts (List[str]): input texts batch.
-        Return:
-            List[str]: corresponding model generations. Have the same length as `input_texts`.
+            input_texts: List of text prompts/questions about the images.
+                Each prompt is paired with the same set of images loaded
+                during model initialization
+            **args: Additional generation parameters:
+                - max_new_tokens: Maximum tokens to generate per prompt
+                - temperature: Sampling temperature (0.0 = greedy)
+                - do_sample: Whether to use sampling
+                - num_beams: Beam search width
+                - top_p: Nucleus sampling threshold
+                - repetition_penalty: Penalty for repeated tokens
+                - Any other HuggingFace generation parameters
+                
+        Returns:
+            List[str]: Generated text responses for each input prompt.
+                Length matches input_texts length.
+                
+        Examples:
+            Single prompt:
+            >>> texts = model.generate_texts(
+            ...     ["What is happening in this image?"],
+            ...     max_new_tokens=100
+            ... )
+            >>> print(texts[0])
+            
+            Multiple prompts about same images:
+            >>> prompts = [
+            ...     "Describe the scene",
+            ...     "What colors are dominant?",
+            ...     "Is this indoors or outdoors?"
+            ... ]
+            >>> responses = model.generate_texts(prompts, temperature=0.7)
+            
+            With beam search:
+            >>> texts = model.generate_texts(
+            ...     ["Generate a detailed caption:"],
+            ...     num_beams=4,
+            ...     max_new_tokens=150
+            ... )
+            
+        Note:
+            - All prompts use the same images loaded during initialization
+            - To use different images, create new model instances
+            - Some VLMs require specific prompt formats (e.g., "Question: ... Answer:")
+            - The method handles special tokens based on model's chat template
         """
         args = self._validate_args(args)
         batch: Dict[str, torch.Tensor] = self.processor_visual(
@@ -269,20 +439,78 @@ class VisualWhiteboxModel(Model):
     def from_pretrained(
         model_path: str,
         model_type: str,
-        image_urls: list,
-        image_paths: list,
+        image_urls: list = None,
+        image_paths: list = None,
         generation_params: Optional[Dict] = {},
         add_bos_token: bool = True,
         **kwargs,
     ):
         """
-        Initializes the model from HuggingFace. Automatically determines model type.
-
+        Create a VisualWhiteboxModel from a pretrained vision-language model.
+        
+        Factory method that loads a vision-language model from HuggingFace hub
+        or local path, along with its processor, and prepares it for uncertainty
+        estimation with the specified images.
+        
         Parameters:
-            model_path (str): model path in HuggingFace.
-            generation_params (Dict): generation arguments for
-                lm_polygraph.utils.generation_parametersGenerationParameters
-            add_bos_token (bool): tokenizer argument. Default: True.
+            model_path: HuggingFace model ID or local path to model.
+                Examples: "Salesforce/blip2-opt-2.7b", "llava-hf/llava-1.5-7b-hf"
+            model_type: Type identifier, typically "VisualLM" for consistency
+            image_urls: List of image URLs to download and use. Mutually
+                exclusive with image_paths
+            image_paths: List of local image file paths. Mutually exclusive
+                with image_urls
+            generation_params: Dictionary of default generation parameters:
+                - temperature: Sampling temperature
+                - max_new_tokens: Maximum generation length
+                - top_p: Nucleus sampling threshold
+                See GenerationParameters for full list
+            add_bos_token: Whether to add beginning-of-sequence token to
+                tokenizer configuration. Default: True
+            **kwargs: Additional arguments for model loading:
+                - device_map: Device placement ("auto", "cuda:0", etc.)
+                - torch_dtype: Model precision (torch.float16, etc.)
+                - load_in_8bit: Enable 8-bit quantization
+                - load_in_4bit: Enable 4-bit quantization
+                - cache_dir: Directory for model caching
+                - revision: Model revision to load
+                - trust_remote_code: Allow custom model code
+                
+        Returns:
+            VisualWhiteboxModel: Initialized model ready for generation
+            
+        Examples:
+            Basic usage:
+            >>> model = VisualWhiteboxModel.from_pretrained(
+            ...     "Salesforce/blip2-opt-2.7b",
+            ...     "VisualLM",
+            ...     image_urls=["https://example.com/cat.jpg"]
+            ... )
+            
+            With local images and GPU:
+            >>> model = VisualWhiteboxModel.from_pretrained(
+            ...     "llava-hf/llava-1.5-7b-hf",
+            ...     "VisualLM",
+            ...     image_paths=["img1.jpg", "img2.jpg"],
+            ...     device_map="auto",
+            ...     torch_dtype=torch.float16
+            ... )
+            
+            With quantization:
+            >>> model = VisualWhiteboxModel.from_pretrained(
+            ...     "Salesforce/blip2-flan-t5-xxl",
+            ...     "VisualLM",
+            ...     image_paths=["image.png"],
+            ...     load_in_8bit=True,
+            ...     generation_params={"temperature": 0.9}
+            ... )
+            
+        Raises:
+            ValueError: If neither image_urls nor image_paths provided
+            
+        Note:
+            This method is marked as deprecated in favor of direct initialization
+            with pre-loaded models, but remains for backward compatibility.
         """
         log.warning(
             "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
