@@ -182,6 +182,8 @@ CUDA_VISIBLE_DEVICES=0 polygraph_eval \
     subsample_eval_dataset=100
 ```
 
+The benchmark dataset in the correct format could be found in the [HF repo](https://huggingface.co/LM-Polygraph). The scripts for dataset preparation could be found in the `dataset_builders` directory.
+
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) or [`result_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/result_tables.ipynb) to generate the summarizing tables for an experiment.
 
 A detailed description of the benchmark is in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
