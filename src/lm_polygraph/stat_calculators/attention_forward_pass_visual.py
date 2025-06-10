@@ -43,14 +43,6 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                 text=str(texts[i]), images=images[i], return_tensors="pt"
             ).to(model.device())
 
-            # Get the input IDs (text tokens)
-            input_ids = encoding["input_ids"]
-
-            # Prepare the full sequence (original input + generated tokens)
-            if i < len(cut_sequences):
-                generated_ids = torch.tensor([cut_sequences[i]], device=model.device())
-                full_input_ids = torch.cat([input_ids, generated_ids], dim=1)
-
             # Forward pass with attention output
             with torch.no_grad():
                 forwardpass_attentions = model.model(
