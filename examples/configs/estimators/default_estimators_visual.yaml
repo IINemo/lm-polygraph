@@ -1,5 +1,5 @@
-# - name: MaximumSequenceProbability
-# - name: Perplexity
+- name: MaximumSequenceProbability
+- name: Perplexity
 - name: MeanTokenEntropy
 - name: MeanPointwiseMutualInformation
 - name: MeanConditionalPointwiseMutualInformation 

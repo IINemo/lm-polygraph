@@ -417,23 +417,3 @@ def get_abs_path_from_hydra_config(path: str) -> Path:
 
 if __name__ == "__main__":
     main()
-
-# def get_whitebox_model(args, cache_kwargs={}):
-#     model_type = getattr(args.model, "type", "Whitebox").lower()
-    
-#     if model_type in ["visual", "vision", "vision2seq", "visualllm"]:
-#         model_path = args.model.path
-#         # Create the processor and model using Hugging Face auto classes
-#         processor_visual = AutoProcessor.from_pretrained(model_path)
-#         base_model = AutoModelForVision2Seq.from_pretrained(model_path, **cache_kwargs)
-#         generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
-
-#         return VisualWhiteboxModel(
-#             model=base_model,
-#             processor_visual=processor_visual,
-#             model_path=model_path,
-#             model_type=args.model.type,
-#             generation_parameters=generation_params,
-#         )
-    
-#     # Existing whitebox model loading logic for text-only models
