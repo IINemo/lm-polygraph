@@ -42,7 +42,6 @@ def load_dataset(args):
         load_from_disk=args.background_load_from_disk,
         trust_remote_code=getattr(args, "trust_remote_code", False),
     )
-    print("IM ARG", getattr(args, "background_images", None))
 
     if args.subsample_train_dataset != -1:
         train_dataset.subsample(

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel

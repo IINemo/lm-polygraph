@@ -262,7 +262,7 @@ class VisualWhiteboxModel(Model):
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
         args = self._validate_args(args)
-        images = get_images(input_images)
+        images = self.get_images(input_images)
         batch: Dict[str, torch.Tensor] = self.processor_visual(
             text=input_texts,
             images=images,
