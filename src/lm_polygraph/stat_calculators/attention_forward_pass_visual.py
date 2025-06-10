@@ -1,8 +1,6 @@
 import torch
 import numpy as np
-
 from typing import Dict, List, Tuple
-
 from .stat_calculator import StatCalculator
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 
@@ -29,93 +27,54 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
     ) -> Dict[str, np.ndarray]:
         """
         Parameters:
-            dependencies: includes greedy_tokens.
-            texts: List of dicts with keys like 'text'
-            model: WhiteboxModel wrapper.
+            dependencies: includes greedy_tokens and images.
+            texts: List of input texts
+            model: VisualWhiteboxModel wrapper.
         Returns:
             Dict with 'forwardpass_attention_weights' numpy array.
         """
-        # Tokenize image+text pairs
-        batches = {}
         images = dependencies["images"]
-
-        for text, image in zip(texts, images):
-            batch = model.processor_visual(
-                text=str(text),
-                images=image,
-                return_tensors="pt",
-            )
-            batch = {k: v.to(model.device()) for k, v in batch.items()}
-            if not batches:
-                batches = {k: [v] for k, v in batch.items()}
-            else:
-                for key in batch:
-                    batches[key].append(batch[key])
-        batch: Dict[str, torch.Tensor] = {
-            key: torch.cat(value, dim=0) for key, value in batches.items()
-        }
         cut_sequences = dependencies["greedy_tokens"]
         forwardpass_attention_weights = []
 
         for i in range(len(texts)):
-            input_ids = batch["input_ids"][i].unsqueeze(0)
-            vision_inputs = {
-                k: v[i].unsqueeze(0) for k, v in batch.items() if k != "input_ids"
-            }
+            # Process each sample individually
+            encoding = model.processor_visual(
+                text=str(texts[i]), images=images[i], return_tensors="pt"
+            ).to(model.device())
 
-            greedy_ids = torch.tensor([cut_sequences[i]], device=model.device())
+            # Get the input IDs (text tokens)
+            input_ids = encoding["input_ids"]
 
-            full_input_ids = torch.cat([input_ids, greedy_ids], dim=1)
+            # Prepare the full sequence (original input + generated tokens)
+            if i < len(cut_sequences):
+                generated_ids = torch.tensor([cut_sequences[i]], device=model.device())
+                full_input_ids = torch.cat([input_ids, generated_ids], dim=1)
 
-            model_inputs = {"input_ids": input_ids, "output_attentions": True}
+            # Forward pass with attention output
+            with torch.no_grad():
+                forwardpass_attentions = model.model(
+                    **encoding, output_attentions=True, output_hidden_states=True
+                ).attentions
+                forwardpass_attentions = tuple(
+                    attention.to("cpu") for attention in forwardpass_attentions
+                )
+                forwardpass_attentions = (
+                    torch.cat(forwardpass_attentions).float().numpy()
+                )
+            forwardpass_attention_weights.append(forwardpass_attentions)
 
-            if "pixel_values" in batch:
-                model_inputs["pixel_values"] = batch["pixel_values"][i].unsqueeze(0)
-            if "img_input_mask" in batch:
-                model_inputs["img_input_mask"] = batch["img_input_mask"][i].unsqueeze(0)
-
-            # with torch.no_grad():
-            #     outputs = model.model(
-            #         input_ids=input_ids,
-            #         pixel_values=pixel_values,
-            #         output_attentions=True,
-            #         output_hidden_states=True
-            #     )
-            print(
-                {
-                    k: v.shape if isinstance(v, torch.Tensor) else type(v)
-                    for k, v in model_inputs.items()
-                }
-            )
-
-            for i in range(len(texts)):
-                encoding = model.processor_visual(
-                    text=str(texts[i]), images=images[i], return_tensors="pt"
-                ).to(model.device())
-
-                with torch.no_grad():
-                    out = model.model(**encoding, output_attentions=True)
-                    attentions = out.attentions
-                    attentions = tuple(a.to("cpu") for a in attentions)
-                    attentions_np = torch.cat(attentions).float().numpy()
-
-                forwardpass_attention_weights.append(attentions_np)
-
-            # with torch.no_grad():
-            #     out = model.model(**model_inputs)
-            #     attentions = out.attentions
-            #     attentions = tuple(a.to("cpu") for a in attentions)
-            #     attentions_np = torch.cat(attentions).float().numpy()
-
-            # forwardpass_attention_weights.append(attentions_np)
-
-        # Pad if sequence lengths mismatch
+        # Handle padding if sequence lengths vary
         try:
             forwardpass_attention_weights = np.array(forwardpass_attention_weights)
         except Exception:
-            max_seq_length = max(el.shape[-1] for el in forwardpass_attention_weights)
-            padded = []
+            # in this case we have various len of input_ids+greedy_tokens in batch, so pad before concat
+            max_seq_length = np.max(
+                [el.shape[-1] for el in forwardpass_attention_weights]
+            )
+            forwardpass_attention_weights_padded = []
             for el in forwardpass_attention_weights:
+                buf_el = el
                 if el.shape[-1] != max_seq_length:
                     pad_mask = (
                         (0, 0),
@@ -123,8 +82,9 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                         (0, max_seq_length - el.shape[-1]),
                         (0, max_seq_length - el.shape[-1]),
                     )
-                    el = np.pad(el, pad_mask, constant_values=np.nan)
-                padded.append(el)
-            forwardpass_attention_weights = np.array(padded)
-
+                    buf_el = np.pad(el, pad_mask, constant_values=np.nan)
+                forwardpass_attention_weights_padded.append(buf_el)
+            forwardpass_attention_weights = np.array(
+                forwardpass_attention_weights_padded
+            )
         return {"forwardpass_attention_weights": forwardpass_attention_weights}
