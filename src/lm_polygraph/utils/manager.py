@@ -323,9 +323,7 @@ class UEManager:
         return batch_estimations, bad_estimators
 
     def _process(self, iterable_data, batch_callback):
-        iterable_data = tqdm(self.data) if self.verbose else self.data
         for batch_i, batch in enumerate(iterable_data):
-
             if len(batch) == 3:
                 inp_texts, target_texts, images = batch
             elif len(batch) == 2:
@@ -335,7 +333,6 @@ class UEManager:
                 raise ValueError(
                     f"Expected batch with 2 or 3 elements, got {len(batch)}"
                 )
-
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ("input_texts", inp_texts),
@@ -344,22 +341,29 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
 
-            # if images is not None:
-            #     self.stats["images"] += images
-            #     batch_stats["images"] = images
-
+            if images is not None and not (
+                isinstance(images, list) and all(img is None for img in images)
+            ):
+                self.stats["images"] += self.model.get_images(images)
+                batch_stats["images"] = self.model.get_images(images)
             batch_stats["model"] = self.model
 
+            # Calculate statistics
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
 
+            # Get estimations
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
             )
 
+            # Process batch
             batch_callback(
-                batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
+                batch_i,
+                target_texts,
+                batch_stats,
+                batch_estimations,
+                bad_estimators,
             )
-
             torch.cuda.empty_cache()
             gc.collect()
 

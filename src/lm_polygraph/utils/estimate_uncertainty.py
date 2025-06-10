@@ -87,13 +87,12 @@ def estimate_uncertainty(
         model_type = "VisualLM"
     else:
         model_type = "Blackbox"
+
     man = UEManager(
         Dataset([input_text], [""], batch_size=1, images=[image]),
         model,
         [estimator],
-        available_stat_calculators=register_default_stat_calculators(
-            model_type
-        ),  # TODO:
+        available_stat_calculators=register_default_stat_calculators(model_type),
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],
         ue_metrics=[],

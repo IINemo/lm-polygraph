@@ -37,8 +37,9 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
         """
         # Tokenize image+text pairs
         batches = {}
+        images = dependencies["images"]
 
-        for text, image in zip(texts, model.images):
+        for text, image in zip(texts, images):
             batch = model.processor_visual(
                 text=str(text),
                 images=image,
@@ -88,9 +89,8 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
             )
 
             for i in range(len(texts)):
-                # Формируем корректный input через processor
                 encoding = model.processor_visual(
-                    text=str(texts[i]), images=model.images[i], return_tensors="pt"
+                    text=str(texts[i]), images=images[i], return_tensors="pt"
                 ).to(model.device())
 
                 with torch.no_grad():

@@ -52,9 +52,9 @@ class TrainingStatisticExtractionCalculatorVisual(StatCalculator):
                     else background_train_dataset_max_new_tokens
                 )
 
-                for images, inp_texts, target_texts in tqdm(dataset):
+                for inp_texts, target_texts, images in tqdm(dataset):
                     batch_stats: Dict[str, np.ndarray] = {
-                        "images": images,
+                        "images": model.get_images(images),
                         "input_texts": inp_texts,
                         "target_texts": target_texts,
                     }

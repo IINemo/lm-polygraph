@@ -40,7 +40,6 @@ class VisualWhiteboxModel(Model):
         processor_visual: AutoProcessor,
         model_path: str = None,
         model_type: str = "VisualLM",
-        images: list = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
     ):
         """
@@ -57,40 +56,6 @@ class VisualWhiteboxModel(Model):
         self.processor_visual = processor_visual
         self.tokenizer = self.processor_visual.tokenizer
         self.generation_parameters = generation_parameters
-        imgs = []
-        for image_input in images:
-            if isinstance(image_input, Image.Image):
-                imgs.append(image_input)
-
-            elif isinstance(image_input, str):
-                if image_input.startswith("http"):
-                    try:
-                        response = requests.get(image_input, stream=True)
-                        response.raise_for_status()
-                        imgs.append(Image.open(io.BytesIO(response.content)))
-                    except Exception as e:
-                        print(
-                            f"Warning: Failed to load image from URL {image_input}: {e}"
-                        )
-
-                else:
-                    try:
-                        imgs.append(Image.open(image_input))
-                    except Exception as e:
-                        print(
-                            f"Warning: Failed to load image from path {image_input}: {e}"
-                        )
-
-            elif isinstance(image_input, bytes):
-                try:
-                    imgs.append(Image.open(io.BytesIO(image_input)))
-                except Exception as e:
-                    print(f"Warning: Failed to load image from bytes: {e}")
-
-            else:
-                print(f"Warning: Unsupported image input format for {image_input}")
-
-        self.images = imgs
         self.generation_parameters = generation_parameters or GenerationParameters()
 
     def _validate_args(self, args):
@@ -246,19 +211,61 @@ class VisualWhiteboxModel(Model):
 
         return generation
 
-    def generate_texts(self, input_texts: List[str], **args) -> List[str]:
+    def get_images(self, images: List[Union[Image.Image, str, bytes]]):
+        imgs = []
+        for image_input in images:
+            if isinstance(image_input, Image.Image):
+                imgs.append(image_input)
+
+            elif isinstance(image_input, str):
+                if image_input.startswith("http"):
+                    try:
+                        response = requests.get(image_input, stream=True)
+                        response.raise_for_status()
+                        imgs.append(Image.open(io.BytesIO(response.content)))
+                    except Exception as e:
+                        print(
+                            f"Warning: Failed to load image from URL {image_input}: {e}"
+                        )
+
+                else:
+                    try:
+                        imgs.append(Image.open(image_input))
+                    except Exception as e:
+                        print(
+                            f"Warning: Failed to load image from path {image_input}: {e}"
+                        )
+
+            elif isinstance(image_input, bytes):
+                try:
+                    imgs.append(Image.open(io.BytesIO(image_input)))
+                except Exception as e:
+                    print(f"Warning: Failed to load image from bytes: {e}")
+
+            else:
+                print(f"Warning: Unsupported image input format for {image_input}")
+        return imgs
+
+    def generate_texts(
+        self,
+        input_texts: List[str],
+        input_images: List[Union[Image.Image, str, bytes]],
+        **args,
+    ) -> List[str]:
         """
         Generates a list of model answers using input texts batch.
 
         Parameters:
             input_texts (List[str]): input texts batch.
+            input_images (List[Optional]): input images batch
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
         args = self._validate_args(args)
+        images = get_images(input_images)
         batch: Dict[str, torch.Tensor] = self.processor_visual(
             text=input_texts,
-            images=self.images,
+            images=images,
             return_tensors="pt",
         )
         batch = {k: v.to(self.device()) for k, v in batch.items()}

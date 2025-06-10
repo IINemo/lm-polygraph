@@ -106,7 +106,7 @@ def main(args):
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
 
-        model = get_model(args, images=images)
+        model = get_model(args)
 
         log.info("Done with loading model.")
 
@@ -118,7 +118,6 @@ def main(args):
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
-
         generation_metrics = get_generation_metrics(args)
 
         ue_metrics = get_ue_metrics(args)
@@ -287,11 +286,11 @@ def get_generation_metrics(args):
     return result
 
 
-def get_model(args, images=None):
+def get_model(args):
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         return get_blackbox_model(args)
     elif getattr(args.model, "type", "Whitebox") == "VisualLM":
-        return get_visual_model(args, images=images)
+        return get_visual_model(args)
     else:
         cache_kwargs = {
             "cache_dir": getattr(args, 'hf_cache', None),
@@ -366,7 +365,7 @@ def get_whitebox_model(args, cache_kwargs={}):
 
     return model
 
-def get_visual_model(args, images, cache_kwargs={}):
+def get_visual_model(args, cache_kwargs={}):
     if not "path_to_load_script" in args.model or not args.model.path_to_load_script:
         log.warning(
             "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
@@ -403,7 +402,6 @@ def get_visual_model(args, images, cache_kwargs={}):
                           processor,
                           args.model.path,
                           args.model.type,
-                          images,
                           generation_params)
 
     return model

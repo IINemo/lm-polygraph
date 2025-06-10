@@ -36,12 +36,13 @@ def load_dataset(args):
         args.background_train_dataset_label_column,
         batch_size=args.batch_size,
         data_files=args.background_train_dataset_data_files,
+        im_column=getattr(args, "background_images", None),
         split="train",
         size=args.bg_size,
         load_from_disk=args.background_load_from_disk,
         trust_remote_code=getattr(args, "trust_remote_code", False),
-        im_column=getattr(args, "background_images", None),
     )
+    print("IM ARG", getattr(args, "background_images", None))
 
     if args.subsample_train_dataset != -1:
         train_dataset.subsample(

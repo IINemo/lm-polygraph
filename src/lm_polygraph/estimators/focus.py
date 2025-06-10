@@ -337,7 +337,7 @@ class Focus(Estimator):
         for token_focus, kw_mask in zip(all_token_focus, all_kw_mask):
             token_focus_np = np.array(token_focus)
             if token_focus_np.size == 0 or kw_mask.sum() == 0:
-                focus_ue.append(np.nan)  
+                focus_ue.append(np.nan)
             else:
                 focus_ue.append(np.mean(token_focus_np[kw_mask[: len(token_focus_np)]]))
 

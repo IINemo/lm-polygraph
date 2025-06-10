@@ -56,6 +56,7 @@ class CrossEncoderSimilarityMatrixVisualCalculator(StatCalculator):
         batch_texts = dependencies["sample_texts"]
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
+        batch_images = dependencies["images"]
 
         special_tokens = list(tokenizer.tokenizer.added_tokens_decoder.keys())
 
