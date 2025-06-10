@@ -34,7 +34,6 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
             Dict with 'forwardpass_attention_weights' numpy array.
         """
         images = dependencies["images"]
-        cut_sequences = dependencies["greedy_tokens"]
         forwardpass_attention_weights = []
 
         for i in range(len(texts)):
