@@ -250,7 +250,7 @@ class BaseAttentionPromptCalculator(StatCalculator):
 
             greedy_tokens_i = dependencies["greedy_tokens"][i]
             n_tokens = len(greedy_tokens_i)
-            input_ids = prompt_tokens[i].cpu().detach().numpy()
+            input_ids = prompt_tokens[0].cpu().detach().numpy()
             len_input_ids = len(input_ids)
 
             start, end = None, None
