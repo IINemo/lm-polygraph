@@ -77,5 +77,16 @@ estimators:
       spacy_path: "en_core_web_sm"
   - name: AttentionScore
     cfg:
-      layer: 16
+      model_name: '${model.path}'
       gen_only: False
+  - name: RAUQ
+    cfg:
+      alpha: 0.2
+      model_name: '${model.path}'
+      use_entropy: False
+  - name: RAUQ
+    cfg:
+      alpha: 0.8
+      model_name: '${model.path}'
+      use_entropy: True
+  - name: CSL
