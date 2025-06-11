@@ -40,7 +40,6 @@ classifiers = [
 script-files = [
   "scripts/polygraph_eval",
   "scripts/polygraph_eval_ood",
-  "scripts/polygraph_server",
   "scripts/polygraph_normalize",
 ]
 
