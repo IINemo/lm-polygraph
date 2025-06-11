@@ -11,6 +11,7 @@ def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
     hf_cache: Optional[str] = None,
+    blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
 ) -> List[StatCalculatorContainer]:
