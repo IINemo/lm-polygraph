@@ -95,7 +95,6 @@ UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs
 * [low_level_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_example.ipynb): low-level integration into inference and claim-level UE
 * [low_level_vllm_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_vllm_example.ipynb): low-level example using vLLM for faster inference
 * [basic_visual_llm_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_visual_llm_example.ipynb): examples for visual LLMs
-* [Google Colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in Colab (LLMs such as `Qwen/Qwen2.5-0.5B-Instruct`, `gpt-4o` fit the default memory limit; other models require Colab-pro)
 
 ## <a name="overview_of_methods"></a>Overview of methods
 
@@ -205,18 +204,6 @@ A detailed description of the benchmark is in the [documentation](https://lm-pol
 Currently unsupported.
 
 <img width="850" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
-
-
-### Start with Docker
-
-```sh
-docker build -t lm-polygraph .
-docker run --rm -it docker.io/library/lm-polygraph
-# If you want to use GPU: docker run --gpus all --rm -it docker.io/library/lm-polygraph
-```
-The server should be available on `http://localhost:3001`
-
-A more detailed description of the demo is available in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
 
 ## Cite
 
