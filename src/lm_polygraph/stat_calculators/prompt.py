@@ -21,7 +21,6 @@ class BasePromptCalculator(StatCalculator):
         input_text_dependency: str = "input_texts",
         sample_text_dependency: Optional[str] = None,
         generation_text_dependency: str = "greedy_texts",
-        output_attentions: bool = False,
     ):
         """
         Parameters:
@@ -42,7 +41,6 @@ class BasePromptCalculator(StatCalculator):
         self.input_text_dependency = input_text_dependency
         self.sample_text_dependency = sample_text_dependency
         self.generation_text_dependency = generation_text_dependency
-        self.output_attentions = output_attentions
 
     def __call__(
         self,
@@ -100,7 +98,6 @@ class BasePromptCalculator(StatCalculator):
                 min_new_tokens=1,
                 max_new_tokens=1,
                 num_beams=1,
-                output_attentions=self.output_attentions,
             )
 
         logits = torch.stack(out.scores, dim=1)
