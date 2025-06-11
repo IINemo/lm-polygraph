@@ -27,7 +27,7 @@ class InferCausalLMCalculator(StatCalculator):
         self,
         n_alternatives: int = 10,
         tokenize: bool = False,
-        return_embeddings: bool = True,
+        return_embeddings: bool = True
     ):
         super().__init__()
 
@@ -175,7 +175,7 @@ class InferCausalLMCalculator(StatCalculator):
             else model_inputs["input_ids"]
         )
 
-        args_generate = kwargs.pop("args_generate")
+        args_generate = model.generation_parameters
         args_generate.update(
             {
                 "return_dict_in_generate": True,
@@ -186,12 +186,14 @@ class InferCausalLMCalculator(StatCalculator):
         out = model.generate(model_inputs, **args_generate)
 
         result_dict = self._post_process_logits(
-            out, model_inputs, args_generate["generation_config"].eos_token_id
+            out, model_inputs, model.model.generation_config.eos_token_id
         )
 
         if self._return_embeddings:
             result_dict.update(
                 {"embeddings_decoder": self._get_embeddings_from_output(out)}
             )
+
+        result_dict.update({"out" : out})
 
         return result_dict
