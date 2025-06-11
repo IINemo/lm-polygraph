@@ -243,8 +243,6 @@ class BaseAttentionPromptCalculator(StatCalculator):
         with torch.no_grad():
             out = model(
                 input_ids=prompt_tokens,
-                output_scores=True,
-                return_dict_in_generate=True,
                 output_attentions=self.output_attentions,
             )
 
