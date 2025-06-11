@@ -52,7 +52,6 @@ class RAUQ(Estimator):
     def __str__(self) -> str:
         """Returns a string representation of the estimator."""
         method_desc = " (entropy)" if self.use_entropy else ""
-        method_desc += f" (alpha={self.alpha})"
         return f"RAUQ{method_desc}"
 
     def get_alpha(self) -> float:
