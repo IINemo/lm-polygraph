@@ -227,28 +227,27 @@ class BaseAttentionPromptCalculator(StatCalculator):
 
         inp_texts = [self.prompt.format(q=text) for text in texts]
 
-        prompt_tokens = []
+        if len(inp_texts) == 0:
+            return {self.method: np.array([])}
+
+        attn_mask = []
         for i, text in enumerate(inp_texts):
             input_ids = model.tokenizer([text])["input_ids"][0]
             suffix_ids = model.tokenizer(
                 [self.suffix_prompt], add_special_tokens=False
             )["input_ids"][0]
             combined_ids = input_ids + greedy_tokens[i] + suffix_ids
-            prompt_tokens.append(combined_ids)
-        prompt_tokens = torch.tensor(prompt_tokens).to(model.device())
 
-        if len(inp_texts) == 0:
-            return {self.method: np.array([])}
+            prompt_tokens = torch.tensor([combined_ids]).to(model.device())
 
-        with torch.no_grad():
-            out = model(
-                input_ids=prompt_tokens,
-                output_attentions=self.output_attentions,
-            )
+            with torch.no_grad():
+                out = model(
+                    input_ids=prompt_tokens,
+                    output_attentions=self.output_attentions,
+                )
 
-        attentions = out.attentions
-        attn_mask = []
-        for i in range(len(texts)):
+            attentions = out.attentions
+
             greedy_tokens_i = dependencies["greedy_tokens"][i]
             n_tokens = len(greedy_tokens_i)
             input_ids = prompt_tokens[i].cpu().detach().numpy()
