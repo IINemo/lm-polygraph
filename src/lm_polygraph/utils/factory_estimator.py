@@ -50,6 +50,8 @@ def load_simple_estimators(name: str, config):
         FocusClaim,
         AttentionScore,
         AttentionScoreClaim,
+        RAUQ,
+        CSL,
     ]
 
     try:
