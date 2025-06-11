@@ -182,7 +182,19 @@ CUDA_VISIBLE_DEVICES=0 polygraph_eval \
     subsample_eval_dataset=100
 ```
 
-The benchmark dataset in the correct format could be found in the [HF repo](https://huggingface.co/LM-Polygraph). The scripts for dataset preparation could be found in the `dataset_builders` directory.
+You can also use a pre-built docker container for benchmarking, example:
+```
+docker run --gpus '"device=0"' --rm \
+  -w /app \
+  inemo/lm_polygraph \
+  bash -c "polygraph_eval \
+    --config-dir=./examples/configs/ \
+    --config-name=polygraph_eval_coqa.yaml \
+    model.path=meta-llama/Llama-3.1-8B \
+    subsample_eval_dataset=100"
+```
+
+The benchmark datasets in the correct format could be found in the [HF repo](https://huggingface.co/LM-Polygraph). The scripts for dataset preparation could be found in the `dataset_builders` directory.
 
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) or [`result_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/result_tables.ipynb) to generate the summarizing tables for an experiment.
 
