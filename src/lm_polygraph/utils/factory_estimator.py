@@ -50,6 +50,9 @@ def load_simple_estimators(name: str, config):
         FocusClaim,
         AttentionScore,
         AttentionScoreClaim,
+        CocoaMSP,
+        CocoaPPL,
+        CocoaMTE,
     ]
 
     try:
