@@ -33,7 +33,6 @@ class SemanticMatrixCalculator(StatCalculator):
 
     def __init__(self, nli_model):
         super().__init__()
-        self.is_deberta_setup = False
         self.nli_model = nli_model
 
     def __call__(

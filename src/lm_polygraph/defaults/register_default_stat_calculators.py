@@ -94,6 +94,18 @@ def register_default_stat_calculators(
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)
         _register(SamplingGenerationCalculator)
+        _register(
+            SamplingGenerationSDLGCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SamplingGenerationSDLGCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
+                    "batch_size": 10,
+                    "device": None,
+                },
+            },
+        )
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
