@@ -1,0 +1,32 @@
+- auto
+- name: TrainingStatisticExtractionCalculatorVisual
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_TrainingStatisticExtractionCalculatorVisual
+  cfg:
+    dataset: '${dataset}'
+    text_column: '${text_column}'
+    label_column: '${label_column}'
+    im_column: '${im_column}'
+    description: ''
+    prompt: ''
+    few_shot_split: "train"
+    train_split: '${train_split}'
+    load_from_disk: '${load_from_disk}'
+    subsample_train_dataset: 50
+    n_shot: 5
+    background_train_dataset: LM-Polygraph/laion-1000-background
+    background_train_dataset_text_column: txt
+    background_train_dataset_label_column: __url__
+    background_load_from_disk: false
+    background_images: jpg
+    background_train_dataset_data_files: data/train-00000-of-00001.parquet
+    subsample_background_train_dataset: 100
+    batch_size: '${batch_size}'
+    seed: '${seed}'
+    size: '${size}'
+    bg_size: 1000
+    output_attentions: True
+  stats: 
+    - "train_embeddings"
+    - "background_train_embeddings"
+    - "train_greedy_log_likelihoods"
+  dependencies:

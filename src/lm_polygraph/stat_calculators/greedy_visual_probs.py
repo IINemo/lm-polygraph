@@ -38,12 +38,14 @@ class GreedyProbsVisualCalculator(StatCalculator):
     def __init__(
         self,
         output_attentions: bool = True,
+        output_hidden_states: bool = True,
         n_alternatives: int = 10,
         samples_n: int = 10,
     ):
         super().__init__()
         self.samples_n = samples_n
         self.output_attentions = output_attentions
+        self.output_hidden_states = output_hidden_states
         self.n_alternatives = n_alternatives
 
     def __call__(
@@ -72,8 +74,9 @@ class GreedyProbsVisualCalculator(StatCalculator):
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
         batches = {}
+        images = dependencies["images"]
 
-        for text, image in zip(texts, model.images):
+        for text, image in zip(texts, images):
             batch = model.processor_visual(
                 text=str(text),
                 images=image,
@@ -96,8 +99,8 @@ class GreedyProbsVisualCalculator(StatCalculator):
                 output_logits=True,
                 return_dict_in_generate=True,
                 return_dict=True,
-                output_hidden_states=True,
                 output_attentions=self.output_attentions,
+                output_hidden_states=self.output_hidden_states,
             )
             logits = torch.stack(out.scores, dim=1)
             sequences = out.sequences
@@ -177,6 +180,15 @@ class GreedyProbsVisualCalculator(StatCalculator):
                         ]
 
                 attention_all.append(attn_mask.max(0))
+
+        if self.output_hidden_states:
+            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                out, batch, model.model_type
+            )
+            if embeddings_decoder.dtype == torch.bfloat16:
+                embeddings_decoder = embeddings_decoder.to(
+                    torch.float16
+                )  # numpy does not support bfloat16
 
         embeddings_dict = {
             "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),

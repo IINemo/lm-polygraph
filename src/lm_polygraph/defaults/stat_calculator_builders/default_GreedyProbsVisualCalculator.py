@@ -4,4 +4,6 @@ from lm_polygraph.stat_calculators.greedy_visual_probs import (
 
 
 def load_stat_calculator(config, builder):
-    return GreedyProbsVisualCalculator(config.output_attentions)
+    return GreedyProbsVisualCalculator(
+        config.output_attentions, config.output_hidden_states
+    )

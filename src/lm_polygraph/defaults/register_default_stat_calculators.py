@@ -42,10 +42,11 @@ def register_default_stat_calculators(
         )
         all_stat_calculators.append(sc)
 
-    if language == "en":
-        deberta_model_path = "microsoft/deberta-large-mnli"
-    else:
-        deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
+    deberta_model_path = (
+        "microsoft/deberta-large-mnli"
+        if language == "en"
+        else "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
+    )
 
     _register(InitialStateCalculator)
     _register(
@@ -65,21 +66,6 @@ def register_default_stat_calculators(
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
-        if blackbox_supports_logprobs:
-            # For blackbox models that support logprobs (like OpenAI models)
-            _register(EntropyCalculator)
-            _register(
-                GreedyAlternativesNLICalculator,
-                "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-                {
-                    "nli_model": {
-                        "deberta_path": deberta_model_path,
-                        "hf_cache": hf_cache,
-                        "batch_size": 10,
-                        "device": None,
-                    }
-                },
-            )
 
     elif model_type == "Whitebox":
         _register(
@@ -97,7 +83,6 @@ def register_default_stat_calculators(
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(PromptCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
         _register(
@@ -133,17 +118,6 @@ def register_default_stat_calculators(
             },
         )
         _register(
-            SemanticClassesClaimToSamplesCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticClassesClaimToSamplesCalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": 10,
-                    "device": None,
-                }
-            },
-        )
-        _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
             {
@@ -153,12 +127,14 @@ def register_default_stat_calculators(
             },
         )
         _register(AttentionForwardPassCalculator)
+
     elif model_type == "VisualLM":
         _register(
             GreedyProbsVisualCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsVisualCalculator",
             {
-                "output_attentions": True,
+                "output_attentions": output_attentions,
+                "output_hidden_states": output_hidden_states,
             },
         )
         _register(EntropyCalculator)
@@ -168,7 +144,6 @@ def register_default_stat_calculators(
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(PromptVisualCalculator)
         _register(SamplingPromptVisualCalculator)
         _register(ClaimPromptVisualCalculator)
         _register(
@@ -210,6 +185,7 @@ def register_default_stat_calculators(
                 "language": language,
             },
         )
+        _register(AttentionForwardPassCalculatorVisual)
 
     else:
         raise NotImplementedError(f"Unknown model type: {model_type}")
