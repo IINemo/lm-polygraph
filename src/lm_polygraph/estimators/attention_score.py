@@ -1,7 +1,6 @@
 import numpy as np
 
 from typing import Dict
-from transformers import AutoConfig
 
 from lm_polygraph.estimators.estimator import Estimator
 
@@ -32,15 +31,11 @@ class AttentionScore(Estimator):
 
     def __init__(
         self,
-        model_name: str = None,
+        layer: int = None,
         gen_only: bool = False,
     ):
         super().__init__(["forwardpass_attention_weights", "greedy_tokens"], "sequence")
-        if model_name is not None:
-            config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
-            self.layer = config.num_hidden_layers // 2  # middle layer
-        else:
-            raise ValueError("model_name must be provided to initialize self.layer")
+        self.layer = layer
         self.gen_only = gen_only
 
     def __str__(self):
@@ -49,6 +44,10 @@ class AttentionScore(Estimator):
         return f"AttentionScore (layer={self.layer})"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+
+        if self.layer is None:
+            self.layer = stats["model"].model.config.num_hidden_layers // 2
+
         forwardpass_attention_weights_original = stats["forwardpass_attention_weights"]
         # check nan and unpad
         forwardpass_attention_weights = unpad_attentions(

@@ -1,6 +1,5 @@
 import numpy as np
 from typing import Dict, List, Optional
-from transformers import AutoConfig
 
 from .estimator import Estimator
 
@@ -22,7 +21,8 @@ class RAUQ(Estimator):
     def __init__(
         self,
         alpha: Optional[float] = None,
-        model_name: Optional[str] = None,
+        n_layers: Optional[int] = None,
+        n_heads: Optional[int] = None,
         use_entropy: bool = False,
         instruct: bool = False,
     ):
@@ -35,19 +35,16 @@ class RAUQ(Estimator):
         self.instruct = instruct
         self.alpha = alpha if alpha is not None else self.get_alpha()
 
-        if model_name is not None:
-            config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
-            self.n_layers = config.num_hidden_layers
-            self.n_heads = config.num_attention_heads
-        else:
-            raise ValueError(
-                "model_name must be provided to initialize n_layers and n_heads"
-            )
+        self.n_layers = n_layers
+        self.n_heads = n_heads
 
         # Focus on middle third of layers which typically contain most relevant information
-        self.layers = list(
-            range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
-        )
+        if self.n_layers is not None:
+            self.layers = list(
+                range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
+            )
+        else:
+            self.layers = None
 
     def __str__(self) -> str:
         """Returns a string representation of the estimator."""
@@ -109,6 +106,14 @@ class RAUQ(Estimator):
         Returns:
             np.ndarray: Uncertainty scores for each sequence
         """
+        if self.n_layers is None:
+            self.n_layers = stats["model"].model.config.num_hidden_layers
+            self.layers = list(
+                range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
+            )
+        if self.n_heads is None:
+            self.n_heads = stats["model"].model.config.num_attention_heads
+
         # Extract diagonal attention patterns for each sequence
         attentions = []
         for attention_weight in stats["attention_all"]:

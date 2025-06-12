@@ -247,15 +247,13 @@ def test_eigenscore(model):
 
 
 def test_attentionscore(model):
-    model_name = model.model.config._name_or_path
-    estimator = AttentionScore(model_name=model_name)
+    estimator = AttentionScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
 
 def test_rauq(model):
-    model_name = model.model.config._name_or_path
-    estimator = RAUQ(model_name=model_name)
+    estimator = RAUQ()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
