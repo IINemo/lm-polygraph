@@ -2,6 +2,7 @@ estimators:
   - name: MaximumSequenceProbability
   - name: Perplexity
   - name: MeanTokenEntropy
+  - name: SelfCertainty
   - name: MeanPointwiseMutualInformation
   - name: MeanConditionalPointwiseMutualInformation 
   - name: ClaimConditionedProbability
