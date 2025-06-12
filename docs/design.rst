@@ -30,8 +30,6 @@ Usually, there is not just one stat calculator, but a chain of them. For example
 
 Due to differences in inference procedures for different model types, stat calculators are not universally compatible with all model wrappers. To determine what LLM types are supported by a stat calculator, you can look at the type of the `model` argument in the `__call__` method. The most general stat calculator has the type `Model`. For example, the type of the argument for `GreedyProbsVisualCalculator` is `VisualWhiteboxModel`.
 
-For benchmarking, the stat calculators should be equipped with a builder function, so `polygraph_eval` knows how to create a corresponding object. The path to this function is specified in the .yaml config file for `polygraph_eval`.
-
 Estimators
 ----------------
 
@@ -39,5 +37,11 @@ Estimators are the final step in the uncertainty estimation process. They take t
 The majority of estimators are computationally light, because in the benchmarking the results are heavy computations should be leveraged by multiple uncertainty estimators for efficiency.
 
 
-Basic usage
+UQ in High-level API and low-level API
 ----------------
+TBD:
+
+Benchmarking novel UQ methods
+-----------------
+
+For benchmarking, the stat calculators should be equipped with a builder function, so `polygraph_eval` knows how to create a corresponding object. The path to this function is specified in the .yaml config file for `polygraph_eval`.
