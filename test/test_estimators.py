@@ -250,3 +250,21 @@ def test_attentionscore(model):
     estimator = AttentionScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_cocoamsp(model):
+    estimator = CocoaMSP()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_cocoappl(model):
+    estimator = CocoaPPL()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_cocoamte(model):
+    estimator = CocoaMTE()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
