@@ -1,27 +1,27 @@
 import numpy as np
 import torch
 from collections import defaultdict
+from dataclasses import dataclass, field
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.model_adapters import WhiteboxModel, BlackboxModel, WhiteboxModelvLLM
 
 
+@dataclass
 class Args:
-    def __init__(self):
-        self.num_total_generations = 10
-        self.eos_token_ids = None
-        self.invalid_ids = []
-
-        # Default parameters taken from Aichberger et al. (2024)
-        self.num_beams_sdlg = 5
-        self.num_return_sequences_sdlg = 1
-        self.do_sample_sdlg = False
-        self.temperature_sdlg = 1.0
-        self.top_p_sdlg = 1
-        self.token_prob_threshold = 0.001
-        self.alphas = (1/3, 1/3, 1/3)  # weighting of attribution, substitution, and importance scores
+    num_total_generations: int = 10
+    eos_token_ids: int = None
+    pad_token_id: int = None
+    invalid_ids: list = field(default_factory=list)
+    num_beams_sdlg: int = 5
+    num_return_sequences_sdlg: int = 1
+    do_sample_sdlg: bool = False
+    temperature_sdlg: float = 1.0
+    top_p_sdlg: int = 1
+    token_prob_threshold: float = 0.001
+    alphas: tuple = (1/3, 1/3, 1/3)  # weighting of attribution, substitution, and importance scores
 
 
 @torch.no_grad()
@@ -49,14 +49,14 @@ def clean_generation(generation):
 
 
 @torch.no_grad()
-def generate_text(args, 
-                  model, 
-                  tokenizer, 
-                  input_ids, 
-                  len_prompt, 
-                  decoding_method, 
+def generate_text(args,
+                  model,
+                  tokenizer,
+                  input_ids,
+                  len_prompt,
+                  decoding_method,
                   device):
-    input_ids = input_ids.to(device).reshape(1, -1) if args.dataset == 'trivia_qa' else input_ids.to(device)
+    #input_ids = input_ids.to(device).reshape(1, -1) if args.dataset == 'trivia_qa' else input_ids.to(device)
 
     generation_ids = model.generate(input_ids,
                                     num_beams=args.num_beams_sdlg * args.num_return_sequences_sdlg,
@@ -64,10 +64,36 @@ def generate_text(args,
                                     do_sample=args.do_sample_sdlg,
                                     temperature=args.temperature_sdlg,
                                     top_p=args.top_p_sdlg,
-                                    max_length=len_prompt + args.max_length_of_generated_sequence,
+                                    #max_length=len_prompt + args.max_length_of_generated_sequence,
                                     eos_token_id=args.eos_token_ids,)
 
     generation_ids = generation_ids.to('cpu')
+
+    generation_ids_list, generation_text_list, cleaned_generation_ids_list, cleaned_generation_text_list = list(), list(), list(), list()
+
+    pad_token_id = args.pad_token_id
+
+    for i in range(len(generation_ids)):
+        generation_to_add = generation_ids[i][len_prompt:]
+        generation_to_add = generation_to_add[generation_to_add != pad_token_id] # remove pad_token_ids
+
+        generation_to_add = remove_invalid_ids(generation_to_add, args.invalid_ids)
+        generation_ids_list.append(generation_to_add)
+        generation_text = tokenizer.decode(generation_to_add, skip_special_tokens=True).strip()
+        generation_text_list.append(generation_text)
+
+        cleaned_generation_text = clean_generation(generation_text)
+        cleaned_generation_text_list.append(cleaned_generation_text)
+        cleaned_generation_ids_list.append(generation_to_add if cleaned_generation_text == generation_text else \
+            tokenizer.encode(cleaned_generation_text, add_special_tokens=False, return_tensors='pt')[0])
+
+    return {
+        'generation_ids': generation_ids_list,
+        'generation_text': generation_text_list,
+
+        'cleaned_generation_ids': cleaned_generation_ids_list,
+        'cleaned_generation_text': cleaned_generation_text_list,
+    }
 
 
 @torch.no_grad()
@@ -87,7 +113,6 @@ def compute_likelihood(prompt,
     for i in range(len(generation['generation_ids'])): 
 
         generation_ids = generation['generation_ids'][i]
-
         generation_input = torch.hstack([prompt, generation_ids]).to(device)
 
         target_ids = generation_input.clone()
@@ -433,15 +458,14 @@ def generate_semantically_diverse_output_sequences(results_dict,
 
             # check if added token is eos token
             if new_token_idx != args.eos_token_ids:
-
                 final_input_ids = torch.hstack([all_input_ids, torch.tensor(new_token_idx).unsqueeze(0).unsqueeze(0).to(device_llm)])
                 alternative_generation = generate_text(args=args, 
-                                                    model=model, 
-                                                    tokenizer=tokenizer, 
-                                                    input_ids=final_input_ids, 
-                                                    len_prompt=len(prompt), 
-                                                    decoding_method="sdlg", 
-                                                    device=device_llm)
+                                                       model=model, 
+                                                       tokenizer=tokenizer, 
+                                                       input_ids=final_input_ids, 
+                                                       len_prompt=len(prompt), 
+                                                       decoding_method="sdlg", 
+                                                       device=device_llm)
             else:
                 if initial_gen_word_idx == 0:
                     continue # skip if first predicted token is eos token 
@@ -509,7 +533,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
         ], [
             "greedy_texts",
             "greedy_tokens",
-            "greedy_log_likelihoods",
+            "greedy_log_probs",
         ]
 
     def __init__(
@@ -518,7 +542,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
         samples_n: int = 10,
         alphas: List[float] = [0.33, 0.33, 0.33],
         token_prob_threshold: float = 0.001,
-        invalid_token_ids: []
+        invalid_token_ids = []
     ):
         self.nli_model = nli_model
         self.samples_n = samples_n
@@ -530,7 +554,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: Model,
+        model: Union[WhiteboxModel, WhiteboxModelvLLM],
         max_new_tokens: int = 100,
     ):
         sdlg_sample_texts = []
@@ -541,15 +565,29 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
             num_total_generations=self.samples_n,
             token_prob_threshold=self.token_prob_threshold,
             alphas=self.alphas,
-            invalid_ids=self.invalid_ids
-            eos_token_ids=model.eos_token_id if isinstance(model, (WhiteboxModel, WhiteboxModelvLLM)) else None,
+            invalid_ids=self.invalid_ids,
+            eos_token_ids=model.model.config.eos_token_id,
+            pad_token_id=model.model.config.pad_token_id,
         )
 
-        for text in texts:
-            results_dict = defaultdict(dict)
+        for i, text in enumerate(texts):
+            results_dict = {
+                'sdlg': {
+                    'generations': [],
+                    'likelihoods': [],
+                }
+            }
 
             batch: Dict[str, torch.Tensor] = model.tokenize([text])
             batch = {k: v.to(model.device()) for k, v in batch.items()}
+
+            initial_generation = {
+                'generation_text': [dependencies['greedy_texts'][i]],
+                'generation_ids': [torch.tensor(dependencies['greedy_tokens'][i])],
+            }
+            initial_likelihood = {
+                'generation_logits': [torch.from_numpy(dependencies['greedy_log_probs'][i])],
+            }
 
             result = generate_semantically_diverse_output_sequences(
                 results_dict=results_dict,
@@ -558,18 +596,18 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
                 device_deberta=self.nli_model.device,
                 model=model.model,
                 tokenizer=model.tokenizer,
-                device_llm=model.device,
-                input_ids=model.tokenizer(text, return_tensors='pt').input_ids.squeeze(0),
-                prompt=text,
+                device_llm=model.device(),
+                input_ids=batch['input_ids'],
+                prompt=batch['input_ids'][0].to('cpu'),
                 question=text,
-                initial_generation=dependencies['greedy_texts'][0],
-                initial_likelihood=np.sum(dependencies['greedy_log_likelihoods'][0]),
+                initial_generation=initial_generation,
+                initial_likelihood=initial_likelihood,
                 args=args
             )
 
-            sdlg_sample_texts.extend(result['sdlg']['generations'])
-            sdlg_sample_tokens.extend([gen['generation_ids'] for gen in result['sdlg']['generations']])
-            sdlg_sample_likelihoods.extend([gen['neg_log_likelihood'] for gen in result['sdlg']['likelihoods']])
+            sdlg_sample_texts.append([gen['generation_text'][0] for gen in result['sdlg']['generations']])
+            sdlg_sample_tokens.append([gen['generation_ids'][0].tolist() for gen in result['sdlg']['generations']])
+            sdlg_sample_likelihoods.append([-gen['neg_log_likelihood'][0] for gen in result['sdlg']['likelihoods']])
 
         return {
             "sdlg_sample_texts": sdlg_sample_texts,
