@@ -56,16 +56,21 @@ def generate_text(args,
                   len_prompt,
                   decoding_method,
                   device):
-    #input_ids = input_ids.to(device).reshape(1, -1) if args.dataset == 'trivia_qa' else input_ids.to(device)
-
-    generation_ids = model.generate(input_ids,
-                                    num_beams=args.num_beams_sdlg * args.num_return_sequences_sdlg,
-                                    num_return_sequences=args.num_return_sequences_sdlg,
-                                    do_sample=args.do_sample_sdlg,
-                                    temperature=args.temperature_sdlg,
-                                    top_p=args.top_p_sdlg,
-                                    #max_length=len_prompt + args.max_length_of_generated_sequence,
-                                    eos_token_id=args.eos_token_ids,)
+    # use the library generate API (e.g. WhiteboxModel) with output_scores and return_dict to get sequences
+    gen_output = model.generate(
+        input_ids=input_ids,
+        num_beams=args.num_beams_sdlg * args.num_return_sequences_sdlg,
+        num_return_sequences=args.num_return_sequences_sdlg,
+        do_sample=args.do_sample_sdlg,
+        temperature=args.temperature_sdlg,
+        top_p=args.top_p_sdlg,
+        # max_length=len_prompt + args.max_length_of_generated_sequence,
+        eos_token_id=args.eos_token_ids,
+        output_scores=True,
+        return_dict_in_generate=True,
+    )
+    # extract sequence tensor
+    generation_ids = gen_output.sequences.to('cpu')
 
     generation_ids = generation_ids.to('cpu')
 
@@ -117,7 +122,7 @@ def compute_likelihood(prompt,
 
         target_ids = generation_input.clone()
         target_ids[:len(prompt)] = -100
-        model_output = model(torch.reshape(generation_input, (1, -1)), labels=target_ids)
+        model_output = model.model(torch.reshape(generation_input, (1, -1)), labels=target_ids)
         average_neg_log_likelihood = model_output['loss'].item()
         neg_log_likelihood = average_neg_log_likelihood * (len(generation_ids))
 
@@ -594,7 +599,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
                 deberta_model=self.nli_model.deberta,
                 deberta_tokenizer=self.nli_model.deberta_tokenizer,
                 device_deberta=self.nli_model.device,
-                model=model.model,
+                model=model,
                 tokenizer=model.tokenizer,
                 device_llm=model.device(),
                 input_ids=batch['input_ids'],
@@ -602,7 +607,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
                 question=text,
                 initial_generation=initial_generation,
                 initial_likelihood=initial_likelihood,
-                args=args
+                args=args,
             )
 
             sdlg_sample_texts.append([gen['generation_text'][0] for gen in result['sdlg']['generations']])
