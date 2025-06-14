@@ -3,6 +3,9 @@ from omegaconf import OmegaConf
 from pathlib import Path
 
 from lm_polygraph.stat_calculators import *
+from lm_polygraph.stat_calculators.sdlg_semantic_classes import (
+    SDLGSemanticClassesCalculator,
+)
 from lm_polygraph.utils.factory_stat_calculator import (
     StatCalculatorContainer,
 )
@@ -94,6 +97,31 @@ def register_default_stat_calculators(
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)
         _register(SamplingGenerationCalculator)
+        _register(
+            SamplingGenerationSDLGCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SamplingGenerationSDLGCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
+                    "batch_size": 10,
+                    "device": None,
+                },
+            },
+        )
+        _register(
+            SDLGSemanticMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SDLGSemanticMatrixCalculator",
+            {
+                "nli_model": {
+                    "deberta_path": deberta_model_path,
+                    "hf_cache": hf_cache,
+                    "batch_size": 10,
+                    "device": None,
+                },
+            },
+        )
+        _register(SDLGSemanticClassesCalculator)
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
