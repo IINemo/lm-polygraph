@@ -1,4 +1,6 @@
-from lm_polygraph.stat_calculators.sdlg_semantic_matrix import SDLGSemanticMatrixCalculator
+from lm_polygraph.stat_calculators.sdlg_semantic_matrix import (
+    SDLGSemanticMatrixCalculator,
+)
 from .utils import load_nli_model
 
 

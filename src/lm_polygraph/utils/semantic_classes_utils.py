@@ -36,7 +36,10 @@ def calculate_semantic_classes(
             assigned = False
             for class_id, members in enumerate(class_to_sample[idx]):
                 class_text_id = members[0]
-                if is_entailment[idx, class_text_id, i] and is_entailment[idx, i, class_text_id]:
+                if (
+                    is_entailment[idx, class_text_id, i]
+                    and is_entailment[idx, i, class_text_id]
+                ):
                     class_to_sample[idx][class_id].append(i)
                     sample_to_class[idx][i] = class_id
                     assigned = True

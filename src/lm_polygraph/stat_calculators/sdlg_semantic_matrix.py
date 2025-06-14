@@ -36,5 +36,7 @@ class SDLGSemanticMatrixCalculator(StatCalculator):
         model: Model,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        matrix = calculate_semantic_matrix(self.nli_model, dependencies["sdlg_sample_texts"])
+        matrix = calculate_semantic_matrix(
+            self.nli_model, dependencies["sdlg_sample_texts"]
+        )
         return {f"sdlg_{key}": value for key, value in matrix.items()}

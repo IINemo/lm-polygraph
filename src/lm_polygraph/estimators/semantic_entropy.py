@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Dict, Optional
+from typing import Dict
 
 from .estimator import Estimator
 from .utils.semantic_entropy import compute_semantic_entropy
@@ -76,4 +76,3 @@ class SemanticEntropy(Estimator):
             self.class_probability_estimation,
             self.entropy_estimator,
         )
-

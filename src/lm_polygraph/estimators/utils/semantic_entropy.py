@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List, Optional
 
+
 def compute_semantic_entropy(
     hyps_list: List[List[str]],
     loglikelihoods_list: Optional[List[List[float]]],
@@ -28,20 +29,21 @@ def compute_semantic_entropy(
         if class_probability_estimation == "sum":
             likelihoods = loglikelihoods_list[i]
             class_likelihoods = [
-                np.array(likelihoods)[np.array(cls)]
-                for cls in class_to_sample[i]
+                np.array(likelihoods)[np.array(cls)] for cls in class_to_sample[i]
             ]
-            class_lp = [np.logaddexp.reduce(likelihood) for likelihood in class_likelihoods]
+            class_lp = [
+                np.logaddexp.reduce(likelihood) for likelihood in class_likelihoods
+            ]
         elif class_probability_estimation == "frequency":
             num = len(hyps)
             class_lp = np.log([len(cls) / num for cls in class_to_sample[i]])
         else:
-            raise ValueError(f"Unknown class_probability_estimation: {class_probability_estimation}")
+            raise ValueError(
+                f"Unknown class_probability_estimation: {class_probability_estimation}"
+            )
 
         if entropy_estimator == "mean":
-            ent = -np.mean(
-                [class_lp[sample_to_class[i][j]] for j in range(len(hyps))]
-            )
+            ent = -np.mean([class_lp[sample_to_class[i][j]] for j in range(len(hyps))])
         elif entropy_estimator == "direct":
             ent = -np.sum(
                 [

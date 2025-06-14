@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Dict, Optional
+from typing import Dict
 
 from .estimator import Estimator
 from .utils.semantic_entropy import compute_semantic_entropy
@@ -11,6 +11,7 @@ class SemanticEntropySDLG(Estimator):
     Estimates the sequence-level uncertainty using semantic entropy with SDLG sampling.
     Reuses the core semantic entropy logic but based on SDLG sampler.
     """
+
     def __init__(
         self,
         verbose: bool = False,
