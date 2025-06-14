@@ -24,7 +24,7 @@ def calculate_semantic_matrix(nli_model, sample_texts):
     batch_counts = []
     for texts in batch_texts:
         # Sampling from LLM often produces significant number of identical
-        # outputs. We only need to score pairs of unqiue outputs
+        # outputs. We only need to score pairs of unique outputs
         unique_texts, inv = np.unique(texts, return_inverse=True)
         batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
         batch_invs.append(inv)
