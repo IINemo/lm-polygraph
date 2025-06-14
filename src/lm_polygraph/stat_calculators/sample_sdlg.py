@@ -244,7 +244,7 @@ def compute_token_score_ranking(
     if len(encoded_answer) != initial_generation_ids.shape[0]:
         # Example: encoded_answer: [' the', ' _', 'Sel', 'ache', '_.'] vs. initial_generation_ids: [' the', ' _', 'Sel', 'ache', '_', '.']
         print(
-            f"Error: {[deberta_tokenizer.decode(e) for e in encoded_answer]} vs. {[deberta_tokenizer.decode(e) for e in initial_generation_ids]}"
+            f"Error: {[deberta_tokenizer.decode(e) for e in encoded_answer]} vs. {[deberta_tokenizer.decode(e) for e in initial_generation_ids]}\n\nSDLG requires same tokenizer for NLI model and LLM.\n"
         )
         return False
 
