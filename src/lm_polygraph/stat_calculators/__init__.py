@@ -29,6 +29,8 @@ from .claim_level_prompts import (
 from .entropy import EntropyCalculator
 from .sample import SamplingGenerationCalculator, BlackboxSamplingGenerationCalculator
 from .sample_sdlg import SamplingGenerationSDLGCalculator
+from .sdlg_semantic_matrix import SDLGSemanticMatrixCalculator
+from .sdlg_semantic_classes import SDLGSemanticClassesCalculator
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,
     GreedyAlternativesFactPrefNLICalculator,
