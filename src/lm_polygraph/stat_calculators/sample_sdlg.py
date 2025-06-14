@@ -34,21 +34,6 @@ def remove_invalid_ids(generation,
 
 
 @torch.no_grad()
-def clean_generation(generation):
-    strings_to_filter_on = ['A:', 'A;', 'answer:',  'Answer:', 'Answers:', 'answers:', 'ANSWER:',
-                            'Q:', 'Q;', 'question:', 'Question:', 'Questions:', 'questions:', 'QUESTION:']
-
-    for stop_word in strings_to_filter_on:
-        stop_word_index = generation.find(stop_word)
-        if stop_word_index != -1:
-            generation = generation[:stop_word_index]
-
-    generation = generation.strip()
-
-    return generation
-
-
-@torch.no_grad()
 def generate_text(args,
                   model,
                   tokenizer,
@@ -74,7 +59,7 @@ def generate_text(args,
 
     generation_ids = generation_ids.to('cpu')
 
-    generation_ids_list, generation_text_list, cleaned_generation_ids_list, cleaned_generation_text_list = list(), list(), list(), list()
+    generation_ids_list, generation_text_list = list(), list() 
 
     pad_token_id = args.pad_token_id
 
@@ -87,17 +72,10 @@ def generate_text(args,
         generation_text = tokenizer.decode(generation_to_add, skip_special_tokens=True).strip()
         generation_text_list.append(generation_text)
 
-        cleaned_generation_text = clean_generation(generation_text)
-        cleaned_generation_text_list.append(cleaned_generation_text)
-        cleaned_generation_ids_list.append(generation_to_add if cleaned_generation_text == generation_text else \
-            tokenizer.encode(cleaned_generation_text, add_special_tokens=False, return_tensors='pt')[0])
 
     return {
         'generation_ids': generation_ids_list,
         'generation_text': generation_text_list,
-
-        'cleaned_generation_ids': cleaned_generation_ids_list,
-        'cleaned_generation_text': cleaned_generation_text_list,
     }
 
 
@@ -106,13 +84,11 @@ def compute_likelihood(prompt,
                        generation, 
                        model, 
                        device, 
-                       compute_cleaned=False, 
                        store_logits=True):
 
     # Note: This computation of NLL follows the impementation of Kuhn et al. (2023)
     list_average_neg_log_likelihoods, list_neg_log_likelihood = [], []
-    list_cleaned_average_neg_log_likelihood, list_cleaned_neg_log_likelihood = [], []
-    list_generation_logits, list_cleaned_generation_logits = [], []
+    list_generation_logits = []
 
     # iterate over all generations -> "generation_ids" is list of generations
     for i in range(len(generation['generation_ids'])): 
@@ -136,48 +112,10 @@ def compute_likelihood(prompt,
             list_generation_logits.append(generation_logits)
             assert generation_logits.shape[0] == generation_ids.shape[0]
 
-        if compute_cleaned:
-
-            cleaned_generation_ids = generation['cleaned_generation_ids'][i]
-
-            if torch.equal(cleaned_generation_ids, generation_ids) or \
-                generation['cleaned_generation_text'][i] == generation['generation_text'][i]:
-                cleaned_average_neg_log_likelihood = average_neg_log_likelihood
-                cleaned_neg_log_likelihood = neg_log_likelihood
-                if store_logits:
-                    cleaned_generation_logits = generation_logits
-            elif generation['cleaned_generation_text'][i] == '':
-                # Note: setting nll to ngative infinity (zero likelihood) if cleaned generation is empty
-                cleaned_average_neg_log_likelihood = float('-inf')
-                cleaned_neg_log_likelihood = float('-inf')
-                if store_logits:
-                    cleaned_generation_logits = []
-            else:
-                # Note: computation of NNL follows tutorial: https://huggingface.co/docs/transformers/perplexity
-                generation_input = torch.hstack([prompt, cleaned_generation_ids]).to(device)
-                target_ids = generation_input.clone()
-                target_ids[:len(prompt)] = -100
-                model_output = model(torch.reshape(generation_input, (1, -1)), labels=target_ids)
-                cleaned_average_neg_log_likelihood = model_output['loss'].item()
-                cleaned_neg_log_likelihood = cleaned_average_neg_log_likelihood * (len(cleaned_generation_ids))
-
-                # compute logits
-                if store_logits:
-                    cleaned_generation_logits = model_output["logits"][0, len(prompt)-1:-1, :].to('cpu')
-
-            if store_logits:
-                list_cleaned_generation_logits.append(cleaned_generation_logits)
-            list_cleaned_average_neg_log_likelihood.append(cleaned_average_neg_log_likelihood)
-            list_cleaned_neg_log_likelihood.append(cleaned_neg_log_likelihood)
-
     return {
         'average_neg_log_likelihood': list_average_neg_log_likelihoods,
         'neg_log_likelihood': list_neg_log_likelihood,
         'generation_logits': list_generation_logits,
-
-        'cleaned_average_neg_log_likelihood': list_cleaned_average_neg_log_likelihood,
-        'cleaned_neg_log_likelihood': list_cleaned_neg_log_likelihood,
-        'cleaned_generation_logits': list_cleaned_generation_logits,
     }
 
 
@@ -476,13 +414,10 @@ def generate_semantically_diverse_output_sequences(results_dict,
                     continue # skip if first predicted token is eos token 
                 generation_to_add = torch.hstack([new_input_ids[0], torch.tensor(new_token_idx)])
                 generation_text = tokenizer.decode(generation_to_add, skip_special_tokens=True).strip()
-                cleaned_generation_text = clean_generation(generation_text)
                 alternative_generation = {
                     'generation_ids': [generation_to_add],
                     'generation_text': [generation_text],
 
-                    'cleaned_generation_ids': [generation_to_add if generation_text == cleaned_generation_text else tokenizer.encode(cleaned_generation_text, add_special_tokens=False, return_tensors='pt')[0]],
-                    'cleaned_generation_text': [cleaned_generation_text],
                     'logits': None,
                 }
 
@@ -491,7 +426,7 @@ def generate_semantically_diverse_output_sequences(results_dict,
                 continue
 
             # compute likelihood
-            alternative_likelihoods = compute_likelihood(prompt, alternative_generation, model, device_llm, compute_cleaned=False, store_logits=True)
+            alternative_likelihoods = compute_likelihood(prompt, alternative_generation, model, device_llm, store_logits=True)
 
             # log additional information of alternative generation
             alternative_generation['word_idx'] = initial_gen_word_idx
