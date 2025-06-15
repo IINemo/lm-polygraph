@@ -82,6 +82,7 @@ def estimate_uncertainty(
         model_type = "VisualLM"
     else:
         model_type = "Blackbox"
+
     man = UEManager(
         Dataset([input_text], [""], batch_size=1),
         model,

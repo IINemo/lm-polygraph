@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, OPTForCausalLM
 
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
@@ -12,7 +12,7 @@ INPUT = "When was Julius Caesar born?"
 
 @pytest.fixture(scope="module")
 def model():
-    model_path = "bigscience/bloomz-560m"
+    model_path = "facebook/opt-125m"
 
     if torch.cuda.is_available():
         device = "cuda"
@@ -21,7 +21,7 @@ def model():
     else:
         device = "cpu"
 
-    base_model = AutoModelForCausalLM.from_pretrained(
+    base_model = OPTForCausalLM.from_pretrained(
         model_path,
         trust_remote_code=True,
         device_map=device,
@@ -248,5 +248,11 @@ def test_eigenscore(model):
 
 def test_attentionscore(model):
     estimator = AttentionScore()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_sdlg_se(model):
+    estimator = SemanticEntropySDLG()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)

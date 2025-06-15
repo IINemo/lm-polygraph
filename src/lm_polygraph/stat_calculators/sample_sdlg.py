@@ -189,7 +189,8 @@ def compute_token_score_ranking(
         :-1
     ]  # remove SEP token (last)
     encoded_answer = deberta_tokenizer.encode(
-        " " + initial_generation_text, padding=True, return_tensors="pt"
+        #" " + initial_generation_text, padding=True, return_tensors="pt"
+        initial_generation_text, padding=True, return_tensors="pt"
     ).squeeze()[
         1:-1
     ]  # remove CLS token (first) and SEP (last) tokens
@@ -619,6 +620,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
             "sdlg_sample_likelihoods",
             "sdlg_sample_tokens",
             "sdlg_sample_texts",
+            "sdlg_sample_importance_weights",
         ], [
             "greedy_texts",
             "greedy_tokens",
