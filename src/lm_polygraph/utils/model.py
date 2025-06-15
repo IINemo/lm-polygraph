@@ -533,11 +533,10 @@ class WhiteboxModel(Model):
         args = self._validate_args(args)
 
         generation = self.model.generate(**args)
-
-        # override generation.scores with original scores from model
-        generation.generation_scores = generation.scores
-        generation.scores = processor.scores
-
+        # override generation.scores only if the HF generate returned scores
+        if hasattr(generation, "scores"):
+            generation.generation_scores = generation.scores
+            generation.scores = processor.scores
         return generation
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
