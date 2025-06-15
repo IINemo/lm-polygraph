@@ -3,7 +3,6 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
-from .utils.semantic_entropy import compute_semantic_entropy
 
 
 class SemanticEntropySDLG(Estimator):
@@ -15,39 +14,23 @@ class SemanticEntropySDLG(Estimator):
     def __init__(
         self,
         verbose: bool = False,
-        class_probability_estimation: str = "sum",
-        entropy_estimator: str = "mean",
     ):
-        self.class_probability_estimation = class_probability_estimation
-        self.entropy_estimator = entropy_estimator
-        if self.class_probability_estimation == "sum":
-            deps = [
-                "sdlg_sample_likelihoods",
-                "sdlg_sample_texts",
-                "sdlg_semantic_classes_entail",
-            ]
-        elif self.class_probability_estimation == "frequency":
-            deps = ["sdlg_sample_texts", "sdlg_semantic_classes_entail"]
-        else:
-            raise ValueError(
-                f"Unknown class_probability_estimation: {self.class_probability_estimation}. "
-                f"Use 'sum' or 'frequency'."
-            )
-
+        deps = [
+            "sdlg_sample_likelihoods",
+            "sdlg_sample_texts",
+            "sdlg_semantic_classes_entail",
+            "sdlg_sample_importance_weights",
+        ]
         super().__init__(deps, "sequence")
         self.verbose = verbose
 
     def __str__(self):
-        base = "SemanticEntropySDLG"
-        if self.class_probability_estimation == "frequency":
-            base += "Empirical"
-        if self.entropy_estimator == "direct":
-            base = "Direct" + base
-        return base
+        return "SemanticEntropySDLG"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
         Estimates the semantic entropy for each sample using SDLG sampling.
+        Implementation according to paper https://arxiv.org/pdf/2406.04306.
 
         Parameters:
             stats: dictionary containing:
@@ -58,12 +41,9 @@ class SemanticEntropySDLG(Estimator):
         Returns:
             np.ndarray: float semantic entropy for each sample. Higher means more uncertain.
         """
-        if self.class_probability_estimation == "sum":
-            loglikelihoods_list = stats["sdlg_sample_likelihoods"]
-            hyps_list = stats["sdlg_sample_texts"]
-        else:
-            loglikelihoods_list = None
-            hyps_list = stats["sdlg_sample_texts"]
+        loglikelihoods_list = stats["sdlg_sample_likelihoods"]
+        hyps_list = stats["sdlg_sample_texts"]
+        weights = stats["sdlg_sample_importance_weights"]
 
         class_to_sample = stats["sdlg_semantic_classes_entail"]["class_to_sample"]
         sample_to_class = stats["sdlg_semantic_classes_entail"]["sample_to_class"]
@@ -73,6 +53,54 @@ class SemanticEntropySDLG(Estimator):
             loglikelihoods_list,
             class_to_sample,
             sample_to_class,
-            self.class_probability_estimation,
-            self.entropy_estimator,
+            weights=weights,
         )
+
+
+    def compute_semantic_entropy(
+        hyps_list,
+        loglikelihoods_list,
+        class_to_sample,
+        sample_to_class,
+        weights,
+    ):
+    """
+    Computes SDLG-specific semantic entropy for sequence-level uncertainty.
+    Args:
+        hyps_list: List of generation samples per input.
+        loglikelihoods_list: List of log-probabilities per sample, or None if using frequency.
+        class_to_sample: Mapping from class indices to sample indices.
+        sample_to_class: Mapping from sample indices to class indices.
+
+    Returns:
+        np.ndarray of semantic entropy values per input.
+    """
+    results = []
+    for i, hyps in enumerate(hyps_list):
+        likelihoods = loglikelihoods_list[i]
+        weights = weights[i]
+
+        # Importance sampling adjustment
+        class_likelihoods = [
+            np.array(likelihoods)[np.array(cls)] + weights[np.array(cls)]
+            for cls in class_to_sample[i]
+        ]
+        class_lp = [
+            np.logaddexp.reduce(likelihood) for likelihood in class_likelihoods
+        ]
+
+        # This is incorrect. We multiply class log probs from unnormalized distribution
+        # with normalized class probabilities. But this is the original implementation
+        # that comes with the paper.
+        class_p = torch.softmax(torch.tensor(class_lp), dim=0).numpy()
+        ent = -np.sum(
+            [
+                class_lp[sample_to_class[i][j]]
+                * class_p[sample_to_class[i][j]]
+                for j in range(len(hyps))
+            ]
+        )
+
+        results.append(ent)
+
+    return np.array(results)

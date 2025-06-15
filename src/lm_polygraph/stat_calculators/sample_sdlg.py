@@ -649,6 +649,7 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
         sdlg_sample_texts = []
         sdlg_sample_tokens = []
         sdlg_sample_likelihoods = []
+        sdlg_sample_importance_weights = []
 
         args = Args(
             num_total_generations=self.samples_n,
@@ -708,9 +709,16 @@ class SamplingGenerationSDLGCalculator(StatCalculator):
             sdlg_sample_likelihoods.append(
                 [-gen["neg_log_likelihood"][0] for gen in result["sdlg"]["likelihoods"]]
             )
+            sdlg_sample_importance_weights.append(
+                [
+                    gen["token_likelihood"]
+                    for gen in result["sdlg"]["generations"]
+                ]
+            )
 
         return {
             "sdlg_sample_texts": sdlg_sample_texts,
             "sdlg_sample_tokens": sdlg_sample_tokens,
             "sdlg_sample_likelihoods": sdlg_sample_likelihoods,
+            "sdlg_sample_importance_weights": sdlg_sample_importance_weights,
         }
