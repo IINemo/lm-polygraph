@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from transformers import AutoModelForCausalLM, AutoTokenizer, OPTForCausalLM
+from transformers import AutoTokenizer, OPTForCausalLM
 
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *

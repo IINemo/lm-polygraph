@@ -53,7 +53,6 @@ class SemanticEntropySDLG(Estimator):
             weights=weights,
         )
 
-
     def compute_semantic_entropy(
         self,
         hyps_list,
@@ -93,8 +92,7 @@ class SemanticEntropySDLG(Estimator):
             class_p = torch.softmax(torch.tensor(class_lp), dim=0).numpy()
             ent = -np.sum(
                 [
-                    class_lp[sample_to_class[i][j]]
-                    * class_p[sample_to_class[i][j]]
+                    class_lp[sample_to_class[i][j]] * class_p[sample_to_class[i][j]]
                     for j in range(len(hyps))
                 ]
             )
