@@ -12,7 +12,7 @@ INPUT = "When was Julius Caesar born?"
 
 @pytest.fixture(scope="module")
 def model():
-    model_path = "facebook/opt-125m"
+    model_path = "bigscience/bloomz-560m"
 
     if torch.cuda.is_available():
         device = "cuda"
@@ -252,7 +252,28 @@ def test_attentionscore(model):
     assert isinstance(ue.uncertainty, float)
 
 
+def model_opt():
+    model_path = "facebook/opt-125m"
+
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
+
+    base_model = OPTForCausalLM.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        device_map=device,
+    )
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+    return WhiteboxModel(base_model, tokenizer)
+
+
 def test_sdlg_se(model):
+    model = model_opt()
     estimator = SemanticEntropySDLG()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
