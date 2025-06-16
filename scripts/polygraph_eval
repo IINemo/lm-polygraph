@@ -343,6 +343,7 @@ def get_whitebox_model(args, cache_kwargs={}):
             getattr(args, "generation_params", {}),
             device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
+            instruct=getattr(args, "instruct", False),
             **cache_kwargs,
         )
 
@@ -360,7 +361,7 @@ def get_whitebox_model(args, cache_kwargs={}):
     generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
 
     model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params
+        base_model, tokenizer, args.model.path, args.model.type, generation_params, instruct=getattr(args, "instruct", False)
     )
 
     return model
