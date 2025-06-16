@@ -20,6 +20,49 @@ defaults:
 ```
 【F:examples/configs/polygraph_eval_xsum.yaml†L1-L10】
 
+## Model parameters
+
+The `model` Hydra group provides configuration for selecting and loading your language model. Base fields are defined in `examples/configs/model/default.yaml`【F:examples/configs/model/default.yaml†L1-L5】, and can be overridden by specific presets (e.g., `bloomz-560m.yaml`【F:examples/configs/model/bloomz-560m.yaml†L4-L10】, `vllm.yaml`【F:examples/configs/model/vllm.yaml†L4-L12】). Key parameters include:
+
+| Name                       | Type            | Purpose                                                                                                              |
+|----------------------------|-----------------|----------------------------------------------------------------------------------------------------------------------|
+| `model.path`               | `str`           | Hugging Face model identifier or path to a local model.                                                              |
+| `model.type`               | `str`           | Model wrapper type (`CausalLM`, `Seq2SeqLM`, `vLLMCausalLM`).                                                         |
+| `model.path_to_load_script`| `str`           | Path to the Python script implementing `load_model` and `load_tokenizer` (relative to this directory).               |
+| `model.load_model_args`    | `map`           | Keyword arguments passed to `load_model` (e.g., `device_map` for HF or `gpu_memory_utilization` for vLLM).            |
+| `model.load_tokenizer_args`| `map`           | Keyword arguments passed to `load_tokenizer` (e.g., `add_bos_token`).                                                |
+| `model.logprobs`           | `int` (optional)| Number of logprobs to request (vLLM only).                                                                           |
+| `model.device`             | `str` (optional)| Device override for vLLM (e.g., `cuda`).                                                                              |
+
+_Note: ensemble-related parameters (`ensemble`, `mc`, `mc_seeds`, `dropout_rate`) are deprecated and omitted here._
+
+Example presets:
+```yaml
+# examples/configs/model/bloomz-560m.yaml
+path: bigscience/bloomz-560m
+type: CausalLM
+path_to_load_script: model/default_causal.py
+
+load_model_args:
+  device_map: auto
+load_tokenizer_args: {}
+```
+【F:examples/configs/model/bloomz-560m.yaml†L4-L10】
+
+```yaml
+# examples/configs/model/vllm.yaml
+path: facebook/opt-350m
+type: vLLMCausalLM
+path_to_load_script: model/default_vllm.py
+logprobs: 20
+
+load_model_args:
+  gpu_memory_utilization: 0.8
+
+device: cuda
+```
+【F:examples/configs/model/vllm.yaml†L4-L12】
+
 ## Common parameters
 
 These parameters are defined in all of the `polygraph_eval_*.yaml` examples:
@@ -28,7 +71,6 @@ These parameters are defined in all of the `polygraph_eval_*.yaml` examples:
 |-------------------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `cache_path`            | `str`            | Base path for caching intermediate artifacts, used as `cache_dir` when `HF_DATASETS_OFFLINE=1` and passed to certain estimators (e.g., OpenAIFactCheck).               |
 | `save_path`             | `str`            | Directory where outputs (e.g., UEManager state, metrics) are saved, defaults to Hydra run dir.                                                                            |
-| `device`                | `str`            | (Currently unused by `polygraph_eval`) Intended to select compute device (e.g., `cpu`, `cuda`).                                                                            |
 | `instruct`              | `bool`           | Passed to dataset loader to enable instruction-style prompts (currently accepted but unused by the loader).                                                             |
 | `task`                  | `str`            | Defines the task type (`nmt`, `qa`, `ats`) and affects which generation quality metrics get added (e.g., COMET for `nmt`, AlignScore for `ats`).                                            |
 | `dataset`               | `str` or `[ ]`   | HuggingFace dataset identifier or path (plus subset) for evaluation.                                                                                                     |
@@ -41,7 +83,6 @@ These parameters are defined in all of the `polygraph_eval_*.yaml` examples:
 | `few_shot_prompt`       | `str` or `null`  | Template for formatting few-shot examples into the prompt.                                                                                                              |
 | `load_from_disk`        | `bool`           | If true, loads a locally cached HF dataset from disk instead of downloading.                                                                                            |
 | `trust_remote_code`     | `bool`           | Passed to `datasets.load_dataset` to allow execution of remote code.                                                                                                      |
-| `size`                  | `int` or `null`  | Max number of examples to load. If `null`, uses the full split.                                                                                                          |
 | `max_new_tokens`        | `int`            | Number of tokens to generate per example.                                                                                                                                |
 | `generation_params`     | `map`            | Overrides for generation decoding parameters (see [GenerationParameters] for details).                                                                                   |
 | `subsample_eval_dataset`| `int`            | If ≥0, subsamples the eval dataset to this size (or fraction if <1); set to `-1` to disable subsampling.                                                                 |
