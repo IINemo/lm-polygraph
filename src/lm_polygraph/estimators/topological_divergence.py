@@ -1,3 +1,6 @@
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import warnings
 from typing import Dict, List, Tuple, Literal
 from collections import defaultdict
@@ -163,31 +166,34 @@ class TopologicalDivergence(Estimator):
         for response, attention_weights in zip(responses, attention_weights_batch):
             padding_length = np.isnan(attention_weights[0, 0, 0]).sum()
             response_length = len(response)
+            mtopdivs_batch.append([])
             for layer in layers:
-                mtopdivs_batch.append([])
                 heads = self.selected_heads[layer]
-                selected_attention_weights = torch.from_numpy(
-                    attention_weights[layer, heads, :-padding_length, :-padding_length]
-                ).float()
+                if padding_length > 0:
+                    selected_attention_weights = torch.from_numpy(
+                        attention_weights[layer, heads, :-padding_length, :-padding_length]
+                    ).float()
+                else:
+                    selected_attention_weights = torch.from_numpy(
+                        attention_weights[layer, heads, :, :]
+                    ).float()
                 distance_matrices = transform_attention_scores_to_distances(
                     selected_attention_weights, self.zero_out, response_length
                 )
                 if IS_PARALLEL_AVAILABLE:
                     if selected_attention_weights.shape[-1] <= self.critical_size:
-                        n_jobs = min(self.n_jobs, 8) if n_jobs > 0 else 8
+                        n_jobs = min(self.n_jobs, 8) if self.n_jobs > 0 else 8
                     else:
                         n_jobs = self.n_jobs
-                    mtopdivs = list(
-                        *Parallel(n_jobs=n_jobs)(
-                            delayed(transform_distances_to_mtopdiv)(distance_matrice)
-                            for distance_matrice in distance_matrices
-                        )
+                    mtopdivs = Parallel(n_jobs=n_jobs)(
+                        delayed(transform_distances_to_mtopdiv)(distance_matrice)
+                        for distance_matrice in distance_matrices
                     )
                 else:
                     mtopdivs = list(map(
                         transform_distances_to_mtopdiv, distance_matrices
                     ))
                 mtopdivs_batch[-1].extend(mtopdivs)
-        mtopdivs_batch = np.array(mtopdivs_batch, dtype=np.float)  
+        mtopdivs_batch = np.array(mtopdivs_batch, dtype=float)  
 
         return np.mean(mtopdivs_batch, axis=1)
