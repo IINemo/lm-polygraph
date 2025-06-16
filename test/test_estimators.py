@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer, OPTForCausalLM
 
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
@@ -21,7 +21,7 @@ def model():
     else:
         device = "cpu"
 
-    base_model = AutoModelForCausalLM.from_pretrained(
+    base_model = OPTForCausalLM.from_pretrained(
         model_path,
         trust_remote_code=True,
         device_map=device,
@@ -248,5 +248,32 @@ def test_eigenscore(model):
 
 def test_attentionscore(model):
     estimator = AttentionScore()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def model_opt():
+    model_path = "facebook/opt-125m"
+
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
+
+    base_model = OPTForCausalLM.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        device_map=device,
+    )
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+    return WhiteboxModel(base_model, tokenizer)
+
+
+def test_sdlg_se(model):
+    model = model_opt()
+    estimator = SemanticEntropySDLG()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
