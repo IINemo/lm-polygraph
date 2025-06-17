@@ -5,8 +5,10 @@ def load_model(model_path: str, device_map: str):
     model = AutoModelForCausalLM.from_pretrained(
         model_path, trust_remote_code=True, device_map=device_map
     )
-    model.config.num_hidden_layers = model.config.text_config.num_hidden_layers
-    model.config.num_attention_heads = model.config.text_config.num_attention_heads
+    if not hasattr(model.config, "num_hidden_layers"):
+        model.config.num_hidden_layers = model.config.text_config.num_hidden_layers
+    if not hasattr(model.config, "num_attention_heads"):
+        model.config.num_attention_heads = model.config.text_config.num_attention_heads
     model.eval()
 
     return model
