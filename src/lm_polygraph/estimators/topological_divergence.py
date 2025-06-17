@@ -1,11 +1,10 @@
 import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
 import warnings
 from typing import Dict, List, Tuple, Literal
 from collections import defaultdict
 import numpy as np
 import torch
+
 try:
     from joblib import Parallel, delayed
     IS_PARALLEL_AVAILABLE = True
@@ -14,25 +13,20 @@ except ImportError:
     warnings.warn(
         "Joblib is not installed. Parallel processing for MTopDivCalculator will not be available. "
         "Please install it via 'pip install joblib' if you want to use parallel processing."
-        )    
+        )
 try:
-    import ripserplusplus as rpp_py
+    from ripser import ripser
 except ImportError:
     raise ImportError(
-    "Please install the 'ripserplusplus' package to use TopologicalDivergence estimator. "
-    "You can install it via 'pip install ripserplusplus'."
-    )
-try:
-    import mtd.barcodes as mtd
-except ImportError:
-    raise ImportError(
-    "Please install the 'mtd' package to use TopologicalDivergence estimator.\n"
-    "Installation steps:\n"
-    "  1. git clone https://github.com/IlyaTrofimov/MTopDiv.git\n"
-    "  2. cd MTopDiv && python setup.py install"
+        "Please install the 'ripser' package to use TopologicalDivergence estimator. "
+        "You can install it via 'pip install ripser'."
     )
 
 from .estimator import Estimator
+
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 def transform_attention_scores_to_distances(
     attention_weights: torch.Tensor,
@@ -77,50 +71,61 @@ def transform_attention_scores_to_distances(
 
     return distance_mx.cpu().numpy()
 
+
 def transform_distances_to_mtopdiv(distance_mx: np.ndarray) -> float:
     """
-    Calculate MTopDiv value for the given attention matrix.
+    Compute the MTopDiv (Metric Topological Diversity) score from a distance matrix.
+
+    This function calculates the sum of persistence intervals in the H₀ (zero-dimensional)
+    persistent homology barcode, corresponding to the lifetimes of connected components
+    in a Vietoris–Rips filtration.
+
+    Parameters:
+        distance_mx (np.ndarray): A square, symmetric distance matrix.
+
+    Returns:
+        float: Sum of finite H₀ barcode lengths (birth–death), representing topological diversity.
     """
-    barcodes = rpp_py.run("--format distance --dim 1", distance_mx)
-    barcodes = mtd.barc2array(barcodes)
-    mtopdiv = mtd.get_score(barcodes, 0, "sum_length")
-    return mtopdiv
+    barcodes = ripser(distance_mx, distance_matrix=True, maxdim=0)['dgms']
+    if len(barcodes) > 0:
+        return barcodes[0][:-1, 1].sum()
+    return 0
 
 
 class TopologicalDivergence(Estimator):
     """
-    Estimates the sequence-level uncertainty of a language model following the method of 
-    "Hallucination Detection in LLMs with Topological Divergence on Attention Graphs" 
-    as provided in the paper https://arxiv.org/abs/2504.10063. 
+    Estimates the sequence-level uncertainty of a language model following the method of
+    "Hallucination Detection in LLMs with Topological Divergence on Attention Graphs"
+    as provided in the paper https://arxiv.org/abs/2504.10063.
     Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
-    Computes topological divergences between prompt and response attention 
+    Computes topological divergences between prompt and response attention
     graphs to identify hallucination-indicative heads.
     """
     def __init__(
-            self, 
+            self,
             selected_heads: List[Tuple[int, int]] = None,
-            num_layers: int = None, 
+            num_layers: int = None,
             num_heads: int = None,
-            zero_output: Literal["prompt", "response"] = "prompt", 
-            n_jobs: int = 16, 
+            zero_output: Literal["prompt", "response"] = "prompt",
+            n_jobs: int = 16,
             critical_size: int = 768
     ):
         """
         Initializes TopologicalDivergence estimator.
 
         Parameters:
-            selected_heads (List[Tuple[int, int]]): List of attention heads to calculate MTopDiv for. 
-                First integer is layer index, second is head index. 
+            selected_heads (List[Tuple[int, int]]): List of attention heads to calculate MTopDiv for.
+                First integer is layer index, second is head index.
                 If not provided or empty, all heads will be used.
-            zero_out Literal["prompt", "response"]: Determines whether to zero out distances between 
-                prompt tokens or response tokens. 
+            zero_out Literal["prompt", "response"]: Determines whether to zero out distances between
+                prompt tokens or response tokens.
                 If not provided or empty, prompt tokens will be zeroed out.
             n_jobs (int): Number of jobs for parallel processing. Default: 16.
-            critical_size (int): Size threshold for parallel processing. 
+            critical_size (int): Size threshold for parallel processing.
                 If the sequence length exceeds this size, n_jobs will be limited to 8. Default: 768.
         """
         super().__init__(["greedy_tokens", "forwardpass_attention_weights"], "sequence")
-        
+
         if selected_heads is None or len(selected_heads) == 0:
             # If no specific heads are selected, use all heads
             if num_layers is None or num_heads is None:
@@ -140,14 +145,14 @@ class TopologicalDivergence(Estimator):
         self.zero_out = zero_output
         self.n_jobs = n_jobs
         self.critical_size = critical_size
-        
+
     def __str__(self):
         return "TopologicalDivergence"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
-        Calculates sequence-wise MTopDiv scores for selected heads of attention masks. 
-        Returns the mean MTopDiv score for each input text. 
+        Calculates sequence-wise MTopDiv scores for selected heads of attention masks.
+        Returns the mean MTopDiv score for each input text.
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, consisting of:
@@ -194,6 +199,6 @@ class TopologicalDivergence(Estimator):
                         transform_distances_to_mtopdiv, distance_matrices
                     ))
                 mtopdivs_batch[-1].extend(mtopdivs)
-        mtopdivs_batch = np.array(mtopdivs_batch, dtype=float)  
+        mtopdivs_batch = np.array(mtopdivs_batch, dtype=float)
 
         return np.mean(mtopdivs_batch, axis=1)
