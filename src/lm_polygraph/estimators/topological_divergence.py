@@ -5,9 +5,11 @@ from collections import defaultdict
 import numpy as np
 import torch
 
+
 try:
     from joblib import Parallel, delayed
     IS_PARALLEL_AVAILABLE = True
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
 except ImportError:
     IS_PARALLEL_AVAILABLE = False
     warnings.warn(
@@ -25,33 +27,25 @@ except ImportError:
 from .estimator import Estimator
 
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-
 def transform_attention_scores_to_distances(
-    attention_weights: torch.Tensor,
-    zero_out: Literal["prompt", "response"],
-    len_answer: int,
+    attention_weights: np.array,
     lower_bound: float = 0.0,
-) -> torch.Tensor:
+) -> np.array:
     """Transform attention matrix to the matrix of distances between tokens.
 
     Parameters
     ----------
     attention_weights : torch.Tensor
         Attention matrixes of one sample (n_heads x n_tokens x n_tokens).
-    zero_out : Literal['prompt', 'response']
-        Determines whether to zero out distances between prompt tokens or response tokens.
-    len_answer : int
-        Length of the response.
-
+    
     Returns
     -------
-    torch.Tensor
+    np.array
         Distance matrix.
 
     """
-    n_tokens = attention_weights.shape[1]
+    attention_weights = torch.from_numpy(attention_weights).float()
+    n_tokens = attention_weights.shape[-1]
     distance_mx = 1 - torch.clamp(
         attention_weights, min=lower_bound
     )  # torch.where(attn_mx > lower_bound, attn_mx, 0.0)
@@ -59,16 +53,7 @@ def transform_attention_scores_to_distances(
     distance_mx *= zero_diag.to(attention_weights.device).expand_as(
         distance_mx
     )  # torch.diag(torch.diag(distance_mx))
-    distance_mx = torch.minimum(distance_mx.transpose(1, 2), distance_mx)
-
-    if zero_out == "prompt":
-        len_prompt = n_tokens - len_answer
-        distance_mx[:, :len_prompt, :len_prompt] = 0
-    elif zero_out == "response":
-        distance_mx[:, -len_answer:, -len_answer:] = 0
-    else:
-        raise ValueError(f"Unsupported zero_out parameter: {zero_out}")
-
+    distance_mx = torch.minimum(distance_mx.transpose(-1, -2), distance_mx)
     return distance_mx.cpu().numpy()
 
 
@@ -104,11 +89,7 @@ class TopologicalDivergence(Estimator):
     def __init__(
             self,
             selected_heads: List[Tuple[int, int]] = None,
-            num_layers: int = None,
-            num_heads: int = None,
-            zero_output: Literal["prompt", "response"] = "prompt",
             n_jobs: int = 16,
-            critical_size: int = 768
     ):
         """
         Initializes TopologicalDivergence estimator.
@@ -117,34 +98,18 @@ class TopologicalDivergence(Estimator):
             selected_heads (List[Tuple[int, int]]): List of attention heads to calculate MTopDiv for.
                 First integer is layer index, second is head index.
                 If not provided or empty, all heads will be used.
-            zero_out Literal["prompt", "response"]: Determines whether to zero out distances between
-                prompt tokens or response tokens.
-                If not provided or empty, prompt tokens will be zeroed out.
             n_jobs (int): Number of jobs for parallel processing. Default: 16.
-            critical_size (int): Size threshold for parallel processing.
-                If the sequence length exceeds this size, n_jobs will be limited to 8. Default: 768.
         """
         super().__init__(["greedy_tokens", "forwardpass_attention_weights"], "sequence")
 
         if selected_heads is None or len(selected_heads) == 0:
-            # If no specific heads are selected, use all heads
-            if num_layers is None or num_heads is None:
-                raise ValueError(
-                    "If no specific heads are specified in 'selected_heads', "
-                    "'num_layers' and 'num_heads' must be provided."
-                )
-            selected_heads = [
-                (layer, head)
-                for layer in range(num_layers)
-                for head in range(num_heads)
-            ]
-        selected_heads_dict = defaultdict(list)
-        for layer, head in selected_heads:
-            selected_heads_dict[layer].append(head)
-        self.selected_heads = selected_heads_dict
-        self.zero_out = zero_output
+            self.selected_heads = 'all'
+        else:
+            selected_heads_dict = defaultdict(list)
+            for layer, head in selected_heads:
+                selected_heads_dict[layer].append(head)
+            self.selected_heads = selected_heads_dict
         self.n_jobs = n_jobs
-        self.critical_size = critical_size
 
     def __str__(self):
         return "TopologicalDivergence"
@@ -165,40 +130,45 @@ class TopologicalDivergence(Estimator):
         """
         responses = stats["greedy_tokens"]
         attention_weights_batch = stats["forwardpass_attention_weights"]
+        batch_size = attention_weights_batch.shape[0]
 
+        if self.selected_heads == 'all':
+            num_layers = attention_weights_batch.shape[1]
+            num_heads = attention_weights_batch.shape[2]
+            self.selected_heads = defaultdict(list)
+            for layer in range(num_layers):
+                self.selected_heads[layer] = list(range(num_heads))
+            
         layers = sorted(self.selected_heads.keys())
-        mtopdivs_batch = []
-        for response, attention_weights in zip(responses, attention_weights_batch):
-            padding_length = np.isnan(attention_weights[0, 0, 0]).sum()
-            response_length = len(response)
-            mtopdivs_batch.append([])
-            for layer in layers:
-                heads = self.selected_heads[layer]
-                if padding_length > 0:
-                    selected_attention_weights = torch.from_numpy(
-                        attention_weights[layer, heads, :-padding_length, :-padding_length]
-                    ).float()
-                else:
-                    selected_attention_weights = torch.from_numpy(
-                        attention_weights[layer, heads, :, :]
-                    ).float()
-                distance_matrices = transform_attention_scores_to_distances(
-                    selected_attention_weights, self.zero_out, response_length
-                )
-                if IS_PARALLEL_AVAILABLE:
-                    if selected_attention_weights.shape[-1] <= self.critical_size:
-                        n_jobs = min(self.n_jobs, 8) if self.n_jobs > 0 else 8
-                    else:
-                        n_jobs = self.n_jobs
-                    mtopdivs = Parallel(n_jobs=n_jobs)(
-                        delayed(transform_distances_to_mtopdiv)(distance_matrice)
-                        for distance_matrice in distance_matrices
-                    )
-                else:
-                    mtopdivs = list(map(
-                        transform_distances_to_mtopdiv, distance_matrices
-                    ))
-                mtopdivs_batch[-1].extend(mtopdivs)
-        mtopdivs_batch = np.array(mtopdivs_batch, dtype=float)
+        padding_lengths = np.isnan(attention_weights_batch[:, 0, 0, 0]).sum(axis=-1)
 
-        return np.mean(mtopdivs_batch, axis=1)
+        distance_matrices_batch = transform_attention_scores_to_distances(
+            attention_weights_batch
+        )
+
+        def compute_mtopdiv(sample_id, layer, head):
+            distance_matrice = distance_matrices_batch[sample_id, layer, head]
+            padding_length = padding_lengths[sample_id]
+            response_length = len(responses[sample_id])
+            if padding_length > 0:
+                distance_matrice = distance_matrice[:-padding_length, :-padding_length]
+            distance_matrice[:-response_length, :-response_length] = 0
+            mtopdiv = transform_distances_to_mtopdiv(distance_matrice)
+            return mtopdiv
+        
+        if IS_PARALLEL_AVAILABLE:
+            mtopdivs = Parallel(n_jobs=self.n_jobs, backend="threading")(
+                delayed(compute_mtopdiv)(sample_id, layer, head)
+                for layer in layers
+                for head  in self.selected_heads[layer]
+                for sample_id in range(batch_size)
+            )
+        else:
+            mtopdivs = [
+                compute_mtopdiv(sample_id, layer, head)
+                for layer in layers
+                for head  in self.selected_heads[layer]
+                for sample_id in range(batch_size)
+            ]
+        mtopdivs = np.array(mtopdivs).reshape(batch_size, -1)
+        return np.mean(mtopdivs, axis=1)
