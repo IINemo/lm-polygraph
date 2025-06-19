@@ -1,9 +1,11 @@
 defaults:
   - default
 
-path: deepseek-ai/deepseek-llm-7b-chat
+path: google/gemma-3-12b-it
 type: CausalLM
 path_to_load_script: model/default_causal.py
+
+instruct: true
 
 load_model_args:
   device_map: auto

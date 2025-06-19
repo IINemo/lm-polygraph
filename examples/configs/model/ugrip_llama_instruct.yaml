@@ -5,6 +5,8 @@ path: meta-llama/Llama-3.1-8B-Instruct
 type: CausalLM
 path_to_load_script: model/default_causal.py
 
+instruct: true
+
 load_model_args:
   device_map: auto
 load_tokenizer_args: {}
