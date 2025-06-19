@@ -1,0 +1,10 @@
+defaults:
+  - _self_
+
+task: qa
+dataset: ['UGRIP-LM-Polygraph/gsm8k-reasoning', 'continuation']
+text_column: question
+label_column: answer
+max_new_tokens: 256
+# Do you need a space after? 
+output_ignore_regex: "(?s).### Answer: "
