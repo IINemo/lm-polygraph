@@ -1,0 +1,58 @@
+# A. Information-Theoretic Methods
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: TokenSAR
+
+# B. Consistency-Based Methods
+- name: NumSemSets
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: DegMat
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: Eccentricity
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge1"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge2"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rougeL"
+- name: LexicalSimilarity
+  cfg:
+    metric: "BLEU"
+
+# C. Hybrid Methods
+- name: SentenceSAR
+- name: SAR
+- name: SemanticEntropy
