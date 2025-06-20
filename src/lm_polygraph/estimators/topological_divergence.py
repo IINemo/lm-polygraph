@@ -137,10 +137,11 @@ class TopologicalDivergence(Estimator):
             best_heads = np.unravel_index(best_heads, (num_layers, num_heads))
             best_heads = list(zip(best_heads[0], best_heads[1]))
             self._best_heads = best_heads
-            super().__init__(
-                ["greedy_tokens", "forwardpass_attention_weights"],
-                "sequence",
-            )
+
+            # After selecting heads once, we drop train stats to prevent recomputing them in later runs.
+            # This assumes the manager object is reinitialized before the next estimator call.
+            # Alternatively, a new estimator instance can be created with the selected heads.
+            self.stats_dependencies = ["greedy_tokens", "forwardpass_attention_weights"]
 
         mtopdivs = get_mtopdivs(
             self._best_heads if self._best_heads else self._selected_heads,
