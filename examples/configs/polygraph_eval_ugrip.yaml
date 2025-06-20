@@ -1,0 +1,36 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: ugrip_gemma_instruct
+  - dataset: ugrip_gsm8k_direct
+  - estimators: ugrip_benchmark_estimators
+  - stat_calculators: default_calculators
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+train_split: train
+eval_split: test
+# few_shot_prompt: null
+load_from_disk: false
+normalize: true
+trust_remote_code: false
+# Limit to 10,000 samples? Is this bad?
+size: 10000
+generation_params:
+  generate_until:
+    - "\n"
+
+# subsample_eval_dataset: -1
+
+# generation_metrics: null
+
+ignore_exceptions: false
+
+batch_size: 1
+
+seed:
+    - 1
