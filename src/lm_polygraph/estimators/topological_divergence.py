@@ -1,78 +1,64 @@
 import os
 import warnings
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import numpy as np
 import torch
+from sklearn.metrics import roc_auc_score
 
 
 try:
     from joblib import Parallel, delayed
-    IS_PARALLEL_AVAILABLE = True
+
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    IS_PARALLEL_AVAILABLE = True
 except ImportError:
     IS_PARALLEL_AVAILABLE = False
     warnings.warn(
         "Joblib is not installed. Parallel processing for TopologicalDivergence call will not be available. "
         "Please install it via 'pip install joblib' if you want to use parallel processing."
-        )
-try:
-    from ripser import ripser
-except ImportError:
-    raise ImportError(
-        "Please install the 'ripser' package to use TopologicalDivergence estimator. "
-        "You can install it via 'pip install ripser'."
     )
 
 from .estimator import Estimator
+from .mtopdiv import (
+    transform_attention_scores_to_distances,
+    transform_distances_to_mtopdiv,
+)
 
 
-def transform_attention_scores_to_distances(
-    attention_weights: np.array
-) -> np.array:
-    """Transform attention matrix to the matrix of distances between tokens.
+def get_mtopdivs(
+    heads: List[Tuple[int, int]],
+    length_responses: List[int],
+    attention_weights_batch: np.array,
+    n_jobs: Optional[float] = -1,
+) -> np.ndarray:
+    batch_size = attention_weights_batch.shape[0]
+    padding_lengths = np.isnan(attention_weights_batch[:, 0, 0, 0]).sum(axis=-1)
+    attention_weights_batch = torch.from_numpy(attention_weights_batch)
+    distance_matrices_batch = transform_attention_scores_to_distances(
+        attention_weights_batch
+    ).numpy()
 
-    Parameters
-    ----------
-    attention_weights : torch.Tensor
-        Attention matrixes of one sample (n_heads x n_tokens x n_tokens).
+    def job(layer, head):
+        mtopdivs = []
+        for sample_id in range(batch_size):
+            distance_matrice = distance_matrices_batch[sample_id, layer, head]
+            padding_length = padding_lengths[sample_id]
+            response_length = length_responses[sample_id]
+            if padding_length > 0:
+                distance_matrice = distance_matrice[:-padding_length, :-padding_length]
+            distance_matrice[:-response_length, :-response_length] = 0
+            mtopdiv = transform_distances_to_mtopdiv(distance_matrice)
+            mtopdivs.append(mtopdiv)
+        return np.array(mtopdivs, dtype=float)
 
-    Returns
-    -------
-    np.array
-        Distance matrix.
-
-    """
-    attention_weights = torch.from_numpy(attention_weights).float()
-    n_tokens = attention_weights.shape[-1]
-    distance_mx = 1 - torch.clamp(
-        attention_weights, min=0.0
-    )
-    zero_diag = torch.ones(n_tokens, n_tokens) - torch.eye(n_tokens)
-    distance_mx *= zero_diag.to(attention_weights.device).expand_as(
-        distance_mx
-    )
-    distance_mx = torch.minimum(distance_mx.transpose(-1, -2), distance_mx)
-    return distance_mx.cpu().numpy()
-
-
-def transform_distances_to_mtopdiv(distance_mx: np.ndarray) -> float:
-    """
-    Compute the MTopDiv (Manifold Topology Divergence) score from a distance matrix.
-
-    This function calculates the sum of persistence intervals in the H₀ (zero-dimensional)
-    persistent homology barcode, corresponding to the lifetimes of connected components
-    in a Vietoris–Rips filtration.
-
-    Parameters:
-        distance_mx (np.ndarray): A square, symmetric distance matrix.
-
-    Returns:
-        float: Sum of finite H₀ barcode lengths (birth–death), representing topological diversity.
-    """
-    barcodes = ripser(distance_mx, distance_matrix=True, maxdim=0)['dgms']
-    if len(barcodes) > 0:
-        return barcodes[0][:-1, 1].sum()
-    return 0
+    if IS_PARALLEL_AVAILABLE:
+        mtopdivs = Parallel(n_jobs=n_jobs, backend="threading")(
+            delayed(job)(layer, head) for layer, head in heads
+        )
+    else:
+        mtopdivs = [job(layer, head) for layer, head in heads]
+    mtopdivs = np.stack(mtopdivs, axis=1)
+    return mtopdivs
 
 
 class TopologicalDivergence(Estimator):
@@ -84,10 +70,12 @@ class TopologicalDivergence(Estimator):
     Computes topological divergences between prompt and response attention
     graphs to identify hallucination-indicative heads.
     """
+
     def __init__(
-            self,
-            selected_heads: List[Tuple[int, int]] = None,
-            n_jobs: int = 16,
+        self,
+        heads: Optional[List[Tuple[int, int]]] = None,
+        max_heads: Optional[int] = 6,
+        n_jobs: int = -1,
     ):
         """
         Initializes TopologicalDivergence estimator.
@@ -98,13 +86,28 @@ class TopologicalDivergence(Estimator):
                 If not provided or empty, all heads will be used.
             n_jobs (int): Number of jobs for parallel processing. Default: 16.
         """
-        super().__init__(["greedy_tokens", "forwardpass_attention_weights"], "sequence")
+        if not heads:
+            calculators = [
+                "train_labels",
+                "train_mtopdivs",
+                "greedy_tokens",
+                "forwardpass_attention_weights",
+            ]
+        else:
+            calculators = ["greedy_tokens", "forwardpass_attention_weights"]
 
-        self.selected_heads = selected_heads
-        self.n_jobs = n_jobs
+        super().__init__(calculators, "sequence")
+        self._selected_heads = heads
+        self._best_heads = None
+        self._max_heads = max_heads
+        self._n_jobs = n_jobs
 
     def __str__(self):
         return "TopologicalDivergence"
+
+    @property
+    def best_heads(self):
+        return self._best_heads
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -120,43 +123,45 @@ class TopologicalDivergence(Estimator):
             np.ndarray: float uncertainty for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        responses = stats["greedy_tokens"]
+        length_responses = list(map(len, stats["greedy_tokens"]))
         attention_weights_batch = stats["forwardpass_attention_weights"]
-        batch_size = attention_weights_batch.shape[0]
 
-        if not self.selected_heads:
-            num_layers = attention_weights_batch.shape[1]
-            num_heads = attention_weights_batch.shape[2]
-            self.selected_heads = [(layer, head) for layer in range(num_layers) for head in range(num_heads)]
+        if self._selected_heads is None and self._best_heads is None:
+            train_mtopdivs = stats["train_mtopdivs"]
+            train_labels = stats["train_labels"]
+            best_heads = self._select_heads(
+                train_mtopdivs,
+                train_labels,
+            )
+            _, num_layers, num_heads, _, _ = attention_weights_batch.shape
+            best_heads = np.unravel_index(best_heads, (num_layers, num_heads))
+            best_heads = list(zip(best_heads[0], best_heads[1]))
+            self._best_heads = best_heads
+            super().__init__(
+                ["greedy_tokens", "forwardpass_attention_weights"],
+                "sequence",
+            )
 
-        padding_lengths = np.isnan(attention_weights_batch[:, 0, 0, 0]).sum(axis=-1)
-
-        distance_matrices_batch = transform_attention_scores_to_distances(
-            attention_weights_batch
+        mtopdivs = get_mtopdivs(
+            self._best_heads if self._best_heads else self._selected_heads,
+            length_responses,
+            attention_weights_batch,
+            n_jobs=self._n_jobs,
         )
 
-        def compute_mtopdiv(layer, head):
-            mtopdivs = []
-            for sample_id in range(batch_size):
-                distance_matrice = distance_matrices_batch[sample_id, layer, head]
-                padding_length = padding_lengths[sample_id]
-                response_length = len(responses[sample_id])
-                if padding_length > 0:
-                    distance_matrice = distance_matrice[:-padding_length, :-padding_length]
-                distance_matrice[:-response_length, :-response_length] = 0
-                mtopdiv = transform_distances_to_mtopdiv(distance_matrice)
-                mtopdivs.append(mtopdiv)
-            return np.array(mtopdivs, dtype=float)
-
-        if IS_PARALLEL_AVAILABLE:
-            mtopdivs = Parallel(n_jobs=self.n_jobs, backend="threading")(
-                delayed(compute_mtopdiv)(layer, head)
-                for layer, head in self.selected_heads
-            )
-        else:
-            mtopdivs = [
-                compute_mtopdiv(layer, head)
-                for layer, head in self.selected_heads
-            ]
-        mtopdivs = np.stack(mtopdivs, axis=1)
         return np.mean(mtopdivs, axis=1)
+
+    def _select_heads(self, scores, labels):
+        grounded_scores, hal_scores = scores[labels == 0], scores[labels == 1]
+        deltas = hal_scores.mean(0) - grounded_scores.mean(0)
+        heads = sorted(range(len(deltas)), key=lambda x: deltas[x], reverse=True)
+
+        best_auroc, n_opt = 0, 0
+        for n in range(1, self._max_heads + 1):
+            n_best_heads = heads[:n]
+            predictions = scores[:, n_best_heads].mean(axis=1)
+            roc_auc = roc_auc_score(labels, predictions)
+            if roc_auc > best_auroc:
+                best_auroc = roc_auc
+                n_opt = n
+        return heads[:n_opt]
