@@ -230,6 +230,10 @@ class SamplingGenerationCalculator(StatCalculator):
             "sample_texts": texts,
         }
 
+        config = model.model.config
+        if hasattr(config, 'text_config'):
+            config = config.text_config
+
         if model.model_type != "vLLMCausalLM":
             out = OutputWrapper()
             batch_size = len(batch["input_ids"])
@@ -252,7 +256,7 @@ class SamplingGenerationCalculator(StatCalculator):
                     batch,
                     model.model_type,
                     level="token",
-                    hidden_layer=int(model.model.config.num_hidden_layers // 2),
+                    hidden_layer=int(config.num_hidden_layers // 2),
                 )
 
                 if cur_token_embeddings.dtype == torch.bfloat16:

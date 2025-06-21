@@ -1,13 +1,18 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset.0}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: ugrip_gemma_instruct
-  - dataset: ugrip_gsm8k_direct
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
   - _self_
+
+task: qa
+dataset: ['UGRIP-LM-Polygraph/gsm8k-direct']
+text_column: question
+label_column: answer
+max_new_tokens: 20
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -24,7 +29,7 @@ generation_params:
   generate_until:
     - "\n"
 
-# subsample_eval_dataset: -1
+subsample_eval_dataset: 1
 
 # generation_metrics: null
 
