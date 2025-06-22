@@ -17,7 +17,7 @@ from transformers import (
     AdamW,
     get_linear_schedule_with_warmup
 )
-
+from torch.optim import AdamW
 import nltk
 import torch
 import torch.nn as nn
