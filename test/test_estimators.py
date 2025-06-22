@@ -1,5 +1,6 @@
 import torch
 import pytest
+import numpy as np
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -8,6 +9,24 @@ from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel
 
 INPUT = "When was Julius Caesar born?"
+
+# Test data for BayesPE
+TEST_TEXTS = [
+    "I love this product! It's amazing.",
+    "This is terrible, I hate it.",
+    "The product is okay, nothing special.",
+    "Absolutely fantastic experience!",
+    "Would not recommend to anyone."
+]
+
+TEST_LABELS = [1, 0, 0, 1, 0]  # 1 for positive, 0 for negative
+
+FEW_SHOT_EXAMPLES = [
+    {"text": "This movie was great!", "label": "positive"},
+    {"text": "I didn't enjoy it at all.", "label": "negative"},
+    {"text": "The service was excellent.", "label": "positive"},
+    {"text": "Waste of money.", "label": "negative"}
+]
 
 
 @pytest.fixture(scope="module")
@@ -298,3 +317,57 @@ def test_boostedprob_sequence(model):
     estimator = BoostedProbSequence()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_bayespe_zero_shot(model):
+    estimator = BayesPEZeroShot(
+        instructions=[
+            "classify the sentiment of the text",
+            "determine if the text is positive or negative",
+            "what is the emotional tone of the text"
+        ],
+        n_forward_passes=3
+    )
+    
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+    
+    estimator.optimize_weights(TEST_TEXTS, TEST_LABELS)
+    assert isinstance(estimator.weights, np.ndarray)
+    assert len(estimator.weights) == len(estimator.instructions)
+    assert np.allclose(np.sum(estimator.weights), 1.0, atol=1e-6)
+    
+    uncertainties = estimator({"input_texts": TEST_TEXTS})
+    assert isinstance(uncertainties, np.ndarray)
+    assert len(uncertainties) == len(TEST_TEXTS)
+    assert np.all(uncertainties >= 0)  # Uncertainties should be non-negative
+
+
+def test_bayespe_few_shot(model):
+    estimator = BayesPEFewShot(
+        instructions=[
+            "classify the sentiment of the text",
+            "determine if the text is positive or negative",
+            "what is the emotional tone of the text"
+        ],
+        few_shot_examples=FEW_SHOT_EXAMPLES,
+        n_forward_passes=3
+    )
+    
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+    
+    estimator.optimize_weights(TEST_TEXTS, TEST_LABELS)
+    assert isinstance(estimator.weights, np.ndarray)
+    assert len(estimator.weights) == len(estimator.instructions)
+    assert np.allclose(np.sum(estimator.weights), 1.0, atol=1e-6)
+    
+    uncertainties = estimator({"input_texts": TEST_TEXTS})
+    assert isinstance(uncertainties, np.ndarray)
+    assert len(uncertainties) == len(TEST_TEXTS)
+    assert np.all(uncertainties >= 0)  # Uncertainties should be non-negative
+    
+    formatted_examples = estimator._format_examples()
+    assert isinstance(formatted_examples, str)
+    assert all(ex["text"] in formatted_examples for ex in FEW_SHOT_EXAMPLES)
+    assert all(ex["label"] in formatted_examples for ex in FEW_SHOT_EXAMPLES)
