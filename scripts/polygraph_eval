@@ -186,6 +186,7 @@ def get_stat_calculator_names(config):
             output_attentions=output_attentions, 
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
+            batch_size=config.stat_calculator.batch_size,
         )
 
     for stat_calculator in config.stat_calculators:
