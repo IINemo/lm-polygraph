@@ -1,8 +1,0 @@
-defaults:
-  - _self_
-
-task: qa
-dataset: ['UGRIP-LM-Polygraph/mmlu-direct', 'continuation']
-text_column: question
-label_column: answer
-max_new_tokens: 1

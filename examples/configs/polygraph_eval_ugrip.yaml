@@ -5,16 +5,37 @@ hydra:
 task: qa
 
 defaults:
-  - model: ugrip_gemma_instruct
+  - model: ugrip_llama_instruct
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
   - _self_
 
+<<<<<<< HEAD
 # task: qa
 dataset: ['UGRIP-LM-Polygraph/gsm8k-direct']
+=======
+# OPTIONS:
+#  UGRIP-LM-Polygraph/gsm8k-direct
+#  UGRIP-LM-Polygraph/gsm8k-reasoning
+#  UGRIP-LM-Polygraph/medmcqa-direct
+#  UGRIP-LM-Polygraph/medmcqa-reasoning
+#  UGRIP-LM-Polygraph/mmlu-direct
+#  UGRIP-LM-POLYGRAPH/mmlu-reasoning
+dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
+
+task: qa
+>>>>>>> ugrip
 text_column: question
 label_column: answer
-max_new_tokens: 20
+# Use max_new_tokens= to override
+max_new_tokens: 500
+
+process_output_fn:
+  path: instruct/output_processing_scripts/ugrip.py
+  fn_name: process_output
+process_target_fn:
+  path: instruct/output_processing_scripts/ugrip.py
+  fn_name: process_target
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -23,17 +44,24 @@ train_split: train
 eval_split: test
 # few_shot_prompt: null
 load_from_disk: false
-normalize: true
+normalize: false # REQUIRED TO ALLOW process_output_fn
 trust_remote_code: false
-# Limit to 10,000 samples? Is this bad?
-size: 10000
 generation_params:
   generate_until:
     - "\n"
 
+<<<<<<< HEAD
 subsample_eval_dataset: 10
+=======
+# \/ How many samples per dataset
+# Change with subsample_eval_dataset=25
+subsample_eval_dataset: -1
+>>>>>>> ugrip
 
-# generation_metrics: null
+# \/ What to ignore in model output
+# output_ignore_regex: "(?s).### Answer: "
+# Below is important for Gemma outputs
+# output_ignore_regex: "<end_of_turn>"
 
 ignore_exceptions: false
 
