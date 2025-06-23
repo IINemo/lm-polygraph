@@ -456,7 +456,7 @@ class UEManager:
 
         return self.metrics
 
-    def save(self, save_path: str):
+    def save(self, save_path: str, metainfo={}):
         """
         Saves the run results in the provided path.
         To load the saved manager, see UEManager.load().
@@ -464,8 +464,10 @@ class UEManager:
         Parameters:
             save_path (str): Path to file to save benchmark results to.
         """
+
         torch.save(
             {
+                "metainfo": metainfo,
                 "state": self.state,
                 "metrics": self.metrics,
                 "gen_metrics": self.gen_metrics,

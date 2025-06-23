@@ -44,8 +44,8 @@ generation_params:
     - "\n"
 
 # \/ How many samples per dataset
-# Change with +subsample_eval_dataset=25
-# subsample_eval_dataset: 25
+# Change with subsample_eval_dataset=25
+subsample_eval_dataset: -1
 
 # \/ What to ignore in model output
 # output_ignore_regex: "(?s).### Answer: "
