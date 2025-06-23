@@ -152,11 +152,10 @@ class GreedyProbsCalculator(StatCalculator):
 
         attention_all = []
 
-        config = model.model.config
-        if hasattr(config, 'text_config'):
-            config = config.text_config
-
         if self.output_attentions and (model.model_type != "vLLMCausalLM"):
+            config = model.model.config
+            if hasattr(config, 'text_config'):
+                config = config.text_config
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
                 attn_mask = np.zeros(
