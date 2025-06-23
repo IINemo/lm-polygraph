@@ -11,7 +11,9 @@ from transformers import (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
+    Gemma3ForCausalLM,
     AutoConfig,
+    Gemma3Config,
     LogitsProcessorList,
     BartForConditionalGeneration,
     StoppingCriteria,
@@ -532,7 +534,7 @@ class WhiteboxModel(Model):
         args = default_params
         args = self._validate_args(args)
 
-        generation = self.model.generate(**args)
+        generation = self.model.generate(**args, disable_compile="gemma" in self.model_path.lower())
 
         # override generation.scores with original scores from model
         generation.generation_scores = generation.scores
@@ -608,12 +610,21 @@ class WhiteboxModel(Model):
             "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
         )
 
-        config = AutoConfig.from_pretrained(
-            model_path, trust_remote_code=True, **kwargs
-        )
+        if "gemma" in model_path.lower():
+            config = Gemma3Config.from_pretrained(
+                model_path, trust_remote_code=True, **kwargs
+            )
+        else:
+            config = AutoConfig.from_pretrained(
+                model_path, trust_remote_code=True, **kwargs
+            )
         generation_params = GenerationParameters(**generation_params)
-
-        if any(["CausalLM" in architecture for architecture in config.architectures]):
+        if "gemma" in model_path.lower():
+            model_type = "CausalLM"
+            model = Gemma3ForCausalLM.from_pretrained(
+                model_path, trust_remote_code=True, **kwargs
+            )
+        elif any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
                 model_path, trust_remote_code=True, **kwargs
