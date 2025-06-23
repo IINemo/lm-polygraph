@@ -5,22 +5,13 @@ hydra:
 task: qa
 
 defaults:
-<<<<<<< HEAD
-  - model: ugrip_llama_instruct
-  # - dataset: ['UGRIP-LM-Polygraph/gsm8k-direct', 'default']
-=======
   - model: ugrip_gemma_instruct
->>>>>>> origin/belati-syuhada
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
   - _self_
 
-<<<<<<< HEAD
-dataset: ['UGRIP-LM-Polygraph/gsm8k-direct', 'default']
-=======
-task: qa
+# task: qa
 dataset: ['UGRIP-LM-Polygraph/gsm8k-direct']
->>>>>>> origin/belati-syuhada
 text_column: question
 label_column: answer
 max_new_tokens: 20
@@ -40,11 +31,7 @@ generation_params:
   generate_until:
     - "\n"
 
-<<<<<<< HEAD
 subsample_eval_dataset: 10
-=======
-subsample_eval_dataset: 1
->>>>>>> origin/belati-syuhada
 
 # generation_metrics: null
 
