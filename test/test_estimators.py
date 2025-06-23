@@ -7,6 +7,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.estimators import BayesPEZeroShot, BayesPEFewShot
 
 INPUT = "When was Julius Caesar born?"
 
@@ -19,7 +20,7 @@ TEST_TEXTS = [
     "Would not recommend to anyone."
 ]
 
-TEST_LABELS = [1, 0, 0, 1, 0]  # 1 for positive, 0 for negative
+TEST_LABELS = [1, 0, 0, 1, 0]  
 
 FEW_SHOT_EXAMPLES = [
     {"text": "This movie was great!", "label": "positive"},
@@ -350,7 +351,6 @@ def test_bayespe_few_shot(model):
             "determine if the text is positive or negative",
             "what is the emotional tone of the text"
         ],
-        few_shot_examples=FEW_SHOT_EXAMPLES,
         n_forward_passes=3
     )
     
