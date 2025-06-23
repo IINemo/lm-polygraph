@@ -171,6 +171,9 @@ cython_debug/
 # Slurm logs (UGRIP)
 slurm_logs/
 
+# Hydra multirun outputs (UGRIP)
+multirun/
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
