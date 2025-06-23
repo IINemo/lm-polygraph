@@ -151,13 +151,19 @@ class GreedyProbsCalculator(StatCalculator):
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
+
+        config = model.model.config
+        if hasattr(config, 'text_config'):
+            config = config.text_config
+
         if self.output_attentions and (model.model_type != "vLLMCausalLM"):
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
                 attn_mask = np.zeros(
+
                     shape=(
-                        model.model.config.num_attention_heads
-                        * model.model.config.num_hidden_layers,
+                        config.num_attention_heads
+                        * config.num_hidden_layers,
                         c,
                         c,
                     )
