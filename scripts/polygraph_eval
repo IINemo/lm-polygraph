@@ -143,7 +143,10 @@ def main(args):
             man.state = "failed"
             raise e
         finally:
-            man.save(save_path + f"/ue_manager_seed{seed}")
+            model_name = args.model.path.replace("/", "-")
+            dataset_name = (args.dataset if isinstance(args.dataset, str) else args.dataset[0]).replace("/", "-")
+            man.save(save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man")
+            # man.save(save_path + f"/ue_manager_seed1")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
             wandb.log({str(k) : v for k, v in man.gen_metrics})

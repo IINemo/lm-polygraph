@@ -4,10 +4,18 @@ hydra:
 
 defaults:
   - model: ugrip_llama_instruct
-  - dataset: ugrip_gsm8k_direct
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
   - _self_
+
+# OPTIONS:
+#  UGRIP-LM-Polygraph/gsm8k-direct
+#  UGRIP-LM-Polygraph/gsm8k-reasoning
+#  UGRIP-LM-Polygraph/medmcqa-direct
+#  UGRIP-LM-Polygraph/medmcqa-reasoning
+#  UGRIP-LM-Polygraph/mmlu-direct
+#  UGRIP-LM-POLYGRAPH/mmlu-reasoning
+dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
 
 task: qa
 text_column: question
@@ -15,17 +23,22 @@ label_column: answer
 # Use max_new_tokens= to override
 max_new_tokens: 500
 
+process_output_fn:
+  path: instruct/output_processing_scripts/ugrip.py
+  fn_name: process_output
+process_target_fn:
+  path: instruct/output_processing_scripts/ugrip.py
+  fn_name: process_target
+
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-
 
 train_split: train
 eval_split: test
 # few_shot_prompt: null
 load_from_disk: false
-normalize: true
+normalize: false # REQUIRED TO ALLOW process_output_fn
 trust_remote_code: false
-size: 10000
 generation_params:
   generate_until:
     - "\n"
@@ -37,7 +50,7 @@ generation_params:
 # \/ What to ignore in model output
 # output_ignore_regex: "(?s).### Answer: "
 # Below is important for Gemma outputs
-output_ignore_regex: "<end_of_turn>"
+# output_ignore_regex: "<end_of_turn>"
 
 ignore_exceptions: false
 
