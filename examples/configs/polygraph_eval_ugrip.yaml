@@ -37,7 +37,7 @@ generation_params:
 # \/ What to ignore in model output
 # output_ignore_regex: "(?s).### Answer: "
 # Below is important for Gemma outputs
-output_ignore_regex: r"\s*<end_of_turn>"
+output_ignore_regex: "<end_of_turn>"
 
 ignore_exceptions: false
 
