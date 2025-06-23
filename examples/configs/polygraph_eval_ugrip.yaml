@@ -4,27 +4,20 @@ hydra:
 
 defaults:
   - model: ugrip_llama_instruct
-  # - dataset: ugrip_gsm8k_direct
-  # - ugrip_gsm8k_direct
+  - dataset: ugrip_gsm8k_direct
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
   - _self_
 
 task: qa
-dataset: ['UGRIP-LM-Polygraph/gsm8k-direct']
 text_column: question
 label_column: answer
-max_new_tokens: 20
+# Use max_new_tokens= to override
+max_new_tokens: 500
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
-task: qa
-# dataset: ['UGRIP-LM-Polygraph/gsm8k-direct', 'default']
-dataset: ['UGRIP-LM-Polygraph/mmlu-direct', 'default']
-text_column: question
-label_column: answer
-max_new_tokens: 20
 
 train_split: train
 eval_split: test
@@ -32,16 +25,19 @@ eval_split: test
 load_from_disk: false
 normalize: true
 trust_remote_code: false
-# Limit to 10,000 samples? Is this bad?
 size: 10000
-subsample_eval_dataset: 25
 generation_params:
   generate_until:
     - "\n"
 
-subsample_eval_dataset: 1
+# \/ How many samples per dataset
+# Change with +subsample_eval_dataset=25
+# subsample_eval_dataset: 25
 
-# generation_metrics: null
+# \/ What to ignore in model output
+# output_ignore_regex: "(?s).### Answer: "
+# Below is important for Gemma outputs
+output_ignore_regex: r"\s*<end_of_turn>"
 
 ignore_exceptions: false
 

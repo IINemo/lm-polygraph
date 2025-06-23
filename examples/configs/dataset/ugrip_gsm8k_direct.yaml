@@ -1,8 +1,1 @@
-defaults:
-  - _self_
-
-task: qa
-dataset: ['UGRIP-LM-Polygraph/gsm8k-direct', 'continuation']
-text_column: question
-label_column: answer
-max_new_tokens: 20
+['UGRIP-LM-Polygraph/gsm8k-direct', 'default']
