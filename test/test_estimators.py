@@ -7,7 +7,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.estimators import BayesPEZeroShot, BayesPEFewShot
 
 INPUT = "When was Julius Caesar born?"
 
@@ -20,7 +19,7 @@ TEST_TEXTS = [
     "Would not recommend to anyone."
 ]
 
-TEST_LABELS = [1, 0, 0, 1, 0]  
+TEST_LABELS = [1, 0, 0, 1, 0]
 
 FEW_SHOT_EXAMPLES = [
     {"text": "This movie was great!", "label": "positive"},
@@ -235,13 +234,13 @@ def test_focus(model):
     model_name = model.model.config._name_or_path
     estimator = Focus(
         model_name=model_name,
-        path="../token_idf/{model_name}/token_idf.pkl",
+        path=f"../focus_data/{model_name}/token_idf.pkl",
         gamma=0.9,
         p=0.01,
-        idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test",
+        idf_dataset="togethercomputer/RedPajama-Data-1T-Sample",
         trust_remote_code=True,
         idf_seed=42,
-        idf_dataset_size=5,
+        idf_dataset_size=1000,
         spacy_path="en_core_web_sm",
     )
     ue = estimate_uncertainty(model, estimator, INPUT)
@@ -351,6 +350,7 @@ def test_bayespe_few_shot(model):
             "determine if the text is positive or negative",
             "what is the emotional tone of the text"
         ],
+        few_shot_examples=FEW_SHOT_EXAMPLES,
         n_forward_passes=3
     )
     
