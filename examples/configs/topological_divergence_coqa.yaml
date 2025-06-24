@@ -3,18 +3,11 @@ hydra:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
+  - model: bloomz-560m
   - estimators: default_TopologicalDivergence
-
-  - stat_calculators: default_TrainMTopDivCalculator
+  - stat_calculators: default_calculators
   - base_processing_coqa
   - _self_
-model: 
-  path: Qwen/Qwen2.5-0.5B-Instruct
-  type: CausalLM
-  path_to_load_script: model/default_causal.py
-  load_model_args:
-    device_map: auto
-  load_tokenizer_args: {}
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
@@ -39,18 +32,18 @@ generation_params:
   generate_until:
     - "\n"
 subsample_eval_dataset: -1
-batch_size: 1
+batch_size: 4
 
 generation_metrics: null
 ignore_exceptions: false
 seed:
     - 1
 
-model_heads_cache: "../../../model_heads_cache.yaml"
+model_heads_cache: "model_heads_cache.yaml"
 max_heads: 6
 n_jobs: -1
 train_dataset:
-  train_data_path: "../../../coqa_Meta-Llama-3-8B-Instruct.csv"
+  train_data_path: "coqa_Llama-3.1-8B-Instruct.csv"
   context_column: context
   question_column: question
   prompt_column: prompt

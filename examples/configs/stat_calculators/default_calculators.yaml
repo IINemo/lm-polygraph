@@ -28,4 +28,22 @@
     - "background_train_embeddings"
     - "train_greedy_log_likelihoods"
   dependencies:
-
+- name: TrainMTopDivCalculator
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_TrainMTopDivCalculator
+  cfg:
+    heads_extraction_priority: cache
+    cache_path: '${model_heads_cache}'
+    max_heads: '${max_heads}'
+    n_jobs: '${n_jobs}'
+    train_data_path: '${train_dataset.train_data_path}'
+    context_column: '${train_dataset.context_column}'
+    question_column: '${train_dataset.question_column}'
+    prompt_column: '${train_dataset.prompt_column}'
+    response_column: '${train_dataset.response_column}'
+    label_column: '${train_dataset.label_column}'
+    batch_size: '${batch_size}'
+    subsample_train_dataset: '${train_dataset.subsample}'
+    seed: '${seed}'
+  stats: 
+    - "topological_divergence_heads"
+  dependencies:

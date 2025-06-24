@@ -58,7 +58,7 @@ class MTopDivHoldoutDataset:
     def subsample(self):
         if self.subsample_train_dataset >= len(self):
             return self
-        rng = np.random.default_rng(self.seed)
+        rng = np.random.default_rng(self.seed[0])
         selected_indices = rng.choice(
             len(self),
             size=self.subsample_train_dataset,
