@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 from .greedy_probs import GreedyProbsCalculator
+from .embeddings import EmbeddingsCalculator, TokenEmbeddingsCalculator
 
 
 class TrainingStatisticExtractionCalculator(StatCalculator):
@@ -19,17 +20,35 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
 
         return [
             "train_embeddings",
+            "train_token_embeddings",
             "background_train_embeddings",
+            "background_train_token_embeddings",
             "train_greedy_log_likelihoods",
         ], []
 
-    def __init__(self, train_dataset=None, background_train_dataset=None):
+    def __init__(
+        self,
+        train_dataset=None,
+        background_train_dataset=None,
+        output_attentions: bool = True,
+        output_hidden_states: bool = True,
+        return_embeddings: bool = False,
+        return_token_embeddings: bool = False,
+    ):
         super().__init__()
-        self.hidden_layer = -1
         self.train_dataset = train_dataset
         self.background_train_dataset = background_train_dataset
         self.statistics_extracted = False
-        self.base_calculators = [GreedyProbsCalculator(output_hidden_states=True)]
+        self.base_calculators = [
+            GreedyProbsCalculator(
+                output_hidden_states=output_hidden_states,
+                output_attentions=output_attentions,
+            )
+        ]
+        if return_embeddings:
+            self.base_calculators.append(EmbeddingsCalculator())
+        if return_token_embeddings:
+            self.base_calculators.append(TokenEmbeddingsCalculator())
 
     def __call__(
         self,
@@ -61,6 +80,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                         ("target_texts", target_texts),
                     ]:
                         batch_stats[key] = val
+                        batch_stats["layers"] = dependencies["layers"]
 
                     for stat_calculator in self.base_calculators:
                         new_stats = stat_calculator(
@@ -86,8 +106,11 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     torch.cuda.empty_cache()
                     gc.collect()
 
+            skip_keywords = ["tokenizer", "layers", "_raw"]
             for stat in train_stats.keys():
-                if any(s is None for s in train_stats[stat]) or ("tokenizer" in stat):
+                if any(s is None for s in train_stats[stat]) or any(
+                    keyword in stat for keyword in skip_keywords
+                ):
                     continue
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[stat] = [
