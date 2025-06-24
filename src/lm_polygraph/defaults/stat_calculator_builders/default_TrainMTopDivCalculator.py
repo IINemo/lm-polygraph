@@ -1,51 +1,15 @@
-import logging
+from typing import List
 import numpy as np
 import pandas as pd
-from typing import Iterable, Tuple, List, Optional
+
 from lm_polygraph.stat_calculators.train_mtopdiv import (
     TrainMTopDivCalculator,
 )
 
-log = logging.getLogger("lm_polygraph")
 
-
-class Dataset:
-    def __init__(self, x: List[str], y: List[str], labels: List[int], batch_size: int):
-        self.x = x
-        self.y = y
-        self.labels = labels
-        self.batch_size = batch_size
-
-    def __iter__(self) -> Iterable[Tuple[List[str], List[str], List[int]]]:
-        for i in range(0, len(self.x), self.batch_size):
-            yield (
-                self.x[i : i + self.batch_size],
-                self.y[i : i + self.batch_size],
-                self.labels[i : i + self.batch_size],
-            )
-
-    def __len__(self) -> int:
-        return (len(self.x) + self.batch_size - 1) // self.batch_size
-
-    def select(self, indices: List[int]):
-        self.x = [self.x[i] for i in indices]
-        self.y = [self.y[i] for i in indices]
-        self.labels = [self.labels[i] for i in indices]
-        return self
-
-    def subsample(self, n_samples: int, seed: Optional[int] = None):
-        if n_samples >= len(self.x):
-            return self
-
-        indices = list(range(len(self.x)))
-        if seed is not None:
-            np.random.seed(seed)
-        selected_indices = np.random.choice(indices, n_samples, replace=False)
-        return self.select(selected_indices.tolist())
-
-    @classmethod
-    def from_csv(
-        cls,
+class MTopDivHoldoutDataset:
+    def __init__(
+        self,
         csv_path: str,
         context_column: str,
         question_column: str,
@@ -53,43 +17,77 @@ class Dataset:
         response_column: str,
         label_column: str,
         batch_size: int,
+        subsample_train_dataset: int,
+        seed,
     ):
+        self.csv_path = csv_path
+        self.context_column = context_column
+        self.question_column = question_column
+        self.prompt_column = prompt_column
+        self.response_column = response_column
+        self.label_column = label_column
+        self.batch_size = batch_size
+        self.subsample_train_dataset = subsample_train_dataset
+        self.seed = seed
+
+        self.prompts = []
+        self.responses = []
+        self.labels = []
+
+    def from_csv(self):
         def assemble_query(row):
-            return row[prompt_column].format(row[context_column], row[question_column])
+            return row[self.prompt_column].format(row[self.context_column], row[self.question_column])
 
-        csv = pd.read_csv(csv_path)
-        x = csv.apply(assemble_query, axis=1).tolist()
-        y = csv[response_column].tolist()
-        labels = csv[label_column].tolist()
-        return cls(x, y, labels, batch_size)
+        df = pd.read_csv(self.csv_path)
+        self.prompts = df.apply(assemble_query, axis=1).tolist()
+        self.responses = df[self.response_column].tolist()
+        self.labels = df[self.label_column].tolist()
 
+    def __len__(self):
+        return len(self.prompts)
 
-def load_dataset(args):
-    log.info("=" * 100)
-    log.info("Loading train dataset...")
+    def __getitem__(self, idx):
+        return self.prompts[idx], self.responses[idx], self.labels[idx]
 
-    train_dataset = Dataset.from_csv(
-        csv_path=args.train_dataset,
-        context_column=args.context_column,
-        question_column=args.question_column,
-        prompt_column=args.prompt_column,
-        response_column=args.response_column,
-        label_column=args.label_column,
-        batch_size=args.batch_size,
-    )
+    def select(self, indices: List[int]):
+        self.prompts = [self.prompts[i] for i in indices]
+        self.responses = [self.responses[i] for i in indices]
+        self.labels = [self.labels[i] for i in indices]
+        return self
 
-    if args.subsample_train_dataset != -1:
-        train_dataset.subsample(
-            args.subsample_train_dataset,
-            seed=(
-                int(list(args.seed)[0]) if not isinstance(args.seed, int) else args.seed
-            ),
-        )
-
-    log.info("Done loading train data.")
-    return train_dataset
-
+    def subsample(self):
+        if self.subsample_train_dataset >= len(self):
+            return self
+        rng = np.random.default_rng(self.seed)
+        selected_indices = rng.choice(
+            len(self),
+            size=self.subsample_train_dataset,
+            replace=False,
+        ).tolist()
+        return self.select(selected_indices)
 
 def load_stat_calculator(config, builder):
-    train_dataset = load_dataset(config)
-    return TrainMTopDivCalculator(train_dataset)
+    priority = config.heads_extraction_priority
+    cache_path = config.cache_path
+    max_heads = config.max_heads
+    n_jobs = config.n_jobs
+
+    train_dataset = MTopDivHoldoutDataset(
+        csv_path=config.train_data_path,
+        context_column=config.context_column,
+        question_column=config.question_column,
+        prompt_column=config.prompt_column,
+        response_column=config.response_column,
+        label_column=config.label_column,
+        batch_size=config.batch_size,
+        subsample_train_dataset=config.subsample_train_dataset,
+        seed=config.seed,
+    )
+
+    return TrainMTopDivCalculator(
+        priority,
+        train_dataset,
+        cache_path,
+        max_heads,
+        n_jobs,
+    )

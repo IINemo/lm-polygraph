@@ -1,16 +1,19 @@
 import gc
 import torch
+from torch.utils.data import DataLoader
 import numpy as np
+import pandas as pd
+from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
-
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Literal
+from itertools import product
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
-from .attention_forward_pass import AttentionForwardPassCalculator
-from ..estimators.mtopdiv import (
-    transform_attention_scores_to_distances,
-    transform_distances_to_mtopdiv,
+from lm_polygraph.estimators.mtopdiv import (
+    get_mtopdivs,
+    load_model_heads,
+    save_model_heads,
 )
 
 
@@ -21,18 +24,25 @@ class TrainMTopDivCalculator(StatCalculator):
         Returns the statistics and dependencies for the calculator.
         """
 
-        return [
-            "train_labels",
-            "train_mtopdivs",
-        ], []
+        return ["topological_divergence_heads"], []
 
-    def __init__(self, train_dataset=None, *args, **kwargs):
+    def __init__(self, 
+                 priority: Literal["train", "cache"] = "cache", 
+                 train_dataset: "MTopDivHoldoutDataset" = None, 
+                 cache_path: str = None, 
+                 max_heads: int = 6,
+                 n_jobs: int = -1):
         super().__init__()
+        if train_dataset is None and cache_path is None:
+            raise Exception("Either train_dataset or cache_path must be provided.")
+        self.priority = priority
+        self.cache_path = cache_path
         self.train_dataset = train_dataset
-        self.base_calculator = AttentionForwardPassCalculator()
+        self.max_heads = max_heads
+        self.n_jobs = n_jobs
 
-    def _calculate_attention_forward_pass(
-        self,
+    @staticmethod
+    def calculate_attention_forward_pass(
         prompts: List[str],
         responses: List[str],
         model: WhiteboxModel,
@@ -61,6 +71,58 @@ class TrainMTopDivCalculator(StatCalculator):
         gc.collect()
 
         return attns
+    
+    def select_heads(self, scores, labels):
+        grounded_scores, hal_scores = scores[labels == 0], scores[labels == 1]
+        deltas = hal_scores.mean(0) - grounded_scores.mean(0)
+        heads = sorted(range(len(deltas)), key=lambda x: deltas[x], reverse=True)
+
+        best_auroc, n_opt = 0, 0
+        for n in range(1, self.max_heads + 1):
+            n_best_heads = heads[:n]
+            predictions = scores[:, n_best_heads].mean(axis=1)
+            roc_auc = roc_auc_score(labels, predictions)
+            if roc_auc > best_auroc:
+                best_auroc = roc_auc
+                n_opt = n
+        return heads[:n_opt]
+    
+    def train(self, model, train_dataloader):
+        train_mtopdivs = []
+        train_labels = []
+
+        for inp_texts, target_texts, labels in tqdm(train_dataloader):
+            forwardpass_attention_weights = self.calculate_attention_forward_pass(
+                inp_texts,
+                target_texts,
+                model,
+            )
+            length_responses = model.tokenizer(
+                target_texts,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors="pt",
+            )
+            length_responses = length_responses["attention_mask"].sum(dim=1).tolist()
+            _, num_layers, num_heads, _, _ = forwardpass_attention_weights.shape
+            heads = product(range(num_layers), range(num_heads))
+            mtopdivs = get_mtopdivs(
+                heads,
+                length_responses,
+                forwardpass_attention_weights,
+                self.n_jobs
+            )
+            train_mtopdivs.append(mtopdivs)
+            train_labels += labels
+
+        train_mtopdivs = np.concatenate(train_mtopdivs, axis=0)
+        train_labels = np.array(train_labels)
+        return {
+            "train_mtopdivs": train_mtopdivs,
+            "train_labels": train_labels,
+            "num_layers": num_layers,
+            "num_heads": num_heads,
+        }
 
     def __call__(
         self,
@@ -69,59 +131,25 @@ class TrainMTopDivCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
+        heads = load_model_heads(self.cache_path, model.model_path)
+        if heads and self.priority == "cache":
+            heads = np.array(heads)
+            return {"topological_divergence_heads": heads[:self.max_heads]}
+        
+        self.train_dataset.from_csv()
+        self.train_dataset.subsample()
+        train_dataloader = DataLoader(
+            self.train_dataset,
+            batch_size=self.train_dataset.batch_size,
+            shuffle=True
+        )
+        output = self.train(model, train_dataloader)
+        heads = self.select_heads(
+            output["train_mtopdivs"],
+            output["train_labels"],
+        )
+        heads = np.unravel_index(heads, (output["num_layers"], output["num_heads"]))
+        heads = np.stack(heads, axis=1)
 
-        train_mtopdivs = []
-        train_labels = []
-
-        for inp_texts, target_texts, labels in tqdm(self.train_dataset):
-            forwardpass_attention_weights = self._calculate_attention_forward_pass(
-                inp_texts,
-                target_texts,
-                model,
-            )
-
-            length_responses = model.tokenizer(
-                target_texts,
-                add_special_tokens=False,
-                padding=True,
-                return_tensors="pt",
-            )
-            length_responses = length_responses["attention_mask"].sum(dim=1).tolist()
-
-            batch_size, layers, heads, seq_len, _ = forwardpass_attention_weights.shape
-            paddings = np.isnan(forwardpass_attention_weights[:, 0, 0, 0]).sum(axis=-1)
-            distance_matrices_batch = transform_attention_scores_to_distances(
-                forwardpass_attention_weights
-            )
-            distance_matrices_batch = distance_matrices_batch.reshape(
-                batch_size, layers * heads, seq_len, seq_len
-            ).numpy()
-
-            def job(head):
-                mtopdivs = []
-                for sample_id in range(batch_size):
-                    distance_matrice = distance_matrices_batch[sample_id, head]
-                    padding = paddings[sample_id]
-                    response_length = length_responses[sample_id]
-                    if padding > 0:
-                        distance_matrice = distance_matrice[:-padding, :-padding]
-                    distance_matrice[:-response_length, :-response_length] = 0
-                    mtopdiv = transform_distances_to_mtopdiv(distance_matrice)
-                    mtopdivs.append(mtopdiv)
-                return np.array(mtopdivs, dtype=float)
-
-            train_mtopdivs.append(
-                np.stack(
-                    [job(head) for head in range(heads * layers)],
-                    axis=1,
-                )
-            )
-            train_labels += labels
-
-        train_mtopdivs = np.concatenate(train_mtopdivs, axis=0)
-        train_labels = np.array(train_labels)
-
-        return {
-            "train_mtopdivs": train_mtopdivs,
-            "train_labels": train_labels,
-        }
+        save_model_heads(self.cache_path, model.model_path, heads.tolist())
+        return {"topological_divergence_heads": heads}
