@@ -10,25 +10,6 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 INPUT = "When was Julius Caesar born?"
 
-# Test data for BayesPE
-TEST_TEXTS = [
-    "I love this product! It's amazing.",
-    "This is terrible, I hate it.",
-    "The product is okay, nothing special.",
-    "Absolutely fantastic experience!",
-    "Would not recommend to anyone."
-]
-
-TEST_LABELS = [1, 0, 0, 1, 0]
-
-FEW_SHOT_EXAMPLES = [
-    {"text": "This movie was great!", "label": "positive"},
-    {"text": "I didn't enjoy it at all.", "label": "negative"},
-    {"text": "The service was excellent.", "label": "positive"},
-    {"text": "Waste of money.", "label": "negative"}
-]
-
-
 @pytest.fixture(scope="module")
 def model():
     model_path = "bigscience/bloomz-560m"
@@ -320,6 +301,16 @@ def test_boostedprob_sequence(model):
 
 
 def test_bayespe_zero_shot(model):
+    TEST_TEXTS = [
+        "I love this product! It's amazing.",
+        "This is terrible, I hate it.",
+        "The product is okay, nothing special.",
+        "Absolutely fantastic experience!",
+        "Would not recommend to anyone."
+    ]
+
+    TEST_LABELS = [1, 0, 0, 1, 0]
+
     estimator = BayesPEZeroShot(
         instructions=[
             "classify the sentiment of the text",
@@ -344,6 +335,21 @@ def test_bayespe_zero_shot(model):
 
 
 def test_bayespe_few_shot(model):
+    TEST_TEXTS = [
+        "I love this product! It's amazing.",
+        "This is terrible, I hate it.",
+        "The product is okay, nothing special.",
+        "Absolutely fantastic experience!",
+        "Would not recommend to anyone."
+    ]
+
+    TEST_LABELS = [1, 0, 0, 1, 0]
+    FEW_SHOT_EXAMPLES = [
+        {"text": "This movie was great!", "label": "positive"},
+        {"text": "I didn't enjoy it at all.", "label": "negative"},
+        {"text": "The service was excellent.", "label": "positive"},
+        {"text": "Waste of money.", "label": "negative"}
+    ]
     estimator = BayesPEFewShot(
         instructions=[
             "classify the sentiment of the text",
