@@ -31,7 +31,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens_alternatives",
             "greedy_texts",
             "greedy_log_likelihoods",
-            "embeddings",
+            "embeddings_raw",
             "attention_all",
             "tokenizer",
         ], []
@@ -141,14 +141,21 @@ class GreedyProbsCalculator(StatCalculator):
             sequences = out.sequences
             if self.output_attentions:
                 attentions = out.attentions
-            if self.output_hidden_states:
-                embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                    out, batch, model.model_type
-                )
-                if embeddings_decoder.dtype == torch.bfloat16:
-                    embeddings_decoder = embeddings_decoder.to(
-                        torch.float16
-                    )  # numpy does not support bfloat16
+            if not self.output_hidden_states:
+                embeddings_dict = {}
+            elif model.model_type in ["CausalLM", "VisualLM"]:
+                embeddings_dict = {
+                    "embeddings_decoder_raw": out.hidden_states,
+                }
+                if model.model_type == "VisualLM":
+                    embeddings_dict["embeddings_visual_raw"] = out.vision_hidden_states
+            elif model.model_type == "Seq2SeqLM":
+                embeddings_dict = {
+                    "embeddings_encoder_raw": out.encoder_hidden_states,
+                    "embeddings_decoder_raw": out.decoder_hidden_states,
+                }
+            else:
+                raise NotImplementedError
 
         cut_logits = []
         cut_sequences = []
@@ -237,20 +244,6 @@ class GreedyProbsCalculator(StatCalculator):
 
                     attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
                 attention_all.append(attn_mask)
-
-        if not self.output_hidden_states:
-            embeddings_dict = {}
-        elif model.model_type == "CausalLM":
-            embeddings_dict = {
-                "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
-            }
-        elif model.model_type == "Seq2SeqLM":
-            embeddings_dict = {
-                "embeddings_encoder": embeddings_encoder.cpu().detach().numpy(),
-                "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
-            }
-        else:
-            raise NotImplementedError
 
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),

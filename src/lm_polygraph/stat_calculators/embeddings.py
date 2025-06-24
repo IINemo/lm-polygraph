@@ -167,6 +167,14 @@ def get_embeddings_from_output(
     else:
         raise NotImplementedError
 
+    if batch_embeddings is not None and batch_embeddings.dtype == torch.bfloat16:
+        batch_embeddings = batch_embeddings.to(torch.float16)
+    if (
+        batch_embeddings_decoder is not None
+        and batch_embeddings_decoder.dtype == torch.bfloat16
+    ):
+        batch_embeddings_decoder = batch_embeddings_decoder.to(torch.float16)
+
     return batch_embeddings, batch_embeddings_decoder
 
 
@@ -179,18 +187,24 @@ def aggregate(x, aggregation_method, axis):
         return x.sum(axis=axis)
 
 
+class OutputWrapper:
+    hidden_states = None
+    encoder_hidden_states = None
+    decoder_hidden_states = None
+
+
 class EmbeddingsCalculator(StatCalculator):
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
         Returns the statistics and dependencies for the calculator.
         """
+        return [
+            "embeddings",
+        ], ["embeddings_raw"]
 
-        return ["train_embeddings", "background_train_embeddings"], []
-
-    def __init__(self, hidden_layer: int = -1):
+    def __init__(self):
         super().__init__()
-        self.hidden_layer = hidden_layer
 
     def __call__(
         self,
@@ -202,38 +216,102 @@ class EmbeddingsCalculator(StatCalculator):
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
-            out = model.generate(
-                **batch,
-                output_scores=True,
-                return_dict_in_generate=True,
-                max_new_tokens=max_new_tokens,
-                min_new_tokens=2,
-                output_attentions=False,
-                output_hidden_states=True,
-                num_beams=1,
-                num_return_sequences=1,
-                suppress_tokens=(
-                    []
-                    if model.generation_parameters.allow_newlines
-                    else [
-                        t
-                        for t in range(len(model.tokenizer))
-                        if "\n" in model.tokenizer.decode([t])
-                    ]
-                ),
-            )
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
-            )
+            out = OutputWrapper()
+            if model.model_type in ["CausalLM", "VisualLM"]:
+                out.hidden_states = dependencies[f"embeddings_decoder_raw"]
+                if model.model_type == "VisualLM":
+                    out.vision_hidden_states = dependencies[f"embeddings_visual_raw"]
+            elif model.model_type == "Seq2SeqLM":
+                out.decoder_hidden_states = dependencies[f"embeddings_decoder_raw"]
+                out.encoder_hidden_states = dependencies[f"embeddings_encoder_raw"]
 
-        if model.model_type in ["CausalLM", "VisualLM"]:
-            return {
-                "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
-            }
-        elif model.model_type == "Seq2SeqLM":
-            return {
-                "embeddings_encoder": embeddings_encoder.cpu().detach().numpy(),
-                "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
-            }
-        else:
-            raise NotImplementedError
+            results = {}
+            for layer in dependencies["layers"]:
+                layer_name = "" if layer == -1 else f"_{layer}"
+                embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                    out,
+                    batch,
+                    model.model_type,
+                    level="sequence",
+                    hidden_layer=layer,
+                )
+
+                if model.model_type in ["CausalLM", "VisualLM"]:
+                    results[f"embeddings_decoder{layer_name}"] = (
+                        embeddings_decoder.cpu().detach().numpy()
+                    )
+                elif model.model_type == "Seq2SeqLM":
+                    results[f"embeddings{layer_name}"] = (
+                        embeddings_decoder.cpu().detach().numpy()
+                    )
+                else:
+                    raise NotImplementedError
+
+        return results
+
+
+class TokenEmbeddingsCalculator(StatCalculator):
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+        return [
+            "token_embeddings",
+        ], ["embeddings_raw"]
+
+    def __init__(self):
+        super().__init__()
+
+    def __call__(
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        max_new_tokens: int = 100,
+    ) -> Dict[str, np.ndarray]:
+        batch: Dict[str, torch.Tensor] = model.tokenize(texts)
+        batch = {k: v.to(model.device()) for k, v in batch.items()}
+        with torch.no_grad():
+            out = OutputWrapper()
+            if model.model_type in ["CausalLM", "VisualLM"]:
+                out.hidden_states = dependencies[f"embeddings_decoder_raw"]
+                if model.model_type == "VisualLM":
+                    out.vision_hidden_states = dependencies[f"embeddings_visual_raw"]
+            elif model.model_type == "Seq2SeqLM":
+                out.decoder_hidden_states = dependencies[f"embeddings_decoder_raw"]
+                out.encoder_hidden_states = dependencies[f"embeddings_encoder_raw"]
+
+            results = {}
+            for layer in dependencies["layers"]:
+                layer_name = "" if layer == -1 else f"_{layer}"
+                token_embeddings_encoder, token_embeddings_decoder = (
+                    get_embeddings_from_output(
+                        out,
+                        batch,
+                        model.model_type,
+                        level="token",
+                        hidden_layer=layer,
+                    )
+                )
+                if token_embeddings_decoder is None:
+                    token_embeddings_decoder = torch.empty(
+                        (0, embeddings_decoder.shape[-1]), dtype=torch.float32
+                    )
+                elif len(token_embeddings_decoder.shape) == 3:
+                    token_embeddings_decoder = token_embeddings_decoder.reshape(
+                        -1, token_embeddings_decoder.shape[-1]
+                    )
+
+                if model.model_type in ["CausalLM", "VisualLM"]:
+                    results[f"token_embeddings_decoder{layer_name}"] = (
+                        token_embeddings_decoder.cpu().detach().numpy()
+                    )
+                elif model.model_type == "Seq2SeqLM":
+                    results[f"token_embeddings{layer_name}"] = (
+                        token_embeddings_encoder.cpu().detach().numpy()
+                    )
+                else:
+                    raise NotImplementedError
+
+        return results

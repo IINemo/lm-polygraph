@@ -30,7 +30,7 @@ from lm_polygraph.utils.factory_stat_calculator import (
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
-from lm_polygraph.utils.common import flatten_results
+from lm_polygraph.utils.common import flatten_results, process_layers
 
 import logging
 
@@ -234,6 +234,7 @@ class UEManager:
         self.stat_calculators = self.factory_stat_calc(
             [self.stat_calculators_dict[c] for c in stats]
         )
+        self.layers = process_layers(self.estimators)
         self.state = "Initialized"
 
         if self.verbose:
@@ -337,6 +338,7 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
             batch_stats["model"] = self.model
+            batch_stats["layers"] = self.layers
 
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
 

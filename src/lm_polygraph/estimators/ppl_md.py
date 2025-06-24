@@ -38,6 +38,7 @@ class PPLMDSeq(Estimator):
         md_type: str = "MD",
         parameters_path: str = None,
         normalize: bool = False,
+        layer: int = -1,
     ):
         self.stats_dependencies = [
             "train_greedy_log_likelihoods",
@@ -50,6 +51,8 @@ class PPLMDSeq(Estimator):
             self.stats_dependencies,
             "sequence",
         )
+        self.layer = layer
+        self.layer_name = f"_{layer}" if layer != -1 else ""
         self.parameters_path = parameters_path
         self.embeddings_type = embeddings_type
         self.normalize = normalize
@@ -65,34 +68,36 @@ class PPLMDSeq(Estimator):
         self.PPL = Perplexity()
         if self.md_type == "MD":
             self.MD = MahalanobisDistanceSeq(
-                embeddings_type, parameters_path, normalize=False
+                embeddings_type, parameters_path, normalize=False, layer=layer
             )
             self.MD_val = MahalanobisDistanceSeq(
-                embeddings_type, parameters_path, normalize=False
+                embeddings_type, parameters_path, normalize=False, layer=layer
             )
         elif self.md_type == "RMD":
             self.MD = RelativeMahalanobisDistanceSeq(
-                embeddings_type, parameters_path, normalize=False
+                embeddings_type, parameters_path, normalize=False, layer=layer
             )
             self.MD_val = RelativeMahalanobisDistanceSeq(
-                embeddings_type, parameters_path, normalize=False
+                embeddings_type, parameters_path, normalize=False, layer=layer
             )
         else:
             raise NotImplementedError
 
         if self.parameters_path is not None:
-            self.full_path = (
-                f"{self.parameters_path}/ppl_{self.md_type}_{self.embeddings_type}"
-            )
+            self.full_path = f"{self.parameters_path}/ppl_{self.md_type}_{self.embeddings_type}{self.layer_name}"
             os.makedirs(self.full_path, exist_ok=True)
 
-            if os.path.exists(f"{self.full_path}/train_md.npy"):
-                self.train_ppl = load_array(f"{self.full_path}/train_ppl.npy")
-                self.train_md = load_array(f"{self.full_path}/train_md.npy")
+            if os.path.exists(f"{self.full_path}/train_md{self.layer_name}.npy"):
+                self.train_ppl = load_array(
+                    f"{self.full_path}/train_ppl{self.layer_name}.npy"
+                )
+                self.train_md = load_array(
+                    f"{self.full_path}/train_md{self.layer_name}.npy"
+                )
                 self.is_fitted = True
 
     def __str__(self):
-        return f"PPL{self.md_type}Seq_{self.embeddings_type}"
+        return f"PPL{self.md_type}Seq_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         ppl = self.PPL(stats)
@@ -111,10 +116,12 @@ class PPLMDSeq(Estimator):
             ]
             self.train_ppl = self.PPL(stats_copy)
             if self.parameters_path is not None:
-                save_array(self.train_ppl, f"{self.full_path}/train_ppl.npy")
+                save_array(
+                    self.train_ppl, f"{self.full_path}/train_ppl{self.layer_name}.npy"
+                )
         if not self.is_fitted:
             train_embeds, val_embeds = train_test_split(
-                stats[f"train_embeddings_{self.embeddings_type}"],
+                stats[f"train_embeddings_{self.embeddings_type}{self.layer_name}"],
                 test_size=0.3,
                 random_state=42,
             )
@@ -124,11 +131,17 @@ class PPLMDSeq(Estimator):
                 if any(k.startswith(stat) for stat in self.stats_dependencies)
             }
             stats_copy = copy.deepcopy(stats_copy)
-            stats_copy[f"train_embeddings_{self.embeddings_type}"] = train_embeds
-            stats_copy[f"embeddings_{self.embeddings_type}"] = val_embeds
+            stats_copy[f"train_embeddings_{self.embeddings_type}{self.layer_name}"] = (
+                train_embeds
+            )
+            stats_copy[f"embeddings_{self.embeddings_type}{self.layer_name}"] = (
+                val_embeds
+            )
             self.train_md = self.MD_val(stats_copy)
             if self.parameters_path is not None:
-                save_array(self.train_md, f"{self.full_path}/train_md.npy")
+                save_array(
+                    self.train_md, f"{self.full_path}/train_md{self.layer_name}.npy"
+                )
             self.is_fitted = True
 
         ppl_rank = rank(ppl, self.train_ppl)

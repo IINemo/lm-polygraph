@@ -61,7 +61,14 @@ def load_dataset(args):
 
 
 def load_stat_calculator(config, builder):
+    return_embeddings = getattr(builder, "return_embeddings", False)
+    return_token_embeddings = getattr(builder, "return_token_embeddings", False)
     train_dataset, background_train_dataset = load_dataset(config)
     return TrainingStatisticExtractionCalculator(
-        train_dataset, background_train_dataset
+        train_dataset,
+        background_train_dataset,
+        output_attentions=config.output_attentions,
+        output_hidden_states=config.output_hidden_states,
+        return_embeddings=return_embeddings,
+        return_token_embeddings=return_token_embeddings,
     )
