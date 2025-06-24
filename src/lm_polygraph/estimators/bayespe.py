@@ -8,8 +8,7 @@ from sklearn.metrics import log_loss
 class BayesPEZeroShot(Estimator):
     """
     Bayesian Prompt Ensembles for Zero-Shot classification.
-    Implements the method from https://aclanthology.org/2024.findings-acl.728.pdf
-    and github https://github.com/amzn/BayesPE
+    Implements the method provided in https://aclanthology.org/2024.findings-acl.728.pdf
     """
     
     @polygraph_module_init
@@ -71,6 +70,7 @@ class BayesPEZeroShot(Estimator):
 
         self.weights = np.exp(result.x) / np.sum(np.exp(result.x))
     
+    
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
         Calculate uncertainty using BayesPE ensemble.
@@ -107,7 +107,7 @@ class BayesPEZeroShot(Estimator):
 class BayesPEFewShot(Estimator):
     """
     Bayesian Prompt Ensembles for Few-Shot classification.
-    Implements the method from https://github.com/amzn/BayesPE
+    Implements the method provided in https://aclanthology.org/2024.findings-acl.728.pdf
     """
     
     @polygraph_module_init
