@@ -281,7 +281,10 @@ def get_generation_metrics(args):
             if not fn_config:
                 return None
             path = get_abs_path_from_hydra_config(fn_config.path)
+            # print("Resolved path:", path)
             module = load_external_module(path)
+            # fn = getattr(module, fn_config.fn_name)
+            # print("Loaded function:", fn)
             return getattr(module, fn_config.fn_name)
 
         process_output_fn = load_process_fn(process_output_fn)
