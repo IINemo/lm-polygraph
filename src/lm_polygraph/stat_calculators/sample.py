@@ -230,11 +230,11 @@ class SamplingGenerationCalculator(StatCalculator):
             "sample_texts": texts,
         }
 
-        config = model.model.config
-        if hasattr(config, 'text_config'):
-            config = config.text_config
-
         if model.model_type != "vLLMCausalLM":
+            config = model.model.config
+            if hasattr(config, 'text_config'):
+                config = config.text_config
+                
             out = OutputWrapper()
             batch_size = len(batch["input_ids"])
             embeddings_last_token = [[] for _ in range(batch_size)]
