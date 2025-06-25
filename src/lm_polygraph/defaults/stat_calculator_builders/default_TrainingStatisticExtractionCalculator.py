@@ -63,6 +63,20 @@ def load_dataset(args):
 def load_stat_calculator(config, builder):
     return_embeddings = getattr(builder, "return_embeddings", False)
     return_token_embeddings = getattr(builder, "return_token_embeddings", False)
+    if getattr(config, "target_metric", None):
+        try:
+            selected_metric = next(
+                m
+                for m in builder.generation_metrics
+                if m.__str__() == config.target_metric
+            )
+        except StopIteration:
+            raise ValueError(
+                f"Metric '{config.target_metric}' not found in generation_metrics: {[m.__str__() for m in builder.generation_metrics]}"
+            )
+    else:
+        selected_metric = None
+
     train_dataset, background_train_dataset = load_dataset(config)
     return TrainingStatisticExtractionCalculator(
         train_dataset,
@@ -71,4 +85,5 @@ def load_stat_calculator(config, builder):
         output_hidden_states=config.output_hidden_states,
         return_embeddings=return_embeddings,
         return_token_embeddings=return_token_embeddings,
+        target_metric=selected_metric,
     )

@@ -84,3 +84,11 @@ from .focus import Focus
 from .kernel_language_entropy import KernelLanguageEntropy
 from .luq import LUQ
 from .eigenscore import EigenScore
+from .supervised.saplma import SAPLMA
+from .supervised.mind import MIND
+from .supervised.sheeps import Sheeps
+from .supervised.token_mahalanobis_distance import TokenMahalanobisDistance
+from .supervised.relative_token_mahalanobis_distance import (
+    RelativeTokenMahalanobisDistance,
+)
+from .supervised.satrmd import SATRMD
