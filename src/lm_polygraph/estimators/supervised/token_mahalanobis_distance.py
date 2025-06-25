@@ -26,6 +26,7 @@ class TokenMahalanobisDistance(Estimator):
         device (str): Device for computation ("cuda" or "cpu").
         storage_device (str): Device for storing centroids/covariances ("cuda" or "cpu").
     """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",

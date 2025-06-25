@@ -56,6 +56,7 @@ class MIND(Estimator):
         - "train_token_embeddings"
         - "train_metrics"
     """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",

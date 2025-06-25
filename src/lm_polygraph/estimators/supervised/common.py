@@ -113,6 +113,7 @@ class TrainerMLP:
         fit(X, y, mask=None, regression=False): Train the model on the provided data.
         predict(X, mask=None, regression=False): Predict outputs for the provided data.
     """
+
     def __init__(
         self,
         n_epochs: int = 5,
