@@ -42,7 +42,7 @@ class LookBackLens(Estimator):
         self.is_fitted = False
 
     def __str__(self):
-        return f"LookBackLens"
+        return "LookBackLens"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
