@@ -88,3 +88,16 @@
   cfg:
     layer: 16
     gen_only: False
+- name: SAPLMA
+  cfg:
+    model_name: '${model.path}'
+- name: MIND
+- name: Sheeps
+  cfg:
+    model_name: '${model.path}'
+- name: SATRMD
+  cfg:
+    model_name: '${model.path}'
+    base_method: "RelativeTokenMahalanobis"
+- name: LookBackLens
+- name: TAD

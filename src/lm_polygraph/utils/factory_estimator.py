@@ -59,6 +59,7 @@ def load_simple_estimators(name: str, config):
         RelativeTokenMahalanobisDistance,
         SATRMD,
         LookBackLens,
+        TAD,
     ]
 
     try:

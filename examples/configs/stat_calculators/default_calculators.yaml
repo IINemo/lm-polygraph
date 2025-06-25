@@ -23,6 +23,14 @@
     - "lookback_ratios"
   dependencies:
     - "attention_raw"
+- name: AttentionFeaturesCalculator
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_Attentions
+  cfg:
+    attentions: "attention_features"
+  stats:
+    - "attention_features"
+  dependencies:
+    - "attention_raw"
 - name: TrainingStatisticExtractionCalculator
   builder: lm_polygraph.defaults.stat_calculator_builders.default_TrainingStatisticExtractionCalculator
   cfg:
@@ -57,4 +65,5 @@
     - "train_greedy_log_likelihoods"
     - "train_metrics"
     - "train_lookback_ratios"
+    - "train_attention_features"
   dependencies:

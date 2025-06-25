@@ -10,7 +10,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 from .greedy_probs import GreedyProbsCalculator
 from .embeddings import EmbeddingsCalculator, TokenEmbeddingsCalculator
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
-from .attention import LookbackRatioCalculator
+from .attention import LookbackRatioCalculator, AttentionFeaturesCalculator
 
 
 class TrainingStatisticExtractionCalculator(StatCalculator):
@@ -26,6 +26,9 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
             "background_train_embeddings",
             "background_train_token_embeddings",
             "train_greedy_log_likelihoods",
+            "train_lookback_ratios",
+            "train_attention_features",
+            "train_metrics",
         ], []
 
     def __init__(
@@ -37,6 +40,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
         return_embeddings: bool = False,
         return_token_embeddings: bool = False,
         return_lookback_ratios: bool = False,
+        return_attention_features: bool = False,
         target_metric: GenerationMetric = None,
     ):
         super().__init__()
@@ -55,6 +59,8 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
             self.base_calculators.append(TokenEmbeddingsCalculator())
         if return_lookback_ratios:
             self.base_calculators.append(LookbackRatioCalculator())
+        if return_attention_features:
+            self.base_calculators.append(AttentionFeaturesCalculator())
         if target_metric is not None:
             self.target_metric = target_metric
 

@@ -64,6 +64,7 @@ def load_stat_calculator(config, builder):
     return_embeddings = getattr(builder, "return_embeddings", False)
     return_token_embeddings = getattr(builder, "return_token_embeddings", False)
     return_lookback_ratios = getattr(builder, "return_lookback_ratios", False)
+    return_attention_features = getattr(builder, "return_attention_features", False)
     if getattr(config, "target_metric", None):
         try:
             selected_metric = next(
@@ -87,5 +88,6 @@ def load_stat_calculator(config, builder):
         return_embeddings=return_embeddings,
         return_token_embeddings=return_token_embeddings,
         return_lookback_ratios=return_lookback_ratios,
+        return_attention_features=return_attention_features,
         target_metric=selected_metric,
     )
