@@ -245,12 +245,12 @@ class EmbeddingsCalculator(StatCalculator):
         with torch.no_grad():
             out = OutputWrapper()
             if model.model_type in ["CausalLM", "VisualLM"]:
-                out.hidden_states = dependencies[f"embeddings_decoder_raw"]
+                out.hidden_states = dependencies["embeddings_decoder_raw"]
                 if model.model_type == "VisualLM":
-                    out.vision_hidden_states = dependencies[f"embeddings_visual_raw"]
+                    out.vision_hidden_states = dependencies["embeddings_visual_raw"]
             elif model.model_type == "Seq2SeqLM":
-                out.decoder_hidden_states = dependencies[f"embeddings_decoder_raw"]
-                out.encoder_hidden_states = dependencies[f"embeddings_encoder_raw"]
+                out.decoder_hidden_states = dependencies["embeddings_decoder_raw"]
+                out.encoder_hidden_states = dependencies["embeddings_encoder_raw"]
 
             results = {}
             for layer in dependencies["layers"]:
@@ -329,12 +329,12 @@ class TokenEmbeddingsCalculator(StatCalculator):
         with torch.no_grad():
             out = OutputWrapper()
             if model.model_type in ["CausalLM", "VisualLM"]:
-                out.hidden_states = dependencies[f"embeddings_decoder_raw"]
+                out.hidden_states = dependencies["embeddings_decoder_raw"]
                 if model.model_type == "VisualLM":
-                    out.vision_hidden_states = dependencies[f"embeddings_visual_raw"]
+                    out.vision_hidden_states = dependencies["embeddings_visual_raw"]
             elif model.model_type == "Seq2SeqLM":
-                out.decoder_hidden_states = dependencies[f"embeddings_decoder_raw"]
-                out.encoder_hidden_states = dependencies[f"embeddings_encoder_raw"]
+                out.decoder_hidden_states = dependencies["embeddings_decoder_raw"]
+                out.encoder_hidden_states = dependencies["embeddings_encoder_raw"]
 
             results = {}
             for layer in dependencies["layers"]:
@@ -350,7 +350,7 @@ class TokenEmbeddingsCalculator(StatCalculator):
                 )
                 if token_embeddings_decoder is None:
                     token_embeddings_decoder = torch.empty(
-                        (0, embeddings_decoder.shape[-1]), dtype=torch.float32
+                        (0, model.model.config.hidden_size), dtype=torch.float32
                     )
                 elif len(token_embeddings_decoder.shape) == 3:
                     token_embeddings_decoder = token_embeddings_decoder.reshape(

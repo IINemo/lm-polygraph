@@ -1,19 +1,13 @@
 import numpy as np
-import torch
 import torch.nn as nn
-import torch.optim as optim
-from tqdm import tqdm
-import itertools
-from sklearn.model_selection import KFold
 
-from typing import Dict, Callable, Any
+from typing import Dict
 
 from lm_polygraph.estimators.estimator import Estimator
 
 from lm_polygraph.estimators.mahalanobis_distance import (
     create_cuda_tensor_from_numpy,
 )
-from sklearn.metrics import mean_squared_error, roc_auc_score
 from transformers import set_seed, AutoConfig
 from .common import cross_val_hp, TrainerMLP
 
@@ -107,7 +101,7 @@ class SAPLMA(Estimator):
         # Fit model if not already fitted
         if not self.is_fitted:
             set_seed(42)
-            target = np.array(stats[f"train_metrics"])
+            target = np.array(stats["train_metrics"])
 
             # Check if target is continuous or in [0, 1]
             unique_vals = np.unique(target)

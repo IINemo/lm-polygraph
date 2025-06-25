@@ -1,6 +1,4 @@
-import os
 import numpy as np
-import torch
 from typing import Dict
 
 from lm_polygraph.estimators.estimator import Estimator

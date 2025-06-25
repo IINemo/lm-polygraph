@@ -3,7 +3,6 @@ import numpy as np
 
 from typing import Dict, List, Tuple, Union
 
-from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
 from lm_polygraph.model_adapters import WhiteboxModel, WhiteboxModelvLLM
 
