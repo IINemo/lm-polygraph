@@ -1,4 +1,3 @@
-from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.stat_calculators.embeddings import (
     EmbeddingsCalculator,
     TokenEmbeddingsCalculator,

@@ -114,7 +114,6 @@ class SATRMD(Estimator):
                 [np.arange(tokens_before[i], tokens_before[i + 1]) for i in dev_idx]
             )
 
-            centroids = []
             for layer in tqdm(
                 self.layers,
                 desc=f"Fitting layer-wise Mahalanobis distances for {self.__str__()}",
@@ -222,7 +221,7 @@ class SATRMD(Estimator):
             self.is_fitted = True
 
         eval_mds = []
-        greedy_tokens = stats[f"greedy_tokens"]
+        greedy_tokens = stats["greedy_tokens"]
         for layer in self.tmds.keys():
             md = self.tmds[layer](stats).reshape(-1)
             k = 0
