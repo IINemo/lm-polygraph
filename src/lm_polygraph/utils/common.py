@@ -59,7 +59,7 @@ def flatten_results(results, result_generator_class):
 
 def process_layers(estimators: List) -> List[int]:
     """
-    Extracts layer indices from estimators.
+    Extracts required layer indices from estimators.
 
     Args:
         estimators (List[Estimator]): List of estimators.
