@@ -22,6 +22,21 @@ def cross_val_hp(
     regression: bool = False,
     estimator_name: str = "SAPLMA",
 ):
+    """
+    Perform cross-validated hyperparameter search for a given model.
+
+    Args:
+        X (np.ndarray): Feature matrix.
+        y (np.ndarray): Target vector.
+        model_init (Callable[[Any], nn.Module]): Function to initialize the model with a set of hyperparameters.
+        params (dict): Dictionary of hyperparameter lists to search over.
+        mask (np.ndarray, optional): Optional attention mask array for training/validation splits. Default is None.
+        regression (bool, optional): If True, use regression metrics (MSE). If False, use classification metrics (ROC AUC). Default is False.
+        estimator_name (str, optional): Name of the estimator for logging. Default is "SAPLMA".
+
+    Returns:
+        best_params (tuple): The best hyperparameter combination found.
+    """
     if regression:
         best_score = np.inf
         metric = mean_squared_error
@@ -82,6 +97,22 @@ def cross_val_hp(
 
 
 class TrainerMLP:
+    """
+    Trainer class for training and predicting with a MLP model.
+
+    Args:
+        n_epochs (int): Number of training epochs.
+        batch_size (int): Batch size for training and prediction.
+        lr (float): Learning rate for the optimizer.
+        n_features (int): Number of input features for the MLP.
+        device (str): Device to use for training and inference ('cuda' or 'cpu').
+        loss_fn (nn.Module, optional): Loss function to use. Defaults to MSELoss if None.
+        model (nn.Module): MLP model class to instantiate.
+
+    Methods:
+        fit(X, y, mask=None, regression=False): Train the model on the provided data.
+        predict(X, mask=None, regression=False): Predict outputs for the provided data.
+    """
     def __init__(
         self,
         n_epochs: int = 5,
@@ -100,6 +131,15 @@ class TrainerMLP:
         self.loss_fn = loss_fn if loss_fn is not None else nn.MSELoss()
 
     def fit(self, X, y, mask=None, regression: bool = False):
+        """
+        Train the MLP model on the provided data.
+
+        Args:
+            X (np.ndarray or torch.Tensor): Input features.
+            y (np.ndarray or torch.Tensor): Target values.
+            mask (np.ndarray or torch.Tensor, optional): Optional attention mask for the data.
+            regression (bool, optional): If True, use regression mode. If False, use classification mode.
+        """
         self.model.train()
         X_torch = (
             torch.tensor(X, dtype=torch.float32)
@@ -142,6 +182,17 @@ class TrainerMLP:
                 self.optimizer.step()
 
     def predict(self, X, mask=None, regression: bool = False):
+        """
+        Predict outputs for the provided data using the trained MLP model.
+
+        Args:
+            X (np.ndarray or torch.Tensor): Input features.
+            mask (np.ndarray or torch.Tensor, optional): Optional attention mask for the data.
+            regression (bool, optional): If True, use regression mode. If False, use classification mode.
+
+        Returns:
+            np.ndarray: Predicted outputs.
+        """
         X_torch = (
             torch.tensor(X, dtype=torch.float32)
             if not isinstance(X, torch.Tensor)

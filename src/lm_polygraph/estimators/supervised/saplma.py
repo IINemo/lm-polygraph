@@ -39,6 +39,27 @@ class MLP(nn.Module):
 
 
 class SAPLMA(Estimator):
+    """
+    SAPLMA: Supervised uncertainty estimation using an MLP on hidden state embeddings.
+
+    This method follows the approach described in:
+    "The Internal State of an LLM Knows When It’s Lying"
+    (https://aclanthology.org/2023.findings-emnlp.68.pdf).
+
+    The SAPLMA estimator trains a MLP on hidden state embeddings
+    to predict a target metric (e.g., hallucination label or continuous metric).
+
+    Args:
+        embeddings_type (str): Which embeddings to use ("decoder" or "encoder").
+        layer (int): Which hidden layer to use (None for middle layer, -1 for last).
+        device (str): Device for computation.
+        model_name (str): Name of the pretrained model (for layer selection).
+
+    Dependencies:
+        - "train_embeddings"
+        - "embeddings"
+        - "train_metrics"
+    """
     def __init__(
         self,
         embeddings_type: str = "decoder",
@@ -94,6 +115,15 @@ class SAPLMA(Estimator):
         return f"SAPLMA_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Compute SAPLMA uncertainty scores for a batch of samples.
+
+        Args:
+            stats (Dict[str, np.ndarray]): Dictionary containing embeddings and train metrics.
+
+        Returns:
+            np.ndarray: Array of uncertainty scores.
+        """
         # Select embeddings
         emb_key = f"embeddings_{self.embeddings_type}{self.layer_name}"
         embeddings = create_cuda_tensor_from_numpy(stats[emb_key])

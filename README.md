@@ -159,6 +159,13 @@ UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs
 | LUQ [(Zhang et al., 2024)](https://aclanthology.org/2024.emnlp-main.299/)                                                                                                      | Black-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
 | Verbalized Uncertainty 1S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Low     | Low    |         No          | sequence      |
 | Verbalized Uncertainty 2S [(Tian et al., 2023)](https://arxiv.org/abs/2305.14975)                                                                                              | Black-box   | Reflexive           | Medium  | Low    |         No          | sequence      |
+| SAPLMA [(Azaria et al., 2023)](https://aclanthology.org/2023.findings-emnlp.68.pdf)                                                                                             | White-box   | Supervised | Low  | Low | Yes                 | sequence      |
+| MIND [(Su et al., 2024)](https://aclanthology.org/2024.findings-acl.854/)                                                                                                 | White-box   | Supervised | Low  | Low | Yes                 | sequence      |
+| LayerSheeps [(CH-Wang et al., 2024)](https://aclanthology.org/2024.findings-acl.260.pdf)                                                                                       | White-box   | Supervised | Low    | Low | Yes                 | sequence      |
+| Sheeps [(CH-Wang et al., 2024)](https://aclanthology.org/2024.findings-acl.260.pdf)                                                                                            | White-box   | Supervised | Low    | Low | Yes                 | sequence      |
+| SATRMD [(Vazhentsev et al., 2025)](https://aclanthology.org/2025.naacl-long.113/)                                                                                              | White-box   | Supervised   | Low    | Medium | Yes                 | sequence      |
+| Token Mahalanobis Distance (TMD) [(Vazhentsev et al., 2025)](https://aclanthology.org/2025.naacl-long.113/)                                                                    | White-box   | Supervised       | Low  | Low    | Yes                 | sequence |
+| Relative Token Mahalanobis Distance (RTMD) [(Vazhentsev et al., 2025)](https://aclanthology.org/2025.naacl-long.113/)                                                          | White-box   | Supervised       | Low  | Low    | Yes                 | sequence |
 
 ## Benchmark
 

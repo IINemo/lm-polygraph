@@ -13,6 +13,11 @@ from .common import cross_val_hp, TrainerMLP
 
 
 class AttentionPooling(nn.Module):
+    """
+    Attention-based pooling layer for aggregating token embeddings.
+
+    Used in the SHEEPS method from https://aclanthology.org/2024.findings-acl.260.pdf
+    """
     def __init__(self, embedding_size):
         super().__init__()
         self.attn = nn.Linear(embedding_size, 1)
@@ -26,6 +31,9 @@ class AttentionPooling(nn.Module):
 
 
 class MLP(nn.Module):
+    """
+    MLP classifier with attention pooling for sequence-level uncertainty estimation.
+    """
     def __init__(self, n_features: int = 4096):
         super().__init__()
         self.pooling = AttentionPooling(n_features)
@@ -41,6 +49,13 @@ class MLP(nn.Module):
 
 
 class LayerSheeps(Estimator):
+    """
+    LayerSHEEPS: Sequence-level uncertainty estimation using attention-pooled token embeddings
+    from a single layer, as described in https://aclanthology.org/2024.findings-acl.260.pdf
+
+    This estimator fits an MLP with attention pooling on token embeddings from a specific layer,
+    using a cross-entropy loss to predict hallucination labels.
+    """
     def __init__(
         self,
         embeddings_type: str = "decoder",
@@ -79,6 +94,16 @@ class LayerSheeps(Estimator):
         return f"LayerSheeps_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Compute sequence-level uncertainty scores using attention-pooled token embeddings
+        from a single layer, as in SHEEPS (https://aclanthology.org/2024.findings-acl.260.pdf).
+
+        Args:
+            stats (Dict[str, np.ndarray]): Dictionary containing token embeddings and metrics.
+
+        Returns:
+            np.ndarray: Array of uncertainty scores for each sequence.
+        """
         if not self.is_fitted:
             train_metrics = stats["train_metrics"]
             train_greedy_tokens = stats["train_greedy_tokens"]
@@ -147,6 +172,14 @@ class LayerSheeps(Estimator):
 
 
 class Sheeps(Estimator):
+    """
+    Implements the SHEEPS method from "Do Androids Know They’re Only Dreaming of Electric Sheep?"
+    (https://aclanthology.org/2024.findings-acl.260.pdf)
+
+    This estimator fits a meta-classifier (logistic regression) on the outputs of LayerSHEEPS
+    from multiple layers, using attention-pooled token embeddings, to predict hallucination
+    or uncertainty at the sequence level.
+    """
     def __init__(
         self,
         embeddings_type: str = "decoder",
