@@ -3,9 +3,10 @@ from typing import Dict
 from sklearn.linear_model import LogisticRegression
 from lm_polygraph.estimators.estimator import Estimator
 
+
 class LookBackLens(Estimator):
     """
-    This estimator implements the LookBackLens method from 
+    This estimator implements the LookBackLens method from
     "LookBackLens: Lookback Lens: Detecting and Mitigating Contextual Hallucinations in Large Language Models Using Only Attention Maps"
     (https://aclanthology.org/2024.emnlp-main.84/).
 
