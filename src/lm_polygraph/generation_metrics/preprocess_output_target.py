@@ -36,7 +36,7 @@ class PreprocessOutputTarget(GenerationMetric):
             np.ndarray: list of base metric values for each sample in input.
         """
         processed_target_texts = [
-            self.process_target_fn(target) for target in target_texts
+            self.process_target_fn(str(target)) for target in target_texts
         ]
 
         # Select and copy only the stats that are needed for the base metric
@@ -45,7 +45,7 @@ class PreprocessOutputTarget(GenerationMetric):
         stats_copy = deepcopy(stats_copy)
 
         stats_copy["greedy_texts"] = [
-            self.process_output_fn(output) for output in stats_copy["greedy_texts"]
+            self.process_output_fn(str(output)) for output in stats_copy["greedy_texts"]
         ]
 
         return self.base_metric(stats_copy, processed_target_texts)

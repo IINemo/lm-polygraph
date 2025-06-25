@@ -151,7 +151,9 @@ def main(args):
                 "subsample_eval_dataset": args.subsample_eval_dataset,
                 "estimators": estimators
             }
-            man.save(save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man", metainfo=metainfo)
+            final_path = save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man"
+            print(f"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMAN SAVED TO: {final_path}")
+            man.save(final_path, metainfo=metainfo)
             # man.save(save_path + f"/ue_manager_seed1")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:

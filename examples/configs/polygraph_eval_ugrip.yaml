@@ -1,6 +1,7 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    # dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 task: qa
 
@@ -8,12 +9,10 @@ defaults:
   - model: ugrip_llama_instruct
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
+  - generation_metrics: null
+
   - _self_
 
-<<<<<<< HEAD
-# task: qa
-dataset: ['UGRIP-LM-Polygraph/gsm8k-direct']
-=======
 # OPTIONS:
 #  UGRIP-LM-Polygraph/gsm8k-direct
 #  UGRIP-LM-Polygraph/gsm8k-reasoning
@@ -23,8 +22,7 @@ dataset: ['UGRIP-LM-Polygraph/gsm8k-direct']
 #  UGRIP-LM-POLYGRAPH/mmlu-reasoning
 dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
 
-task: qa
->>>>>>> ugrip
+# task: qa
 text_column: question
 label_column: answer
 # Use max_new_tokens= to override
@@ -50,13 +48,9 @@ generation_params:
   generate_until:
     - "\n"
 
-<<<<<<< HEAD
-subsample_eval_dataset: 10
-=======
 # \/ How many samples per dataset
 # Change with subsample_eval_dataset=25
-subsample_eval_dataset: -1
->>>>>>> ugrip
+subsample_eval_dataset: 10
 
 # \/ What to ignore in model output
 # output_ignore_regex: "(?s).### Answer: "
