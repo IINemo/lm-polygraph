@@ -63,6 +63,7 @@ def load_dataset(args):
 def load_stat_calculator(config, builder):
     return_embeddings = getattr(builder, "return_embeddings", False)
     return_token_embeddings = getattr(builder, "return_token_embeddings", False)
+    return_lookback_ratios = getattr(builder, "return_lookback_ratios", False)
     if getattr(config, "target_metric", None):
         try:
             selected_metric = next(
@@ -85,5 +86,6 @@ def load_stat_calculator(config, builder):
         output_hidden_states=config.output_hidden_states,
         return_embeddings=return_embeddings,
         return_token_embeddings=return_token_embeddings,
+        return_lookback_ratios=return_lookback_ratios,
         target_metric=selected_metric,
     )

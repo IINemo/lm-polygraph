@@ -31,7 +31,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_texts",
             "greedy_log_likelihoods",
             "embeddings_raw",
-            "attention_all",
+            "attention_raw",
             "tokenizer",
         ], []
 
@@ -197,52 +197,33 @@ class GreedyProbsCalculator(StatCalculator):
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
-        attention_all = []
-        if self.output_attentions and (model.model_type != "vLLMCausalLM"):
-            prompt_len = batch["input_ids"].shape[1]
-            for i in range(len(texts)):
-                c = len(cut_sequences[i])
-                attn_mask = np.zeros(
-                    shape=(
-                        model.model.config.num_attention_heads
-                        * model.model.config.num_hidden_layers,
-                        c,
-                        c,
-                    )
-                )
-                for j in range(1, c):
-                    # Get attention dimensions
-                    current_attention_len = attentions[j][0].shape[-1]
+        # attention_all = []
+        # if self.output_attentions and (model.model_type != "vLLMCausalLM"):
+        #     for i in range(len(texts)):
+        #         c = len(cut_sequences[i])
+        #         attn_mask = np.zeros(
+        #             shape=(
+        #                 model.model.config.num_attention_heads
+        #                 * model.model.config.num_hidden_layers,
+        #                 c,
+        #                 c,
+        #             )
+        #         )
+        #         for j in range(1, c):
+        #             stacked_attention = torch.vstack(
+        #                 [
+        #                     attentions[j][layer][0][head][0][-j:]
+        #                     for layer in range(len(attentions[j]))
+        #                     for head in range(len(attentions[j][layer][0]))
+        #                 ]
+        #             )
+        #             if stacked_attention.dtype == torch.bfloat16:
+        #                 stacked_attention = stacked_attention.to(
+        #                     torch.float16
+        #                 )  # numpy does not support bfloat16
 
-                    # Default case: use relative indexing from end
-                    start_idx = -j
-                    end_idx = current_attention_len
-
-                    # Special case for models like Gemma that maintain consistent attention lengths
-                    if attentions[0][0].shape[-1] == current_attention_len:
-                        start_idx = prompt_len
-                        end_idx = prompt_len + j
-
-                    stacked_attention = torch.vstack(
-                        [
-                            self._preprocess_attention(
-                                attentions[j][layer][0][head][0],
-                                j,
-                                start_idx,
-                                end_idx,
-                                prompt_len,
-                            )
-                            for layer in range(len(attentions[j]))
-                            for head in range(len(attentions[j][layer][0]))
-                        ]
-                    )
-                    if stacked_attention.dtype == torch.bfloat16:
-                        stacked_attention = stacked_attention.to(
-                            torch.float16
-                        )  # numpy does not support bfloat16
-
-                    attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
-                attention_all.append(attn_mask)
+        #             attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
+        #         attention_all.append(attn_mask.max(0))
 
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
@@ -254,6 +235,6 @@ class GreedyProbsCalculator(StatCalculator):
         }
         result_dict.update(embeddings_dict)
         if self.output_attentions:
-            result_dict.update({"attention_all": attention_all})
+            result_dict.update({"attention_raw": attentions})
             result_dict.update({"tokenizer": model.tokenizer})
         return result_dict

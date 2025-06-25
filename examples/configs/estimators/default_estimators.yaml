@@ -114,3 +114,4 @@
   cfg:
     model_name: '${model.path}'
     base_method: "TokenMahalanobis"
+- name: LookBackLens

@@ -95,3 +95,4 @@ from .supervised.relative_token_mahalanobis_distance import (
     RelativeTokenMahalanobisDistance,
 )
 from .supervised.satrmd import SATRMD
+from .supervised.lookbacklens import LookBackLens
