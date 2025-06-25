@@ -60,6 +60,7 @@ class SAPLMA(Estimator):
         - "embeddings"
         - "train_metrics"
     """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",

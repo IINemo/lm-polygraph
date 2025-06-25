@@ -21,7 +21,7 @@ from transformers import AutoConfig
 class SATRMD(Estimator):
     """
     Supervised Average Token Relative Mahalanobis Distance (SATRMD)
-    
+
     Implements the SATRMD method as described in
     "Token-Level Density-Based Uncertainty Quantification Methods for Eliciting Truthfulness of Large Language Models"
     (https://aclanthology.org/2025.naacl-long.113/).

@@ -18,6 +18,7 @@ class AttentionPooling(nn.Module):
 
     Used in the SHEEPS method from https://aclanthology.org/2024.findings-acl.260.pdf
     """
+
     def __init__(self, embedding_size):
         super().__init__()
         self.attn = nn.Linear(embedding_size, 1)
@@ -34,6 +35,7 @@ class MLP(nn.Module):
     """
     MLP classifier with attention pooling for sequence-level uncertainty estimation.
     """
+
     def __init__(self, n_features: int = 4096):
         super().__init__()
         self.pooling = AttentionPooling(n_features)
@@ -56,6 +58,7 @@ class LayerSheeps(Estimator):
     This estimator fits an MLP with attention pooling on token embeddings from a specific layer,
     using a cross-entropy loss to predict hallucination labels.
     """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",
@@ -180,6 +183,7 @@ class Sheeps(Estimator):
     from multiple layers, using attention-pooled token embeddings, to predict hallucination
     or uncertainty at the sequence level.
     """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",
