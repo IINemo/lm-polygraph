@@ -167,6 +167,7 @@ UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs
 | Token Mahalanobis Distance (TMD) [(Vazhentsev et al., 2025)](https://aclanthology.org/2025.naacl-long.113/)                                                                    | White-box   | Supervised       | Low  | Low    | Yes                 | sequence |
 | Relative Token Mahalanobis Distance (RTMD) [(Vazhentsev et al., 2025)](https://aclanthology.org/2025.naacl-long.113/)                                                          | White-box   | Supervised       | Low  | Low    | Yes                 | sequence |
 | LookBackLens [(Chuang et al., 2024)](https://aclanthology.org/2024.emnlp-main.84/) | White-box   | Supervised | Low  | Low | Yes                 | sequence      |
+| TAD [(Vazhentsev et al., 2024)](https://arxiv.org/pdf/2408.10692)                                                                                                              | White-box   | Supervised          | Low     | Low | Yes                 | sequence      |
 
 
 ## Benchmark
