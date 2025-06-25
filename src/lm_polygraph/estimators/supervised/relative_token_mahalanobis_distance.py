@@ -11,6 +11,34 @@ from .token_mahalanobis_distance import TokenMahalanobisDistance
 
 
 class RelativeTokenMahalanobisDistance(Estimator):
+    """
+    Relative Token Mahalanobis Distance (RTMD)
+    
+    This method computes the difference between the Token Mahalanobis distance of each token embedding
+    to the in-distribution centroid (computed from training data) and the Token Mahalanobis distance
+    to a background centroid (computed from a background set of embeddings), as described in
+    https://aclanthology.org/2025.naacl-long.113/.
+    
+    The RTMD is defined as:
+        RTMD(x) = MD(x) - MD_0(x)
+    where MD(x) is the Token Mahalanobis distance of token embedding x to the in-distribution centroid,
+    and MD_0(x) is the Token Mahalanobis distance to the background centroid.
+    
+    Args:
+        embeddings_type (str): Which embeddings to use ("decoder" or "encoder").
+        metric_thr (float): Threshold for binarizing the metric (not used in RMD, but kept for compatibility).
+        aggregation (str): How to aggregate token-level scores into a sequence-level score ("mean" or "none").
+        layer (int): Which hidden layer to use (-1 for last).
+        device (str): Device for computation ("cuda" or "cpu").
+        storage_device (str): Device for storing centroids/covariances ("cuda" or "cpu").
+    
+    Dependencies:
+        - "token_embeddings"
+        - "train_token_embeddings"
+        - "background_train_token_embeddings"
+        - "train_metrics"
+    """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",

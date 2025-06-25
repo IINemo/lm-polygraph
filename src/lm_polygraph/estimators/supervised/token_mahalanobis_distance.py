@@ -10,6 +10,22 @@ from lm_polygraph.estimators.mahalanobis_distance import (
 
 
 class TokenMahalanobisDistance(Estimator):
+    """
+    Token Mahalanobis Distance (TMD) as described in https://aclanthology.org/2025.naacl-long.113/.
+
+    This method computes the Token Mahalanobis distance between each token embedding and the centroid
+    of in-distribution token embeddings, using the inverse covariance estimated from the high-quality training data.
+    The resulting token-level distances can be aggregated (e.g., mean) to produce a sequence-level
+    uncertainty score.
+
+    Args:
+        embeddings_type (str): Which embeddings to use ("decoder" or "encoder").
+        layer (int): Which hidden layer to use (-1 for last).
+        metric_thr (float): Threshold for binarizing the metric (used for filtering high-quality training data).
+        aggregation (str): How to aggregate token-level scores into a sequence-level score ("mean" or "none").
+        device (str): Device for computation ("cuda" or "cpu").
+        storage_device (str): Device for storing centroids/covariances ("cuda" or "cpu").
+    """
     def __init__(
         self,
         embeddings_type: str = "decoder",

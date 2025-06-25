@@ -30,10 +30,32 @@ class MLP(nn.Module):
 
 
 def aggregate_token_embeddings(embeddings):
+    """
+    Aggregates token embeddings for a sequence by averaging all token embeddings and
+    combining with the last token embedding, as in the MIND method.
+    """
     return (np.mean(embeddings, axis=0) + np.array(embeddings[-1])) / 2
 
 
 class MIND(Estimator):
+    """
+    MIND: Unsupervised Real-Time Hallucination Detection based on the Internal States of Large Language Models
+
+    This estimator uses a cross-validated MLP classifier trained on aggregated token-level
+    hidden state embeddings to predict uncertainty,
+    following the method from https://aclanthology.org/2024.findings-acl.854/.
+
+    Args:
+        embeddings_type (str): Which embeddings to use ("decoder" or "encoder").
+        layer (int): Which hidden layer to use (-1 for last).
+        device (str): Device for computation.
+        metric_thr (float): Threshold for binarizing the metric (e.g., AlignScore).
+
+    Dependencies:
+        - "token_embeddings"
+        - "train_token_embeddings"
+        - "train_metrics"
+    """
     def __init__(
         self,
         embeddings_type: str = "decoder",
@@ -80,6 +102,16 @@ class MIND(Estimator):
         return f"MIND_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Compute MIND uncertainty scores for a batch of samples.
+
+        Args:
+            stats (Dict[str, np.ndarray]): Dictionary containing token embeddings, greedy tokens,
+                and train metrics.
+
+        Returns:
+            np.ndarray: Array of uncertainty scores.
+        """
         if not self.is_fitted:
 
             train_metrics = stats["train_metrics"]

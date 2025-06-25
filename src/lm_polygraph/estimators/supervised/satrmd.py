@@ -19,6 +19,45 @@ from transformers import AutoConfig
 
 
 class SATRMD(Estimator):
+    """
+    Supervised Average Token Relative Mahalanobis Distance (SATRMD)
+    
+    Implements the SATRMD method as described in
+    "Token-Level Density-Based Uncertainty Quantification Methods for Eliciting Truthfulness of Large Language Models"
+    (https://aclanthology.org/2025.naacl-long.113/).
+
+    SATRMD aggregates token-level (Relative) Mahalanobis distances across multiple layers,
+    optionally using either the standard Token Mahalanobis Distance (TMD) or the Relative Token Mahalanobis Distance (RTMD)
+    as the base method. The resulting per-layer, per-sequence features are reduced via PCA and combined with
+    standard uncertainty features (maximum sequence probability and entropy), and a Ridge regression model is trained
+    to predict the uncertainty score.
+
+    Args:
+        embeddings_type (str): Which embeddings to use ("decoder" or "encoder").
+        metric_thr (float): Threshold for binarizing the metric (used for filtering high-quality training data).
+        aggregation (str): How to aggregate token-level scores into a sequence-level score ("mean" or "none").
+        layers (List[int]): Which hidden layers to use (default: all layers).
+        base_method (str): "RelativeTokenMahalanobis" or "TokenMahalanobis".
+        device (str): Device for computation ("cuda" or "cpu").
+        storage_device (str): Device for storing centroids/covariances ("cuda" or "cpu").
+        n_pca_components (int): Number of PCA components for dimensionality reduction.
+        dev_size (float): Fraction of training data to use as development set for fitting the regression.
+        model_name (str): Name of the pretrained model (for determining number of layers).
+
+    Dependencies:
+        - "token_embeddings"
+        - "train_token_embeddings"
+        - "background_train_token_embeddings"
+        - "train_metrics"
+        - "train_greedy_texts"
+        - "train_greedy_tokens"
+        - "train_greedy_log_likelihoods"
+        - "train_greedy_log_probs"
+        - "greedy_tokens"
+        - "greedy_log_likelihoods"
+        - "greedy_log_probs"
+    """
+
     def __init__(
         self,
         embeddings_type: str = "decoder",
