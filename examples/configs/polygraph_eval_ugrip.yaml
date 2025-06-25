@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: ugrip_llama_instruct
@@ -55,6 +55,9 @@ subsample_eval_dataset: -1
 ignore_exceptions: false
 
 batch_size: 1
+
+stat_calculator:
+    batch_size: 1
 
 seed:
     - 1
