@@ -100,3 +100,17 @@
 - name: CocoaPPL
 - name: CocoaMTE
 - name: SemanticDensity
+- name: SAPLMA
+  cfg:
+    model_name: '${model.path}'
+- name: MIND
+- name: Sheeps
+  cfg:
+    model_name: '${model.path}'
+- name: SATRMD
+  cfg:
+    model_name: '${model.path}'
+- name: SATRMD
+  cfg:
+    model_name: '${model.path}'
+    base_method: "TokenMahalanobis"

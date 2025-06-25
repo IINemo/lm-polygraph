@@ -38,10 +38,12 @@
     bg_size: 100000
     output_attentions: True
     output_hidden_states: True
+    target_metric: "Accuracy"
   stats: 
     - "train_embeddings"
     - "train_token_embeddings"
     - "background_train_embeddings"
     - "background_train_token_embeddings"
     - "train_greedy_log_likelihoods"
+    - "train_metrics"
   dependencies:

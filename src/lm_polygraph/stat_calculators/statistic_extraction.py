@@ -9,6 +9,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 from .greedy_probs import GreedyProbsCalculator
 from .embeddings import EmbeddingsCalculator, TokenEmbeddingsCalculator
+from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
 
 
 class TrainingStatisticExtractionCalculator(StatCalculator):
@@ -34,6 +35,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
         output_hidden_states: bool = True,
         return_embeddings: bool = False,
         return_token_embeddings: bool = False,
+        target_metric: GenerationMetric = None,
     ):
         super().__init__()
         self.train_dataset = train_dataset
@@ -49,6 +51,8 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
             self.base_calculators.append(EmbeddingsCalculator())
         if return_token_embeddings:
             self.base_calculators.append(TokenEmbeddingsCalculator())
+        if target_metric is not None:
+            self.target_metric = target_metric
 
     def __call__(
         self,
@@ -65,6 +69,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
             result_train_stat = {}
             datasets = [self.train_dataset, self.background_train_dataset]
             datasets_name = ["train_", "background_train_"]
+            skip_keywords = ["tokenizer", "layers", "_raw"]
             for dataset, dataset_name in zip(datasets, datasets_name):
                 if dataset is None:
                     continue
@@ -91,12 +96,17 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                                 continue
                             batch_stats[stat] = stat_value
 
+                    if dataset_name == "train_":
+                        batch_stats["metrics"] = self.target_metric(
+                            batch_stats, target_texts
+                        )
+
                     for stat in batch_stats.keys():
                         if stat in [
                             "input_tokens",
                             "input_texts",
                             "target_texts",
-                        ]:
+                        ] or any(keyword in stat for keyword in skip_keywords):
                             continue
                         if dataset_name + stat in train_stats.keys():
                             train_stats[dataset_name + stat].append(batch_stats[stat])
@@ -106,7 +116,6 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     torch.cuda.empty_cache()
                     gc.collect()
 
-            skip_keywords = ["tokenizer", "layers", "_raw"]
             for stat in train_stats.keys():
                 if any(s is None for s in train_stats[stat]) or any(
                     keyword in stat for keyword in skip_keywords

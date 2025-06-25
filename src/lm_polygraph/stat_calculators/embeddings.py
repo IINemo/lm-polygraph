@@ -194,6 +194,19 @@ class OutputWrapper:
 
 
 class EmbeddingsCalculator(StatCalculator):
+    """
+    For a Whitebox model (lm_polygraph.WhiteboxModel), calculates sequence-level embeddings for a batch of input texts.
+    The embeddings are extracted from the model's hidden states (decoder or encoder, depending on model type).
+    Supports CausalLM, VisualLM, and Seq2SeqLM model types.
+
+    Returns a dictionary with keys for each layer's embeddings, e.g.:
+        - 'embeddings_decoder' or 'embeddings_decoder_{layer}' for CausalLM/VisualLM
+        - 'embeddings' or 'embeddings_{layer}' for Seq2SeqLM
+
+    Dependencies:
+        - 'embeddings_raw' (raw hidden states from the model)
+    """
+
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
@@ -213,6 +226,20 @@ class EmbeddingsCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
+        """
+        Calculates sequence-level embeddings for a batch of input texts.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): Dictionary containing raw hidden states and layers.
+            texts (List[str]): Input texts batch for which to compute embeddings.
+            model (WhiteboxModel): Model used for embedding extraction.
+            max_new_tokens (int): Maximum number of new tokens at model generation (unused here). Default: 100.
+
+        Returns:
+            Dict[str, np.ndarray]: Dictionary with keys for each layer's embeddings:
+                - 'embeddings_decoder' or 'embeddings_decoder_{layer}' for CausalLM/VisualLM
+                - 'embeddings' or 'embeddings_{layer}' for Seq2SeqLM
+        """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
@@ -251,6 +278,19 @@ class EmbeddingsCalculator(StatCalculator):
 
 
 class TokenEmbeddingsCalculator(StatCalculator):
+    """
+    For a Whitebox model (lm_polygraph.WhiteboxModel), calculates token-level embeddings for a batch of input texts.
+    The embeddings are extracted from the model's hidden states (decoder or encoder, depending on model type).
+    Supports CausalLM, VisualLM, and Seq2SeqLM model types.
+
+    Returns a dictionary with keys for each layer's token embeddings, e.g.:
+        - 'token_embeddings_decoder' or 'token_embeddings_decoder_{layer}' for CausalLM/VisualLM
+        - 'token_embeddings' or 'token_embeddings_{layer}' for Seq2SeqLM
+
+    Dependencies:
+        - 'embeddings_raw' (raw hidden states from the model)
+    """
+
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
@@ -270,6 +310,20 @@ class TokenEmbeddingsCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
+        """
+        Calculates token-level embeddings for a batch of input texts.
+
+        Parameters:
+            dependencies (Dict[str, np.ndarray]): Dictionary containing raw hidden states and layers.
+            texts (List[str]): Input texts batch for which to compute token embeddings.
+            model (WhiteboxModel): Model used for embedding extraction.
+            max_new_tokens (int): Maximum number of new tokens at model generation (unused here). Default: 100.
+
+        Returns:
+            Dict[str, np.ndarray]: Dictionary with keys for each layer's token embeddings:
+                - 'token_embeddings_decoder' or 'token_embeddings_decoder_{layer}' for CausalLM/VisualLM
+                - 'token_embeddings' or 'token_embeddings_{layer}' for Seq2SeqLM
+        """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
