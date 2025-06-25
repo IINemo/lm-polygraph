@@ -85,6 +85,8 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
 
 
 def create_cuda_tensor_from_numpy(array):
+    if isinstance(array, list):
+        array = np.stack(array)
     if not isinstance(array, torch.Tensor):
         array = torch.from_numpy(array)
     if torch.cuda.is_available():
