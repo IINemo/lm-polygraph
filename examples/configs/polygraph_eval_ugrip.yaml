@@ -2,6 +2,8 @@ hydra:
   run:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
+task: qa
+
 defaults:
   - model: ugrip_llama_instruct
   - estimators: ugrip_benchmark_estimators
@@ -19,7 +21,6 @@ defaults:
 #  UGRIP-LM-POLYGRAPH/mmlu-reasoning
 dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
 
-# task: qa
 text_column: question
 label_column: answer
 # Use max_new_tokens= to override
