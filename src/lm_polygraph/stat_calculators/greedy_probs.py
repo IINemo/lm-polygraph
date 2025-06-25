@@ -41,18 +41,49 @@ class GreedyProbsCalculator(StatCalculator):
         output_attentions: bool = True,
         output_hidden_states: bool = False,
         n_alternatives: int = 10,
+        answer_marker: str = "### Answer:",
+        slicing_target: str = None,
     ):
+        """
+        Initializes the calculator.
+
+        Parameters:
+            output_attentions (bool): Whether to calculate and return attention scores.
+            output_hidden_states (bool): Whether to calculate and return embeddings.
+            n_alternatives (int): Number of alternative tokens to store at each position.
+            answer_marker (str): The string that separates different parts of the generation.
+            slicing_target (str): Determines which part of the generation to analyze.
+                - "answer": Analyzes the text after the answer_marker.
+                - "reasoning": Analyzes the text before the answer_marke`.
+                - None or any other string: Analyzes the full generation without slicing.
+        """
         super().__init__()
         self.output_attentions = output_attentions
         self.output_hidden_states = output_hidden_states
         self.n_alternatives = n_alternatives
+        
+        if slicing_target not in ["answer", "reasoning", None]:
+            self.slicing_target = None
+        else:
+            self.slicing_target = slicing_target
+        self.answer_marker = answer_marker if self.slicing_target else None
+
+    def _find_token_subsequence(self, main_list: List[int], sub_list: List[int]) -> int:
+        """Finds the starting index of a sublist within the main list"""
+        len_sub = len(sub_list)
+        if len_sub == 0:
+            return -1
+        for i in range(len(main_list) - len_sub + 1):
+            if main_list[i : i + len_sub] == sub_list:
+                return i
+        return -1
 
     def __call__(
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: Union[WhiteboxModel, WhiteboxModelvLLM],
-        max_new_tokens: int = 100,
+        max_new_tokens: int = 500,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of probabilities at each token position in the generation.
@@ -105,41 +136,77 @@ class GreedyProbsCalculator(StatCalculator):
                     out, batch, model.model_type
                 )
                 if embeddings_decoder.dtype == torch.bfloat16:
-                    embeddings_decoder = embeddings_decoder.to(
-                        torch.float16
-                    )  # numpy does not support bfloat16
+                    embeddings_decoder = embeddings_decoder.to(torch.float16)
 
         cut_logits = []
         cut_sequences = []
         cut_texts = []
         cut_alternatives = []
+        all_slice_start_indices = []
+
+        marker_tokens = []
+        if self.answer_marker:
+            marker_tokens = model.tokenizer(
+                self.answer_marker, add_special_tokens=False
+            ).input_ids
+
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]
-                seq = sequences[i, idx:].cpu()
+                full_gen_seq = sequences[i, idx:].cpu()
             elif model.model_type == "vLLMCausalLM":
-                seq = sequences[i].cpu()
+                full_gen_seq = sequences[i].cpu()
             else:
-                seq = sequences[i, 1:].cpu()
+                full_gen_seq = sequences[i, 1:].cpu()
+
+            slice_start_idx = 0
+            slice_end_idx = len(full_gen_seq)
+            marker_pos = -1
+
+            if self.slicing_target and len(marker_tokens) > 0:
+                marker_pos = self._find_token_subsequence(full_gen_seq.tolist(), marker_tokens)
+
+            if self.slicing_target == "answer":
+                if marker_pos != -1:
+                    slice_start_idx = marker_pos + len(marker_tokens)
+                else:
+                    # If marker not found for answer mode, produces empty result
+                    slice_start_idx, slice_end_idx = 0, 0
+            elif self.slicing_target == "reasoning":
+                if marker_pos != -1:
+                    slice_end_idx = marker_pos
+                # If marker not found, process whole sequence
+
+
+            all_slice_start_indices.append(slice_start_idx)
+            seq = full_gen_seq[slice_start_idx:slice_end_idx]
+
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):
                 if seq[j] == model.tokenizer.eos_token_id:
                     length = j + 1
                     text_length = j
                     break
-            cut_sequences.append(seq[:length].tolist())
-            cut_texts.append(model.tokenizer.decode(seq[:text_length]))
-            cut_logits.append(logits[i, :length, :].cpu().numpy())
+
+            final_seq_tokens = seq[:length].tolist()
+            final_seq_text_tokens = seq[:text_length]
+
+            cut_sequences.append(final_seq_tokens)
+            cut_texts.append(model.tokenizer.decode(final_seq_text_tokens))
+
+            cut_logits.append(logits[i, slice_start_idx : slice_start_idx + length, :].cpu().numpy())
+
             cut_alternatives.append([[] for _ in range(length)])
             for j in range(length):
-                lt = logits[i, j, :].cpu().numpy()
+                # Absolute offset
+                lt = logits[i, j + slice_start_idx, :].cpu().numpy()
                 best_tokens = np.argpartition(lt, -self.n_alternatives)
                 ln = len(best_tokens)
                 best_tokens = best_tokens[ln - self.n_alternatives : ln]
                 for t in best_tokens:
                     cut_alternatives[-1][j].append((t.item(), lt[t].item()))
                 cut_alternatives[-1][j].sort(
-                    key=lambda x: x[0] == cut_sequences[-1][j],
+                    key=lambda x: x[0] == final_seq_tokens[j],
                     reverse=True,
                 )
 
@@ -147,6 +214,9 @@ class GreedyProbsCalculator(StatCalculator):
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
+            if len(tokens) == 0:
+                ll.append([])
+                continue
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
@@ -157,30 +227,27 @@ class GreedyProbsCalculator(StatCalculator):
             if hasattr(config, 'text_config'):
                 config = config.text_config
             for i in range(len(texts)):
+                slice_start_idx = all_slice_start_indices[i]
                 c = len(cut_sequences[i])
-                attn_mask = np.zeros(
+                attn_mask = np.zeros(shape=(
+                    config.num_attention_heads * config.num_hidden_layers, c, c
+                ))
+                
+                if c == 0: # Empty sequence
+                    attention_all.append(attn_mask.max(0))
+                    continue
 
-                    shape=(
-                        config.num_attention_heads
-                        * config.num_hidden_layers,
-                        c,
-                        c,
-                    )
-                )
                 for j in range(1, c):
-                    stacked_attention = torch.vstack(
-                        [
-                            attentions[j][layer][0][head][0][-j:]
-                            for layer in range(len(attentions[j]))
-                            for head in range(len(attentions[j][layer][0]))
-                        ]
-                    )
-                    if stacked_attention.dtype == torch.bfloat16:
-                        stacked_attention = stacked_attention.to(
-                            torch.float16
-                        )  # numpy does not support bfloat16
-
-                    attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
+                    original_token_index = j + slice_start_idx
+                    if original_token_index < len(attentions):
+                        stacked_attention = torch.vstack([
+                            attentions[original_token_index][layer][0][head][0][-j:]
+                            for layer in range(len(attentions[original_token_index]))
+                            for head in range(len(attentions[original_token_index][layer][0]))
+                        ])
+                        if stacked_attention.dtype == torch.bfloat16:
+                            stacked_attention = stacked_attention.to(torch.float16)
+                        attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
                 attention_all.append(attn_mask.max(0))
 
         if not self.output_hidden_states:
