@@ -36,7 +36,7 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         self.cross_encoder_name = cross_encoder_name
 
     def _setup(self, device="cuda"):
-        self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
+        self.crossencoder = CrossEncoder(self.cross_encoder_name, model_kwargs={"device_map": "auto"})
 
     def __call__(
         self,

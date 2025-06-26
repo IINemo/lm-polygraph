@@ -69,11 +69,12 @@ class Deberta:
             self.deberta_path,
             problem_type="multi_label_classification",
             cache_dir=self.hf_cache,
+            device_map="auto",
         )
         self._deberta_tokenizer = DebertaTokenizer.from_pretrained(
             self.deberta_path, cache_dir=self.hf_cache
         )
-        self._deberta.to(self.device)
+        #self._deberta.to(self.device)
         self._deberta.eval()
 
 
