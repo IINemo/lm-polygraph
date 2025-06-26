@@ -70,21 +70,20 @@ class GreedyProbsCalculator(StatCalculator):
         self.answer_marker = answer_marker if self.slicing_target else None
 
 
-    def _find_token_subsequence(self, main_list: List[int], sub_list: List[int], tokenizer) -> int:
+    def _find_token_subsequence(self, main_list: List[int], len_sub: int, substring: str, tokenizer) -> int:
         """
         Finds the starting index of a token sublist in the main list by comparing the decoded strings.
         """
-        len_sub = len(sub_list)
         if len_sub == 0 or len_sub > len(main_list):
             return -1
-        sub_decoded = [tokenizer.decode(token) for token in sub_list]
         initial_window_tokens = main_list[len(main_list) - len_sub:]
         window_decoded = deque(
             (tokenizer.decode(t) for t in initial_window_tokens), maxlen=len_sub
         )
 
         for i in range(len(main_list) - len_sub, -1, -1):
-            if all(i in list(window_decoded) for i in sub_decoded):
+            current_window_text = "".join(list(window_decoded))
+            if substring in current_window_text:
                 return i
             if i > 0:
                 new_token = main_list[i - 1]
@@ -99,7 +98,7 @@ class GreedyProbsCalculator(StatCalculator):
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: Union[WhiteboxModel, WhiteboxModelvLLM],
-        max_new_tokens: int = 500,
+        max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of probabilities at each token position in the generation.
@@ -180,7 +179,7 @@ class GreedyProbsCalculator(StatCalculator):
             marker_pos = -1
 
             if self.slicing_target and len(marker_tokens) > 0:
-                marker_pos = self._find_token_subsequence(full_gen_seq.tolist(), marker_tokens, model.tokenizer)
+                marker_pos = self._find_token_subsequence(full_gen_seq.tolist(), len(marker_tokens), self.answer_marker, model.tokenizer)
 
             if self.slicing_target == "answer":
                 if marker_pos != -1:
