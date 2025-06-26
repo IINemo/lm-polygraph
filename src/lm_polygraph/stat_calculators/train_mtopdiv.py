@@ -63,14 +63,13 @@ class TrainMTopDivCalculator(StatCalculator):
                 output_attentions=True,
             ).attentions
             mask = batch["attention_mask"]
-            mask = mask[:, None, None, None, :] & mask[:, None, None, :, None]
-            attns = torch.stack(attns, dim=1)
-            attns = attns.masked_fill(mask == 0, float("nan")).cpu()
-
+            mask = mask[:, None, None, :] & mask[:, None, :, None]
+            attns = [attn.masked_fill(mask == 0, float("nan")).cpu() for attn in attns]
+        
         torch.cuda.empty_cache()
         gc.collect()
 
-        return attns
+        return torch.stack(attns, dim=1).numpy()
     
     def select_heads(self, scores, labels):
         grounded_scores, hal_scores = scores[labels == 0], scores[labels == 1]
@@ -92,11 +91,6 @@ class TrainMTopDivCalculator(StatCalculator):
         train_labels = []
 
         for inp_texts, target_texts, labels in tqdm(train_dataloader):
-            forwardpass_attention_weights = self.calculate_attention_forward_pass(
-                inp_texts,
-                target_texts,
-                model,
-            )
             length_responses = model.tokenizer(
                 target_texts,
                 add_special_tokens=False,
@@ -104,6 +98,11 @@ class TrainMTopDivCalculator(StatCalculator):
                 return_tensors="pt",
             )
             length_responses = length_responses["attention_mask"].sum(dim=1).tolist()
+            forwardpass_attention_weights = self.calculate_attention_forward_pass(
+                inp_texts,
+                target_texts,
+                model,
+            )
             _, num_layers, num_heads, _, _ = forwardpass_attention_weights.shape
             heads = product(range(num_layers), range(num_heads))
             mtopdivs = get_mtopdivs(
@@ -112,8 +111,12 @@ class TrainMTopDivCalculator(StatCalculator):
                 forwardpass_attention_weights,
                 self.n_jobs
             )
+            
             train_mtopdivs.append(mtopdivs)
             train_labels += labels
+
+            del forwardpass_attention_weights
+            gc.collect()
 
         train_mtopdivs = np.concatenate(train_mtopdivs, axis=0)
         train_labels = np.array(train_labels)

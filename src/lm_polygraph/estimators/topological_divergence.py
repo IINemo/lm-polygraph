@@ -78,7 +78,6 @@ class TopologicalDivergence(Estimator):
             # Alternatively, a new estimator instance can be created with the selected heads.
             self.stats_dependencies = ["greedy_tokens", "forwardpass_attention_weights"]
 
-        attention_weights_batch = torch.from_numpy(attention_weights_batch)
         mtopdivs = get_mtopdivs(
             self._heads,
             length_responses,

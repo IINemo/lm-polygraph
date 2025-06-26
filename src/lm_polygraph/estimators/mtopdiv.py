@@ -29,30 +29,37 @@ except ImportError:
 
 
 def transform_attention_scores_to_distances(
-    attention_weights: torch.Tensor,
-) -> torch.Tensor:
+    attention_weights: np.ndarray,
+) -> np.ndarray:
     """Transform attention matrix to the matrix of distances between tokens.
 
     Parameters
     ----------
-    attention_weights : torch.Tensor
-        Attention matrixes of one sample (n_heads x n_tokens x n_tokens).
+    attention_weights : np.ndarray
+        Attention matrices of one sample (n_heads x n_tokens x n_tokens).
 
     Returns
     -------
-    np.array
+    np.ndarray
         Distance matrix.
 
     """
-    attention_weights = attention_weights.float()
+    attention_weights = attention_weights.astype(np.float32)
     n_tokens = attention_weights.shape[-1]
-    distance_mx = 1 - torch.clamp(attention_weights, min=0.0)
-    zero_diag = (
-        torch.ones(n_tokens, n_tokens, device=attention_weights.device) - 
-        torch.eye(n_tokens, device=attention_weights.device)
+    
+    # Convert attention weights to distances
+    distance_mx = 1 - np.clip(attention_weights, a_min=0.0, a_max=None)
+    
+    # Create mask to zero out diagonal
+    zero_diag = np.ones((n_tokens, n_tokens)) - np.eye(n_tokens)
+    
+    # Apply mask and ensure symmetry
+    distance_mx *= np.broadcast_to(zero_diag, distance_mx.shape)
+    distance_mx = np.minimum(
+        np.swapaxes(distance_mx, -1, -2), 
+        distance_mx
     )
-    distance_mx *= zero_diag.expand_as(distance_mx)
-    distance_mx = torch.minimum(distance_mx.transpose(-1, -2), distance_mx)
+    
     return distance_mx
 
 
@@ -78,35 +85,41 @@ def transform_distances_to_mtopdiv(distance_mx: np.ndarray) -> float:
 def get_mtopdivs(
     heads: List[Tuple[int, int]],
     length_responses: List[int],
-    attention_weights_batch: torch.Tensor,
+    attention_weights_batch: np.array,
     n_jobs: Optional[float] = -1,
 ) -> np.ndarray:
     batch_size = attention_weights_batch.shape[0]
     padding_lengths = np.isnan(attention_weights_batch[:, 0, 0, 0]).sum(axis=-1)
-    distance_matrices_batch = transform_attention_scores_to_distances(
-        attention_weights_batch
-    ).numpy()
-
-    def job(layer, head):
+    
+    def job(layer_head_pair):
+        layer, head = layer_head_pair
         mtopdivs = []
+        distance_matrices = transform_attention_scores_to_distances(
+            attention_weights_batch[:, layer, head]
+        )
+        
         for sample_id in range(batch_size):
-            distance_matrix = distance_matrices_batch[sample_id, layer, head]
+            distance_matrix = distance_matrices[sample_id]
             padding_length = padding_lengths[sample_id]
             response_length = length_responses[sample_id]
+            
             if padding_length > 0:
                 distance_matrix = distance_matrix[:-padding_length, :-padding_length]
             distance_matrix[:-response_length, :-response_length] = 0
             mtopdiv = transform_distances_to_mtopdiv(distance_matrix) / response_length
             mtopdivs.append(mtopdiv)
+            
         return np.array(mtopdivs, dtype=float)
 
+    # Use loky backend with shared memory
     if IS_PARALLEL_AVAILABLE:
-        mtopdivs = Parallel(n_jobs=n_jobs, backend="threading")(
-            delayed(job)(layer, head) for layer, head in heads
-        )
+        with Parallel(n_jobs=n_jobs, prefer='processes') as parallel:
+            mtopdivs = parallel(delayed(job)((layer, head)) for layer, head in heads)
     else:
-        mtopdivs = [job(layer, head) for layer, head in heads]
+        mtopdivs = [job((layer, head)) for layer, head in heads]
+
     mtopdivs = np.stack(mtopdivs, axis=1)
+    
     return mtopdivs
 
 def load_model_heads(

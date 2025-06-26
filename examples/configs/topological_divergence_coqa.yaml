@@ -32,7 +32,7 @@ generation_params:
   generate_until:
     - "\n"
 subsample_eval_dataset: -1
-batch_size: 4
+batch_size: 16
 
 generation_metrics: null
 ignore_exceptions: false
