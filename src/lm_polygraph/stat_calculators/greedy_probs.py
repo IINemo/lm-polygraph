@@ -2,6 +2,7 @@ import torch
 import numpy as np
 
 from typing import Dict, List, Tuple, Union
+from collections import deque
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
@@ -68,15 +69,30 @@ class GreedyProbsCalculator(StatCalculator):
             self.slicing_target = slicing_target
         self.answer_marker = answer_marker if self.slicing_target else None
 
-    def _find_token_subsequence(self, main_list: List[int], sub_list: List[int]) -> int:
-        """Finds the starting index of a sublist within the main list"""
+
+    def _find_token_subsequence(self, main_list: List[int], sub_list: List[int], tokenizer) -> int:
+        """
+        Finds the starting index of a token sublist in the main list by comparing the decoded strings.
+        """
         len_sub = len(sub_list)
-        if len_sub == 0:
+        if len_sub == 0 or len_sub > len(main_list):
             return -1
-        for i in range(len(main_list) - len_sub + 1):
-            if main_list[i : i + len_sub] == sub_list:
+        sub_decoded = [tokenizer.decode(token) for token in sub_list]
+        initial_window_tokens = main_list[len(main_list) - len_sub:]
+        window_decoded = deque(
+            (tokenizer.decode(t) for t in initial_window_tokens), maxlen=len_sub
+        )
+
+        for i in range(len(main_list) - len_sub, -1, -1):
+            if all(i in list(window_decoded) for i in sub_decoded):
                 return i
+            if i > 0:
+                new_token = main_list[i - 1]
+                new_decoded_token = tokenizer.decode(new_token)
+                window_decoded.appendleft(new_decoded_token)
+
         return -1
+
 
     def __call__(
         self,
@@ -164,7 +180,7 @@ class GreedyProbsCalculator(StatCalculator):
             marker_pos = -1
 
             if self.slicing_target and len(marker_tokens) > 0:
-                marker_pos = self._find_token_subsequence(full_gen_seq.tolist(), marker_tokens)
+                marker_pos = self._find_token_subsequence(full_gen_seq.tolist(), marker_tokens, model.tokenizer)
 
             if self.slicing_target == "answer":
                 if marker_pos != -1:
