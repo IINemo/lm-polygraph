@@ -6,6 +6,7 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
         "de": "German",
         "fr": "French",
         "en": "English",
+        "ru": "Russian",
     }
     x, y = [], []
     for inst in dataset["translation"]:
@@ -59,5 +60,18 @@ CONFIG = {
         ),
         "dataset": "wmt19",
         "subset": "deen",
+    },
+    "wmt19_ruen": {
+        "name": ["wmt19", "ru-en"],
+        "train_split": "train",
+        "test_split": "validation",
+        "prepare_func": partial(
+            prepare_wmt,
+            input_column="ru",
+            output_column="en",
+            prompt="Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n",
+        ),
+        "dataset": "wmt19",
+        "subset": "ruen",
     },
 }

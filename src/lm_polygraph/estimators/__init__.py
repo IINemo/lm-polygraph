@@ -9,12 +9,14 @@ from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
 from .claim.focus import FocusClaim
 from .claim.frequency_scoring import FrequencyScoringClaim
 from .claim.token_sar import TokenSARClaim
+from .claim.self_certainty import SelfCertaintyClaim
 from .max_probability import (
     MaximumSequenceProbability,
     MaximumTokenProbability,
 )
 from .attention_score import AttentionScore
 from .claim_conditioned_probability import ClaimConditionedProbability
+from .self_certainty import SelfCertainty
 from .token_entropy import MeanTokenEntropy, TokenEntropy
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,

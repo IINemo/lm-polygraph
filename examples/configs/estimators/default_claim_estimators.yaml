@@ -1,6 +1,7 @@
 - name: MaximumClaimProbability
 - name: PerplexityClaim
 - name: MaxTokenEntropyClaim
+- name: SelfCertaintyClaim
 - name: PointwiseMutualInformationClaim
 - name: PTrueClaim
 - name: ClaimConditionedProbabilityClaim

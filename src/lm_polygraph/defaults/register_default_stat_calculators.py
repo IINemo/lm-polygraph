@@ -15,6 +15,7 @@ def register_default_stat_calculators(
     blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
+    deberta_batch_size: int = 10,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -55,7 +56,7 @@ def register_default_stat_calculators(
             "nli_model": {
                 "deberta_path": deberta_model_path,
                 "hf_cache": hf_cache,
-                "batch_size": 10,
+                "batch_size": deberta_batch_size,
                 "device": None,
             }
         },
@@ -75,7 +76,7 @@ def register_default_stat_calculators(
                     "nli_model": {
                         "deberta_path": deberta_model_path,
                         "hf_cache": hf_cache,
-                        "batch_size": 10,
+                        "batch_size": deberta_batch_size,
                         "device": None,
                     }
                 },
@@ -105,7 +106,7 @@ def register_default_stat_calculators(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
             {
-                "batch_size": 10,
+                "batch_size": deberta_batch_size,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
@@ -124,7 +125,7 @@ def register_default_stat_calculators(
                 "nli_model": {
                     "deberta_path": deberta_model_path,
                     "hf_cache": hf_cache,
-                    "batch_size": 10,
+                    "batch_size": deberta_batch_size,
                     "device": None,
                 }
             },
@@ -136,7 +137,7 @@ def register_default_stat_calculators(
                 "nli_model": {
                     "deberta_path": deberta_model_path,
                     "hf_cache": hf_cache,
-                    "batch_size": 10,
+                    "batch_size": deberta_batch_size,
                     "device": None,
                 }
             },
@@ -147,7 +148,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
-                    "batch_size": 10,
+                    "batch_size": deberta_batch_size,
                     "device": None,
                 }
             },
@@ -184,7 +185,7 @@ def register_default_stat_calculators(
             CrossEncoderSimilarityMatrixVisualCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixVisualCalculator",
             {
-                "batch_size": 10,
+                "batch_size": deberta_batch_size,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
@@ -194,7 +195,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
-                    "batch_size": 10,
+                    "batch_size": deberta_batch_size,
                     "device": None,
                 }
             },
@@ -205,7 +206,7 @@ def register_default_stat_calculators(
             {
                 "nli_model": {
                     "deberta_path": deberta_model_path,
-                    "batch_size": 10,
+                    "batch_size": deberta_batch_size,
                     "device": None,
                 }
             },

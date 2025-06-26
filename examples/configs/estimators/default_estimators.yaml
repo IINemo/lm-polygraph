@@ -2,6 +2,7 @@
 - name: Perplexity
 - name: MeanTokenEntropy
 - name: MeanPointwiseMutualInformation
+- name: SelfCertainty
 - name: MeanConditionalPointwiseMutualInformation 
 - name: ClaimConditionedProbability
 - name: PTrue
