@@ -9,7 +9,7 @@ defaults:
   
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-
+instruct: true
 task: bio
 
 dataset: ['LM-Polygraph/person_bio', 'ar']
