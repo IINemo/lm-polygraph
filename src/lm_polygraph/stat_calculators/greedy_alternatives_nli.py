@@ -6,6 +6,7 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.deberta import Deberta
 from collections import defaultdict
+import torch
 import torch.nn as nn
 import string
 
@@ -18,15 +19,16 @@ def eval_nli_model(
 
     softmax = nn.Softmax(dim=1)
     w_probs = defaultdict(lambda: defaultdict(lambda: None))
-    for k in range(0, len(nli_set), deberta.batch_size):
-        batch = nli_set[k : k + deberta.batch_size]
-        encoded = deberta.deberta_tokenizer.batch_encode_plus(
-            batch, padding=True, return_tensors="pt"
-        ).to(deberta.device)
-        logits = deberta.deberta(**encoded).logits
-        logits = logits.detach().to(deberta.device)
-        for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
-            w_probs[wi][wj] = prob
+    with torch.no_grad():
+        for k in range(0, len(nli_set), deberta.batch_size):
+            batch = nli_set[k : k + deberta.batch_size]
+            encoded = deberta.deberta_tokenizer.batch_encode_plus(
+                batch, padding=True, return_tensors="pt"
+            ).to(deberta.device)
+            logits = deberta.deberta(**encoded).logits
+            logits = logits.detach().to(deberta.device)
+            for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
+                w_probs[wi][wj] = prob
 
     classes = []
     for w1, w2 in nli_queue:
