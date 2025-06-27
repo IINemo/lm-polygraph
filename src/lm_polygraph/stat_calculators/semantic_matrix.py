@@ -74,10 +74,10 @@ class SemanticMatrixCalculator(StatCalculator):
         batch_pairs = []
         batch_invs = []
         batch_counts = []
-        for texts in batch_texts:
+        for texts_in_batch in batch_texts:
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
-            unique_texts, inv = np.unique(texts, return_inverse=True)
+            unique_texts, inv = np.unique(texts_in_batch, return_inverse=True)
             batch_pairs.append(list(itertools.product(unique_texts, unique_texts)))
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
@@ -99,14 +99,24 @@ class SemanticMatrixCalculator(StatCalculator):
             dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
             probs = []
             logits_all = []
-            for first_texts, second_texts in dl:
-                batch = list(zip(first_texts, second_texts))
-                encoded = tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs.append(softmax(logits).cpu().detach())
-                logits_all.append(logits.cpu().detach())
+            
+            with torch.no_grad():
+                for first_texts, second_texts in dl:
+                    batch = list(zip(first_texts, second_texts))
+                    encoded = tokenizer.batch_encode_plus(
+                        batch, padding=True, return_tensors="pt"
+                    ).to(device)
+                    
+                    logits = deberta.deberta(**encoded).logits
+                    
+                    probs.append(softmax(logits).cpu())
+                    logits_all.append(logits.cpu())
+
+                    del encoded, logits
+            
+            # Clear cache
+            torch.cuda.empty_cache()
+
             probs = torch.cat(probs, dim=0)
             logits_all = torch.cat(logits_all, dim=0)
 
@@ -126,8 +136,6 @@ class SemanticMatrixCalculator(StatCalculator):
 
             inv = batch_invs[i]
 
-            # Recover full matrices from unques by gathering along both axes
-            # using inverse index
             E.append(unique_E[inv, :][:, inv])
             C.append(unique_C[inv, :][:, inv])
             E_logits.append(unique_E_logits[inv, :][:, inv])
