@@ -90,7 +90,6 @@
     gen_only: False
 - name: SAPLMA
   cfg:
-    metric_thr: 0.3
     model_name: '${model.path}'
 - name: MIND
   cfg:
