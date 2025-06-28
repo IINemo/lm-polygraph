@@ -92,6 +92,7 @@ def register_default_stat_calculators(
             },
         )
         _register(EntropyCalculator)
+        _register(BaseAttentionCalculator)
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)
         _register(SamplingGenerationCalculator)
