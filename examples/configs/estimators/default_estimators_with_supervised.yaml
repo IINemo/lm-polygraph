@@ -90,14 +90,21 @@
     gen_only: False
 - name: SAPLMA
   cfg:
+    metric_thr: 0.3
     model_name: '${model.path}'
 - name: MIND
+  cfg:
+    metric_thr: 0.3
 - name: Sheeps
   cfg:
+    metric_thr: 0.3
     model_name: '${model.path}'
 - name: SATRMD
   cfg:
+    metric_thr: 0.3
     model_name: '${model.path}'
     base_method: "RelativeTokenMahalanobis"
 - name: LookBackLens
+  cfg:
+    metric_thr: 0.3
 - name: TAD
