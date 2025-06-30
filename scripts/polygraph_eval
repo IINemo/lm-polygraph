@@ -154,9 +154,14 @@ def main(args):
                 "subsample_eval_dataset": args.subsample_eval_dataset,
                 "estimators": estimators
             }
-            final_path = save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man"
-            print(f"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMAN SAVED TO: {final_path}")
-            man.save(final_path, metainfo=metainfo)
+
+            # Create the output directory for the man file if it does not exist yet.
+            # WARNING: HYDRA MULTIRUN WILL NOT WORK WITHOUT THIS!
+            if not os.path.exists(save_path):
+                os.makedirs(save_path, exist_ok=True)
+                log.info(f"Manually created missing output directory: {save_path}")
+
+            man.save(save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man", metainfo=metainfo)
             # man.save(save_path + f"/ue_manager_seed1")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
@@ -165,6 +170,8 @@ def main(args):
     
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
+
+    log.info("Finished running polygraph_eval!")
         
 
 
