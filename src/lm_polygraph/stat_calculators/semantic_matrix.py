@@ -109,8 +109,8 @@ class SemanticMatrixCalculator(StatCalculator):
                     
                     logits = deberta.deberta(**encoded).logits
                     
-                    probs.append(softmax(logits).cpu())
-                    logits_all.append(logits.cpu())
+                    probs.append(softmax(logits))
+                    logits_all.append(logits)
 
                     del encoded, logits
             
@@ -128,25 +128,32 @@ class SemanticMatrixCalculator(StatCalculator):
 
             unique_mat_shape = (batch_counts[i], batch_counts[i])
 
-            unique_E = entail_probs.view(unique_mat_shape).numpy()
-            unique_C = contra_probs.view(unique_mat_shape).numpy()
-            unique_E_logits = entail_logits.view(unique_mat_shape).numpy()
-            unique_C_logits = contra_logits.view(unique_mat_shape).numpy()
-            unique_P = class_preds.view(unique_mat_shape).numpy()
+            unique_E = entail_probs.view(unique_mat_shape)
+            unique_C = contra_probs.view(unique_mat_shape)
+            unique_E_logits = entail_logits.view(unique_mat_shape)
+            unique_C_logits = contra_logits.view(unique_mat_shape)
+            unique_P = class_preds.view(unique_mat_shape)
 
             inv = batch_invs[i]
+            inv_tensor = torch.as_tensor(inv, dtype=torch.long, device=device)
 
-            E.append(unique_E[inv, :][:, inv])
-            C.append(unique_C[inv, :][:, inv])
-            E_logits.append(unique_E_logits[inv, :][:, inv])
-            C_logits.append(unique_C_logits[inv, :][:, inv])
-            P.append(unique_P[inv, :][:, inv])
+            E.append(unique_E[inv_tensor][:, inv_tensor])
+            C.append(unique_C[inv_tensor][:, inv_tensor])
+            E_logits.append(unique_E_logits[inv_tensor][:, inv_tensor])
+            C_logits.append(unique_C_logits[inv_tensor][:, inv_tensor])
+            P.append(unique_P[inv_tensor][:, inv_tensor])
 
-        E = np.stack(E)
-        C = np.stack(C)
-        E_logits = np.stack(E_logits)
-        C_logits = np.stack(C_logits)
-        P = np.stack(P)
+        E = torch.stack(E)
+        C = torch.stack(C)
+        E_logits = torch.stack(E_logits)
+        C_logits = torch.stack(C_logits)
+        P = torch.stack(P)
+
+        E = E.cpu().numpy()
+        C = C.cpu().numpy()
+        E_logits = E_logits.cpu().numpy()
+        C_logits = C_logits.cpu().numpy()
+        P = P.cpu().numpy()
 
         return {
             "semantic_matrix_entail": E,
