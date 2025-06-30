@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from .estimator import Estimator
-from .mtopdiv import get_mtopdivs
+from .mtopdiv_utils import get_mtopdivs
 
 
 class TopologicalDivergence(Estimator):

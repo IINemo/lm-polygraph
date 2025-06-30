@@ -32,21 +32,16 @@ generation_params:
   generate_until:
     - "\n"
 subsample_eval_dataset: -1
-batch_size: 16
+batch_size: 1
 
 generation_metrics: null
 ignore_exceptions: false
 seed:
     - 1
 
+subsample_train_dataset: 100
+heads_extraction_priority: "cache"
 model_heads_cache: "model_heads_cache.yaml"
 max_heads: 6
 n_jobs: -1
-train_dataset:
-  train_data_path: "coqa_Llama-3.1-8B-Instruct.csv"
-  context_column: context
-  question_column: question
-  prompt_column: prompt
-  response_column: generated_answer
-  label_column: hallucination
-  subsample: 100
+

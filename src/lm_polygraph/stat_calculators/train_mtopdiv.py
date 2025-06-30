@@ -1,16 +1,13 @@
-import gc
-import torch
-from torch.utils.data import DataLoader
 import numpy as np
-import pandas as pd
 from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
-from typing import Dict, List, Tuple, Literal
+from typing import Dict, List, Tuple, Literal, Callable
 from itertools import product
 
-from .stat_calculator import StatCalculator
+from ..stat_calculators import StatCalculator, GreedyProbsCalculator, AttentionForwardPassCalculator
+from ..generation_metrics import RougeMetric
 from lm_polygraph.utils.model import WhiteboxModel
-from lm_polygraph.estimators.mtopdiv import (
+from lm_polygraph.estimators.mtopdiv_utils import (
     get_mtopdivs,
     load_model_heads,
     save_model_heads,
@@ -28,48 +25,17 @@ class TrainMTopDivCalculator(StatCalculator):
 
     def __init__(self, 
                  priority: Literal["train", "cache"] = "cache", 
-                 train_dataset: "MTopDivHoldoutDataset" = None, 
+                 load_train_dataset_fn: Callable = None, 
                  cache_path: str = None, 
                  max_heads: int = 6,
                  n_jobs: int = -1):
         super().__init__()
-        if train_dataset is None and cache_path is None:
-            raise Exception("Either train_dataset or cache_path must be provided.")
+
         self.priority = priority
         self.cache_path = cache_path
-        self.train_dataset = train_dataset
+        self.load_train_dataset_fn = load_train_dataset_fn
         self.max_heads = max_heads
         self.n_jobs = n_jobs
-
-    @staticmethod
-    def calculate_attention_forward_pass(
-        prompts: List[str],
-        responses: List[str],
-        model: WhiteboxModel,
-    ) -> Tuple[List[np.ndarray], np.ndarray]:
-
-        if model.tokenizer.chat_template is not None:
-            chats = [
-                [{"role": "user", "content": p}, {"role": "assistant", "content": r}]
-                for p, r in zip(prompts, responses)
-            ]
-        else:
-            chats = [p + r for p, r in zip(prompts, responses)]
-
-        with torch.no_grad():
-            batch = model.tokenize(chats).to(model.device())
-            attns = model.model(
-                **batch,
-                output_attentions=True,
-            ).attentions
-            mask = batch["attention_mask"]
-            mask = mask[:, None, None, :] & mask[:, None, :, None]
-            attns = [attn.masked_fill(mask == 0, float("nan")).cpu() for attn in attns]
-        
-        torch.cuda.empty_cache()
-        gc.collect()
-
-        return torch.stack(attns, dim=1).numpy()
     
     def select_heads(self, scores, labels):
         grounded_scores, hal_scores = scores[labels == 0], scores[labels == 1]
@@ -86,47 +52,6 @@ class TrainMTopDivCalculator(StatCalculator):
                 n_opt = n
         return heads[:n_opt]
     
-    def train(self, model, train_dataloader):
-        train_mtopdivs = []
-        train_labels = []
-
-        for inp_texts, target_texts, labels in tqdm(train_dataloader):
-            length_responses = model.tokenizer(
-                target_texts,
-                add_special_tokens=False,
-                padding=True,
-                return_tensors="pt",
-            )
-            length_responses = length_responses["attention_mask"].sum(dim=1).tolist()
-            forwardpass_attention_weights = self.calculate_attention_forward_pass(
-                inp_texts,
-                target_texts,
-                model,
-            )
-            _, num_layers, num_heads, _, _ = forwardpass_attention_weights.shape
-            heads = product(range(num_layers), range(num_heads))
-            mtopdivs = get_mtopdivs(
-                heads,
-                length_responses,
-                forwardpass_attention_weights,
-                self.n_jobs
-            )
-            
-            train_mtopdivs.append(mtopdivs)
-            train_labels += labels
-
-            del forwardpass_attention_weights
-            gc.collect()
-
-        train_mtopdivs = np.concatenate(train_mtopdivs, axis=0)
-        train_labels = np.array(train_labels)
-        return {
-            "train_mtopdivs": train_mtopdivs,
-            "train_labels": train_labels,
-            "num_layers": num_layers,
-            "num_heads": num_heads,
-        }
-
     def __call__(
         self,
         dependencies: Dict[str, np.array],
@@ -139,19 +64,51 @@ class TrainMTopDivCalculator(StatCalculator):
             heads = np.array(heads)
             return {"topological_divergence_heads": heads[:self.max_heads]}
         
-        self.train_dataset.from_csv()
-        self.train_dataset.subsample()
-        train_dataloader = DataLoader(
-            self.train_dataset,
-            batch_size=self.train_dataset.batch_size,
-            shuffle=True
-        )
-        output = self.train(model, train_dataloader)
-        heads = self.select_heads(
-            output["train_mtopdivs"],
-            output["train_labels"],
-        )
-        heads = np.unravel_index(heads, (output["num_layers"], output["num_heads"]))
+        train_dataset = self.load_train_dataset_fn()
+        
+        mtopdivs = []
+        labels = []
+        
+        greedy_calc = GreedyProbsCalculator(False, False)
+        attn_forward_pass_calc = AttentionForwardPassCalculator()
+        generation_metric = RougeMetric("rougeL")
+
+        for input_text, target in tqdm(train_dataset):
+            stats = greedy_calc(
+                dependencies=None,
+                texts=input_text,
+                model=model,
+                max_new_tokens=max_new_tokens,
+            )
+            attn_weights_batch = attn_forward_pass_calc(
+                dependencies=stats,
+                texts=input_text,
+                model=model,
+                max_new_tokens=max_new_tokens,
+            )["forwardpass_attention_weights"]
+            length_responses = list(map(len, stats["greedy_tokens"]))
+        
+            _, num_layers, num_heads, _, _ = attn_weights_batch.shape
+            heads = product(range(num_layers), range(num_heads))
+
+            mtopdivs.append(get_mtopdivs(
+                heads,
+                length_responses,
+                attn_weights_batch,
+                n_jobs=self.n_jobs,
+            ))
+            labels.append(generation_metric(
+                stats=stats,
+                target_texts=target,
+            ))
+
+        mtopdivs = np.concatenate(mtopdivs, axis=0)
+        
+        labels = np.concatenate(labels)
+        labels = ~(labels > 0.3)
+
+        heads = self.select_heads(mtopdivs, labels)
+        heads = np.unravel_index(heads, (num_layers, num_heads))
         heads = np.stack(heads, axis=1)
 
         save_model_heads(self.cache_path, model.model_path, heads.tolist())

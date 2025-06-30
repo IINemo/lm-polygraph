@@ -186,6 +186,8 @@ def save_model_heads(
     models.append({model_path: f"{heads}"})
     config["models"] = models
 
+    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+
     with open(cache_path, "w") as f:
         yaml.safe_dump(config, f, sort_keys=False)
     print(f"Saved heads for '{model_path}' to {cache_path}")
