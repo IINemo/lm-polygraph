@@ -2,9 +2,8 @@ import re
 import string 
 
 GEMMA_OUTPUT_IGNORE_REGEX = re.compile(r"<end_of_turn>")
+REASONING_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*### Answer:[\w]*")
 PARENTHESEIS_OUTPUT_IGNORE_REGEX = re.compile(r"\)")
-REASONING_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*### Answer:\n")
-
 INTEGER_EXTRACTION_REGEX = re.compile(r"\d+")
 
 def process_output(output: str) -> str:
