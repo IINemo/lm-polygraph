@@ -2,10 +2,14 @@ hydra:
   run:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
+task: qa
+
 defaults:
   - model: ugrip_llama_instruct
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
+  - generation_metrics: null
+
   - _self_
 
 # OPTIONS:
@@ -17,7 +21,6 @@ defaults:
 #  UGRIP-LM-POLYGRAPH/mmlu-reasoning
 dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
 
-task: qa
 text_column: question
 label_column: answer
 # Use max_new_tokens= to override
@@ -39,9 +42,9 @@ eval_split: test
 load_from_disk: false
 normalize: false # REQUIRED TO ALLOW process_output_fn
 trust_remote_code: false
-generation_params:
-  generate_until:
-    - "\n"
+# generation_params:
+#   generate_until:
+#     - "\n"
 
 # \/ How many samples per dataset
 # Change with subsample_eval_dataset=25
