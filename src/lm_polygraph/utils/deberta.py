@@ -34,7 +34,7 @@ class Deberta:
         self._deberta = None
         self._deberta_tokenizer = None
         if device is None:
-            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
         self.hf_cache = hf_cache
@@ -69,12 +69,12 @@ class Deberta:
             self.deberta_path,
             problem_type="multi_label_classification",
             cache_dir=self.hf_cache,
-            device_map="auto",
+            # device_map="auto",
         )
         self._deberta_tokenizer = DebertaTokenizer.from_pretrained(
             self.deberta_path, cache_dir=self.hf_cache
         )
-        #self._deberta.to(self.device)
+        self._deberta.to(self.device)
         self._deberta.eval()
 
 
@@ -105,7 +105,7 @@ class MultilingualDeberta(Deberta):
         self._deberta = None
         self._deberta_tokenizer = None
         if device is None:
-            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
         self.hf_cache = hf_cache
