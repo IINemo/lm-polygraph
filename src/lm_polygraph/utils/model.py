@@ -1,8 +1,8 @@
-import requests
 import torch
 import openai
 import time
 import logging
+import json
 
 from dataclasses import asdict
 from typing import List, Dict, Optional, Union
@@ -18,6 +18,7 @@ from transformers import (
     StoppingCriteriaList,
     PreTrainedTokenizer,
 )
+from huggingface_hub import InferenceClient
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
@@ -160,10 +161,10 @@ class BlackboxModel(Model):
         return args_copy
 
     def _query(self, payload):
-        API_URL = f"https://api-inference.huggingface.co/models/{self.model_path}"
-        headers = {"Authorization": f"Bearer {self.hf_api_token}"}
-        response = requests.post(API_URL, headers=headers, json=payload)
-        return response.json()
+        client = InferenceClient(model=self.model_path, token=self.hf_api_token)
+        response = client.chat_completion(payload)
+        raw_json = json.dumps(response, indent=2)
+        return raw_json
 
     @staticmethod
     def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
@@ -305,7 +306,11 @@ class BlackboxModel(Model):
                 start = time.time()
                 while True:
                     current_time = time.time()
-                    output = self._query({"inputs": prompt})
+                    messages = [
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": prompt},
+                    ]
+                    output = self._query(messages)
 
                     if isinstance(output, dict):
                         if (list(output.keys())[0] == "error") & (
