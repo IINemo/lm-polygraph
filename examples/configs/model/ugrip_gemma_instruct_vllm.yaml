@@ -7,7 +7,7 @@ path_to_load_script: model/default_vllm.py
 logprobs: 10
 
 load_model_args:
-  gpu_memory_utilization: 0.75
-  num_gpus: 2
+  gpu_memory_utilization: 0.6
+  num_gpus: 4
 
 device: cuda
