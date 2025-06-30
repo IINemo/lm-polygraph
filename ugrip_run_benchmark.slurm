@@ -21,27 +21,24 @@ conda activate reasoning_uq
 
 cd ~/workspace/lm-polygraph
 
-scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml model=ugrip_gemma_instruct
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml model=ugrip_gemma_instruct
 
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# #                        process_output_fn.fn_name=your_function \
-#                         model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct \
-#                         estimators=ugrip_benchmark_estimators_lite \
-#                         generation_metrics=ugrip_benchmark_generation_metrics_lite
+scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml  model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-direct subsample_eval_dataset=30
+
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml  model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/mmlu-direct 
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml  model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/medmcqa-direct 
 
 # !!! Example:
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct
 
 # !!! Example: Overwriting process_output_fn or process_target_fn
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-#                         process_output_fn.fn_name=your_function \
-#                         model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml process_output_fn.fn_name=your_function model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct
 
 # !!! Example: Use only a subset of estimators
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml estimators=ugrip_benchmark_estimators_lite model=ugrip_llama_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct
 
 # !!! Example: Use only a subset of generation metrics
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml generation_metrics=ugrip_benchmark_generation_metrics_lite model=ugrip_llama_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml estimators=ugrip_benchmark_estimators_lite generation_metrics=ugrip_benchmark_generation_metrics_lite model=ugrip_llama_instruct dataset=UGRIP-LM-Polygraph/gsm8k-direct
 
 # !!! Example: Multirun
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml hydra.mode=MULTIRUN estimators=ugrip_benchmark_estimators_lite model=ugrip_llama_instruct,ugrip_gemma_instruct subsample_eval_dataset=10 dataset=UGRIP-LM-Polygraph/gsm8k-reasoning,UGRIP-LM-Polygraph/medmcqa-direct,UGRIP-LM-Polygraph/medmcqa-reasoning,UGRIP-LM-Polygraph/mmlu-direct,UGRIP-LM-Polygraph/mmlu-reasoning

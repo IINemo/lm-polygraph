@@ -42,13 +42,13 @@ eval_split: test
 load_from_disk: false
 normalize: false # REQUIRED TO ALLOW process_output_fn
 trust_remote_code: false
-generation_params:
-  generate_until:
-    - "\n"
+# generation_params:
+#   generate_until:
+#     - "\n"
 
 # \/ How many samples per dataset
 # Change with subsample_eval_dataset=25
-subsample_eval_dataset: 10
+subsample_eval_dataset: -1
 
 # \/ What to ignore in model output
 # output_ignore_regex: "(?s).### Answer: "
