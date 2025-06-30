@@ -18,7 +18,7 @@ defaults:
 #  UGRIP-LM-Polygraph/medmcqa-direct
 #  UGRIP-LM-Polygraph/medmcqa-reasoning
 #  UGRIP-LM-Polygraph/mmlu-direct
-#  UGRIP-LM-POLYGRAPH/mmlu-reasoning
+#  UGRIP-LM-Polygraph/mmlu-reasoning
 dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
 
 text_column: question
