@@ -189,6 +189,9 @@ def get_stat_calculator_names(config):
         config.model, "supports_logprobs", False
     )
 
+    answer_marker = getattr(config, "answer_marker", "### Answer:")
+    slicing_target = getattr(config, "slicing_target", None)
+
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
         all_stat_calculators += register_default_stat_calculators(
@@ -199,6 +202,8 @@ def get_stat_calculator_names(config):
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
             batch_size=config.stat_calculator.batch_size,
+            answer_marker=answer_marker,
+            slicing_target=slicing_target,
         )
 
     for stat_calculator in config.stat_calculators:

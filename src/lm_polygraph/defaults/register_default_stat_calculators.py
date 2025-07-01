@@ -16,6 +16,8 @@ def register_default_stat_calculators(
     output_attentions: bool = True,
     output_hidden_states: bool = True,
     batch_size: int = 10,
+    answer_marker: str = "### Answer:",
+    slicing_target: str = None,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -89,6 +91,8 @@ def register_default_stat_calculators(
             {
                 "output_attentions": output_attentions,
                 "output_hidden_states": output_hidden_states,
+                "answer_marker": answer_marker,
+                "slicing_target": slicing_target,
             },
         )
         _register(EntropyCalculator)

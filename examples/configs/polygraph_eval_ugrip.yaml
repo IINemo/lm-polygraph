@@ -33,6 +33,8 @@ process_target_fn:
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
+slicing_target: answer
+
 train_split: train
 eval_split: test
 # few_shot_prompt: null
