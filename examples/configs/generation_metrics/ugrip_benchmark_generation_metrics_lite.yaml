@@ -1,0 +1,3 @@
+  - name: RougeMetric
+    kwargs:
+        rouge_name: "rouge1"

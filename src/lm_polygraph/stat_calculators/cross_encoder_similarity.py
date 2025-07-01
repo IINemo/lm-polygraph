@@ -98,7 +98,6 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             else:
                 token_scores = np.array([0.5] * len(tokens))
             batch_token_scores.append(token_scores)
-
         sim_matrices = []
         for i, pairs in enumerate(batch_pairs):
             sim_scores = self.crossencoder.predict(pairs, batch_size=self.batch_size)

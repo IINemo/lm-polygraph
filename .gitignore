@@ -1,3 +1,6 @@
+# HF token
+examples/.env
+
 .idea
 src/lm_polygraph/app/node_modules
 **/.DStore
@@ -173,6 +176,9 @@ slurm_logs/
 
 # Hydra multirun outputs (UGRIP)
 multirun/
+
+# AWS benchmark outputs (UGRIP)
+hyperpod/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

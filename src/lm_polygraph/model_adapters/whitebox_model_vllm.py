@@ -49,7 +49,21 @@ class WhiteboxModelvLLM(Model):
             kwargs["input_ids"], skip_special_tokens=True
         )
         sampling_params.stop = []
-        output = self.model.generate(*args, texts, sampling_params)
+        # convert texts into chats
+        chats = []
+        for text in texts:
+            chat = [
+                {
+                    "role": "system",
+                    "content": "You are a knowledgeable assistant who answers questions concisely and accurately and strictly follows output formatting instructions.",
+                },
+                {
+                    "role": "user",
+                    "content": text,
+                }
+            ]
+            chats.append(chat)
+        output = self.model.chat(*args, chats, sampling_params)
         return self.post_processing(output)
 
     def device(self):
