@@ -34,7 +34,7 @@ from .greedy_alternatives_nli import (
 )
 from .bart_score import BartScoreCalculator
 from .model_score import ModelScoreCalculator
-from .embeddings import EmbeddingsCalculator
+from .embeddings import EmbeddingsCalculator, TokenEmbeddingsCalculator
 from .statistic_extraction import TrainingStatisticExtractionCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
@@ -42,3 +42,8 @@ from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .extract_claims import ClaimsExtractor
 from .infer_causal_lm_calculator import InferCausalLMCalculator
 from .semantic_classes import SemanticClassesCalculator
+from .attention import (
+    BaseAttentionCalculator,
+    LookbackRatioCalculator,
+    AttentionFeaturesCalculator,
+)
