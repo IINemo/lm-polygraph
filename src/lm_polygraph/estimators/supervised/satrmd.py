@@ -86,7 +86,7 @@ class SATRMD(Estimator):
         self.model_config = AutoConfig.from_pretrained(self.model_name)
         if layers is None:
             self.layers = (
-                list(range(self.model_config.num_hidden_layers))
+                list(range(self.model_config.num_hidden_layers)) + [-1]
                 if hasattr(self.model_config, "num_hidden_layers")
                 else list(range(self.model_config.text_config.num_hidden_layers))
             )

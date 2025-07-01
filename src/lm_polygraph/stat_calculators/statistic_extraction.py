@@ -85,7 +85,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     continue
                 train_max_new_tokens = (
                     max_new_tokens
-                    if datasets_name == "train_"
+                    if dataset_name == "train_"
                     else background_train_dataset_max_new_tokens
                 )
                 for inp_texts, target_texts in tqdm(dataset):

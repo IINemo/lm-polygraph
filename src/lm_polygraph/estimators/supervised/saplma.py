@@ -168,6 +168,6 @@ class SAPLMA(Estimator):
             self.is_fitted = True
 
         # Predict
-        ue = self.ue_predictor.predict(embeddings)
+        ue = self.ue_predictor.predict(embeddings, regression=self.regression)
 
         return ue

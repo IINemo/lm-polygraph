@@ -120,6 +120,7 @@ class TrainerMLP:
         batch_size: int = 64,
         lr: float = 0.001,
         n_features: int = 4096,
+        weight_decay: float = 1e-5,
         device: str = "cuda",
         loss_fn: nn.Module = None,
         model: nn.Module = None,
@@ -127,7 +128,9 @@ class TrainerMLP:
         self.n_epochs = n_epochs
         self.batch_size = batch_size
         self.model = model(n_features)
-        self.optimizer = optim.AdamW(self.model.parameters(), lr=lr)
+        self.optimizer = optim.AdamW(
+            self.model.parameters(), lr=lr, weight_decay=weight_decay
+        )
         self.device = device
         self.loss_fn = loss_fn if loss_fn is not None else nn.MSELoss()
 
