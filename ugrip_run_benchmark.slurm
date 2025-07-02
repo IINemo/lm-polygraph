@@ -23,7 +23,7 @@ cd ~/workspace/lm-polygraph
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml model=ugrip_gemma_instruct
 
-scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml  model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-direct subsample_eval_dataset=30
+scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml  model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning subsample_eval_dataset=5
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml  model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/mmlu-direct 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml  model=ugrip_gemma_instruct dataset=UGRIP-LM-Polygraph/medmcqa-direct 

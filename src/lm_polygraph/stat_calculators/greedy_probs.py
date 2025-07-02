@@ -221,7 +221,7 @@ class GreedyProbsCalculator(StatCalculator):
                 for t in best_tokens:
                     cut_alternatives[-1][j].append((t.item(), lt[t].item()))
                 cut_alternatives[-1][j].sort(
-                    key=lambda x: x[0] == final_seq_tokens[j],
+                    key=lambda x: str(x)[0] == str(final_seq_tokens[j]),
                     reverse=True,
                 )
 
