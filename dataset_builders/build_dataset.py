@@ -8,7 +8,8 @@ from builders.person import CONFIG as person_config
 from builders.trivia_qa import CONFIG as trivia_qa_config
 from builders.wiki import CONFIG as wiki_config
 from builders.wmt import CONFIG as wmt_config
-
+from builders.truthfulqa import CONFIG as truthfulqa_config
+from builders.samsum import CONFIG as samsum_config
 
 DATASET_CONFIG = (
     base_config
@@ -19,6 +20,8 @@ DATASET_CONFIG = (
     | trivia_qa_config
     | wiki_config
     | wmt_config
+    | truthfulqa_config
+    | samsum_config
 )
 
 
