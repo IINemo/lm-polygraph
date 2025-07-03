@@ -44,4 +44,3 @@ heads_extraction_priority: "cache"
 model_heads_cache: "model_heads_cache.yaml"
 max_heads: 6
 n_jobs: -1
-
