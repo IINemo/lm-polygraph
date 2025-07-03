@@ -11,7 +11,7 @@ log = logging.getLogger("lm_polygraph")
 
 
 def load_dataset(args):
-    
+
     log.info("=" * 100)
     log.info("Loading train dataset...")
 
@@ -50,7 +50,9 @@ def load_stat_calculator(config, builder):
     cache_path = os.path.join(config.cache_path, config.model_heads_cache)
     max_heads = config.max_heads
     n_jobs = config.n_jobs
-    load_train_dataset_fn = lambda: load_dataset(config)
+
+    def load_train_dataset_fn():
+        return load_dataset(config)
 
     return TrainMTopDivCalculator(
         priority,

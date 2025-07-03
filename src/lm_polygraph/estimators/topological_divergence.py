@@ -1,6 +1,5 @@
 from typing import Dict, List, Tuple, Optional
 import numpy as np
-import torch
 
 from .estimator import Estimator
 from .mtopdiv_utils import get_mtopdivs
@@ -86,5 +85,3 @@ class TopologicalDivergence(Estimator):
         )
 
         return np.mean(mtopdivs, axis=1)
-
-

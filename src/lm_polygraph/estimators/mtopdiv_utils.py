@@ -2,8 +2,6 @@ import os
 import yaml
 import warnings
 import numpy as np
-import pandas as pd
-import torch
 from typing import List, Tuple, Optional
 import ast
 
@@ -46,20 +44,15 @@ def transform_attention_scores_to_distances(
     """
     attention_weights = attention_weights.astype(np.float32)
     n_tokens = attention_weights.shape[-1]
-    
-    # Convert attention weights to distances
     distance_mx = 1 - np.clip(attention_weights, a_min=0.0, a_max=None)
-    
-    # Create mask to zero out diagonal
     zero_diag = np.ones((n_tokens, n_tokens)) - np.eye(n_tokens)
-    
-    # Apply mask and ensure symmetry
+
     distance_mx *= np.broadcast_to(zero_diag, distance_mx.shape)
     distance_mx = np.minimum(
-        np.swapaxes(distance_mx, -1, -2), 
-        distance_mx
+        np.swapaxes(distance_mx, -1, -2),
+        distance_mx,
     )
-    
+
     return distance_mx
 
 
@@ -82,6 +75,7 @@ def transform_distances_to_mtopdiv(distance_mx: np.ndarray) -> float:
         return barcodes[0][:-1, 1].sum()
     return 0
 
+
 def get_mtopdivs(
     heads: List[Tuple[int, int]],
     length_responses: List[int],
@@ -90,41 +84,40 @@ def get_mtopdivs(
 ) -> np.ndarray:
     batch_size = attention_weights_batch.shape[0]
     padding_lengths = np.isnan(attention_weights_batch[:, 0, 0, 0]).sum(axis=-1)
-    
+
     def job(layer_head_pair):
         layer, head = layer_head_pair
         mtopdivs = []
         distance_matrices = transform_attention_scores_to_distances(
             attention_weights_batch[:, layer, head]
         )
-        
+
         for sample_id in range(batch_size):
             distance_matrix = distance_matrices[sample_id]
             padding_length = padding_lengths[sample_id]
             response_length = length_responses[sample_id]
-            
+
             if padding_length > 0:
                 distance_matrix = distance_matrix[:-padding_length, :-padding_length]
             distance_matrix[:-response_length, :-response_length] = 0
             mtopdiv = transform_distances_to_mtopdiv(distance_matrix) / response_length
             mtopdivs.append(mtopdiv)
-            
+
         return np.array(mtopdivs, dtype=float)
 
-    # Use loky backend with shared memory
     if IS_PARALLEL_AVAILABLE:
-        with Parallel(n_jobs=n_jobs, prefer='processes') as parallel:
+        with Parallel(n_jobs=n_jobs, prefer="processes") as parallel:
             mtopdivs = parallel(delayed(job)((layer, head)) for layer, head in heads)
     else:
         mtopdivs = [job((layer, head)) for layer, head in heads]
 
     mtopdivs = np.stack(mtopdivs, axis=1)
-    
     return mtopdivs
 
+
 def load_model_heads(
-        cache_path: Optional[str], 
-        model_path: str
+    cache_path: Optional[str],
+    model_path: str,
 ) -> Optional[List[Tuple[int, int]]]:
     """
     Load model heads.
@@ -155,10 +148,11 @@ def load_model_heads(
             print(f"Failed to load heads from cache: {e}")
     return None
 
+
 def save_model_heads(
-        cache_path: str,
-        model_path: str,
-        heads: List[Tuple[int, int]]
+    cache_path: str,
+    model_path: str,
+    heads: List[Tuple[int, int]],
 ) -> None:
     """
     Save a list of heads for a model.
@@ -182,7 +176,7 @@ def save_model_heads(
     for entry in models:
         if isinstance(entry, dict) and model_path in entry:
             return
-        
+
     models.append({model_path: f"{heads}"})
     config["models"] = models
 

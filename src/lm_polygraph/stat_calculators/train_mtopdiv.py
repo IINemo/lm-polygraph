@@ -4,7 +4,11 @@ from tqdm import tqdm
 from typing import Dict, List, Tuple, Literal, Callable
 from itertools import product
 
-from ..stat_calculators import StatCalculator, GreedyProbsCalculator, AttentionForwardPassCalculator
+from ..stat_calculators import (
+    StatCalculator,
+    GreedyProbsCalculator,
+    AttentionForwardPassCalculator,
+)
 from ..generation_metrics import RougeMetric
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.estimators.mtopdiv_utils import (
@@ -23,12 +27,14 @@ class TrainMTopDivCalculator(StatCalculator):
 
         return ["topological_divergence_heads"], []
 
-    def __init__(self, 
-                 priority: Literal["train", "cache"] = "cache", 
-                 load_train_dataset_fn: Callable = None, 
-                 cache_path: str = None, 
-                 max_heads: int = 6,
-                 n_jobs: int = -1):
+    def __init__(
+        self,
+        priority: Literal["train", "cache"] = "cache",
+        load_train_dataset_fn: Callable = None,
+        cache_path: str = None,
+        max_heads: int = 6,
+        n_jobs: int = -1,
+    ):
         super().__init__()
 
         self.priority = priority
@@ -36,7 +42,7 @@ class TrainMTopDivCalculator(StatCalculator):
         self.load_train_dataset_fn = load_train_dataset_fn
         self.max_heads = max_heads
         self.n_jobs = n_jobs
-    
+
     def select_heads(self, scores, labels):
         grounded_scores, hal_scores = scores[labels == 0], scores[labels == 1]
         deltas = hal_scores.mean(0) - grounded_scores.mean(0)
@@ -51,7 +57,7 @@ class TrainMTopDivCalculator(StatCalculator):
                 best_auroc = roc_auc
                 n_opt = n
         return heads[:n_opt]
-    
+
     def __call__(
         self,
         dependencies: Dict[str, np.array],
@@ -62,13 +68,14 @@ class TrainMTopDivCalculator(StatCalculator):
         heads = load_model_heads(self.cache_path, model.model_path)
         if heads and self.priority == "cache":
             heads = np.array(heads)
-            return {"topological_divergence_heads": heads[:self.max_heads]}
-        
+            heads = heads[: self.max_heads]
+            return {"topological_divergence_heads": heads}
+
         train_dataset = self.load_train_dataset_fn()
-        
+
         mtopdivs = []
         labels = []
-        
+
         greedy_calc = GreedyProbsCalculator(False, False)
         attn_forward_pass_calc = AttentionForwardPassCalculator()
         generation_metric = RougeMetric("rougeL")
@@ -87,23 +94,27 @@ class TrainMTopDivCalculator(StatCalculator):
                 max_new_tokens=max_new_tokens,
             )["forwardpass_attention_weights"]
             length_responses = list(map(len, stats["greedy_tokens"]))
-        
+
             _, num_layers, num_heads, _, _ = attn_weights_batch.shape
             heads = product(range(num_layers), range(num_heads))
 
-            mtopdivs.append(get_mtopdivs(
-                heads,
-                length_responses,
-                attn_weights_batch,
-                n_jobs=self.n_jobs,
-            ))
-            labels.append(generation_metric(
-                stats=stats,
-                target_texts=target,
-            ))
+            mtopdivs.append(
+                get_mtopdivs(
+                    heads,
+                    length_responses,
+                    attn_weights_batch,
+                    n_jobs=self.n_jobs,
+                )
+            )
+            labels.append(
+                generation_metric(
+                    stats=stats,
+                    target_texts=target,
+                )
+            )
 
         mtopdivs = np.concatenate(mtopdivs, axis=0)
-        
+
         labels = np.concatenate(labels)
         labels = ~(labels > 0.3)
 
