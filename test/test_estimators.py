@@ -250,3 +250,9 @@ def test_attentionscore(model):
     estimator = AttentionScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_topological_divergence(model):
+    estimator = TopologicalDivergence(heads=[[0, 0], [0, 1], [1, 0], [1, 1]])
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
