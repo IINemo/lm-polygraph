@@ -24,6 +24,8 @@ from .prompt import (
     PromptCalculator,
     SamplingPromptCalculator,
     ClaimPromptCalculator,
+)
+from .attention_prompt import (
     AttentionElicitingPromptCalculator,
 )
 from .claim_level_prompts import (
