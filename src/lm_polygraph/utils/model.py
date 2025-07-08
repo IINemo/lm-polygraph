@@ -1,4 +1,3 @@
-import requests
 import torch
 import openai
 import time
