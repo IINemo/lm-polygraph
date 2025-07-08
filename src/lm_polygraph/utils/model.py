@@ -1,3 +1,4 @@
+import requests
 import torch
 import openai
 import time
@@ -403,6 +404,7 @@ class WhiteboxModel(Model):
         model_path: str = None,
         model_type: str = "CausalLM",
         generation_parameters: GenerationParameters = GenerationParameters(),
+        instruct: bool = False,
     ):
         """
         Parameters:
@@ -416,6 +418,7 @@ class WhiteboxModel(Model):
         self.model = model
         self.tokenizer = tokenizer
         self.generation_parameters = generation_parameters
+        self.instruct = instruct
 
     def _validate_args(self, args):
         """
@@ -683,7 +686,7 @@ class WhiteboxModel(Model):
         """
         # Apply chat template if tokenizer has it
         add_start_symbol = True
-        if self.tokenizer.chat_template is not None:
+        if self.instruct:
             formatted_texts = []
             for chat in texts:
                 if isinstance(chat, str):
@@ -695,7 +698,6 @@ class WhiteboxModel(Model):
             texts = formatted_texts
 
             add_start_symbol = False
-
         return self.tokenizer(
             texts,
             padding=True,
