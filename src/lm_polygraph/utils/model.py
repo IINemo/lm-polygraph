@@ -1,4 +1,3 @@
-import requests
 import torch
 import openai
 import time
@@ -309,7 +308,7 @@ class BlackboxModel(Model):
                     current_time = time.time()
                     messages = [
                         {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt},
                     ]
                     output = self._query(messages)
 
