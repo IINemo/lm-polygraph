@@ -53,6 +53,9 @@ def load_simple_estimators(name: str, config):
         AttentionScore,
         AttentionScoreClaim,
         TopologicalDivergence,
+        CocoaMSP,
+        CocoaPPL,
+        CocoaMTE,
     ]
 
     try:
