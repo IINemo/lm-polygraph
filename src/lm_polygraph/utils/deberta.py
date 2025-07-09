@@ -1,5 +1,3 @@
-import torch
-
 from transformers import (
     DebertaForSequenceClassification,
     DebertaTokenizer,
@@ -18,7 +16,6 @@ class Deberta:
         self,
         deberta_path: str = "microsoft/deberta-large-mnli",
         batch_size: int = 10,
-        device=None,
         hf_cache: str = None,
     ):
         """
@@ -26,17 +23,11 @@ class Deberta:
         ----------
         deberta_path : str
             huggingface path of the pretrained DeBERTa (default 'microsoft/deberta-large-mnli')
-        device : str
-            device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
         """
         self.deberta_path = deberta_path
         self.batch_size = batch_size
         self._deberta = None
         self._deberta_tokenizer = None
-        if device is None:
-            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        else:
-            self.device = device
         self.hf_cache = hf_cache
         self.setup()
 
@@ -54,10 +45,7 @@ class Deberta:
 
         return self._deberta_tokenizer
 
-    def to(self, device):
-        self.device = device
-        if self._deberta is not None:
-            self._deberta.to(self.device)
+
 
     def setup(self):
         """
@@ -69,11 +57,11 @@ class Deberta:
             self.deberta_path,
             problem_type="multi_label_classification",
             cache_dir=self.hf_cache,
+            device_map="auto",
         )
         self._deberta_tokenizer = DebertaTokenizer.from_pretrained(
             self.deberta_path, cache_dir=self.hf_cache
         )
-        self._deberta.to(self.device)
         self._deberta.eval()
 
 
@@ -87,7 +75,6 @@ class MultilingualDeberta(Deberta):
         self,
         deberta_path: str = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
         batch_size: int = 10,
-        device=None,
         hf_cache: str = None,
     ):
         """
@@ -96,17 +83,11 @@ class MultilingualDeberta(Deberta):
         deberta_path : str
             huggingface path of the pretrained DeBERTa (default
             'MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7')
-        device : str
-            device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
         """
         self.deberta_path = deberta_path
         self.batch_size = batch_size
         self._deberta = None
         self._deberta_tokenizer = None
-        if device is None:
-            self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        else:
-            self.device = device
         self.hf_cache = hf_cache
         self.setup()
 
@@ -120,9 +101,10 @@ class MultilingualDeberta(Deberta):
             self.deberta_path, cache_dir=self.hf_cache
         )
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
-            self.deberta_path, cache_dir=self.hf_cache
+            self.deberta_path,
+            cache_dir=self.hf_cache,
+            device_map="auto",
         )
-        self._deberta.to(self.device)
         self._deberta.eval()
         # Make label2id classes uppercase to match implementation of microsoft/deberta-large-mnli
         self._deberta.deberta.config.label2id = {
