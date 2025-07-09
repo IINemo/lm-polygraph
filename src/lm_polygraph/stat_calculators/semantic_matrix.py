@@ -105,7 +105,7 @@ class SemanticMatrixCalculator(StatCalculator):
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
                     ).to(device)
-                    logits = deberta.deberta(**encoded).logits.detach().to(device)
+                    logits = deberta.deberta(**encoded).logits.detach()
                     probs.append(softmax(logits))
                     logits_all.append(logits)
                 probs = torch.cat(probs, dim=0)

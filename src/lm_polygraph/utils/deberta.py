@@ -25,6 +25,8 @@ class Deberta:
         ----------
         deberta_path : str
             huggingface path of the pretrained DeBERTa (default 'microsoft/deberta-large-mnli')
+        device : str
+            device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
         """
         self.deberta_path = deberta_path
         self.batch_size = batch_size
@@ -51,8 +53,10 @@ class Deberta:
 
         return self._deberta_tokenizer
 
-
-
+    def to(self, device):
+        self.device = device
+        if self._deberta is not None:
+            self._deberta.to(self.device)
 
     def setup(self):
         """
@@ -91,6 +95,8 @@ class MultilingualDeberta(Deberta):
         deberta_path : str
             huggingface path of the pretrained DeBERTa (default
             'MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7')
+        device : str
+            device on which the computations will take place (default 'cuda:0' if available, else 'cpu').
         """
         self.deberta_path = deberta_path
         self.batch_size = batch_size
@@ -113,8 +119,7 @@ class MultilingualDeberta(Deberta):
             self.deberta_path, cache_dir=self.hf_cache
         )
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
-            self.deberta_path,
-            cache_dir=self.hf_cache,
+            self.deberta_path, cache_dir=self.hf_cache,
         )
         self._deberta.to(self.device)
         self._deberta.eval()
