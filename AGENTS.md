@@ -361,3 +361,13 @@ def save(self, save_path: str):
 You can reload these results with `UEManager.load(load_path)` to inspect past runs or resume analysis.
 
 Welcome aboard, and happy benchmarking!
+
+-------
+
+After implementing changes, run linters:
+
+```bash
+# Run linters
+black .
+flake8 --extend-ignore E501,F405,F403,E203 --per-file-ignores __init__.py:F401,builder_stat_calculator_simple.py:F401 .
+```
