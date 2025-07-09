@@ -22,10 +22,11 @@ def eval_nli_model(
         batch = nli_set[k : k + deberta.batch_size]
         encoded = deberta.deberta_tokenizer.batch_encode_plus(
             batch, padding=True, return_tensors="pt"
-        ).to(deberta.device)
+        )
         logits = deberta.deberta(**encoded).logits
-        logits = logits.detach().to(deberta.device)
-        for (wi, wj), prob in zip(batch, softmax(logits).cpu().detach()):
+        logits = logits.detach()
+        # apply softmax on model device, then move to CPU
+        for (wi, wj), prob in zip(batch, softmax(logits).cpu()):
             w_probs[wi][wj] = prob
 
     classes = []
