@@ -82,6 +82,7 @@ class SemanticMatrixCalculator(StatCalculator):
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
 
+        device = deberta.device
         ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
         contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
 
@@ -103,8 +104,8 @@ class SemanticMatrixCalculator(StatCalculator):
                     batch = list(zip(first_texts, second_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    )
-                    logits = deberta.deberta(**encoded).logits.detach()
+                    ).to(device)
+                    logits = deberta.deberta(**encoded).logits.detach().to(device)
                     probs.append(softmax(logits))
                     logits_all.append(logits)
                 probs = torch.cat(probs, dim=0)
