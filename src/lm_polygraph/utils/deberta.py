@@ -45,6 +45,14 @@ class Deberta:
 
         return self._deberta_tokenizer
 
+    @property
+    def device(self):
+        """Device on which the DeBERTa model resides."""
+        if self._deberta is None:
+            self.setup()
+        # HF models expose .device directly
+        return self._deberta.device
+
 
 
     def setup(self):
