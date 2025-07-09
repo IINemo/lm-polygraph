@@ -48,7 +48,9 @@ class WhiteboxModelvLLM(Model):
         texts = self.tokenizer.batch_decode(
             kwargs["input_ids"], skip_special_tokens=True
         )
-        sampling_params.stop = []
+        sampling_params.stop = list(
+            getattr(self.generation_parameters, "generate_until", [])
+        )
         output = self.model.generate(*args, texts, sampling_params)
         return self.post_processing(output)
 
