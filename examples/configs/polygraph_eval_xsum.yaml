@@ -28,6 +28,8 @@ generation_params:
   generate_until:
     - "\n"
 
+source_ignore_regex: "(?s).*Text:\n(.*?)\n\nSummary"
+
 subsample_eval_dataset: -1
 
 generation_metrics: null
