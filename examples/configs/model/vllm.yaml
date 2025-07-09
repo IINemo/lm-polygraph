@@ -8,5 +8,6 @@ logprobs: 20
 
 load_model_args:
   gpu_memory_utilization: 0.5
+  tensor_parallel_size: 1
 
 device: cuda
