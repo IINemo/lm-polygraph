@@ -119,7 +119,8 @@ class MultilingualDeberta(Deberta):
             self.deberta_path, cache_dir=self.hf_cache
         )
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
-            self.deberta_path, cache_dir=self.hf_cache,
+            self.deberta_path,
+            cache_dir=self.hf_cache,
         )
         self._deberta.to(self.device)
         self._deberta.eval()
