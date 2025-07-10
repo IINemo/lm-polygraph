@@ -43,6 +43,7 @@ class GenerationParametersFactory:
 
     Priority for each parameter: yaml_config > native_config > default value.
     """
+
     @staticmethod
     def from_params(
         yaml_config: dict = None,

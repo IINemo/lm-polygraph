@@ -19,7 +19,10 @@ from transformers import (
     PreTrainedTokenizer,
 )
 
-from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
+from lm_polygraph.utils.generation_parameters import (
+    GenerationParameters,
+    GenerationParametersFactory,
+)
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
