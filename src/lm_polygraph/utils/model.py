@@ -662,7 +662,7 @@ class WhiteboxModel(Model):
 
         generation_params = GenerationParametersFactory.from_params(
             yaml_config=generation_params,
-            native_config=asdict(base_model.config),
+            native_config=asdict(model.config),
         )
 
         instance = WhiteboxModel(
