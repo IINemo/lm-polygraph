@@ -34,3 +34,33 @@ class GenerationParameters:
     repetition_penalty: float = 1.0
     generate_until: tuple = ()
     allow_newlines: bool = True
+
+
+class GenerationParametersFactory:
+    """
+    Factory for creating GenerationParameters by merging YAML config,
+    model-native config, and defaults.
+
+    Priority for each parameter: yaml_config > native_config > default value.
+    """
+    @staticmethod
+    def from_params(
+        yaml_config: dict = None,
+        native_config: dict = None,
+    ) -> GenerationParameters:
+        yaml_config = yaml_config or {}
+        native_config = native_config or {}
+        params: dict = {}
+        # Iterate over dataclass fields to apply priority
+        for name, field_def in GenerationParameters.__dataclass_fields__.items():
+            # YAML config has highest priority
+            if name in yaml_config and yaml_config[name] is not None:
+                params[name] = yaml_config[name]
+            # Then native model config
+            elif name in native_config and native_config[name] is not None:
+                params[name] = native_config[name]
+            # Otherwise leave unset to use default
+        # Ensure generate_until is a tuple
+        if 'generate_until' in params and not isinstance(params['generate_until'], tuple):
+            params['generate_until'] = tuple(params['generate_until'])
+        return GenerationParameters(**params)
