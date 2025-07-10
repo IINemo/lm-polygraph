@@ -363,7 +363,7 @@ def get_whitebox_model(args, cache_kwargs={}):
 
     generation_params = GenerationParametersFactory.from_params(
         yaml_config=getattr(args, "generation_params", {}),
-        native_config=asdict(base_model.generation_config),
+        native_config=asdict(base_model.generation_config.to_dict())
     )
 
     model = WhiteboxModel(
