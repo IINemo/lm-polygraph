@@ -32,7 +32,7 @@ class GenerationParameters:
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    generate_until: tuple = ()
+    generate_until: list = ()
     allow_newlines: bool = True
 
 
@@ -59,8 +59,5 @@ class GenerationParametersFactory:
             # Then native model config
             elif name in native_config and native_config[name] is not None:
                 params[name] = native_config[name]
-            # Otherwise leave unset to use default
-        # Ensure generate_until is a tuple
-        if 'generate_until' in params and not isinstance(params['generate_until'], tuple):
-            params['generate_until'] = tuple(params['generate_until'])
+
         return GenerationParameters(**params)
