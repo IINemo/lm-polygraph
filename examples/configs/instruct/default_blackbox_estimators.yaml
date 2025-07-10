@@ -50,3 +50,4 @@ estimators:
       class_probability_estimation: frequency
   - name: PTrueEmpirical
   - name: LabelProb
+  - name: CocoaConsistency
