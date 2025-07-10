@@ -83,4 +83,5 @@ from .focus import Focus
 from .kernel_language_entropy import KernelLanguageEntropy
 from .luq import LUQ
 from .eigenscore import EigenScore
+from .topological_divergence import TopologicalDivergence
 from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE

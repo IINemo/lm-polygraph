@@ -252,6 +252,12 @@ def test_attentionscore(model):
     assert isinstance(ue.uncertainty, float)
 
 
+def test_topological_divergence(model):
+    estimator = TopologicalDivergence(heads=[[0, 0], [0, 1], [1, 0], [1, 1]])
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
 def test_cocoamsp(model):
     estimator = CocoaMSP()
     ue = estimate_uncertainty(model, estimator, INPUT)
