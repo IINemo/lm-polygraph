@@ -7,6 +7,7 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import uuid
 from hydra.core.hydra_config import HydraConfig
+from dataclasses import asdict
 
 import logging
 
