@@ -396,7 +396,8 @@ def get_vllm_model(args):
     model = WhiteboxModelvLLM(model=base_model, 
                               sampling_params=sampling_params,
                               generation_parameters=generation_parameters,
-                              device=args.model.device)
+                              device=args.model.device,
+                              instruct= getattr(args.model, "instruct", False))
 
     return model
 

@@ -15,12 +15,14 @@ class WhiteboxModelvLLM(Model):
         sampling_params,
         generation_parameters: GenerationParameters = GenerationParameters(),
         device: str = "cuda",
+        instruct: bool = False,
     ):
         self.model = model
         self.tokenizer = self.model.get_tokenizer()
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.sampling_params = sampling_params
         self.generation_parameters = generation_parameters
+        self.instruct = instruct
 
         self.sampling_params.stop = list(
             getattr(self.generation_parameters, "generate_until", list())
@@ -45,13 +47,30 @@ class WhiteboxModelvLLM(Model):
     def generate(self, *args, **kwargs):
         sampling_params = self.sampling_params
         sampling_params.n = kwargs.get("num_return_sequences", 1)
-        texts = self.tokenizer.batch_decode(
-            kwargs["input_ids"], skip_special_tokens=True
-        )
         sampling_params.stop = list(
             getattr(self.generation_parameters, "generate_until", [])
         )
-        output = self.model.generate(*args, texts, sampling_params)
+        texts = self.tokenizer.batch_decode(
+            kwargs["input_ids"], skip_special_tokens=True
+        )
+        if self.instruct:
+            chats = []
+            for text in texts:
+                chat = [
+                    {
+                        "role": "system",
+                        "content": "You are a knowledgeable assistant who answers questions concisely and accurately and strictly follows output formatting instructions.",
+                    },
+                    {
+                        "role": "user",
+                        "content": text,
+                    }
+                ]
+                chats.append(chat)
+            output = self.model.chat(*args, chats, sampling_params)
+        else:
+            output = self.model.generate(*args, texts, sampling_params)
+
         return self.post_processing(output)
 
     def device(self):
