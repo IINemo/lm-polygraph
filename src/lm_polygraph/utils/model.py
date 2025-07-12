@@ -20,7 +20,10 @@ from transformers import (
 )
 from huggingface_hub import InferenceClient
 
-from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.generation_parameters import (
+    GenerationParameters,
+    GenerationParametersFactory,
+)
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
@@ -618,7 +621,6 @@ class WhiteboxModel(Model):
         config = AutoConfig.from_pretrained(
             model_path, trust_remote_code=True, **kwargs
         )
-        generation_params = GenerationParameters(**generation_params)
 
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
@@ -665,6 +667,11 @@ class WhiteboxModel(Model):
         model.eval()
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
+
+        generation_params = GenerationParametersFactory.from_params(
+            yaml_config=generation_params,
+            native_config=asdict(model.config),
+        )
 
         instance = WhiteboxModel(
             model, tokenizer, model_path, model_type, generation_params
