@@ -1,5 +1,4 @@
 import torch
-
 from transformers import (
     DebertaForSequenceClassification,
     DebertaTokenizer,
@@ -18,7 +17,7 @@ class Deberta:
         self,
         deberta_path: str = "microsoft/deberta-large-mnli",
         batch_size: int = 10,
-        device=None,
+        device: str = None,
         hf_cache: str = None,
     ):
         """
@@ -87,7 +86,7 @@ class MultilingualDeberta(Deberta):
         self,
         deberta_path: str = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
         batch_size: int = 10,
-        device=None,
+        device: str = None,
         hf_cache: str = None,
     ):
         """
@@ -120,7 +119,8 @@ class MultilingualDeberta(Deberta):
             self.deberta_path, cache_dir=self.hf_cache
         )
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
-            self.deberta_path, cache_dir=self.hf_cache
+            self.deberta_path,
+            cache_dir=self.hf_cache,
         )
         self._deberta.to(self.device)
         self._deberta.eval()

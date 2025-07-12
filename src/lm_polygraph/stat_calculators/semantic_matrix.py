@@ -89,56 +89,67 @@ class SemanticMatrixCalculator(StatCalculator):
         softmax = nn.Softmax(dim=1)
         tokenizer = deberta.deberta_tokenizer
 
-        E = []
-        C = []
-        E_logits = []
-        C_logits = []
-        P = []
+        E_tensors = []
+        C_tensors = []
+        E_logits_tensors = []
+        C_logits_tensors = []
+        P_tensors = []
 
-        for i, pairs in enumerate(batch_pairs):
-            dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
-            probs = []
-            logits_all = []
-            for first_texts, second_texts in dl:
-                batch = list(zip(first_texts, second_texts))
-                encoded = tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs.append(softmax(logits).cpu().detach())
-                logits_all.append(logits.cpu().detach())
-            probs = torch.cat(probs, dim=0)
-            logits_all = torch.cat(logits_all, dim=0)
+        with torch.no_grad():
+            for i, pairs in enumerate(batch_pairs):
+                dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
+                probs = []
+                logits_all = []
+                for first_texts, second_texts in dl:
+                    batch = list(zip(first_texts, second_texts))
+                    encoded = tokenizer.batch_encode_plus(
+                        batch, padding=True, return_tensors="pt"
+                    ).to(device)
+                    logits = deberta.deberta(**encoded).logits.detach()
+                    probs.append(softmax(logits))
+                    logits_all.append(logits)
+                probs = torch.cat(probs, dim=0)
+                logits_all = torch.cat(logits_all, dim=0)
 
-            entail_probs = probs[:, ent_id]
-            contra_probs = probs[:, contra_id]
-            entail_logits = logits_all[:, ent_id]
-            contra_logits = logits_all[:, contra_id]
-            class_preds = probs.argmax(-1)
+                del encoded, logits
 
-            unique_mat_shape = (batch_counts[i], batch_counts[i])
+                torch.cuda.empty_cache()
 
-            unique_E = entail_probs.view(unique_mat_shape).numpy()
-            unique_C = contra_probs.view(unique_mat_shape).numpy()
-            unique_E_logits = entail_logits.view(unique_mat_shape).numpy()
-            unique_C_logits = contra_logits.view(unique_mat_shape).numpy()
-            unique_P = class_preds.view(unique_mat_shape).numpy()
+                entail_probs = probs[:, ent_id]
+                contra_probs = probs[:, contra_id]
+                entail_logits = logits_all[:, ent_id]
+                contra_logits = logits_all[:, contra_id]
+                class_preds = probs.argmax(-1)
 
-            inv = batch_invs[i]
+                mat_shape = (batch_counts[i], batch_counts[i])
+                unique_E = entail_probs.view(mat_shape)
+                unique_C = contra_probs.view(mat_shape)
+                unique_E_logits = entail_logits.view(mat_shape)
+                unique_C_logits = contra_logits.view(mat_shape)
+                unique_P = class_preds.view(mat_shape)
 
-            # Recover full matrices from unques by gathering along both axes
-            # using inverse index
-            E.append(unique_E[inv, :][:, inv])
-            C.append(unique_C[inv, :][:, inv])
-            E_logits.append(unique_E_logits[inv, :][:, inv])
-            C_logits.append(unique_C_logits[inv, :][:, inv])
-            P.append(unique_P[inv, :][:, inv])
+                inv = batch_invs[i]
+                inv_tensor = torch.as_tensor(inv, device=device)
 
-        E = np.stack(E)
-        C = np.stack(C)
-        E_logits = np.stack(E_logits)
-        C_logits = np.stack(C_logits)
-        P = np.stack(P)
+                # Recover full matrices by indexing with inverse indices
+                E_tensors.append(unique_E[inv_tensor, :][:, inv_tensor])
+                C_tensors.append(unique_C[inv_tensor, :][:, inv_tensor])
+                E_logits_tensors.append(unique_E_logits[inv_tensor, :][:, inv_tensor])
+                C_logits_tensors.append(unique_C_logits[inv_tensor, :][:, inv_tensor])
+                P_tensors.append(unique_P[inv_tensor, :][:, inv_tensor])
+
+            E = torch.stack(E_tensors)
+            C = torch.stack(C_tensors)
+            E_logits = torch.stack(E_logits_tensors)
+            C_logits = torch.stack(C_logits_tensors)
+            P = torch.stack(P_tensors)
+
+        # Convert to numpy arrays on CPU at the end of computation
+        E = E.cpu().numpy()
+        C = C.cpu().numpy()
+        E_logits = E_logits.cpu().numpy()
+        C_logits = C_logits.cpu().numpy()
+        P = P.cpu().numpy()
 
         return {
             "semantic_matrix_entail": E,
@@ -146,5 +157,5 @@ class SemanticMatrixCalculator(StatCalculator):
             "semantic_matrix_entail_logits": E_logits,
             "semantic_matrix_contra_logits": C_logits,
             "semantic_matrix_classes": P,
-            "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
+            "entailment_id": ent_id,
         }
