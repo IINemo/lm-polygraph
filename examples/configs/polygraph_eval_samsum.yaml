@@ -15,12 +15,12 @@ device: cpu
 instruct: false
 task: ats
 
-dataset: ['LM-Polygraph/xsum', 'continuation']
+dataset: ['LM-Polygraph/samsum', 'continuation']
 text_column: input
 label_column: output
 train_split: train
 eval_split: test
-max_new_tokens: 56
+max_new_tokens: 128
 load_from_disk: false
 trust_remote_code: true
 size: 10000
@@ -28,7 +28,7 @@ generation_params:
   generate_until:
     - "\n"
 
-source_ignore_regex: "(?s).*Text:\n(.*?)\n\nSummary"
+source_ignore_regex: "(?s).*Dialogue:\n(.*?)\n\nSummary"
 
 subsample_eval_dataset: -1
 
