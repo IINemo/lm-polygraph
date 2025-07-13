@@ -95,7 +95,7 @@ def estimate_uncertainty(
         processors=[],
         ignore_exceptions=False,
         verbose=False,
-        max_new_tokens=model.generation_parameters.max_new_tokens
+        max_new_tokens=model.generation_parameters.max_new_tokens,
     )
     man()
     ue = man.estimations[estimator.level, str(estimator)]
