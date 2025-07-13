@@ -59,17 +59,21 @@ class InferCausalLMCalculator(StatCalculator):
 
         if not all_layers:
             hidden_layer = -1
-            input_tokens_hs = output.hidden_states[0][hidden_layer].cpu().detach()
+            input_tokens_hs = output.hidden_states[0][hidden_layer].cpu(
+            ).detach()
             if len(output.hidden_states) > 1:
                 generated_tokens_hs = torch.cat(
-                    [h[hidden_layer].cpu().detach() for h in output.hidden_states[1:]],
+                    [h[hidden_layer].cpu().detach()
+                     for h in output.hidden_states[1:]],
                     dim=1,
                 )
         else:
-            input_tokens_hs = output.hidden_states[0].mean(axis=0).cpu().detach()
+            input_tokens_hs = output.hidden_states[0].mean(
+                axis=0).cpu().detach()
             if len(output.hidden_states) > 1:
                 generated_tokens_hs = torch.cat(
-                    [h.mean(axis=0).cpu().detach() for h in output.hidden_states[1:]],
+                    [h.mean(axis=0).cpu().detach()
+                     for h in output.hidden_states[1:]],
                     dim=1,
                 )
 
@@ -81,7 +85,8 @@ class InferCausalLMCalculator(StatCalculator):
                 .detach()
             )
         else:
-            batch_embeddings_decoder = input_tokens_hs.mean(axis=1).cpu().detach()
+            batch_embeddings_decoder = input_tokens_hs.mean(
+                axis=1).cpu().detach()
 
         return batch_embeddings_decoder
 
@@ -94,7 +99,7 @@ class InferCausalLMCalculator(StatCalculator):
 
         all_logits = torch.stack(out.scores, dim=1)
         for i in range(len(model_inputs)):
-            seq = out.sequences[i, model_inputs.shape[1] :].cpu()
+            seq = out.sequences[i, model_inputs.shape[1]:].cpu()
 
             length = len(seq)
             for j in range(len(seq)):
@@ -110,14 +115,15 @@ class InferCausalLMCalculator(StatCalculator):
 
             log_probs = logits.log_softmax(-1)
             cut_log_probs.append(log_probs.numpy())
-            lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+            lls.append([log_probs[j, tokens[j]]
+                       for j in range(len(log_probs))])
 
             cut_alternatives.append([[] for _ in range(length)])
             for j in range(length):
                 lt = logits[j, :].numpy()
                 best_tokens = np.argpartition(lt, -self.n_alternatives)
                 ln = len(best_tokens)
-                best_tokens = best_tokens[ln - self.n_alternatives : ln]
+                best_tokens = best_tokens[ln - self.n_alternatives: ln]
                 for t in best_tokens:
                     cut_alternatives[-1][j].append((t.item(), lt[t].item()))
 
@@ -141,7 +147,7 @@ class InferCausalLMCalculator(StatCalculator):
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: Model,
-        max_new_tokens: int = 100,  # TODO: move to args_generate
+        max_new_tokens: int,  # TODO: move to args_generate
         **kwargs,
     ) -> Dict[str, np.ndarray]:
         """
@@ -164,34 +170,33 @@ class InferCausalLMCalculator(StatCalculator):
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
 
-        if self._tokenize:
-            model_inputs = model.tokenize(texts, padding=True, return_tensors="pt")
-        else:
-            model_inputs = dependencies["model_inputs"]
-
         model_inputs = (
-            model_inputs
-            if isinstance(model_inputs, torch.Tensor)
-            else model_inputs["input_ids"]
+            model.tokenize(texts, padding=True, return_tensors="pt")
+            if self._tokenize
+            else dependencies["model_inputs"]
         )
 
-        args_generate = kwargs.pop("args_generate")
-        args_generate.update(
-            {
-                "return_dict_in_generate": True,
-                "output_scores": True,
-                "output_hidden_states": True,
-            }
-        )
-        out = model.generate(model_inputs, **args_generate)
+        input_ids = model_inputs[0] if isinstance(
+            model_inputs, tuple) else model_inputs["input_ids"]
+
+        args_generate = {
+            "return_dict_in_generate": True,
+            "output_scores": True,
+            "output_hidden_states": True,
+            "max_new_tokens": max_new_tokens,
+        }
+        args_generate.update(kwargs)
+        out = model.generate(**model_inputs, **args_generate)
 
         result_dict = self._post_process_logits(
-            out, model_inputs, args_generate["generation_config"].eos_token_id
+            out, input_ids, model.model.generation_config.eos_token_id
         )
 
         if self._return_embeddings:
             result_dict.update(
                 {"embeddings_decoder": self._get_embeddings_from_output(out)}
             )
+
+        result_dict.update({"out": out})
 
         return result_dict
