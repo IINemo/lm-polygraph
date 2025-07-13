@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -10,25 +10,22 @@ defaults:
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-
-device: cpu
 instruct: false
-task: ats
+task: qa
 
-dataset: ['LM-Polygraph/xsum', 'continuation']
+dataset: ['LM-Polygraph/truthfulqa', 'continuation']
 text_column: input
 label_column: output
 train_split: train
 eval_split: test
-max_new_tokens: 56
+max_new_tokens: 128
 load_from_disk: false
-trust_remote_code: true
+multiref: true
+trust_remote_code: false
 size: 10000
 generation_params:
   generate_until:
     - "\n"
-
-source_ignore_regex: "(?s).*Text:\n(.*?)\n\nSummary"
 
 subsample_eval_dataset: -1
 
@@ -36,7 +33,7 @@ generation_metrics: null
 
 ignore_exceptions: false
 
-batch_size: 1
+batch_size: 2
 
 seed:
     - 1
