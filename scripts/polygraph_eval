@@ -221,6 +221,7 @@ def get_generation_metrics(args):
     log.info("Initializing generation metrics...")
 
     generation_metrics = getattr(args, "generation_metrics", None)
+    ignore_regex = getattr(args, "source_ignore_regex", None)
     if not generation_metrics:
         result = [
             RougeMetric("rouge1"),
@@ -234,8 +235,11 @@ def get_generation_metrics(args):
                 output_ignore_regex=getattr(args, "output_ignore_regex", None),
                 normalize=getattr(args, "normalize", False),
             ),
-            AlignScore(target_is_claims=False if args.task == "ats" else True),
         ]
+        if args.task == "ats":
+            result += [AlignScore(target_is_claims=False, source_ignore_regex=ignore_regex, source_as_target=True)]
+        else:
+            result += [AlignScore(target_is_claims=True)]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
             if getattr(args, "use_claim_ue", False):
                 result += [
@@ -246,7 +250,6 @@ def get_generation_metrics(args):
                     )
                 ]
         if args.task == "nmt":
-            ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex=ignore_regex)]
     else:
         result = []
