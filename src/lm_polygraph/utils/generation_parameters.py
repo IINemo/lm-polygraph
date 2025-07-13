@@ -34,3 +34,4 @@ class GenerationParameters:
     repetition_penalty: float = 1.0
     generate_until: tuple = ()
     allow_newlines: bool = True
+    max_new_tokens: int = 100  # Works only with estimate_uncertainty utility function
