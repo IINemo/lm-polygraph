@@ -176,8 +176,11 @@ class InferCausalLMCalculator(StatCalculator):
             else dependencies["model_inputs"]
         )
 
-        input_ids = model_inputs[0] if isinstance(
-            model_inputs, tuple) else model_inputs["input_ids"]
+        input_ids = (
+            model_inputs[0]
+            if isinstance(model_inputs, tuple)
+            else model_inputs["input_ids"]
+        )
 
         args_generate = {
             "return_dict_in_generate": True,

@@ -1,5 +1,4 @@
 from lm_polygraph.utils.model import Model
-from lm_polygraph.utils.generation_parameters import GenerationParameters
 
 from typing import List, Dict
 
@@ -34,8 +33,10 @@ class WhiteboxModelBasic(Model):
         Returns:
             The output from model.generate() with the combined generation parameters.
         """
-        assert("generation_config" not in kwargs)
-        return self.model.generate(*args, generation_config=self.generation_parameters, **kwargs)
+        assert "generation_config" not in kwargs
+        return self.model.generate(
+            *args, generation_config=self.generation_parameters, **kwargs
+        )
 
     def tokenize(self, texts: List[str], **kwargs) -> Dict:
         """Tokenizes input texts using the model's tokenizer.
