@@ -32,6 +32,34 @@ class GenerationParameters:
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    generate_until: tuple = ()
+    generate_until: list = ()
     allow_newlines: bool = True
     max_new_tokens: int = 100  # Works only with estimate_uncertainty utility function
+
+
+class GenerationParametersFactory:
+    """
+    Factory for creating GenerationParameters by merging YAML config,
+    model-native config, and defaults.
+
+    Priority for each parameter: yaml_config > native_config > default value.
+    """
+
+    @staticmethod
+    def from_params(
+        yaml_config: dict = None,
+        native_config: dict = None,
+    ) -> GenerationParameters:
+        yaml_config = yaml_config or {}
+        native_config = native_config or {}
+        params: dict = {}
+        # Iterate over dataclass fields to apply priority
+        for name, field_def in GenerationParameters.__dataclass_fields__.items():
+            # YAML config has highest priority
+            if name in yaml_config and yaml_config[name] is not None:
+                params[name] = yaml_config[name]
+            # Then native model config
+            elif name in native_config and native_config[name] is not None:
+                params[name] = native_config[name]
+
+        return GenerationParameters(**params)
