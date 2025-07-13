@@ -14,7 +14,7 @@ class WhiteboxModelBasic(Model):
         model: AutoModelForCausalLM,
         tokenizer: AutoTokenizer,
         tokenizer_args: Dict,
-        generation_parameters=dict(),
+        generation_parameters=None,
         model_type="",
     ):
         self.model = model
@@ -34,13 +34,8 @@ class WhiteboxModelBasic(Model):
         Returns:
             The output from model.generate() with the combined generation parameters.
         """
-        params = (
-            self.generation_parameters
-            if isinstance(self.generation_parameters, dict)
-            else self.generation_parameters.to_dict()
-        )
-        params.update(kwargs)
-        return self.model.generate(*args, **params)
+        assert("generation_config" not in kwargs)
+        return self.model.generate(*args, generation_config=self.generation_parameters, **kwargs)
 
     def tokenize(self, texts: List[str], **kwargs) -> Dict:
         """Tokenizes input texts using the model's tokenizer.
