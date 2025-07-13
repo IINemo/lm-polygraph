@@ -27,7 +27,7 @@ class InferCausalLMCalculator(StatCalculator):
         self,
         n_alternatives: int = 10,
         tokenize: bool = False,
-        return_embeddings: bool = True
+        return_embeddings: bool = True,
     ):
         super().__init__()
 
@@ -141,8 +141,7 @@ class InferCausalLMCalculator(StatCalculator):
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: Model,
-        max_new_tokens: int = 100,  # TODO: move to args_generate
-        **kwargs,
+        max_new_tokens: int,  # TODO: move to args_generate
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of probabilities at each token position in the generation.
@@ -164,10 +163,11 @@ class InferCausalLMCalculator(StatCalculator):
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
 
-        if self._tokenize:
-            model_inputs = model.tokenize(texts, padding=True, return_tensors="pt")
-        else:
-            model_inputs = dependencies["model_inputs"]
+        model_inputs = (
+            model.tokenize(texts, padding=True, return_tensors="pt")
+            if self._tokenize
+            else dependencies["model_inputs"]
+        )
 
         model_inputs = (
             model_inputs
@@ -175,14 +175,12 @@ class InferCausalLMCalculator(StatCalculator):
             else model_inputs["input_ids"]
         )
 
-        args_generate = model.generation_parameters
-        args_generate.update(
-            {
-                "return_dict_in_generate": True,
-                "output_scores": True,
-                "output_hidden_states": True,
-            }
-        )
+        args_generate = {
+            "return_dict_in_generate": True,
+            "output_scores": True,
+            "output_hidden_states": True,
+            "max_new_tokens": max_new_tokens,
+        }
         out = model.generate(model_inputs, **args_generate)
 
         result_dict = self._post_process_logits(
@@ -194,6 +192,6 @@ class InferCausalLMCalculator(StatCalculator):
                 {"embeddings_decoder": self._get_embeddings_from_output(out)}
             )
 
-        result_dict.update({"out" : out})
+        result_dict.update({"out": out})
 
         return result_dict

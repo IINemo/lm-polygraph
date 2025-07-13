@@ -8,6 +8,7 @@ import torch
 @dataclass
 class GenerateDecoderOnlyOutputWithUncertainty(GenerateDecoderOnlyOutput):
     """Extends GenerateDecoderOnlyOutput to include uncertainty scores"""
+
     uncertainty_score: Optional[Union[float, List[float], torch.Tensor]] = None
 
 
@@ -39,7 +40,7 @@ class CausalLMWithUncertainty:
         texts = self.tokenizer.batch_decode(inputs["input_ids"])
         for calc in self.stat_calculators:
             deps.update(calc(deps, texts=texts, model=self.model_adapter))
-        
+
         uncertainty_score = self.estimator(deps)
 
         raw_out = deps["out"]
