@@ -100,27 +100,3 @@ class CocoaMTE(Estimator):
             enriched_entropy.append(enriched_value)
 
         return np.array(enriched_entropy)
-
-
-
-class CocoaConsistency(Estimator):
-    def __init__(
-        self,
-    ):
-        super().__init__(["greedy_sentence_similarity"], "sequence")
-
-    def __str__(self):
-        return "CocoaConsistency"
-
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
-
-        enriched_entropy = []
-
-        for  greedy_sentence_similarity in batch_greedy_sentence_similarity:
-            #  Compute row-wise average similarity, excluding self-similarity
-            avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
-
-            enriched_entropy.append(avg_dissimilarity)
-
-        return np.array(enriched_entropy)
