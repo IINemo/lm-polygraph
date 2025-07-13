@@ -30,7 +30,6 @@ from .entropy import EntropyCalculator
 from .sample import (
     SamplingGenerationCalculator,
     BlackboxSamplingGenerationCalculator,
-    BestSampleCalculator,
 )
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,

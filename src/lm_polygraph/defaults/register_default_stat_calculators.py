@@ -48,18 +48,19 @@ def register_default_stat_calculators(
     else:
         deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
 
+    # Shared NLI model config
+    nli_model_cfg = {
+        "deberta_path": deberta_model_path,
+        "hf_cache": hf_cache,
+        "batch_size": deberta_batch_size,
+        "device": None,
+    }
+
     _register(InitialStateCalculator)
     _register(
         SemanticMatrixCalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
-        {
-            "nli_model": {
-                "deberta_path": deberta_model_path,
-                "hf_cache": hf_cache,
-                "batch_size": deberta_batch_size,
-                "device": None,
-            }
-        },
+        {"nli_model": nli_model_cfg},
     )
     _register(SemanticClassesCalculator)
 
@@ -72,14 +73,7 @@ def register_default_stat_calculators(
             _register(
                 GreedyAlternativesNLICalculator,
                 "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-                {
-                    "nli_model": {
-                        "deberta_path": deberta_model_path,
-                        "hf_cache": hf_cache,
-                        "batch_size": deberta_batch_size,
-                        "device": None,
-                    }
-                },
+                {"nli_model": nli_model_cfg},
             )
 
     elif model_type == "Whitebox":
@@ -121,37 +115,17 @@ def register_default_stat_calculators(
         _register(
             GreedyAlternativesNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "hf_cache": hf_cache,
-                    "batch_size": deberta_batch_size,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             GreedyAlternativesFactPrefNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "hf_cache": hf_cache,
-                    "batch_size": deberta_batch_size,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             SemanticClassesClaimToSamplesCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_SemanticClassesClaimToSamplesCalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": deberta_batch_size,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             ClaimsExtractor,
@@ -192,24 +166,12 @@ def register_default_stat_calculators(
         _register(
             GreedyAlternativesNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": deberta_batch_size,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             GreedyAlternativesFactPrefNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": deberta_batch_size,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             ClaimsExtractor,

@@ -13,13 +13,15 @@ save_path: '${hydra:run.dir}'
 instruct: false
 task: qa
 
-dataset: ['LM-Polygraph/mmlu', 'continuation']
+dataset: ['LM-Polygraph/truthfulqa', 'continuation']
 text_column: input
 label_column: output
 train_split: train
 eval_split: test
-max_new_tokens: 3
+max_new_tokens: 128
 load_from_disk: false
+multiref: true
+trust_remote_code: false
 size: 10000
 generation_params:
   generate_until:
@@ -31,7 +33,7 @@ generation_metrics: null
 
 ignore_exceptions: false
 
-batch_size: 1
+batch_size: 2
 
 seed:
     - 1
