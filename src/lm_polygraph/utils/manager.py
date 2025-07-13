@@ -136,6 +136,7 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
+        save_stats: List[str] = [],
     ):
         """
         Parameters:
@@ -180,6 +181,7 @@ class UEManager:
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
+        self.save_stats = list(set(['greedy_texts', 'greedy_tokens']).union(set(save_stats)))
 
         self.init()
 
@@ -334,7 +336,9 @@ class UEManager:
                 batch_stats[key] = val
             batch_stats["model"] = self.model
 
+            old_stats = set(batch_stats)                
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
+            new_stats = set(batch_stats.keys()) - old_stats
 
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
@@ -343,7 +347,9 @@ class UEManager:
             batch_callback(
                 batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
             )
-
+            for key in self.save_stats:
+                if key in new_stats and key!='greedy_texts':
+                    self.stats[key] += list(batch_stats[key])
             torch.cuda.empty_cache()
             gc.collect()
 
@@ -450,6 +456,7 @@ class UEManager:
                         self.metrics[
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
+           
 
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)
