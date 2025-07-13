@@ -1,5 +1,4 @@
 from lm_polygraph.utils.model import Model
-from lm_polygraph.utils.generation_parameters import GenerationParameters
 
 from typing import List, Dict
 
