@@ -170,4 +170,9 @@ CONFIG = {
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\n...\nG{topk}: <other guess>",
         subset="verb_2s_topk",
     ),
+    "mmlu_simple_instruct": generate_mmlu_instruct_config(
+        description="Given the following question about {subject} and four candidate answers (A, B, C, and D), choose the best answer. Your response should contain only the selected option's letter (A, B, C, or D), not a complete sentence.",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
+        subset="simple_instruct",
+    ),
 }

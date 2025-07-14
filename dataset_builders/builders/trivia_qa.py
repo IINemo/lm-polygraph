@@ -152,4 +152,9 @@ CONFIG = {
         few_shot_prompt="Question: {question}\nG1: {answer}\n...\nG{topk}: <other guess>",
         subset="verb_2s_topk",
     ),
+    "triviaqa_simple_instruct": generate_triviaqa_instruct_config(
+        description="Answer the following question as briefly as possible.",
+        few_shot_prompt="Question: {question}\nAnswer: {answer}",
+        subset="simple_instruct",
+    ),
 }

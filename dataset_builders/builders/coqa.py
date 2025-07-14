@@ -118,4 +118,9 @@ CONFIG = {
         description="Here's a short story:\n\n{story} (End of story)\n\nProvide your {topk} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Question: {question}\nG1: {answer}\n...\nG{topk}: <other guess>",
     ),
+    "coqa_simple_instruct": generate_coqa_instruct_config(
+        subset="simple_instruct",
+        description="Here's a short story:\n\n{story} (End of story)\n\nAnswer the following question as briefly as possible.",
+        few_shot_prompt="Question: {question}\nAnswer: {answer}",
+    ),
 }
