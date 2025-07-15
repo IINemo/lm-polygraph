@@ -88,6 +88,7 @@ estimators:
       alpha: 0.8
       use_entropy: True
   - name: CSL
+    cfg:
       layer: 16
       gen_only: False
   - name: CocoaMSP
