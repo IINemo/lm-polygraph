@@ -51,7 +51,7 @@ CONFIG = {
             prompt="\n\nQ: {question}\nA:",
             few_shot_prompt=base_few_shot_prompt_gsm8k,
         ),
-        "dataset": "truthfulqa",
+        "dataset": "gsm8k",
         "subset": "continuation",
     },
     "gsm8k_simple_instruct": {
