@@ -28,8 +28,12 @@ class SemanticDensity(Estimator):
         batch_sample_log_probs = stats["sample_log_probs"]
         batch_sample_tokens = stats["sample_tokens"]
         batch_sample_texts = stats["sample_texts"]
-        batch_semantic_matrix_contra = stats["concat_greedy_semantic_matrix_contra_forward"]
-        batch_semantic_matrix_neutral = stats["concat_greedy_semantic_matrix_neutral_forward"]
+        batch_semantic_matrix_contra = stats[
+            "concat_greedy_semantic_matrix_contra_forward"
+        ]
+        batch_semantic_matrix_neutral = stats[
+            "concat_greedy_semantic_matrix_neutral_forward"
+        ]
         batch_greedy_log_likelihoods = stats["greedy_log_likelihoods"]
 
         semantic_density = []
@@ -54,7 +58,9 @@ class SemanticDensity(Estimator):
 
             for _id in unique_sample_indices:
                 normed_prob = sample_probs[_id] ** (1 / len(sample_tokens[_id]))
-                distance = semantic_matrix_contra[_id] + (semantic_matrix_neutral[_id] / 2)
+                distance = semantic_matrix_contra[_id] + (
+                    semantic_matrix_neutral[_id] / 2
+                )
 
                 if distance <= 1:
                     kernel_value = 1 - distance
@@ -64,7 +70,9 @@ class SemanticDensity(Estimator):
                 numerator.append(normed_prob * kernel_value)
                 denominator.append(normed_prob)
 
-            greedy_normed_prob = np.exp(np.sum(greedy_log_probs)) ** (1 / len(greedy_log_probs))
+            greedy_normed_prob = np.exp(np.sum(greedy_log_probs)) ** (
+                1 / len(greedy_log_probs)
+            )
             numerator.append(greedy_normed_prob)
             denominator.append(greedy_normed_prob)
 

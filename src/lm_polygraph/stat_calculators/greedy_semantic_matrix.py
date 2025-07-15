@@ -60,7 +60,6 @@ class GreedySemanticMatrixCalculator(StatCalculator):
             batch_pairs.append(list(itertools.product([greedy_text], unique_texts)))
             batch_invs.append(inv)
 
-        device = deberta.device
         ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
         contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
         neutral_id = deberta.deberta.config.label2id["NEUTRAL"]
@@ -197,7 +196,6 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
             )
             batch_invs.append(inv)
 
-        device = deberta.device
         ent_id = deberta.deberta.config.label2id["ENTAILMENT"]
         contra_id = deberta.deberta.config.label2id["CONTRADICTION"]
         neutral_id = deberta.deberta.config.label2id["NEUTRAL"]
