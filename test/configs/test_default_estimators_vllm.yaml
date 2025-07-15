@@ -38,7 +38,6 @@ estimators:
       similarity_score: "NLI_score"
       affinity: "contra"
   - name: DegMat
-  - name: SemanticDensity
     cfg:
       similarity_score: "Jaccard_score"
   - name: Eccentricity
