@@ -20,9 +20,15 @@ class GreedySemanticMatrixCalculator(StatCalculator):
     def __init__(self, nli_model):
         super().__init__(
             [
-                "greedy_semantic_matrix_forward",
-                "greedy_semantic_matrix_backward",
-                "greedy_semantic_matrix",
+                "greedy_semantic_matrix_entail_forward",
+                "greedy_semantic_matrix_entail_backward",
+                "greedy_semantic_matrix_entail",
+                "greedy_semantic_matrix_neutral_forward",
+                "greedy_semantic_matrix_neutral_backward",
+                "greedy_semantic_matrix_neutral",
+                "greedy_semantic_matrix_contra_forward",
+                "greedy_semantic_matrix_contra_backward",
+                "greedy_semantic_matrix_contra",
             ],
             ["greedy_texts", "sample_texts"],
         )
@@ -68,48 +74,49 @@ class GreedySemanticMatrixCalculator(StatCalculator):
         C_f = []
         C_b = []
         C = []
+        
+        with torch.no_grad():
+            for i, pairs in enumerate(batch_pairs):
+                dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
+                probs_f = []
+                probs_b = []
 
-        for i, pairs in enumerate(batch_pairs):
-            dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
-            probs_f = []
-            probs_b = []
+                for first_texts, second_texts in tqdm(dl):
+                    batch = list(zip(first_texts, second_texts))
+                    encoded = tokenizer.batch_encode_plus(
+                        batch, padding=True, return_tensors="pt"
+                    ).to(device)
+                    logits = deberta.deberta(**encoded).logits
+                    probs_f.append(softmax(logits))
 
-            for first_texts, second_texts in tqdm(dl):
-                batch = list(zip(first_texts, second_texts))
-                encoded = tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs_f.append(softmax(logits).cpu().detach())
+                    batch = list(zip(second_texts, first_texts))
+                    encoded = tokenizer.batch_encode_plus(
+                        batch, padding=True, return_tensors="pt"
+                    ).to(device)
+                    logits = deberta.deberta(**encoded).logits
+                    probs_b.append(softmax(logits))
 
-                batch = list(zip(second_texts, first_texts))
-                encoded = tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs_b.append(softmax(logits).cpu().detach())
+                probs_f = torch.cat(probs_f, dim=0).cpu()
+                probs_b = torch.cat(probs_b, dim=0).cpu()
 
-            probs_f = torch.cat(probs_f, dim=0)
-            probs_b = torch.cat(probs_b, dim=0)
+                inv = batch_invs[i]
 
-            inv = batch_invs[i]
+                entail_probs_f = probs_f[:, ent_id]
+                entail_probs_b = probs_b[:, ent_id]
+                contra_probs_f = probs_f[:, contra_id]
+                contra_probs_b = probs_b[:, contra_id]
+                neutral_probs_f = probs_f[:, neutral_id]
+                neutral_probs_b = probs_b[:, neutral_id]
 
-            entail_probs_f = probs_f[:, ent_id]
-            entail_probs_b = probs_b[:, ent_id]
-            contra_probs_f = probs_f[:, contra_id]
-            contra_probs_b = probs_b[:, contra_id]
-            neutral_probs_f = probs_f[:, neutral_id]
-            neutral_probs_b = probs_b[:, neutral_id]
-
-            E_f.append(entail_probs_f[inv].numpy())
-            E_b.append(entail_probs_b[inv].numpy())
-            E.append((entail_probs_f[inv].numpy() + entail_probs_b[inv].numpy()) / 2)
-            N_f.append(neutral_probs_f[inv].numpy())
-            N_b.append(neutral_probs_b[inv].numpy())
-            N.append((neutral_probs_f[inv].numpy() + neutral_probs_b[inv].numpy()) / 2)
-            C_f.append(contra_probs_f[inv].numpy())
-            C_b.append(contra_probs_b[inv].numpy())
-            C.append((contra_probs_f[inv].numpy() + contra_probs_b[inv].numpy()) / 2)
+                E_f.append(entail_probs_f[inv].numpy())
+                E_b.append(entail_probs_b[inv].numpy())
+                E.append((entail_probs_f[inv].numpy() + entail_probs_b[inv].numpy()) / 2)
+                N_f.append(neutral_probs_f[inv].numpy())
+                N_b.append(neutral_probs_b[inv].numpy())
+                N.append((neutral_probs_f[inv].numpy() + neutral_probs_b[inv].numpy()) / 2)
+                C_f.append(contra_probs_f[inv].numpy())
+                C_b.append(contra_probs_b[inv].numpy())
+                C.append((contra_probs_f[inv].numpy() + contra_probs_b[inv].numpy()) / 2)
 
         E_f = np.stack(E_f)
         E_b = np.stack(E_b)
@@ -122,9 +129,9 @@ class GreedySemanticMatrixCalculator(StatCalculator):
         C = np.stack(C)
 
         return {
-            "greedy_semantic_matrix_forward": E_f,
-            "greedy_semantic_matrix_backward": E_b,
-            "greedy_semantic_matrix": E,
+            "greedy_semantic_matrix_entail_forward": E_f,
+            "greedy_semantic_matrix_entail_backward": E_b,
+            "greedy_semantic_matrix_entail": E,
             "greedy_semantic_matrix_neutral_forward": N_f,
             "greedy_semantic_matrix_neutral_backward": N_b,
             "greedy_semantic_matrix_neutral": N,
@@ -142,9 +149,15 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
     def __init__(self, nli_model):
         super().__init__(
             [
-                "concat_greedy_semantic_matrix_forward",
-                "concat_greedy_semantic_matrix_backward",
-                "concat_greedy_semantic_matrix",
+                "concat_greedy_semantic_matrix_entail_forward",
+                "concat_greedy_semantic_matrix_entail_backward",
+                "concat_greedy_semantic_matrix_entail",
+                "concat_greedy_semantic_matrix_neutral_forward",
+                "concat_greedy_semantic_matrix_neutral_backward",
+                "concat_greedy_semantic_matrix_neutral",
+                "concat_greedy_semantic_matrix_contra_forward",
+                "concat_greedy_semantic_matrix_contra_backward",
+                "concat_greedy_semantic_matrix_contra",
             ],
             ["greedy_texts", "no_fewshot_input_texts", "sample_texts"],
         )
@@ -205,18 +218,22 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
                     ).to(device)
-                    logits = deberta.deberta(**encoded).logits.detach().to(device)
-                    probs_f.append(softmax(logits).cpu().detach())
+                    logits = deberta.deberta(**encoded).logits
+                    probs_f.append(softmax(logits))
 
                     batch = list(zip(second_texts, first_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
                     ).to(device)
-                    logits = deberta.deberta(**encoded).logits.detach().to(device)
-                    probs_b.append(softmax(logits).cpu().detach())
+                    logits = deberta.deberta(**encoded).logits
+                    probs_b.append(softmax(logits))
 
-                probs_f = torch.cat(probs_f, dim=0)
-                probs_b = torch.cat(probs_b, dim=0)
+                probs_f = torch.cat(probs_f, dim=0).cpu()
+                probs_b = torch.cat(probs_b, dim=0).cpu()
+
+                del encoded, logits
+
+                torch.cuda.empty_cache()
 
                 inv = batch_invs[i]
 
@@ -248,9 +265,9 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
         C = np.stack(C)
 
         return {
-            "concat_greedy_semantic_matrix_forward": E_f,
-            "concat_greedy_semantic_matrix_backward": E_b,
-            "concat_greedy_semantic_matrix": E,
+            "concat_greedy_semantic_matrix_entail_forward": E_f,
+            "concat_greedy_semantic_matrix_entail_backward": E_b,
+            "concat_greedy_semantic_matrix_entail": E,
             "concat_greedy_semantic_matrix_neutral_forward": N_f,
             "concat_greedy_semantic_matrix_neutral_backward": N_b,
             "concat_greedy_semantic_matrix_neutral": N,
