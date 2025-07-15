@@ -20,7 +20,14 @@ from .prompt_visual import (
     SamplingPromptVisualCalculator,
     ClaimPromptVisualCalculator,
 )
-from .prompt import PromptCalculator, SamplingPromptCalculator, ClaimPromptCalculator
+from .prompt import (
+    PromptCalculator,
+    SamplingPromptCalculator,
+    ClaimPromptCalculator,
+)
+from .attention_eliciting_prompt import (
+    AttentionElicitingPromptCalculator,
+)
 from .claim_level_prompts import (
     CLAIM_EXTRACTION_PROMPTS,
     MATCHING_PROMPTS,
