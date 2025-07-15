@@ -96,3 +96,9 @@
     alpha: 0.8
     use_entropy: True
 - name: CSL
+    layer: 16
+    gen_only: False
+- name: CocoaMSP
+- name: CocoaPPL
+- name: CocoaMTE
+- name: SemanticDensity
