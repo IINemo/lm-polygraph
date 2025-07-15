@@ -57,10 +57,7 @@ def register_default_stat_calculators(
     }
 
     _register(InitialStateCalculator)
-    _register(
-        RawInputCalculator,
-        "lm_polygraph.defaults.stat_calculator_builders.default_RawInputCalculator",
-    )
+    _register(RawInputCalculator)
     _register(
         SemanticMatrixCalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
