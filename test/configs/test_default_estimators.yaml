@@ -38,6 +38,7 @@ estimators:
     cfg:
       similarity_score: "NLI_score"
       affinity: "entail"
+  - name: SemanticDensity
   - name: DegMat
     cfg:
       similarity_score: "NLI_score"
@@ -77,6 +78,7 @@ estimators:
       spacy_path: "en_core_web_sm"
   - name: AttentionScore
     cfg:
+<<<<<<< HEAD
       gen_only: False
   - name: RAUQ
     cfg:
@@ -87,3 +89,7 @@ estimators:
       alpha: 0.8
       use_entropy: True
   - name: CSL
+=======
+      layer: 16
+      gen_only: False
+>>>>>>> 414614e (Add test for semantic density)
