@@ -112,7 +112,6 @@ class SemanticMatrixCalculator(StatCalculator):
                 logits_all = torch.cat(logits_all, dim=0)
 
                 del encoded, logits
-
                 torch.cuda.empty_cache()
 
                 entail_probs = probs[:, ent_id]

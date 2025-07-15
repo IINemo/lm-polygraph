@@ -65,68 +65,67 @@ class GreedySemanticMatrixCalculator(StatCalculator):
         softmax = nn.Softmax(dim=1)
         tokenizer = deberta.deberta_tokenizer
 
-        E_f = []
-        E_b = []
-        E = []
-        N_f = []
-        N_b = []
-        N = []
-        C_f = []
-        C_b = []
-        C = []
-        
+        E_f_tensors = []
+        E_b_tensors = []
+        E_tensors = []
+        N_f_tensors = []
+        N_b_tensors = []
+        N_tensors = []
+        C_f_tensors = []
+        C_b_tensors = []
+        C_tensors = []
         with torch.no_grad():
             for i, pairs in enumerate(batch_pairs):
                 dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
                 probs_f = []
                 probs_b = []
-
                 for first_texts, second_texts in tqdm(dl):
                     batch = list(zip(first_texts, second_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    ).to(device)
+                    )
                     logits = deberta.deberta(**encoded).logits
                     probs_f.append(softmax(logits))
 
                     batch = list(zip(second_texts, first_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    ).to(device)
+                    )
                     logits = deberta.deberta(**encoded).logits
                     probs_b.append(softmax(logits))
 
-                probs_f = torch.cat(probs_f, dim=0).cpu()
-                probs_b = torch.cat(probs_b, dim=0).cpu()
+                probs_f = torch.cat(probs_f, dim=0)
+                probs_b = torch.cat(probs_b, dim=0)
 
                 inv = batch_invs[i]
 
-                entail_probs_f = probs_f[:, ent_id]
-                entail_probs_b = probs_b[:, ent_id]
-                contra_probs_f = probs_f[:, contra_id]
-                contra_probs_b = probs_b[:, contra_id]
-                neutral_probs_f = probs_f[:, neutral_id]
-                neutral_probs_b = probs_b[:, neutral_id]
+                entail_probs_f = probs_f[:, ent_id][inv]
+                entail_probs_b = probs_b[:, ent_id][inv]
+                contra_probs_f = probs_f[:, contra_id][inv]
+                contra_probs_b = probs_b[:, contra_id][inv]
+                neutral_probs_f = probs_f[:, neutral_id][inv]
+                neutral_probs_b = probs_b[:, neutral_id][inv]
 
-                E_f.append(entail_probs_f[inv].numpy())
-                E_b.append(entail_probs_b[inv].numpy())
-                E.append((entail_probs_f[inv].numpy() + entail_probs_b[inv].numpy()) / 2)
-                N_f.append(neutral_probs_f[inv].numpy())
-                N_b.append(neutral_probs_b[inv].numpy())
-                N.append((neutral_probs_f[inv].numpy() + neutral_probs_b[inv].numpy()) / 2)
-                C_f.append(contra_probs_f[inv].numpy())
-                C_b.append(contra_probs_b[inv].numpy())
-                C.append((contra_probs_f[inv].numpy() + contra_probs_b[inv].numpy()) / 2)
+                E_f_tensors.append(entail_probs_f)
+                E_b_tensors.append(entail_probs_b)
+                E_tensors.append((entail_probs_f + entail_probs_b) / 2)
+                N_f_tensors.append(neutral_probs_f)
+                N_b_tensors.append(neutral_probs_b)
+                N_tensors.append((neutral_probs_f + neutral_probs_b) / 2)
+                C_f_tensors.append(contra_probs_f)
+                C_b_tensors.append(contra_probs_b)
+                C_tensors.append((contra_probs_f + contra_probs_b) / 2)
 
-        E_f = np.stack(E_f)
-        E_b = np.stack(E_b)
-        E = np.stack(E)
-        N_f = np.stack(N_f)
-        N_b = np.stack(N_b)
-        N = np.stack(N)
-        C_f = np.stack(C_f)
-        C_b = np.stack(C_b)
-        C = np.stack(C)
+            # Stack tensors and then convert to numpy arrays at the end
+            E_f = torch.stack(E_f_tensors).cpu().numpy()
+            E_b = torch.stack(E_b_tensors).cpu().numpy()
+            E = torch.stack(E_tensors).cpu().numpy()
+            N_f = torch.stack(N_f_tensors).cpu().numpy()
+            N_b = torch.stack(N_b_tensors).cpu().numpy()
+            N = torch.stack(N_tensors).cpu().numpy()
+            C_f = torch.stack(C_f_tensors).cpu().numpy()
+            C_b = torch.stack(C_b_tensors).cpu().numpy()
+            C = torch.stack(C_tensors).cpu().numpy()
 
         return {
             "greedy_semantic_matrix_entail_forward": E_f,
@@ -178,15 +177,18 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
         batch_greedy_texts = dependencies["greedy_texts"]
         input_texts = dependencies["no_fewshot_input_texts"]
 
-
         batch_pairs = []
         batch_invs = []
-        for texts, greedy_text, input_text in zip(batch_texts, batch_greedy_texts, input_texts):
+        for texts, greedy_text, input_text in zip(
+            batch_texts, batch_greedy_texts, input_texts
+        ):
             texts = [input_text + text for text in texts]
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
             unique_texts, inv = np.unique(texts, return_inverse=True)
-            batch_pairs.append(list(itertools.product([input_text + greedy_text], unique_texts)))
+            batch_pairs.append(
+                list(itertools.product([input_text + greedy_text], unique_texts))
+            )
             batch_invs.append(inv)
 
         device = deberta.device
@@ -197,72 +199,69 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
         softmax = nn.Softmax(dim=1)
         tokenizer = deberta.deberta_tokenizer
 
-        E_f = []
-        E_b = []
-        E = []
-        N_f = []
-        N_b = []
-        N = []
-        C_f = []
-        C_b = []
-        C = []
-        
+        E_f_tensors = []
+        E_b_tensors = []
+        E_tensors = []
+        N_f_tensors = []
+        N_b_tensors = []
+        N_tensors = []
+        C_f_tensors = []
+        C_b_tensors = []
+        C_tensors = []
         with torch.no_grad():
             for i, pairs in enumerate(batch_pairs):
                 dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
                 probs_f = []
                 probs_b = []
-
                 for first_texts, second_texts in tqdm(dl):
                     batch = list(zip(first_texts, second_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    ).to(device)
+                    )
                     logits = deberta.deberta(**encoded).logits
                     probs_f.append(softmax(logits))
 
                     batch = list(zip(second_texts, first_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    ).to(device)
+                    )
                     logits = deberta.deberta(**encoded).logits
                     probs_b.append(softmax(logits))
 
-                probs_f = torch.cat(probs_f, dim=0).cpu()
-                probs_b = torch.cat(probs_b, dim=0).cpu()
+                probs_f = torch.cat(probs_f, dim=0)
+                probs_b = torch.cat(probs_b, dim=0)
 
                 del encoded, logits
-
                 torch.cuda.empty_cache()
 
                 inv = batch_invs[i]
 
-                entail_probs_f = probs_f[:, ent_id]
-                entail_probs_b = probs_b[:, ent_id]
-                contra_probs_f = probs_f[:, contra_id]
-                contra_probs_b = probs_b[:, contra_id]
-                neutral_probs_f = probs_f[:, neutral_id]
-                neutral_probs_b = probs_b[:, neutral_id]
+                entail_probs_f = probs_f[:, ent_id][inv]
+                entail_probs_b = probs_b[:, ent_id][inv]
+                contra_probs_f = probs_f[:, contra_id][inv]
+                contra_probs_b = probs_b[:, contra_id][inv]
+                neutral_probs_f = probs_f[:, neutral_id][inv]
+                neutral_probs_b = probs_b[:, neutral_id][inv]
 
-                E_f.append(entail_probs_f[inv].numpy())
-                E_b.append(entail_probs_b[inv].numpy())
-                E.append((entail_probs_f[inv].numpy() + entail_probs_b[inv].numpy()) / 2)
-                N_f.append(neutral_probs_f[inv].numpy())
-                N_b.append(neutral_probs_b[inv].numpy())
-                N.append((neutral_probs_f[inv].numpy() + neutral_probs_b[inv].numpy()) / 2)
-                C_f.append(contra_probs_f[inv].numpy())
-                C_b.append(contra_probs_b[inv].numpy())
-                C.append((contra_probs_f[inv].numpy() + contra_probs_b[inv].numpy()) / 2)
+                E_f_tensors.append(entail_probs_f)
+                E_b_tensors.append(entail_probs_b)
+                E_tensors.append((entail_probs_f + entail_probs_b) / 2)
+                N_f_tensors.append(neutral_probs_f)
+                N_b_tensors.append(neutral_probs_b)
+                N_tensors.append((neutral_probs_f + neutral_probs_b) / 2)
+                C_f_tensors.append(contra_probs_f)
+                C_b_tensors.append(contra_probs_b)
+                C_tensors.append((contra_probs_f + contra_probs_b) / 2)
 
-        E_f = np.stack(E_f)
-        E_b = np.stack(E_b)
-        E = np.stack(E)
-        N_f = np.stack(N_f)
-        N_b = np.stack(N_b)
-        N = np.stack(N)
-        C_f = np.stack(C_f)
-        C_b = np.stack(C_b)
-        C = np.stack(C)
+            E_f = torch.stack(E_f_tensors).cpu().numpy()
+            E_b = torch.stack(E_b_tensors).cpu().numpy()
+            E = torch.stack(E_tensors).cpu().numpy()
+            N_f = torch.stack(N_f_tensors).cpu().numpy()
+            N_b = torch.stack(N_b_tensors).cpu().numpy()
+            N = torch.stack(N_tensors).cpu().numpy()
+            C_f = torch.stack(C_f_tensors).cpu().numpy()
+            C_b = torch.stack(C_b_tensors).cpu().numpy()
+            C = torch.stack(C_tensors).cpu().numpy()
 
         return {
             "concat_greedy_semantic_matrix_entail_forward": E_f,
