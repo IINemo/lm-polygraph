@@ -282,7 +282,12 @@ def test_csl(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_semantic_density(model):
+def test_semantic_density_concat(model):
     estimator = SemanticDensity()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+def test_semantic_density(model):
+    estimator = SemanticDensity(concat_input=False)
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)

@@ -7,34 +7,57 @@ from .estimator import Estimator
 
 class SemanticDensity(Estimator):
 
-    def __init__(self, verbose: bool = False):
-        super().__init__(
-            [
-                "greedy_log_probs",
-                "sample_log_probs",
-                "sample_tokens",
-                "sample_texts",
-                "concat_greedy_semantic_matrix_contra_forward",
-                "concat_greedy_semantic_matrix_neutral_forward",
-            ],
-            "sequence",
-        )
+    def __init__(self, verbose: bool = False, concat_input: bool = True):
+        deps = [
+            "greedy_log_probs",
+            "sample_log_probs",
+            "sample_tokens",
+            "sample_texts",
+        ]
+        if concat_input:
+            deps.extend(
+                [
+                    "concat_greedy_semantic_matrix_contra_forward",
+                    "concat_greedy_semantic_matrix_neutral_forward",
+                ]
+            )
+        else:
+            deps.extend(
+                [
+                    "greedy_semantic_matrix_contra_forward",
+                    "greedy_semantic_matrix_neutral_forward",
+                ]
+            )
+        super().__init__(deps, "sequence")
         self.verbose = verbose
+        self.concat_input = concat_input
 
     def __str__(self):
-        return "SemanticDensity"
+        if self.concat_input:
+            return "SemanticDensity"
+        else:
+            return "SemanticDensityOutput"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         batch_sample_log_probs = stats["sample_log_probs"]
         batch_sample_tokens = stats["sample_tokens"]
         batch_sample_texts = stats["sample_texts"]
-        batch_semantic_matrix_contra = stats[
-            "concat_greedy_semantic_matrix_contra_forward"
-        ]
-        batch_semantic_matrix_neutral = stats[
-            "concat_greedy_semantic_matrix_neutral_forward"
-        ]
         batch_greedy_log_likelihoods = stats["greedy_log_likelihoods"]
+
+        if self.concat_input:
+            batch_semantic_matrix_contra = stats[
+                "concat_greedy_semantic_matrix_contra_forward"
+            ]
+            batch_semantic_matrix_neutral = stats[
+                "concat_greedy_semantic_matrix_neutral_forward"
+            ]
+        else:
+            batch_semantic_matrix_contra = stats[
+                "greedy_semantic_matrix_contra_forward"
+            ]
+            batch_semantic_matrix_neutral = stats[
+                "greedy_semantic_matrix_neutral_forward"
+            ]
 
         semantic_density = []
         for batch_data in zip(
