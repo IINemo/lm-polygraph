@@ -48,6 +48,11 @@ from .embeddings import EmbeddingsCalculator
 from .statistic_extraction import TrainingStatisticExtractionCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
 from .semantic_matrix import SemanticMatrixCalculator
+from .raw_input import RawInputCalculator
+from .greedy_semantic_matrix import (
+    GreedySemanticMatrixCalculator,
+    ConcatGreedySemanticMatrixCalculator,
+)
 from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
 from .greedy_cross_encoder_similarity import (
     GreedyCrossEncoderSimilarityMatrixCalculator,

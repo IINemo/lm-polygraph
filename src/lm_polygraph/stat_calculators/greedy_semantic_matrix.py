@@ -17,21 +17,24 @@ class GreedySemanticMatrixCalculator(StatCalculator):
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
 
+    @staticmethod
+    def meta_info():
+        stats = [
+            "greedy_semantic_matrix_entail_forward",
+            "greedy_semantic_matrix_entail_backward",
+            "greedy_semantic_matrix_entail",
+            "greedy_semantic_matrix_neutral_forward",
+            "greedy_semantic_matrix_neutral_backward",
+            "greedy_semantic_matrix_neutral",
+            "greedy_semantic_matrix_contra_forward",
+            "greedy_semantic_matrix_contra_backward",
+            "greedy_semantic_matrix_contra",
+        ]
+        dependencies = ["greedy_texts", "sample_texts"]
+        return stats, dependencies
+
     def __init__(self, nli_model):
-        super().__init__(
-            [
-                "greedy_semantic_matrix_entail_forward",
-                "greedy_semantic_matrix_entail_backward",
-                "greedy_semantic_matrix_entail",
-                "greedy_semantic_matrix_neutral_forward",
-                "greedy_semantic_matrix_neutral_backward",
-                "greedy_semantic_matrix_neutral",
-                "greedy_semantic_matrix_contra_forward",
-                "greedy_semantic_matrix_contra_backward",
-                "greedy_semantic_matrix_contra",
-            ],
-            ["greedy_texts", "sample_texts"],
-        )
+        super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
 
@@ -145,21 +148,24 @@ class ConcatGreedySemanticMatrixCalculator(StatCalculator):
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
 
+    @staticmethod
+    def meta_info():
+        stats = [
+            "concat_greedy_semantic_matrix_entail_forward",
+            "concat_greedy_semantic_matrix_entail_backward",
+            "concat_greedy_semantic_matrix_entail",
+            "concat_greedy_semantic_matrix_neutral_forward",
+            "concat_greedy_semantic_matrix_neutral_backward",
+            "concat_greedy_semantic_matrix_neutral",
+            "concat_greedy_semantic_matrix_contra_forward",
+            "concat_greedy_semantic_matrix_contra_backward",
+            "concat_greedy_semantic_matrix_contra",
+        ]
+        dependencies = ["greedy_texts", "no_fewshot_input_texts", "sample_texts"]
+        return stats, dependencies
+
     def __init__(self, nli_model):
-        super().__init__(
-            [
-                "concat_greedy_semantic_matrix_entail_forward",
-                "concat_greedy_semantic_matrix_entail_backward",
-                "concat_greedy_semantic_matrix_entail",
-                "concat_greedy_semantic_matrix_neutral_forward",
-                "concat_greedy_semantic_matrix_neutral_backward",
-                "concat_greedy_semantic_matrix_neutral",
-                "concat_greedy_semantic_matrix_contra_forward",
-                "concat_greedy_semantic_matrix_contra_backward",
-                "concat_greedy_semantic_matrix_contra",
-            ],
-            ["greedy_texts", "no_fewshot_input_texts", "sample_texts"],
-        )
+        super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
 
