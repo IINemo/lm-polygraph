@@ -42,9 +42,7 @@ def prepare_trivia_qa(
                     )
                     + "\n\n"
                 )
-            formatted_few_shot_prompt += (
-                f"{few_shot_prompt_end}:\n\n"
-            )
+            formatted_few_shot_prompt += f"{few_shot_prompt_end}:\n\n"
         else:
             formatted_few_shot_prompt = ""
             for inst in few_shot_data:
@@ -72,14 +70,20 @@ def prepare_trivia_qa(
     return x, y
 
 
-def generate_triviaqa_instruct_config(description, few_shot_prompt, subset, end_answer="", few_shot_prompt_end="Now answer the following question in the same format:"):
+def generate_triviaqa_instruct_config(
+    description,
+    few_shot_prompt,
+    subset,
+    end_answer="",
+    few_shot_prompt_end="Now answer the following question in the same format:",
+):
     return {
         "name": ["trivia_qa", "rc.nocontext"],
         "train_split": "train",
         "test_split": "validation",
         "prepare_func": partial(
             prepare_trivia_qa,
-            prompt="Question: {question}\n"+end_answer,
+            prompt="Question: {question}\n" + end_answer,
             n_shot=5,
             few_shot_dataset_func=partial(
                 datasets.load_dataset,
@@ -159,6 +163,6 @@ CONFIG = {
         few_shot_prompt="Question: {question}\nAnswer: {answer}",
         subset="simple_instruct",
         end_answer="Answer: ",
-        few_shot_prompt_end="Now answer the following question:"
+        few_shot_prompt_end="Now answer the following question:",
     ),
 }
