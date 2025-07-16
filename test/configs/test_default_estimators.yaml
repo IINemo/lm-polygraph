@@ -80,11 +80,11 @@ estimators:
       gen_only: False
   - name: RAUQ
     cfg:
-      alpha: 0.2
+      instruct: '${instruct}'
       use_entropy: False
   - name: RAUQ
     cfg:
-      alpha: 0.8
+      instruct: '${instruct}'
       use_entropy: True
   - name: CSL
   - name: CocoaMSP
