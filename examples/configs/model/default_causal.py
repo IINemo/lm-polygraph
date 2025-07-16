@@ -3,7 +3,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 def load_model(model_path: str, device_map: str):
     model = AutoModelForCausalLM.from_pretrained(
-        model_path, trust_remote_code=True, device_map=device_map, attn_implementation="eager",
+        model_path,
+        trust_remote_code=True,
+        device_map=device_map,
+        attn_implementation="eager",
     )
     model.eval()
 
