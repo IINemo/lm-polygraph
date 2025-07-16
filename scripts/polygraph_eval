@@ -135,6 +135,7 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
+            save_stats=getattr(args, 'save_stats', []),
             log_time=getattr(args, "log_time", False),
         )
 
