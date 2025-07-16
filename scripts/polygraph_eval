@@ -7,6 +7,7 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import uuid
 from hydra.core.hydra_config import HydraConfig
+from dataclasses import asdict
 
 import logging
 
@@ -22,7 +23,7 @@ from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module
-from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
@@ -221,6 +222,7 @@ def get_generation_metrics(args):
     log.info("Initializing generation metrics...")
 
     generation_metrics = getattr(args, "generation_metrics", None)
+    ignore_regex = getattr(args, "source_ignore_regex", None)
     if not generation_metrics:
         result = [
             RougeMetric("rouge1"),
@@ -234,8 +236,11 @@ def get_generation_metrics(args):
                 output_ignore_regex=getattr(args, "output_ignore_regex", None),
                 normalize=getattr(args, "normalize", False),
             ),
-            AlignScore(target_is_claims=False if args.task == "ats" else True),
         ]
+        if args.task == "ats":
+            result += [AlignScore(target_is_claims=False, source_ignore_regex=ignore_regex, source_as_target=True)]
+        else:
+            result += [AlignScore(target_is_claims=True)]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
             if getattr(args, "use_claim_ue", False):
                 result += [
@@ -246,7 +251,6 @@ def get_generation_metrics(args):
                     )
                 ]
         if args.task == "nmt":
-            ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex=ignore_regex)]
     else:
         result = []
@@ -361,7 +365,10 @@ def get_whitebox_model(args, cache_kwargs={}):
     load_tok_args.update(args.model.load_tokenizer_args)
     tokenizer = load_module.load_tokenizer(**load_tok_args)
 
-    generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
+    generation_params = GenerationParametersFactory.from_params(
+        yaml_config=getattr(args, "generation_params", {}),
+        native_config=base_model.generation_config.to_dict()
+    )
 
     model = WhiteboxModel(
         base_model, tokenizer, args.model.path, args.model.type, generation_params, instruct=getattr(args, "instruct", False)
@@ -379,16 +386,16 @@ def get_vllm_model(args):
     load_model_args = {'model_path': args.model.path, 
                        'max_new_tokens': args.max_new_tokens, 
                        'logprobs': args.model.logprobs}
-    
+
     load_model_args.update(args.model.load_model_args)
     base_model, sampling_params = load_module.load_model(**load_model_args)
     generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
-    
+
     model = WhiteboxModelvLLM(model=base_model, 
                               sampling_params=sampling_params,
                               generation_parameters=generation_parameters,
                               device=args.model.device)
-    
+
     return model
 
 

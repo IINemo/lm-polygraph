@@ -1,5 +1,4 @@
 from lm_polygraph.utils.model import Model
-from lm_polygraph.utils.generation_parameters import GenerationParameters
 
 from typing import List, Dict
 
@@ -14,20 +13,44 @@ class WhiteboxModelBasic(Model):
         model: AutoModelForCausalLM,
         tokenizer: AutoTokenizer,
         tokenizer_args: Dict,
-        parameters: GenerationParameters = GenerationParameters(),
+        generation_parameters=None,
         model_type="",
     ):
         self.model = model
         self.tokenizer = tokenizer
         self.tokenizer_args = tokenizer_args
-        self.generation_parameters = parameters
+        self.generation_parameters = generation_parameters
         self.model_type = model_type
 
     def generate(self, *args, **kwargs):
-        return self.model.generate(*args, **kwargs)
+        """Generates output using the underlying model.
 
-    def tokenize(self, *args, **kwargs):
-        return self.tokenizer(*args, **self.tokenizer_args, **kwargs)
+        Args:
+            *args: Positional arguments to pass to model.generate()
+            **kwargs: Keyword arguments to pass to model.generate(). These will override any
+                     matching parameters from self.generation_parameters.
+
+        Returns:
+            The output from model.generate() with the combined generation parameters.
+        """
+        assert "generation_config" not in kwargs
+        return self.model.generate(
+            *args, generation_config=self.generation_parameters, **kwargs
+        )
+
+    def tokenize(self, texts: List[str], **kwargs) -> Dict:
+        """Tokenizes input texts using the model's tokenizer.
+
+        Args:
+            texts: List of input text strings to tokenize
+            **kwargs: Additional arguments to pass to tokenizer
+
+        Returns:
+            Dict containing the tokenized inputs
+        """
+        tokenizer_args = self.tokenizer_args.copy()
+        tokenizer_args.update(kwargs)
+        return self.tokenizer(texts, **tokenizer_args)
 
     def device(self):
         """
