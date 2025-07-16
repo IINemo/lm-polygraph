@@ -61,7 +61,7 @@ def generate_coqa_instruct_config(subset, description, few_shot_prompt):
             few_shot_prompt=few_shot_prompt,
             instruct=True,
         ),
-        "dataet": "coqa",
+        "dataset": "coqa",
         "subset": subset,
     }
 
