@@ -336,9 +336,7 @@ class UEManager:
                 batch_stats[key] = val
             batch_stats["model"] = self.model
 
-            old_stats = set(batch_stats)                
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
-            new_stats = set(batch_stats.keys()) - old_stats
 
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
@@ -347,9 +345,6 @@ class UEManager:
             batch_callback(
                 batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
             )
-            for key in self.save_stats:
-                if key in new_stats and key!='greedy_texts':
-                    self.stats[key] += list(batch_stats[key])
             torch.cuda.empty_cache()
             gc.collect()
 
@@ -400,12 +395,18 @@ class UEManager:
                     m = flatten_results(m, generation_metric)
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
+            
+           
 
-            for key in ["greedy_texts", "greedy_tokens"]:
-                if key in batch_stats.keys():
-                    self.stats[key] += batch_stats[key]
+            # for key in ["greedy_texts", "greedy_tokens"]:
+            #     if key in batch_stats.keys():
+            #         self.stats[key] += batch_stats[key]
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
+            
+            for key in self.save_stats:
+                if key in batch_stats.keys():
+                    self.stats[key] += list(batch_stats[key])
 
         self._process(iterable_data, fn_on_batch_callback)
 
