@@ -49,14 +49,14 @@ class BaseGreedySemanticMatrixCalculator(StatCalculator):
                     batch = list(zip(first_texts, second_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    )
+                    ).to(deberta.device)
                     logits = deberta.deberta(**encoded).logits
                     probs_f.append(softmax(logits))
 
                     batch = list(zip(second_texts, first_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
-                    )
+                    ).to(deberta.device)
                     logits = deberta.deberta(**encoded).logits
                     probs_b.append(softmax(logits))
 
