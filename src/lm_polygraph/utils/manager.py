@@ -181,7 +181,9 @@ class UEManager:
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
-        self.save_stats = list(set(['greedy_texts', 'greedy_tokens']).union(set(save_stats)))
+        self.save_stats = list(
+            set(["greedy_texts", "greedy_tokens"]).union(set(save_stats))
+        )
 
         self.init()
 
@@ -395,11 +397,10 @@ class UEManager:
                     m = flatten_results(m, generation_metric)
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
-            
-           
+
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
-            
+
             for key in self.save_stats:
                 if key in batch_stats.keys():
                     self.stats[key] += list(batch_stats[key])
@@ -453,7 +454,6 @@ class UEManager:
                         self.metrics[
                             e_level, e_name, gen_name, str(ue_metric) + "_normalized"
                         ] = normalize_metric(ue_metric_val, oracle_score, random_score)
-           
 
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)
