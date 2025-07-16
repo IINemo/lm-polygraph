@@ -30,7 +30,7 @@ CONFIG = {
         "test_split": "test",
         "prepare_func": partial(
             prepare_xsum,
-            prompt="Provide a short one-sentence summary of no more than 60 words for the following text.\n\nHere's the text:\n{text} (End of text).\n\nSummary:\n",
+            prompt="Provide a short one-sentence summary for the following text.\n\nHere's the text:\n{text} (End of text).\n\nSummary:\n",
         ),
         "dataset": "xsum",
         "subset": "simple_instruct",
