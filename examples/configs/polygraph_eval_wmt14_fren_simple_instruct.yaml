@@ -12,10 +12,10 @@ cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
 device: cpu
-instruct: false
+instruct: true
 task: nmt
 
-dataset: ['LM-Polygraph/wmt14', 'deen_simple_instruct']
+dataset: ['LM-Polygraph/wmt14', 'fren_simple_instruct']
 text_column: input
 label_column: output
 train_split: train

@@ -10,7 +10,8 @@ defaults:
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-instruct: false
+instruct: true
+normalize: true
 task: qa
 
 dataset: ['LM-Polygraph/mmlu', 'simple_instruct']

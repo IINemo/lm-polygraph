@@ -3,7 +3,7 @@ from functools import partial
 
 
 def prepare_coqa(
-    dataset, input_column, output_column, description, prompt, few_shot_prompt, instruct
+    dataset, input_column, output_column, description, prompt, few_shot_prompt, instruct, few_shot_prompt_end
 ):
     def doc_to_text(doc, prompt, i=0):
         # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
@@ -28,7 +28,7 @@ def prepare_coqa(
                     few_shot_section = (
                         "\n\nHere are a few examples of questions and answers:"
                         + few_shot_section
-                        + "\n\nNow answer the following question in the same format.\n\n"
+                        + f"\n\n{few_shot_prompt_end}\n\n"
                     )
                 else:
                     few_shot_section = "\n\n"
@@ -47,7 +47,7 @@ def prepare_coqa(
     return x, y
 
 
-def generate_coqa_instruct_config(subset, description, few_shot_prompt):
+def generate_coqa_instruct_config(subset, description, few_shot_prompt, end_answer="", few_shot_prompt_end="Now answer the following question in the same format."):
     return {
         "name": "coqa",
         "train_split": "train",
@@ -57,9 +57,10 @@ def generate_coqa_instruct_config(subset, description, few_shot_prompt):
             input_column="questions",
             output_column="answers",
             description=description,
-            prompt="Question: {question}\n",
+            prompt="Question: {question}\n"+end_answer,
             few_shot_prompt=few_shot_prompt,
             instruct=True,
+            few_shot_prompt_end=few_shot_prompt_end,
         ),
         "dataset": "coqa",
         "subset": subset,
@@ -122,5 +123,7 @@ CONFIG = {
         subset="simple_instruct",
         description="Here's a short story:\n\n{story} (End of story)\n\nAnswer the following question as briefly as possible.",
         few_shot_prompt="Question: {question}\nAnswer: {answer}",
+        end_answer="Answer: {answer}",
+        few_shot_prompt_end="Now answer the following question."
     ),
 }

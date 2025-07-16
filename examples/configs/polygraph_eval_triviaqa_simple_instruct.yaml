@@ -11,7 +11,7 @@ defaults:
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-instruct: false
+instruct: true
 task: qa
 
 dataset: ['LM-Polygraph/triviaqa', 'simple_instruct']
