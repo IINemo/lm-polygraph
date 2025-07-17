@@ -25,8 +25,8 @@ def load_tokenizer(model_path: str, add_bos_token: bool = True):
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-        
-    if model_path.split("-")[-1] == 'it':
+
+    if model_path.split("-")[-1] == "it":
         end_token_id = tokenizer.convert_tokens_to_ids("<end_of_turn>")
         tokenizer.eos_token_id = end_token_id
 
