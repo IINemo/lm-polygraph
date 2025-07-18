@@ -23,7 +23,10 @@ from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module
-from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
+from lm_polygraph.utils.generation_parameters import (
+    GenerationParameters,
+    GenerationParametersFactory,
+)
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
@@ -61,10 +64,13 @@ def main(args):
 
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         import wandb
-        wandb.config = OmegaConf.to_container(
-        args, resolve=True, throw_on_missing=True
+
+        wandb.config = OmegaConf.to_container(args, resolve=True, throw_on_missing=True)
+        wandb.init(
+            dir=save_path,
+            tags=["polygraph_eval"],
+            group=f"experiment_{uuid.uuid4().hex[:8]}",
         )
-        wandb.init(dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
     save_path = args.save_path if "save_path" in args else save_path
 
@@ -135,7 +141,7 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
-            save_stats=getattr(args, 'save_stats', []),
+            save_stats=getattr(args, "save_stats", []),
             log_time=getattr(args, "log_time", False),
         )
 
@@ -148,12 +154,11 @@ def main(args):
             man.save(save_path + f"/ue_manager_seed{seed}")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
-            wandb.log({str(k) : v for k, v in man.gen_metrics})
-            wandb.log({str(k) : v for k, v in man.metrics.items()})
-    
+            wandb.log({str(k): v for k, v in man.gen_metrics})
+            wandb.log({str(k): v for k, v in man.metrics.items()})
+
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
-        
 
 
 def get_ue_metrics(args):
@@ -170,10 +175,18 @@ def get_ue_metrics(args):
 
 
 def get_stat_calculator_names(config):
-    model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
+    model_type = (
+        "Whitebox"
+        if getattr(config.model, "type", "Whitebox") != "Blackbox"
+        else "Blackbox"
+    )
     language = getattr(config, "language", "en")
-    output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
-    output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
+    output_attentions = getattr(config, "output_attentions", True) and (
+        getattr(config.model, "type", "Whitebox") != "vLLMCausalLM"
+    )
+    output_hidden_states = (
+        False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
+    )
     hf_cache = getattr(config, "hf_cache", None)
     deberta_batch_size = getattr(config, "deberta_batch_size", 10)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
@@ -186,7 +199,7 @@ def get_stat_calculator_names(config):
             model_type,
             language,
             hf_cache,
-            output_attentions=output_attentions, 
+            output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
             deberta_batch_size=deberta_batch_size,
@@ -238,7 +251,13 @@ def get_generation_metrics(args):
             ),
         ]
         if args.task == "ats":
-            result += [AlignScore(target_is_claims=False, source_ignore_regex=ignore_regex, source_as_target=True)]
+            result += [
+                AlignScore(
+                    target_is_claims=False,
+                    source_ignore_regex=ignore_regex,
+                    source_as_target=True,
+                )
+            ]
         else:
             result += [AlignScore(target_is_claims=True)]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
@@ -367,34 +386,47 @@ def get_whitebox_model(args, cache_kwargs={}):
 
     generation_params = GenerationParametersFactory.from_params(
         yaml_config=getattr(args, "generation_params", {}),
-        native_config=base_model.generation_config.to_dict()
+        native_config=base_model.generation_config.to_dict(),
     )
+
+    # New: Pull tokenization_args for WhiteboxModel
+    tokenization_args = getattr(args.model, "tokenization_args", {})
 
     model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params, instruct=getattr(args, "instruct", False)
+        base_model,
+        tokenizer,
+        args.model.path,
+        args.model.type,
+        generation_params,
+        instruct=getattr(args, "instruct", False),
+        tokenization_args=tokenization_args,
     )
-
     return model
 
+
 def get_vllm_model(args):
-    
-    path_to_load_script = get_abs_path_from_hydra_config(
-            args.model.path_to_load_script
-        )
+
+    path_to_load_script = get_abs_path_from_hydra_config(args.model.path_to_load_script)
     load_module = load_external_module(path_to_load_script)
 
-    load_model_args = {'model_path': args.model.path, 
-                       'max_new_tokens': args.max_new_tokens, 
-                       'logprobs': args.model.logprobs}
+    load_model_args = {
+        "model_path": args.model.path,
+        "max_new_tokens": args.max_new_tokens,
+        "logprobs": args.model.logprobs,
+    }
 
     load_model_args.update(args.model.load_model_args)
     base_model, sampling_params = load_module.load_model(**load_model_args)
-    generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
+    generation_parameters = GenerationParameters(
+        **getattr(args, "generation_params", {})
+    )
 
-    model = WhiteboxModelvLLM(model=base_model, 
-                              sampling_params=sampling_params,
-                              generation_parameters=generation_parameters,
-                              device=args.model.device)
+    model = WhiteboxModelvLLM(
+        model=base_model,
+        sampling_params=sampling_params,
+        generation_parameters=generation_parameters,
+        device=args.model.device,
+    )
 
     return model
 

@@ -407,6 +407,7 @@ class WhiteboxModel(Model):
         model_type: str = "CausalLM",
         generation_parameters: GenerationParameters = GenerationParameters(),
         instruct: bool = False,
+        tokenization_args: Optional[dict] = None,
     ):
         """
         Parameters:
@@ -415,12 +416,14 @@ class WhiteboxModel(Model):
             model_path (Optional[str]): Unique model path in HuggingFace.
             model_type (str): Additional model specifications.
             parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            tokenization_args (Optional[dict]): Arguments passed to the tokenizer at each use.
         """
         super().__init__(model_path, model_type)
         self.model = model
         self.tokenizer = tokenizer
         self.generation_parameters = generation_parameters
         self.instruct = instruct
+        self.tokenization_args = tokenization_args or {}
 
     def _validate_args(self, args):
         """
@@ -683,7 +686,7 @@ class WhiteboxModel(Model):
         self, texts: Union[List[str], List[List[Dict[str, str]]]]
     ) -> Dict[str, torch.Tensor]:
         """
-        Tokenizes input texts batch into a dictionary using the model tokenizer.
+        Tokenizes input texts batch into a dictionary using the model tokenizer, passing any tokenization_args.
 
         Parameters:
             texts (List[str]): list of input texts batch.
@@ -704,11 +707,17 @@ class WhiteboxModel(Model):
             texts = formatted_texts
 
             add_start_symbol = False
-        return self.tokenizer(
-            texts,
+        # Compose tokenization kwargs
+        kwargs = dict(
             padding=True,
             return_tensors="pt",
             add_special_tokens=add_start_symbol,
+        )
+        # Merge user-provided tokenization args (YAML/config driven)
+        kwargs.update(self.tokenization_args)
+        return self.tokenizer(
+            texts,
+            **kwargs,
         )
 
 
