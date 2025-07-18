@@ -1,5 +1,0 @@
-- name: TopologicalDivergence
-  cfg:
-    heads: null
-    max_heads: '${max_heads}'
-    n_jobs: '${n_jobs}'

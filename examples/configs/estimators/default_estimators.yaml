@@ -88,3 +88,7 @@
   cfg:
     layer: 16
     gen_only: False
+- name: TopologicalDivergence
+  cfg:
+    heads: null
+    n_jobs: -1

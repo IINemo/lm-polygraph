@@ -33,9 +33,9 @@
   cfg:
     heads_extraction_priority: cache
     cache_path: '${cache_path}'
-    model_heads_cache: '${model_heads_cache}'
-    max_heads: '${max_heads}'
-    n_jobs: '${n_jobs}'
+    model_heads_cache: "model_heads_cache.yaml"
+    max_heads: 6
+    n_jobs: -1
     dataset: '${dataset}'
     text_column: '${text_column}'
     label_column: '${label_column}'
@@ -44,7 +44,7 @@
     few_shot_split: "train"
     train_split: '${train_split}'
     load_from_disk: '${load_from_disk}'
-    subsample_train_dataset: '${subsample_train_dataset}'
+    subsample_train_dataset: 100
     n_shot: '${n_shot}'
     batch_size: '${batch_size}'
     seed: '${seed}'

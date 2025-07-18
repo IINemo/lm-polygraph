@@ -18,17 +18,16 @@ class TopologicalDivergence(Estimator):
     def __init__(
         self,
         heads: Optional[List[Tuple[int, int]]] = None,
-        max_heads: Optional[int] = 6,
         n_jobs: int = -1,
     ):
         """
         Initializes TopologicalDivergence estimator.
 
         Parameters:
-            selected_heads (List[Tuple[int, int]]): List of attention heads to calculate MTopDiv for.
+            heads (List[Tuple[int, int]]): List of attention heads to calculate MTopDiv for.
                 First integer is layer index, second is head index.
                 If not provided or empty, all heads will be used.
-            n_jobs (int): Number of jobs for parallel processing. Default: 16.
+            n_jobs (int): Number of jobs for parallel processing. Default: -1.
         """
         if not heads:
             calculators = [
@@ -41,7 +40,6 @@ class TopologicalDivergence(Estimator):
 
         super().__init__(calculators, "sequence")
         self._heads = heads
-        self._max_heads = max_heads
         self._n_jobs = n_jobs
 
     def __str__(self):
