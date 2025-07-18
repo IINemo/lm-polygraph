@@ -10,7 +10,7 @@ defaults:
 
 model:
   tokenization_args:
-    truncate: true
+    truncation: true
     max_length: 2048
 
 cache_path: ./workdir/output
