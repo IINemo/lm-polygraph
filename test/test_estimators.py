@@ -274,3 +274,27 @@ def test_cocoamte(model):
     estimator = CocoaMTE()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_rauq(model):
+    estimator = RAUQ()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_csl(model):
+    estimator = CSL()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_semantic_density_concat(model):
+    estimator = SemanticDensity()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_semantic_density(model):
+    estimator = SemanticDensity(concat_input=False)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)

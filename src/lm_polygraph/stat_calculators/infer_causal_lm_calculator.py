@@ -141,7 +141,7 @@ class InferCausalLMCalculator(StatCalculator):
         dependencies: Dict[str, np.array],
         texts: List[str],
         model: Model,
-        max_new_tokens: int = 100,  # TODO: move to args_generate
+        max_new_tokens: int,  # TODO: move to args_generate
         **kwargs,
     ) -> Dict[str, np.ndarray]:
         """
@@ -164,34 +164,36 @@ class InferCausalLMCalculator(StatCalculator):
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
 
-        if self._tokenize:
-            model_inputs = model.tokenize(texts, padding=True, return_tensors="pt")
-        else:
-            model_inputs = dependencies["model_inputs"]
-
         model_inputs = (
-            model_inputs
-            if isinstance(model_inputs, torch.Tensor)
+            model.tokenize(texts, padding=True, return_tensors="pt")
+            if self._tokenize
+            else dependencies["model_inputs"]
+        )
+
+        input_ids = (
+            model_inputs[0]
+            if isinstance(model_inputs, tuple)
             else model_inputs["input_ids"]
         )
 
-        args_generate = kwargs.pop("args_generate")
-        args_generate.update(
-            {
-                "return_dict_in_generate": True,
-                "output_scores": True,
-                "output_hidden_states": True,
-            }
-        )
-        out = model.generate(model_inputs, **args_generate)
+        args_generate = {
+            "return_dict_in_generate": True,
+            "output_scores": True,
+            "output_hidden_states": True,
+            "max_new_tokens": max_new_tokens,
+        }
+        args_generate.update(kwargs)
+        out = model.generate(**model_inputs, **args_generate)
 
         result_dict = self._post_process_logits(
-            out, model_inputs, args_generate["generation_config"].eos_token_id
+            out, input_ids, model.model.generation_config.eos_token_id
         )
 
         if self._return_embeddings:
             result_dict.update(
                 {"embeddings_decoder": self._get_embeddings_from_output(out)}
             )
+
+        result_dict.update({"out": out})
 
         return result_dict

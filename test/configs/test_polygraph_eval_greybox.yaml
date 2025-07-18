@@ -20,6 +20,7 @@ eval_split: test
 text_column: input
 load_from_disk: false
 label_column: output
+instruct: true
 prompt: ""
 max_new_tokens: 100
 generation_params:

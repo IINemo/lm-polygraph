@@ -136,6 +136,7 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
+        save_stats: List[str] = [],
     ):
         """
         Parameters:
@@ -180,6 +181,9 @@ class UEManager:
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
+        self.save_stats = list(
+            set(["greedy_texts", "greedy_tokens"]).union(set(save_stats))
+        )
 
         self.init()
 
@@ -343,7 +347,6 @@ class UEManager:
             batch_callback(
                 batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
             )
-
             torch.cuda.empty_cache()
             gc.collect()
 
@@ -395,11 +398,12 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
-                if key in batch_stats.keys():
-                    self.stats[key] += batch_stats[key]
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
+
+            for key in self.save_stats:
+                if key in batch_stats.keys():
+                    self.stats[key] += list(batch_stats[key])
 
         self._process(iterable_data, fn_on_batch_callback)
 

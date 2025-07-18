@@ -91,7 +91,7 @@ def prepare_mmlu(
     return x, y
 
 
-def generate_mmlu_instruct_config(description, few_shot_prompt, subset):
+def generate_mmlu_instruct_config(description, few_shot_prompt, subset, end_answer=""):
     return {
         "name": ["cais/mmlu", "all"],
         "train_split": "validation",
@@ -99,7 +99,8 @@ def generate_mmlu_instruct_config(description, few_shot_prompt, subset):
         "prepare_func": partial(
             prepare_mmlu,
             output_column="answer",
-            prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n",
+            prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\n"
+            + end_answer,
             description=description,
             mmlu_max_subject_size=100,
             n_shot=5,
@@ -169,5 +170,11 @@ CONFIG = {
         description="Provide your {topk} best guesses for the following question about {subject} selecting one of the options. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, only the selected option letter; not a complete sentence, just the guess!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nG1: {answer}\n...\nG{topk}: <other guess>",
         subset="verb_2s_topk",
+    ),
+    "mmlu_simple_instruct": generate_mmlu_instruct_config(
+        description="Given the following question about {subject} and four candidate answers (A, B, C, and D), choose the best answer. Your response should contain only the selected option's letter (A, B, C, or D), not a complete sentence.",
+        few_shot_prompt="Q:{question}\nA. {choices[0]}\nB. {choices[1]}\nC. {choices[2]}\nD. {choices[3]}\nAnswer:{answer}",
+        subset="simple_instruct",
+        end_answer="Answer:{answer}",
     ),
 }

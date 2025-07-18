@@ -236,7 +236,7 @@ class GreedyProbsCalculator(StatCalculator):
                         )  # numpy does not support bfloat16
 
                     attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
-                attention_all.append(attn_mask.max(0))
+                attention_all.append(attn_mask)
 
         if not self.output_hidden_states:
             embeddings_dict = {}

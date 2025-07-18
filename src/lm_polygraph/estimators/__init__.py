@@ -85,3 +85,6 @@ from .luq import LUQ
 from .eigenscore import EigenScore
 from .topological_divergence import TopologicalDivergence
 from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE
+from .rauq import RAUQ
+from .csl import CSL
+from .semantic_density import SemanticDensity
