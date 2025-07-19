@@ -65,7 +65,8 @@ class TrainMTopDivCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        heads = load_model_heads(self.cache_path, model.model_path)
+        name_or_path = model.model.config.name_or_path
+        heads = load_model_heads(self.cache_path, name_or_path)
         if heads and self.priority == "cache":
             heads = np.array(heads)
             heads = heads[: self.max_heads]
@@ -122,5 +123,5 @@ class TrainMTopDivCalculator(StatCalculator):
         heads = np.unravel_index(heads, (num_layers, num_heads))
         heads = np.stack(heads, axis=1)
 
-        save_model_heads(self.cache_path, model.model_path, heads.tolist())
+        save_model_heads(self.cache_path, name_or_path, heads.tolist())
         return {"topological_divergence_heads": heads}
