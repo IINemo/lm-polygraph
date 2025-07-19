@@ -59,36 +59,71 @@ def _delete_nans(ue, metric):
 
 
 def order_calculators(
-    stats: List[str],
+    need_stats: List[str],
     stat_calculators: Dict[str, StatCalculator],
     stat_dependencies: Dict[str, List[str]],
 ) -> Tuple[List[str], Set[str]]:
-    ordered: List[str] = []
-    have_stats: Set[str] = set()
-    while len(stats) > 0:
-        stat = stats[0]
-        if stat in have_stats:
-            stats = stats[1:]
-            continue
-        dependent = False
-        if stat not in stat_dependencies.keys():
+    """
+    Orders stat calculators in a way that ensures all dependencies are resolved.
+    Parameters:
+        need_stats (List[str]): List of stats that need to be calculated.
+        stat_calculators (Dict[str, StatCalculator]): Dictionary where keys are stat names and values are calculators that can produce these stats.
+        stat_dependencies (Dict[str, List[str]]): Dictionary where keys are stat names and values are lists of stats that this stat depends on.
+
+    Returns a tuple of:
+        ordered_calculators: a list of StatCalculatorContainer objects ordered in a way that ensures all dependencies are resolved.
+        available_stats: a set of stats that can be calculated with the current set of calculators.
+    """
+    available_stats: Set[str] = set() # stats that can be calculated with the current set of calculators
+    ordered_calculators: List[StatCalculatorContainer] = [] # calculators ordered in a way that ensures all dependencies are resolved
+    need_stats = list(set(need_stats))  # remove duplicates
+
+    while len(need_stats) > 0:
+        stat = need_stats[0]
+
+        if stat not in stat_calculators:
+            # no calculator for this stat, can't proceed
             raise Exception(
                 f"Cant find stat calculator for: {stat}. Maybe you forgot to register it in "
                 + "lm_polygraph.utils.register_stat_calculators.register_stat_calculators()?"
             )
-        for d in stat_dependencies[stat]:
-            if d not in have_stats:
-                stats = [d] + stats
-                if stats.count(d) > 40:
-                    raise Exception(f"Found possibly cyclic dependencies: {d}")
-                dependent = True
-        if not dependent:
-            stats = stats[1:]
-            ordered.append(stat)
-            for new_stat in stat_calculators[stat].meta_info()[0]:
-                have_stats.add(new_stat)
+        calculator = stat_calculators[stat]
 
-    return ordered, have_stats
+        if stat in available_stats:
+            # stat already can be calculated, add it to the list of stats
+            # requested from this calculator and move on
+            need_stats = need_stats[1:]
+            calculator.requested_stats.add(stat)
+            continue
+
+        # check if stat calculation depends on having other stats that are not calculated yet
+        dependent = False
+        for d in stat_dependencies[stat]:
+            if d not in available_stats:
+                dependent = True
+                # if dependency is not calculated yet, add it to the begginning
+                # of need_stats to be processed next
+                need_stats = [d] + need_stats
+                if need_stats.count(d) > 40:
+                    raise Exception(f"Found possibly cyclic dependencies: {d}")
+            else:
+                # if dependency is already calculated, we add it to the list of stats
+                # requested from its calculator
+                stat_calculators[d].requested_stats.add(d)
+        if dependent:
+            continue
+
+        # add calculator to the list of ordered calculators with the stat
+        ordered_calculators.append(calculator)
+        calculator.requested_stats.add(stat)
+        for new_stat in calculator.meta_info()[0]:
+            # add all stats that this calculator calculates to the list of available_stats
+            available_stats.add(new_stat)
+
+        # remove the stat from the list of need_stats
+        need_stats = need_stats[1:]
+
+    return ordered_calculators
 
 
 class UEManager:
@@ -185,55 +220,31 @@ class UEManager:
             set(["greedy_texts", "greedy_tokens"]).union(set(save_stats))
         )
 
-        self.init()
+        self.initialize_stat_calculators()
 
-    def init(self):
+    def initialize_stat_calculators(self):
         log.info("=" * 100)
         log.info("Initializing stat calculators...")
 
         self.stat_calculators_dict = dict()
-        for sc in self.stat_calculator_descr:
-            for stat in sc.stats:
-                self.stat_calculators_dict[stat] = sc
-
-        # stat_calculators_dict = {sc.name: sc for sc in self.stat_calculator_descr}
         stat_dependencies_dict = dict()
         for sc in self.stat_calculator_descr:
             for stat in sc.stats:
+                self.stat_calculators_dict[stat] = sc
                 stat_dependencies_dict[stat] = sc.dependencies
-
-        greedy = ["greedy_texts"]
-        if not isinstance(self.model, BlackboxModel):
-            greedy += ["greedy_tokens"]
 
         stats = (
             [s for e in self.estimators for s in e.stats_dependencies]
             + [s for m in self.generation_metrics for s in m.stats_dependencies]
-            + greedy
         )
 
-        stats, have_stats = order_calculators(
+        ordered_calculators = order_calculators(
             stats,
             self.stat_calculators_dict,
             stat_dependencies_dict,
         )
 
-        self.stats_names = stats
-        stats = [
-            s
-            for s in stats
-            if not (str(s).startswith("ensemble_"))
-            and not (
-                (
-                    str(s).startswith("blackbox_")
-                    and s[len("blackbox_") :] in have_stats
-                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
-            )
-        ]  # below in calculate() we copy X in blackbox_X
-
-        self.stat_calculators = self.factory_stat_calc(
-            [self.stat_calculators_dict[c] for c in stats]
-        )
+        self.stat_calculators = self.factory_stat_calc(ordered_calculators)
         self.state = "Initialized"
 
         if self.verbose:
@@ -266,10 +277,7 @@ class UEManager:
                     if stat in batch_stats.keys():
                         continue
                     batch_stats[stat] = stat_value
-                    if (f"blackbox_{stat}" in self.stat_calculators_dict.keys()) and (
-                        f"blackbox_{stat}" in self.stats_names
-                    ):
-                        batch_stats[f"blackbox_{stat}"] = stat_value
+
             except Exception as e:
                 if self.ignore_exceptions:
                     lineno = e.__traceback__.tb_lineno

@@ -25,6 +25,7 @@ class StatCalculatorContainer:
         obj=None,
         builder=None,
         cfg=dict(),
+        requested_stats=set(),
     ):
         self._name = name
         self.stats = stats if stats is not None else []
@@ -32,6 +33,7 @@ class StatCalculatorContainer:
         self.obj = obj
         self.cfg = cfg
         self.builder = builder
+        self.requested_stats = requested_stats
 
     @property
     def name(self):
