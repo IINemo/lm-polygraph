@@ -252,8 +252,18 @@ def test_attentionscore(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_topological_divergence(model):
+def test_topological_divergence_fixed_heads(model):
     estimator = TopologicalDivergence(heads=[[0, 0], [0, 1], [1, 0], [1, 1]])
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_topological_divergence_select_heads(model):
+    estimator = TopologicalDivergence()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+    # second time heads should be loaded from cache
+    estimator = TopologicalDivergence()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
