@@ -80,7 +80,7 @@ def get_mtopdivs(
     heads: List[Tuple[int, int]],
     length_responses: List[int],
     attention_weights_batch: np.array,
-    n_jobs: Optional[float] = -1,
+    n_jobs: Optional[float] = 1,
 ) -> np.ndarray:
     batch_size = attention_weights_batch.shape[0]
     padding_lengths = np.isnan(attention_weights_batch[:, 0, 0, 0]).sum(axis=-1)

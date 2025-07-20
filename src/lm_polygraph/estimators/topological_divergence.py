@@ -18,7 +18,7 @@ class TopologicalDivergence(Estimator):
     def __init__(
         self,
         heads: Optional[List[Tuple[int, int]]] = None,
-        n_jobs: int = -1,
+        n_jobs: int = 1,
     ):
         """
         Initializes TopologicalDivergence estimator.

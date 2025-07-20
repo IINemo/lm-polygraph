@@ -33,7 +33,7 @@ class TrainMTopDivCalculator(StatCalculator):
         load_train_dataset_fn: Callable = None,
         cache_path: str = None,
         max_heads: int = 6,
-        n_jobs: int = -1,
+        n_jobs: int = 1,
     ):
         super().__init__()
 
