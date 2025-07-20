@@ -7,13 +7,6 @@ Submodules
 lm\_polygraph.stat\_calculators.bart\_score module
 --------------------------------------------------
 
-.. automodule:: lm_polygraph.stat_calculators.bart_score
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-lm\_polygraph.stat\_calculators.cross\_encoder\_similarity module
------------------------------------------------------------------
 
 .. automodule:: lm_polygraph.stat_calculators.cross_encoder_similarity
    :members:

@@ -39,13 +39,6 @@ lm\_polygraph.generation\_metrics.alignscore\_utils module
 lm\_polygraph.generation\_metrics.bart\_score module
 ----------------------------------------------------
 
-.. automodule:: lm_polygraph.generation_metrics.bart_score
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-lm\_polygraph.generation\_metrics.bert\_score module
-----------------------------------------------------
 
 .. automodule:: lm_polygraph.generation_metrics.bert_score
    :members:

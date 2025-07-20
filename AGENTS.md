@@ -108,7 +108,6 @@ class BlackboxModel(Model):
 
 **WhiteboxModel** (direct Hugging Face integration)  
 Wraps a HF `AutoModelForCausalLM`/`AutoModelForSeq2SeqLM` and `AutoTokenizer`, exposing raw logits and custom generation hooks.  
-- `from_pretrained`: loads model & tokenizer, infers architecture (causal vs seq2seq), sets `pad_token`.  
 - `_ScoresProcessor`: intercepts HF’s `logits_processor` to capture original `log_softmax` scores before any processing.  
 - `_MultiTokenEOSCriteria`: custom multi-token EOS/stop-sequence stopping criterion.  
 - `generate`: merges default `GenerationParameters` with call-site overrides, attaches `StoppingCriteriaList` & `_ScoresProcessor`, invokes `model.generate`, and swaps in raw scores.  
@@ -244,26 +243,6 @@ The `UEManager` orchestrates the core benchmarking loop:
 ```
 【F:src/lm_polygraph/utils/manager.py†L240-L350】【F:src/lm_polygraph/utils/manager.py†L350-L445】
 
- #### Handling NaN Values
-
-LM-Polygraph ensures robust correlation computation by filtering out invalid entries:
-- `_delete_nans(ue, metric)` uses `np.nan_to_num` to replace estimator NaNs/∞ with large finite sentinels, then masks out positions where the ground-truth metric is NaN.
-- If no valid pairs remain (`len(ue)==0`), the final metric is recorded as NaN.
-
-```python
-def _delete_nans(ue, metric):
-    metric = np.asarray(metric)
-    # Clip estimator NaN/∞ to finite sentinel values
-    clipped_ue = np.nan_to_num(ue, nan=-1e7, neginf=-1e7, posinf=1e7)
-    # Drop any positions where ground-truth metric is NaN
-    mask = ~np.isnan(metric)
-    return clipped_ue[mask], metric[mask]
-```
-【F:src/lm_polygraph/utils/manager.py†L48-L56】
-
-Warnings are emitted if any NaNs are detected in estimator outputs or generation metrics prior to filtering:
-【F:src/lm_polygraph/utils/manager.py†L425-L445】
-
  ## Uncertainty Evaluation Metrics
 
 Uncertainty Evaluation (UE) metrics assess how well your uncertainty estimators align with ground-truth generation errors. Key components are defined in `src/lm_polygraph/ue_metrics/ue_metric.py`:
@@ -281,43 +260,6 @@ def normalize_metric(target_score, oracle_score, random_score) -> float: ...
 - **`get_random_scores`**: random baseline by shuffling estimator indices, averaged over many trials.  
 - **`normalize_metric`**: rescales a raw UE metric between the random baseline (0) and oracle baseline (1).  
 - **`skip_target_nans`**: in-metric helper to drop samples where the ground-truth metric is NaN before computing quality.
-
-### Prediction-Rejection Area (PRR)
-
-The most widely used UE metric is **Prediction-Rejection Area (PRR)**, implemented in `pred_rej_area.py`.
-PRR constructs a **prediction–rejection curve** that tracks the average ground-truth metric over the retained subset as samples with highest uncertainty are dropped incrementally up to a fraction `max_rejection`.
-
-Raw PRR is computed as the (discrete) area under this curve (integral from 0 to `max_rejection`), normalized by the number of rejection steps. To compare methods, the final PRR score is further normalized between two baselines:
-1. **Oracle curve** (using ground-truth metric itself as uncertainty scores) – the optimal upper bound.
-2. **Random curve** (random rejection, a flat line at the global mean) – the lower bound.
-
-Final normalized PRR:
-```
-(raw_prr - random_prr) / (oracle_prr - random_prr)
-```
-
-```python
-# src/lm_polygraph/ue_metrics/pred_rej_area.py
-class PredictionRejectionArea(UEMetric):
-    def __init__(self, max_rejection: float = 1.0):
-        super().__init__()
-        self.max_rejection = max_rejection
-
-    def __str__(self):
-        return "prr" if self.max_rejection == 1 else f"prr_{self.max_rejection}"
-
-    def __call__(self, estimator: List[float], target: List[float]) -> float:
-        target = normalize(target)
-        ue = np.array(estimator)
-        num_obs = len(ue)
-        num_rej = int(self.max_rejection * num_obs)
-        ue_argsort = np.argsort(ue)
-        sorted_metrics = np.array(target)[ue_argsort]
-        cumsum = np.cumsum(sorted_metrics)[-num_rej:]
-        scores = (cumsum / np.arange((num_obs - num_rej) + 1, num_obs + 1))[::-1]
-        return np.sum(scores) / num_rej
-```
-【F:src/lm_polygraph/ue_metrics/pred_rej_area.py†L13-L21】【F:src/lm_polygraph/ue_metrics/pred_rej_area.py†L22-L25】【F:src/lm_polygraph/ue_metrics/pred_rej_area.py†L27-L39】【F:src/lm_polygraph/ue_metrics/pred_rej_area.py†L40-L53】
 
 ### Saving Results
 

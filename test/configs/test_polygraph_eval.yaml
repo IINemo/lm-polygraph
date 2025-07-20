@@ -29,8 +29,6 @@ ignore_exceptions: false
 generation_metrics:
   - name: RougeMetric
     args: ["rouge1"]
-  - name: BartScoreSeqMetric
-    args: ["rh"]
   - name: AccuracyMetric
 
 stat_calculators:

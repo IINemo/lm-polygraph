@@ -158,7 +158,7 @@ class UEManager:
     ... )
     >>> ue_methods = [MaximumSequenceProbability(), SemanticEntropy()]
     >>> ue_metrics = [RiskCoverageCurveAUC()]
-    >>> ground_truth = [RougeMetric('rougeL'), BartScoreSeqMetric('rh')]
+    >>> ground_truth = [RougeMetric('rougeL')]
     >>> man = UEManager(dataset, model, ue_methods, ground_truth, ue_metrics, processors=[])
     >>> results = man()
     >>> results.save("./manager.man")
