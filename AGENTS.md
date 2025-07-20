@@ -114,7 +114,6 @@ Wraps a HF `AutoModelForCausalLM`/`AutoModelForSeq2SeqLM` and `AutoTokenizer`, e
 - `generate`: merges default `GenerationParameters` with call-site overrides, attaches `StoppingCriteriaList` & `_ScoresProcessor`, invokes `model.generate`, and swaps in raw scores.  
 - `tokenize`: applies optional chat template, batch-pads inputs, returns `input_ids`/`attention_mask`.  
 - `generate_texts`: decodes only newly generated tokens (or full seq for seq2seq), stripping prompts when needed.  
-- `create_ensemble`: supports Monte Carlo dropout-based ensembling via `EnsembleGenerationMixin`.  
 
 ```python
 # src/lm_polygraph/utils/model.py (WhiteboxModel)
@@ -206,7 +205,6 @@ The set and execution order of StatCalculators is determined by the statistics r
    - Collects dependencies dictionary from each container.
    - Aggregates required stats: all `e.stats_dependencies` (from Estimators) + `m.stats_dependencies` (from GenerationMetrics) + `greedy_*`.
    - Calls `order_calculators`, which topologically sorts the stat keys, ensuring dependencies are satisfied.
-   - Filters out redundant blackbox variants and ensemble-specific stats.
    - Instantiates actual StatCalculator instances via `FactoryStatCalculator`.
 
 ```python
