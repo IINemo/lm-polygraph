@@ -138,15 +138,19 @@ class UEManager:
     Examples:
 
     ```python
+    >>> from transformers import AutoModel, AutoTokenizer
     >>> from lm_polygraph import WhiteboxModel
     >>> from lm_polygraph.utils.dataset import Dataset
     >>> from lm_polygraph.estimators import *
     >>> from lm_polygraph.ue_metrics import *
     >>> from lm_polygraph.generation_metrics import *
-    >>> model = WhiteboxModel.from_pretrained(
-    ...     'bigscience/bloomz-560m',
-    ...     device='cuda:0',
+    >>> model_path = 'bigscience/bloomz-560m'
+    >>> base_model = AutoModel.from_pretrained(
+    ...     model_path,
+    ...     device='cpu',
     ... )
+    >>> tokenizer = AutoTokenizer.from_pretrained(model_path)
+    >>> model = WhiteboxModel(base_model, tokenizer, model_path, 'CausalLM')
     >>> dataset = Dataset.load(
     ...     '../workdir/data/triviaqa.csv',
     ...     'question', 'answer',

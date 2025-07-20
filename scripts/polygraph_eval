@@ -340,20 +340,6 @@ def get_blackbox_model(args):
 
 
 def get_whitebox_model(args, cache_kwargs={}):
-    if not "path_to_load_script" in args.model or not args.model.path_to_load_script:
-        log.warning(
-            "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
-        )
-        log.info(f"Loading model with cache_kwargs: {cache_kwargs}")
-        return WhiteboxModel.from_pretrained(
-            args.model.path,
-            getattr(args, "generation_params", {}),
-            device_map=args.model.load_model_args.device_map,
-            add_bos_token=getattr(args.model, "add_bos_token", True),
-            instruct=getattr(args, "instruct", False),
-            **cache_kwargs,
-        )
-
     path_to_load_script = get_abs_path_from_hydra_config(args.model.path_to_load_script)
     load_module = load_external_module(path_to_load_script)
 

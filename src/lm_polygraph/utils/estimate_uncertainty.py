@@ -52,12 +52,16 @@ def estimate_uncertainty(
     Examples:
 
     ```python
+    >>> from transformers import AutoModel, AutoTokenizer
     >>> from lm_polygraph import WhiteboxModel
     >>> from lm_polygraph.estimators import LexicalSimilarity
-    >>> model = WhiteboxModel.from_pretrained(
-    ...     'bigscience/bloomz-560m',
+    >>> model_path = 'bigscience/bloomz-560m'
+    >>> base_model = AutoModel.from_pretrained(
+    ...     model_path,
     ...     device='cpu',
     ... )
+    >>> tokenizer = AutoTokenizer.from_pretrained(model_path)
+    >>> model = WhiteboxModel(base_model, tokenizer, model_path, 'CausalLM')
     >>> estimator = LexicalSimilarity('rougeL')
     >>> estimate_uncertainty(model, estimator, input_text='Who is George Bush?')
     UncertaintyOutput(uncertainty=-0.9176470588235295, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')

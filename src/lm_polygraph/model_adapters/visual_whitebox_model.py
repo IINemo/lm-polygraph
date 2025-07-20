@@ -265,54 +265,6 @@ class VisualWhiteboxModel(Model):
         """
         return self.model.device
 
-    @staticmethod
-    def from_pretrained(
-        model_path: str,
-        model_type: str,
-        image_urls: list,
-        image_paths: list,
-        generation_params: Optional[Dict] = {},
-        add_bos_token: bool = True,
-        **kwargs,
-    ):
-        """
-        Initializes the model from HuggingFace. Automatically determines model type.
-
-        Parameters:
-            model_path (str): model path in HuggingFace.
-            generation_params (Dict): generation arguments for
-                lm_polygraph.utils.generation_parametersGenerationParameters
-            add_bos_token (bool): tokenizer argument. Default: True.
-        """
-        log.warning(
-            "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
-        )
-
-        generation_params = GenerationParameters(**generation_params)
-        model = AutoModelForVision2Seq.from_pretrained(model_path, **kwargs)
-
-        processor_visual = AutoProcessor.from_pretrained(
-            model_path,
-            padding_side="left",
-            add_bos_token=add_bos_token,
-            **kwargs,
-        )
-
-        model.eval()
-        if processor_visual.tokenizer.pad_token is None:
-            processor_visual.tokenizer.pad_token = processor_visual.tokenizer.eos_token
-        instance = VisualWhiteboxModel(
-            model,
-            processor_visual,
-            model_path,
-            model_type,
-            image_urls,
-            image_paths,
-            generation_params,
-        )
-
-        return instance
-
     def tokenize(
         self, texts: Union[List[str], List[List[Dict[str, str]]]]
     ) -> Dict[str, torch.Tensor]:
