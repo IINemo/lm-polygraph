@@ -74,8 +74,12 @@ def order_calculators(
         ordered_calculators: a list of StatCalculatorContainer objects ordered in a way that ensures all dependencies are resolved.
         available_stats: a set of stats that can be calculated with the current set of calculators.
     """
-    available_stats: Set[str] = set() # stats that can be calculated with the current set of calculators
-    ordered_calculators: List[StatCalculatorContainer] = [] # calculators ordered in a way that ensures all dependencies are resolved
+    available_stats: Set[str] = (
+        set()
+    )  # stats that can be calculated with the current set of calculators
+    ordered_calculators: List[StatCalculatorContainer] = (
+        []
+    )  # calculators ordered in a way that ensures all dependencies are resolved
     need_stats = list(set(need_stats))  # remove duplicates
 
     while len(need_stats) > 0:
@@ -233,10 +237,9 @@ class UEManager:
                 self.stat_calculators_dict[stat] = sc
                 stat_dependencies_dict[stat] = sc.dependencies
 
-        stats = (
-            [s for e in self.estimators for s in e.stats_dependencies]
-            + [s for m in self.generation_metrics for s in m.stats_dependencies]
-        )
+        stats = [s for e in self.estimators for s in e.stats_dependencies] + [
+            s for m in self.generation_metrics for s in m.stats_dependencies
+        ]
 
         ordered_calculators = order_calculators(
             stats,
