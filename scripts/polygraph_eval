@@ -228,7 +228,6 @@ def get_generation_metrics(args):
             RougeMetric("rouge1"),
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
-            BLEUMetric(),
             BertScoreMetric("rh"),
             SbertMetric(),
             AccuracyMetric(
@@ -251,7 +250,7 @@ def get_generation_metrics(args):
                     )
                 ]
         if args.task == "nmt":
-            result += [Comet(source_ignore_regex=ignore_regex)]
+            result += [Comet(source_ignore_regex=ignore_regex), BLEUMetric()]
     else:
         result = []
         for metric in generation_metrics:
