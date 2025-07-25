@@ -156,7 +156,7 @@ def register_default_stat_calculators(
                 "cache_path": "./workdir/output",
                 "model_heads_cache": "model_heads_cache.yaml",
                 "max_heads": 6,
-                "n_jobs": 1,
+                "n_jobs": -1,
                 "dataset": ["LM-polygraph/coqa", "continuation"],
                 "text_column": "input",
                 "label_column": "output",
