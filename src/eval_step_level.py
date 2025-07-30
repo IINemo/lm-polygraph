@@ -7,6 +7,18 @@ import transformers
 import wandb
 from argparse import ArgumentParser, BooleanOptionalAction, ArgumentTypeError
 
+# ✅ Monkey patch: HF config support
+import dataclasses
+_original_asdict = dataclasses.asdict
+def patched_asdict(obj):
+    if isinstance(obj, transformers.PretrainedConfig):
+        return obj.to_dict()
+    return _original_asdict(obj)
+dataclasses.asdict = patched_asdict
+# ✅ End patch
+
+import nltk
+nltk.data.path.append("/mnt/beegfs/work/xie12/tmp/nltk_data")
 
 from lm_polygraph.stat_calculators.step.steps_extractor import StepsExtractor
 from lm_polygraph.utils.model import WhiteboxModel
@@ -98,6 +110,7 @@ def main(args):
         y_column='answer',
         prompt=open(args.prompt_path).read() if args.prompt_path else "",
         split=args.dataset_split,
+        batch_size=1,
     )
     nli_model = Deberta(batch_size=args.deberta_batch_size)
     if args.finetuned_deberta_path:
@@ -107,16 +120,16 @@ def main(args):
     stat_calculators: list[StatCalculator] = [
         GreedyProbsCalculator(),
         StepsExtractor(),
-        EntropyCalculator(),
-        ClaimPromptCalculator(),
-        SamplingGenerationCalculator(samples_n=args.n_samples),
-        SemanticClassesClaimToSamplesCalculator(nli_model),
-        GreedyAlternativesNLICalculator(nli_model),
-        GreedyAlternativesFactPrefNLICalculator(nli_model),
+        EntropyCalculator(),#EntropyCalculator(),
+        ClaimPromptCalculator(),#ClaimPromptCalculator(),
+        SamplingGenerationCalculator(samples_n=args.n_samples),#SamplingGenerationCalculator(samples_n=args.n_samples),
+        SemanticClassesClaimToSamplesCalculator(nli_model),#SemanticClassesClaimToSamplesCalculator(nli_model),
+        GreedyAlternativesNLICalculator(nli_model),#GreedyAlternativesNLICalculator(nli_model),
+        GreedyAlternativesFactPrefNLICalculator(nli_model),#GreedyAlternativesFactPrefNLICalculator(nli_model),
         StepwiseSamplingCalculator(candidates_per_step=args.n_samples),
         StepsSemanticMatrixCalculator(nli_model),
         StepsSemanticClassesCalculator(),
-        StepsGreedyNLISimilarityCalculator(nli_model),
+        StepsGreedyNLISimilarityCalculator(nli_model),#StepsGreedyNLISimilarityCalculator(nli_model),
     ]
     estimators: list[Estimator] = [
         RandomBaselineClaim(),
@@ -144,6 +157,8 @@ def main(args):
     if os.path.exists(args.save_path):
         man = torch.load(args.save_path)
     for i, (input_texts, target_texts) in enumerate(data):
+        if i > 500:
+            continue
         if len(man['estimates']) > i:
             print(f"Skipping batch#{i}")
             continue

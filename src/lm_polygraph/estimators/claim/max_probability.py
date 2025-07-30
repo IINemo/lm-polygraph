@@ -36,10 +36,14 @@ class MaximumClaimProbability(Estimator):
         log_likelihoods = stats["greedy_log_likelihoods"]
         claims = stats["claims"]
         claim_ue = []
-        for sample_ll, sample_claims in zip(log_likelihoods, claims):
+        for i, (sample_ll, sample_claims) in enumerate(zip(log_likelihoods, claims)):
             claim_ue.append([])
-            for claim in sample_claims:
+            for j, claim in enumerate(sample_claims):
                 tokens = np.array(claim.aligned_token_ids)
+                if tokens.size == 0:
+                    print(f"[Warning] Empty aligned_token_ids at sample {i}, claim{j}, text: {claim.claim_text[:50]}")
+                    claim_ue[-1].append(float("nan"))
+                    continue
                 claim_ll = np.array(sample_ll)[tokens]
                 claim_ue[-1].append(self._reduce(claim_ll))
         return claim_ue
