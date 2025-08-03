@@ -3,6 +3,7 @@ import openai
 import time
 import logging
 import json
+import os
 
 from dataclasses import asdict
 from typing import List, Dict, Optional, Union
@@ -23,6 +24,7 @@ from huggingface_hub import InferenceClient
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
+from lm_polygraph.utils.adapter import get_adapter
 
 log = logging.getLogger("lm_polygraph")
 
@@ -102,6 +104,7 @@ class BlackboxModel(Model):
         hf_api_token: str = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
         supports_logprobs: bool = False,
+        api_provider_name: str = "openai",
     ):
         """
         Parameters:
@@ -111,20 +114,27 @@ class BlackboxModel(Model):
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
             supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
+            api_provider_name (str): Name of the API provider adapter to use. Default: "openai".
         """
         super().__init__(model_path, "Blackbox")
         self.generation_parameters = generation_parameters
         self.openai_api_key = openai_api_key
         self.supports_logprobs = supports_logprobs
+        self.api_provider_name = api_provider_name
+
+        # Initialize the adapter for this provider
+        self.adapter = get_adapter(self.api_provider_name)
 
         if openai_api_key is not None:
-            self.openai_api = openai.OpenAI(api_key=openai_api_key)
+            # Support custom base_url from environment
+            base_url = os.environ.get("OPENAI_BASE_URL", None)
+            self.openai_api = openai.OpenAI(api_key=openai_api_key, base_url=base_url)
 
         self.hf_api_token = hf_api_token
 
     def _validate_args(self, args):
         """
-        Validates and adapts arguments for BlackboxModel generation.
+        Validates and adapts arguments for BlackboxModel generation using the configured adapter.
 
         Parameters:
             args (dict): The arguments to validate.
@@ -132,33 +142,11 @@ class BlackboxModel(Model):
         Returns:
             dict: Validated and adapted arguments.
         """
-        args_copy = args.copy()
+        # Use the adapter to validate parameter ranges first
+        validated_args = self.adapter.validate_parameter_ranges(args)
 
-        # BlackboxModel specific validation
-        for delete_key in [
-            "do_sample",
-            "min_length",
-            "top_k",
-            "repetition_penalty",
-            "min_new_tokens",
-            "num_beams",
-            "generate_until",
-            "allow_newlines",
-        ]:
-            args_copy.pop(delete_key, None)
-
-        # Map HF argument names to OpenAI/HF API argument names
-        key_mapping = {
-            "num_return_sequences": "n",
-            "max_length": "max_tokens",
-            "max_new_tokens": "max_tokens",
-        }
-        for key, replace_key in key_mapping.items():
-            if key in args_copy:
-                args_copy[replace_key] = args_copy[key]
-                args_copy.pop(key)
-
-        return args_copy
+        # Then adapt the request format for the specific provider
+        return self.adapter.adapt_request(validated_args)
 
     def _query(self, payload):
         client = InferenceClient(model=self.model_path, token=self.hf_api_token)
@@ -195,15 +183,24 @@ class BlackboxModel(Model):
             openai_api_key (Optional[str]): OpenAI API key. Default: None.
             model_path (Optional[str]): model name in OpenAI.
             supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
+            api_provider_name (str): API provider adapter to use. Default: "openai".
         """
         generation_parameters = kwargs.pop(
             "generation_parameters", GenerationParameters()
         )
+        api_provider_name = kwargs.pop("api_provider_name", "openai")
+
+        # Auto-detect provider from environment or model path if not explicitly set
+        if api_provider_name == "openai":
+            if os.environ.get("AZURE_OPENAI_ENDPOINT") or "azure" in model_path.lower():
+                api_provider_name = "azure_openai"
+
         return BlackboxModel(
             openai_api_key=openai_api_key,
             model_path=model_path,
             supports_logprobs=supports_logprobs,
             generation_parameters=generation_parameters,
+            api_provider_name=api_provider_name,
         )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
@@ -221,18 +218,24 @@ class BlackboxModel(Model):
         args = self._validate_args(default_params)
 
         # Check if we're trying to access features that require logprobs support
-        if (
-            any(
-                args.get(arg, False)
-                for arg in [
-                    "output_scores",
-                    "output_attentions",
-                    "output_hidden_states",
-                ]
-            )
-            and not self.supports_logprobs
+        requires_logprobs = any(
+            args.get(arg, False)
+            for arg in [
+                "output_scores",
+                "output_attentions",
+                "output_hidden_states",
+            ]
+        )
+
+        # Use adapter to check logprobs support (considering model-specific rules)
+        adapter_supports_logprobs = self.adapter.supports_logprobs(self.model_path)
+
+        if requires_logprobs and not (
+            self.supports_logprobs and adapter_supports_logprobs
         ):
-            raise Exception("Cannot access logits for blackbox model")
+            raise Exception(
+                f"Cannot access logits for blackbox model with provider '{self.api_provider_name}'"
+            )
 
         texts = []
 
@@ -282,19 +285,25 @@ class BlackboxModel(Model):
                             retries += 1
                             continue
 
+                # Parse response using the adapter
                 if args.get("n", 1) == 1:
-                    texts.append(response.choices[0].message.content)
+                    # Convert response to dict for adapter processing
+                    response_dict = (
+                        response.model_dump()
+                        if hasattr(response, "model_dump")
+                        else response
+                    )
+                    parsed_response = self.adapter.parse_response(response_dict)
+
+                    texts.append(parsed_response.text)
                     # Store logprobs if available
-                    if return_logprobs and hasattr(response.choices[0], "logprobs"):
-                        self.logprobs.append(response.choices[0].logprobs)
-                        # Extract token information if available
-                        if hasattr(response.choices[0].logprobs, "content"):
-                            tokens = [
-                                item.token
-                                for item in response.choices[0].logprobs.content
-                            ]
-                            self.tokens.append(tokens)
+                    if return_logprobs and parsed_response.logprobs:
+                        self.logprobs.append(parsed_response.logprobs)
+                        # Store tokens if available
+                        if parsed_response.tokens:
+                            self.tokens.append(parsed_response.tokens)
                 else:
+                    # For multiple returns, use original parsing for now
                     texts.append([resp.message.content for resp in response.choices])
                     # For multiple returns, we don't collect logprobs for now
 

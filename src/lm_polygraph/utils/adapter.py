@@ -1,0 +1,147 @@
+"""
+API Provider Adapter System
+
+This module implements a flexible adapter pattern for handling different API providers
+with varying parameter formats and response structures.
+"""
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import List, Dict, Optional, Any
+import logging
+
+log = logging.getLogger("lm_polygraph")
+
+# The registry to hold all available adapters
+ADAPTER_REGISTRY = {}
+
+
+def register_adapter(api_provider_name: str):
+    """A decorator to register an adapter class."""
+
+    def decorator(cls):
+        ADAPTER_REGISTRY[api_provider_name] = cls
+        return cls
+
+    return decorator
+
+
+@dataclass
+class StandardizedResponse:
+    """A unified data structure for API responses."""
+
+    text: str
+    logprobs: Optional[List[Dict[str, Any]]] = None
+    finish_reason: Optional[str] = None
+    tokens: Optional[List[str]] = None
+    raw_response: Optional[Dict[str, Any]] = None
+
+
+class APIProviderAdapter(ABC):
+    """
+    Abstract base class for API Provider Adapters.
+
+    Each adapter is responsible for:
+    1. Translating request parameters to provider-specific format
+    2. Parsing provider-specific responses to standardized format
+    """
+
+    @abstractmethod
+    def adapt_request(self, params: dict) -> dict:
+        """
+        Adapts the generation parameters for the specific API provider.
+
+        Args:
+            params: Dictionary of generation parameters
+
+        Returns:
+            Modified parameters dictionary suitable for the provider
+        """
+        pass
+
+    @abstractmethod
+    def parse_response(self, response: dict) -> StandardizedResponse:
+        """
+        Parses the raw API response into the StandardizedResponse format.
+
+        Args:
+            response: Raw API response dictionary
+
+        Returns:
+            StandardizedResponse object
+        """
+        pass
+
+    def supports_logprobs(self, model_path: str = None) -> bool:
+        """
+        Check if the provider/model supports logprobs.
+
+        Args:
+            model_path: Optional model identifier for model-specific checks
+
+        Returns:
+            True if logprobs are supported, False otherwise
+        """
+        return True
+
+    def validate_parameter_ranges(self, params: dict) -> dict:
+        """
+        Validate and clamp parameters to provider-specific ranges.
+
+        Args:
+            params: Parameters dictionary
+
+        Returns:
+            Validated parameters dictionary
+        """
+        return params
+
+
+def get_adapter(api_provider_name: str) -> APIProviderAdapter:
+    """
+    Factory function to get an adapter instance from the registry.
+
+    Args:
+        api_provider_name: Name of the API provider
+
+    Returns:
+        APIProviderAdapter instance
+
+    Defaults to 'openai' if the requested provider is not found.
+    """
+    # Default to 'openai' for backward compatibility
+    name_to_get = (
+        api_provider_name if api_provider_name in ADAPTER_REGISTRY else "openai"
+    )
+
+    if name_to_get not in ADAPTER_REGISTRY:
+        log.warning(
+            f"No adapter found for provider '{api_provider_name}', falling back to 'openai'"
+        )
+        name_to_get = "openai"
+
+    adapter_class = ADAPTER_REGISTRY[name_to_get]
+    return adapter_class()
+
+
+def list_available_adapters() -> List[str]:
+    """
+    Get a list of all registered adapters.
+
+    Returns:
+        List of adapter names
+    """
+    return list(ADAPTER_REGISTRY.keys())
+
+
+def is_adapter_registered(api_provider_name: str) -> bool:
+    """
+    Check if an adapter is registered for the given provider.
+
+    Args:
+        api_provider_name: Name of the API provider
+
+    Returns:
+        True if adapter is registered, False otherwise
+    """
+    return api_provider_name in ADAPTER_REGISTRY

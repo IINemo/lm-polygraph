@@ -3,3 +3,6 @@ from .visual_whitebox_model import VisualWhiteboxModel
 from .whitebox_model_vllm import WhiteboxModelvLLM
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.model import BlackboxModel
+
+from . import openai_adapter
+from . import vllm_adapter

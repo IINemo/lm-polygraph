@@ -3,3 +3,6 @@ from .utils.manager import UEManager
 from .utils.estimate_uncertainty import estimate_uncertainty
 from .utils.dataset import Dataset
 from .utils.causal_lm_with_uncertainty import CausalLMWithUncertainty
+
+# Import model adapters to ensure API provider adapters are registered
+from . import model_adapters
