@@ -160,6 +160,8 @@ def get_ue_metrics(args):
     ue_metrics = [
         PredictionRejectionArea(),
         PredictionRejectionArea(max_rejection=0.5),
+        IsotonicPCC(),
+        ECE(normalize=True),
     ]
     if getattr(args, "use_claim_ue", False):
         ue_metrics += [
