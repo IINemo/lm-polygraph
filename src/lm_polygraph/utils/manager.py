@@ -454,8 +454,13 @@ class UEManager:
                                 oracle_score = oracle_score_all
                                 random_score = random_score_all
                             self.metrics[
-                                e_level, e_name, gen_name, str(ue_metric) + "_normalized"
-                            ] = normalize_metric(ue_metric_val, oracle_score, random_score)
+                                e_level,
+                                e_name,
+                                gen_name,
+                                str(ue_metric) + "_normalized",
+                            ] = normalize_metric(
+                                ue_metric_val, oracle_score, random_score
+                            )
 
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)

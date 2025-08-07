@@ -4,10 +4,12 @@ from sklearn.preprocessing import MinMaxScaler
 
 from .ue_metric import UEMetric
 
+
 class ECE(UEMetric):
     """
     Expected Calibration Error (ECE) metric. Only applicable to binary quality metrics.
     """
+
     def __init__(self, normalize=False, n_bins=20):
         super().__init__()
         self.normalize = normalize
@@ -45,7 +47,11 @@ class ECE(UEMetric):
         ece, N = 0.0, len(confidences)
         for i in range(self.n_bins):
             lo, hi = bin_edges[i], bin_edges[i + 1]
-            in_bin = (confidences > lo) & (confidences <= hi) if i > 0 else (confidences >= lo) & (confidences <= hi)
+            in_bin = (
+                (confidences > lo) & (confidences <= hi)
+                if i > 0
+                else (confidences >= lo) & (confidences <= hi)
+            )
             if not np.any(in_bin):
                 continue
             acc_bin = np.mean(target[in_bin])

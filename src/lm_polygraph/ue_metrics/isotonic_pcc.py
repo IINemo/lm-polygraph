@@ -4,11 +4,13 @@ from typing import List
 from .ue_metric import UEMetric
 from lm_polygraph.normalizers.isotonic_pcc import IsotonicPCCNormalizer
 
+
 class IsotonicPCC(UEMetric):
     """
     Perform leave-one-out isotonic regression calibration and measure mean squared error (MSE).
     For each point, fit IsotonicPCCNormalizer on all other points, then predict and compare with metric.
     """
+
     def __str__(self):
         return "isotonic-pcc"
 
