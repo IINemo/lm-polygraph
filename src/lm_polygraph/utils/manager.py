@@ -411,12 +411,13 @@ class UEManager:
             for ue_metric in self.ue_metrics:
                 log.info(f"Metric: {ue_metric}")
 
-                oracle_score_all = ue_metric(
-                    -np.array(generation_metric), np.array(generation_metric)
-                )
-                random_score_all = get_random_scores(
-                    ue_metric, np.array(generation_metric)
-                )
+                if "prr" in str(ue_metric):
+                    oracle_score_all = ue_metric(
+                        -np.array(generation_metric), np.array(generation_metric)
+                    )
+                    random_score_all = get_random_scores(
+                        ue_metric, np.array(generation_metric)
+                    )
                 for (e_level, e_name), estimator_values in self.estimations.items():
                     if gen_level != e_level:
                         continue
@@ -440,20 +441,21 @@ class UEManager:
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        if len(ue) != len(estimator_values):
-                            oracle_score = ue_metric(-metric, metric)
-                            random_score = get_random_scores(ue_metric, metric)
-                        else:
-                            oracle_score = oracle_score_all
-                            random_score = random_score_all
-
                         ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
-                        self.metrics[
-                            e_level, e_name, gen_name, str(ue_metric) + "_normalized"
-                        ] = normalize_metric(ue_metric_val, oracle_score, random_score)
+
+                        if "prr" in str(ue_metric):
+                            if len(ue) != len(estimator_values):
+                                oracle_score = ue_metric(-metric, metric)
+                                random_score = get_random_scores(ue_metric, metric)
+                            else:
+                                oracle_score = oracle_score_all
+                                random_score = random_score_all
+                            self.metrics[
+                                e_level, e_name, gen_name, str(ue_metric) + "_normalized"
+                            ] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
         for processor in self.processors:
             processor.on_eval(self.metrics, self.total_bad_estimators)
