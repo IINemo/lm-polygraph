@@ -603,6 +603,7 @@ class WhiteboxModel(Model):
         model_path: str,
         generation_params: Optional[Dict] = {},
         add_bos_token: bool = True,
+        instruct: bool = False,
         **kwargs,
     ):
         """
@@ -674,7 +675,7 @@ class WhiteboxModel(Model):
         )
 
         instance = WhiteboxModel(
-            model, tokenizer, model_path, model_type, generation_params
+            model, tokenizer, model_path, model_type, generation_params, instruct
         )
 
         return instance

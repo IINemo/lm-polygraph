@@ -82,6 +82,8 @@ def get_parser() -> ArgumentParser:
     parser.add_argument('--wandb-project', type=str, default='tot-decoding', help='WandB project name')
     parser.add_argument('--n-samples', type=int, default=5, help='Number of sample chains and steps')
     parser.add_argument('--verbose', action=BooleanOptionalAction, default=False)
+    parser.add_argument('--is_chat_formatted', type=str, default='False')
+    parser.add_argument('--dataset_size', type=int, default=None, help='Size of dataset to use')
     return parser
 
 
@@ -102,15 +104,21 @@ def main(args):
         project=args.wandb_project,
         config=vars(args),
     )
+    is_chat_formatted = True if args.is_chat_formatted == "True" else False
+    instruct = is_chat_formatted
 
-    model = WhiteboxModel.from_pretrained(args.model_path, torch_dtype="auto", device_map=args.device)
+    model = WhiteboxModel.from_pretrained(
+        args.model_path, 
+        instruct=instruct,
+    )
     data = Dataset.from_datasets(
         args.dataset_path,
         x_column='question',
         y_column='answer',
         prompt=open(args.prompt_path).read() if args.prompt_path else "",
         split=args.dataset_split,
-        batch_size=1,
+        batch_size=1,       
+        is_chat_formatted=True,
     )
     nli_model = Deberta(batch_size=args.deberta_batch_size)
     if args.finetuned_deberta_path:
@@ -126,7 +134,7 @@ def main(args):
         SemanticClassesClaimToSamplesCalculator(nli_model),#SemanticClassesClaimToSamplesCalculator(nli_model),
         GreedyAlternativesNLICalculator(nli_model),#GreedyAlternativesNLICalculator(nli_model),
         GreedyAlternativesFactPrefNLICalculator(nli_model),#GreedyAlternativesFactPrefNLICalculator(nli_model),
-        StepwiseSamplingCalculator(candidates_per_step=args.n_samples),
+        StepwiseSamplingCalculator(candidates_per_step=args.n_samples, temperature=0.6),
         StepsSemanticMatrixCalculator(nli_model),
         StepsSemanticClassesCalculator(),
         StepsGreedyNLISimilarityCalculator(nli_model),#StepsGreedyNLISimilarityCalculator(nli_model),
@@ -157,7 +165,7 @@ def main(args):
     if os.path.exists(args.save_path):
         man = torch.load(args.save_path)
     for i, (input_texts, target_texts) in enumerate(data):
-        if i > 500:
+        if i > args.dataset_size:
             continue
         if len(man['estimates']) > i:
             print(f"Skipping batch#{i}")
