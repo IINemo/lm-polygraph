@@ -107,10 +107,8 @@ def main(args):
     is_chat_formatted = True if args.is_chat_formatted == "True" else False
     instruct = is_chat_formatted
 
-    model = WhiteboxModel.from_pretrained(
-        args.model_path, 
-        instruct=instruct,
-    )
+    model = WhiteboxModel.from_pretrained(args.model_path, torch_dtype="auto", device_map=args.device, instruct=instruct)
+
     data = Dataset.from_datasets(
         args.dataset_path,
         x_column='question',
@@ -128,16 +126,16 @@ def main(args):
     stat_calculators: list[StatCalculator] = [
         GreedyProbsCalculator(),
         StepsExtractor(),
-        EntropyCalculator(),#EntropyCalculator(),
-        ClaimPromptCalculator(),#ClaimPromptCalculator(),
-        SamplingGenerationCalculator(samples_n=args.n_samples),#SamplingGenerationCalculator(samples_n=args.n_samples),
-        SemanticClassesClaimToSamplesCalculator(nli_model),#SemanticClassesClaimToSamplesCalculator(nli_model),
-        GreedyAlternativesNLICalculator(nli_model),#GreedyAlternativesNLICalculator(nli_model),
-        GreedyAlternativesFactPrefNLICalculator(nli_model),#GreedyAlternativesFactPrefNLICalculator(nli_model),
+        EntropyCalculator(),
+        ClaimPromptCalculator(),
+        SamplingGenerationCalculator(samples_n=args.n_samples),
+        SemanticClassesClaimToSamplesCalculator(nli_model),
+        GreedyAlternativesNLICalculator(nli_model),
+        GreedyAlternativesFactPrefNLICalculator(nli_model),
         StepwiseSamplingCalculator(candidates_per_step=args.n_samples, temperature=0.6),
         StepsSemanticMatrixCalculator(nli_model),
         StepsSemanticClassesCalculator(),
-        StepsGreedyNLISimilarityCalculator(nli_model),#StepsGreedyNLISimilarityCalculator(nli_model),
+        StepsGreedyNLISimilarityCalculator(nli_model),
     ]
     estimators: list[Estimator] = [
         RandomBaselineClaim(),
