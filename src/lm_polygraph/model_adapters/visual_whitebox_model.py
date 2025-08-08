@@ -11,9 +11,6 @@ from transformers import (
     AutoModelForVision2Seq,
     AutoProcessor,
     LogitsProcessorList,
-    StoppingCriteria,
-    StoppingCriteriaList,
-    PreTrainedTokenizer,
     GenerationConfig,
 )
 
