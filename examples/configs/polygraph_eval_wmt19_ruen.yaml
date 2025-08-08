@@ -25,7 +25,7 @@ load_from_disk: false
 trust_remote_code: false
 size: 10000
 generation_params:
-  generate_until:
+  stop_strings:
     - "\n"
 
 source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
