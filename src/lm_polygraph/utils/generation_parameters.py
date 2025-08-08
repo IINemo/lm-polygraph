@@ -32,7 +32,7 @@ class GenerationParameters:
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    generate_until: list = ()
+    stop_strings: list = []
     allow_newlines: bool = True
     max_new_tokens: int = 100  # Works only with estimate_uncertainty utility function
 
