@@ -23,7 +23,7 @@ class WhiteboxModelvLLM(Model):
         self.generation_parameters = generation_parameters
 
         self.sampling_params.stop = list(
-            getattr(self.generation_parameters, "generate_until", list())
+            getattr(self.generation_parameters, "stop_strings", list())
         )
 
         for param in [

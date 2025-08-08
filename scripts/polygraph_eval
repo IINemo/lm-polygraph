@@ -371,13 +371,17 @@ def get_whitebox_model(args, cache_kwargs={}):
     )
 
     model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params, instruct=getattr(args, "instruct", False)
+        base_model,
+        tokenizer,
+        args.model.path,
+        args.model.type,
+        generation_params,
+        instruct=getattr(args, "instruct", False)
     )
 
     return model
 
 def get_vllm_model(args):
-    
     path_to_load_script = get_abs_path_from_hydra_config(
             args.model.path_to_load_script
         )

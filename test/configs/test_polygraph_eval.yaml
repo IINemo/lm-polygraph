@@ -22,7 +22,7 @@ prompt: ""
 
 generation_params:
   temperature: 0.7
-  generate_until:
+  stop_strings:
     - "\n"
 
 ignore_exceptions: false

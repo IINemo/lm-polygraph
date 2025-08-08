@@ -24,7 +24,7 @@ prompt: ""
 max_new_tokens: 100
 instruct: true 
 generation_params:
-  generate_until:
+  stop_strings:
     - "\n"
 
 

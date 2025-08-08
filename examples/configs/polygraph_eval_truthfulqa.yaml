@@ -24,7 +24,7 @@ multiref: true
 trust_remote_code: false
 size: 10000
 generation_params:
-  generate_until:
+  stop_strings:
     - "\n"
 
 subsample_eval_dataset: -1
