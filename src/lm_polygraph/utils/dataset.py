@@ -167,6 +167,7 @@ class Dataset:
         instruct: bool = False,
         split: str = "test",
         size: int = None,
+        is_chat_formatted: bool = False,
         **kwargs,
     ):
         """
@@ -195,6 +196,16 @@ class Dataset:
                     y.append(inst[y_column])
         else:
             x = dataset[x_column]
+            if is_chat_formatted:
+                x = [
+                    [
+                        {
+                            "role": "user",
+                            "content": text
+                        }
+                    ]
+                    for text in dataset[x_column]
+                ]
             if y_column is not None:
                 y = dataset[y_column]
             else:

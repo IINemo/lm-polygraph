@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 import itertools
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
 from lm_polygraph.utils.model import Model
@@ -38,8 +38,11 @@ class StepsGreedyNLISimilarityCalculator(StatCalculator):
         x = x.replace('<Answer>:', 'Answer:')
         return x
 
-    def parse_problem(self, x: str) -> str:
-        return x.split('<Question>: ', 1)[-1].split('<|im_end|>', 1)[0].replace('  ', ' ').strip()
+    def parse_problem(self, x: Union[str, List[Dict[str, str]]]) -> str:
+        if isinstance(x, str):
+            return x.split('<Question>: ', 1)[-1].split('<|im_end|>', 1)[0].replace('  ', ' ').strip()
+        else:
+            return x[0]["content"].split('<Question>: ', 1)[-1].split('<|im_end|>', 1)[0].replace('  ', ' ').strip()
 
     def parse_solution(self, x: str) -> str:
         x = x.split('Reasoning Steps:\n')[-1].strip().replace('\n', ' ')

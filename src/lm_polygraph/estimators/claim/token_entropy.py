@@ -39,14 +39,6 @@ class MaxTokenEntropyClaim(Estimator):
             claim_ue.append([])
             for claim in sample_claims:
                 tokens = np.array(claim.aligned_token_ids)
-                
-            if not np.issubdtype(tokens.dtype, np.integer):
-                print("⚠️ Warning: Non-integer tokens found, skipping claim.")
-                continue
-
-            if tokens.size == 0 or np.any(tokens >= len(sample_ent)):
-                print(f"⚠️ Skipping due to empty or out-of-bound tokens: {tokens}")
-                continue    
             
                 claim_ent = np.array(sample_ent)[tokens]
                 claim_ue[-1].append(self._reduce(claim_ent))

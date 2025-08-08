@@ -83,13 +83,12 @@ class StepsExtractor(StatCalculator):
             if text[text_i] in self.sent_separators and self.filter_claim_texts(
                 text[prev_text_i : text_i + 1]
             ):
+                end = token_i if token_i > prev_token_i else prev_token_i + 1
                 claims.append(
                     Claim(
                         claim_text=text[prev_text_i : text_i + 1].strip(),
                         sentence=text[prev_text_i : text_i + 1],
-                        aligned_token_ids=list(
-                            range(prev_token_i, min(token_i + 1, len(tokens) - 1))
-                        ),
+                        aligned_token_ids=list(range(prev_token_i, min(end, len(tokens)))),
                     )
                 )
             while (
@@ -101,13 +100,12 @@ class StepsExtractor(StatCalculator):
                 prev_text_i = text_i + 1
                 prev_token_i = token_i
         if self.filter_claim_texts(text[prev_text_i:]):
+            end = token_i if token_i > prev_token_i else prev_token_i + 1
             claims.append(
                 Claim(
                     claim_text=text[prev_text_i:].strip(),
                     sentence=text[prev_text_i:],
-                    aligned_token_ids=list(
-                        range(prev_token_i, min(token_i + 1, len(tokens) - 1))
-                    ),
+                    aligned_token_ids=list(range(prev_token_i, min(end, len(tokens)))),
                 )
             )
         return claims
