@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -32,7 +32,7 @@ class GenerationParameters:
     num_beams: int = 1
     presence_penalty: float = 0.0
     repetition_penalty: float = 1.0
-    stop_strings: list = []
+    stop_strings: list = field(default_factory=lambda: [])
     allow_newlines: bool = True
     max_new_tokens: int = 100  # Works only with estimate_uncertainty utility function
 
