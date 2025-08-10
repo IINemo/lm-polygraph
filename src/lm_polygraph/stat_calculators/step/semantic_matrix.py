@@ -40,26 +40,37 @@ class StepsSemanticMatrixCalculator(StatCalculator):
         self.nli_model = nli_model
 
     def parse_steps(self, x: str) -> str:
-        x = re.sub(r'- Step \d+:\s*', '', x)
-        x = x.replace('<Answer>:', 'Answer:')
+        x = re.sub(r"- Step \d+:\s*", "", x)
+        x = x.replace("<Answer>:", "Answer:")
         return x
 
     def parse_problem(self, x: Union[str, List[Dict[str, str]]]) -> str:
         if isinstance(x, str):
-            return x.split('<Question>: ', 1)[-1].split('<|im_end|>', 1)[0].replace('  ', ' ').strip()
+            return (
+                x.split("<Question>: ", 1)[-1]
+                .split("<|im_end|>", 1)[0]
+                .replace("  ", " ")
+                .strip()
+            )
         else:
-            return x[0]["content"].split('<Question>: ', 1)[-1].split('<|im_end|>', 1)[0].replace('  ', ' ').strip()
+            return (
+                x[0]["content"]
+                .split("<Question>: ", 1)[-1]
+                .split("<|im_end|>", 1)[0]
+                .replace("  ", " ")
+                .strip()
+            )
 
     def parse_solution(self, x: str) -> str:
-        x = x.split('Reasoning Steps:\n')[-1].strip().replace('\n', ' ')
+        x = x.split("Reasoning Steps:\n")[-1].strip().replace("\n", " ")
         return self.parse_steps(x)
 
     def __call__(
-            self,
-            dependencies: Dict[str, np.array],
-            texts: List[str],
-            model: Model,
-            max_new_tokens: int = 100,
+        self,
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: Model,
+        max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the NLI semantic matrix for generation samples using DeBERTa model.
@@ -89,8 +100,14 @@ class StepsSemanticMatrixCalculator(StatCalculator):
         deberta_batch_size = deberta.batch_size
         sample_steps_texts = dependencies["sample_steps_texts"]
         batch_texts: list[list[str]] = flatten(sample_steps_texts)
-        greedy_texts: list[str] = [x.claim_text for x in flatten(dependencies["claims"])]
-        input_texts: list[str] = [texts[i] for i in range(len(sample_steps_texts)) for _ in sample_steps_texts[i]]
+        greedy_texts: list[str] = [
+            x.claim_text for x in flatten(dependencies["claims"])
+        ]
+        input_texts: list[str] = [
+            texts[i]
+            for i in range(len(sample_steps_texts))
+            for _ in sample_steps_texts[i]
+        ]
         greedy_solutions: list[str] = [
             dependencies["greedy_texts"][i]
             for i in range(len(sample_steps_texts))
@@ -100,8 +117,15 @@ class StepsSemanticMatrixCalculator(StatCalculator):
         batch_pairs = []
         batch_invs = []
         batch_counts = []
-        assert len(input_texts) == len(greedy_solutions) == len(greedy_texts) == len(batch_texts)
-        for input_text, greedy_solution, greedy_step, texts in zip(input_texts, greedy_solutions, greedy_texts, batch_texts):
+        assert (
+            len(input_texts)
+            == len(greedy_solutions)
+            == len(greedy_texts)
+            == len(batch_texts)
+        )
+        for input_text, greedy_solution, greedy_step, texts in zip(
+            input_texts, greedy_solutions, greedy_texts, batch_texts
+        ):
             # Sampling from LLM often produces significant number of identical
             # outputs. We only need to score pairs of unqiue outputs
             sample_steps = [self.parse_steps(s) for s in texts]
@@ -110,7 +134,11 @@ class StepsSemanticMatrixCalculator(StatCalculator):
                 solution=self.parse_solution(greedy_solution.split(greedy_step, 1)[0]),
             )
             unique_texts, inv = np.unique(sample_steps, return_inverse=True)
-            batch_pairs.append(list(itertools.product([prefix + x for x in unique_texts], unique_texts)))
+            batch_pairs.append(
+                list(
+                    itertools.product([prefix + x for x in unique_texts], unique_texts)
+                )
+            )
             batch_invs.append(inv)
             batch_counts.append(len(unique_texts))
 
@@ -169,8 +197,12 @@ class StepsSemanticMatrixCalculator(StatCalculator):
         return {
             "steps_semantic_matrix_entail": reconstruct(E, sample_steps_texts),
             "steps_semantic_matrix_contra": reconstruct(C, sample_steps_texts),
-            "steps_semantic_matrix_entail_logits": reconstruct(E_logits, sample_steps_texts),
-            "steps_semantic_matrix_contra_logits": reconstruct(C_logits, sample_steps_texts),
+            "steps_semantic_matrix_entail_logits": reconstruct(
+                E_logits, sample_steps_texts
+            ),
+            "steps_semantic_matrix_contra_logits": reconstruct(
+                C_logits, sample_steps_texts
+            ),
             "steps_semantic_matrix_classes": reconstruct(P, sample_steps_texts),
             "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
         }

@@ -4,7 +4,7 @@ from transformers import StoppingCriteria, StoppingCriteriaList
 
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from .steps_extractor import StepsExtractor, Claim
+from .steps_extractor import StepsExtractor
 
 
 class StopOnNewline(StoppingCriteria):

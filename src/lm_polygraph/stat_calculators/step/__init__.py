@@ -9,11 +9,11 @@ from .semantic_matrix import StepsSemanticMatrixCalculator
 
 __all__ = [
     "StepsGreedyNLISimilarityCalculator",
-    "StepsExtractor", 
+    "StepsExtractor",
     "StepsEntropyCalculator",
     "StepsGreedySimilarityCalculator",
     "StepsCrossEncoderSimilarityCalculator",
     "StepwiseSamplingCalculator",
-    "StepsSemanticClassesCalculator", 
+    "StepsSemanticClassesCalculator",
     "StepsSemanticMatrixCalculator",
 ]

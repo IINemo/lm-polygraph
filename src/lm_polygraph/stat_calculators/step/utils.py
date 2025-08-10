@@ -1,7 +1,3 @@
-import re
-import numpy as np
-
-
 def flatten(a: list[list] | None) -> list | None:
     if a is None:
         return None
@@ -13,6 +9,6 @@ def reconstruct(b: list, a: list[list]) -> list[list]:
     last = 0
     b_reconstructed = []
     for x in a:
-        b_reconstructed.append(b[last:last + len(x)])
+        b_reconstructed.append(b[last : last + len(x)])
         last += len(x)
     return b_reconstructed

@@ -180,7 +180,7 @@ class ClaimConditionedProbabilityClaim(Estimator):
                     continue
                 if tokens.size == 0 or np.any(tokens >= len(sample_ccp)):
                     print(f"⚠️ Skipping due to empty or out-of-bound tokens: {tokens}")
-                    continue 
+                    continue
                 claim_ue[-1].append(-self._reduce(sample_ccp[tokens]))
         return claim_ue
 

@@ -41,7 +41,9 @@ class MaximumClaimProbability(Estimator):
             for j, claim in enumerate(sample_claims):
                 tokens = np.array(claim.aligned_token_ids)
                 if tokens.size == 0:
-                    print(f"[Warning] Empty aligned_token_ids at sample {i}, claim{j}, text: {claim.claim_text[:50]}")
+                    print(
+                        f"[Warning] Empty aligned_token_ids at sample {i}, claim{j}, text: {claim.claim_text[:50]}"
+                    )
                     claim_ue[-1].append(float("nan"))
                     continue
                 claim_ll = np.array(sample_ll)[tokens]

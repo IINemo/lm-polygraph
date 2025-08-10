@@ -8,8 +8,8 @@ from lm_polygraph.stat_calculators.step.utils import flatten, reconstruct
 
 class StepsDissimilarity(Estimator):
     def __init__(
-            self,
-            similarity: str,
+        self,
+        similarity: str,
     ):
         assert similarity in [
             "rouge1",
@@ -46,19 +46,22 @@ class StepsDissimilarity(Estimator):
                     fwd[-1].append(1 - sample_nlis["forward_contradiction"][i])
                     bwd[-1].append(1 - sample_nlis["backward_contradiction"][i])
                 elif self.similarity == "nli_ccp":
-                    fwd[-1].append(self.ccp(
-                        sample_nlis["forward_entailment"][i],
-                        sample_nlis["forward_contradiction"][i],
-                    ))
-                    bwd[-1].append(self.ccp(
-                        sample_nlis["backward_entailment"][i],
-                        sample_nlis["backward_contradiction"][i],
-                    ))
+                    fwd[-1].append(
+                        self.ccp(
+                            sample_nlis["forward_entailment"][i],
+                            sample_nlis["forward_contradiction"][i],
+                        )
+                    )
+                    bwd[-1].append(
+                        self.ccp(
+                            sample_nlis["backward_entailment"][i],
+                            sample_nlis["backward_contradiction"][i],
+                        )
+                    )
                 else:
                     raise Exception(f"Unknown similarity: {self.similarity}")
         return [
-            [(f + b) / 2 for f, b in zip(f_sc, b_sc)]
-            for f_sc, b_sc in zip(fwd, bwd)
+            [(f + b) / 2 for f, b in zip(f_sc, b_sc)] for f_sc, b_sc in zip(fwd, bwd)
         ]
 
     def rouge_similarities(self, stats: dict) -> list[list[float]]:
@@ -70,7 +73,9 @@ class StepsDissimilarity(Estimator):
         for greedy_text, cur_sample_texts in zip(greedy_texts, sample_texts):
             sims.append([])
             for sample_text in cur_sample_texts:
-                sims[-1].append(scorer.score(greedy_text, sample_text)[self.similarity].fmeasure)
+                sims[-1].append(
+                    scorer.score(greedy_text, sample_text)[self.similarity].fmeasure
+                )
         return sims
 
     def similarities(self, stats: dict) -> list[list[float]]:

@@ -46,12 +46,10 @@ class StepsEntropyCalculator(StatCalculator):
             Dict[str, np.ndarray]: dictionary with List[List[List[float]]] entropies calculated at 'steps_entropy' key.
         """
         sample_steps_log_probs = dependencies["sample_steps_log_probs"]
-        claims = dependencies["claims"]
-        
+
         # Flatten the nested structure for processing
         flattened_log_probs = flatten(sample_steps_log_probs)
-        flattened_claims = flatten(claims)
-        
+
         steps_entropy = []
         for step_log_probs in flattened_log_probs:
             step_entropies = []
@@ -69,8 +67,8 @@ class StepsEntropyCalculator(StatCalculator):
                 else:
                     step_entropies.append(0.0)
             steps_entropy.append(step_entropies)
-        
+
         # Reconstruct the original nested structure
         reconstructed_entropy = reconstruct(steps_entropy, sample_steps_log_probs)
-        
-        return {"steps_entropy": reconstructed_entropy} 
+
+        return {"steps_entropy": reconstructed_entropy}

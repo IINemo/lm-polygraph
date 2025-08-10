@@ -197,15 +197,7 @@ class Dataset:
         else:
             x = dataset[x_column]
             if is_chat_formatted:
-                x = [
-                    [
-                        {
-                            "role": "user",
-                            "content": text
-                        }
-                    ]
-                    for text in dataset[x_column]
-                ]
+                x = [[{"role": "user", "content": text}] for text in dataset[x_column]]
             if y_column is not None:
                 y = dataset[y_column]
             else:
