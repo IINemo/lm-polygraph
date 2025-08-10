@@ -46,6 +46,12 @@ from lm_polygraph.estimators.step.semantic_entropy import StepsSemanticEntropy
 from lm_polygraph.estimators.step.dissimilarity import StepsDissimilarity
 from lm_polygraph.stat_calculators.step.semantic_matrix import StepsSemanticMatrixCalculator
 from lm_polygraph.stat_calculators.step.stepwise_sampling import StepwiseSamplingCalculator
+from lm_polygraph.stat_calculators.step.steps_entropy import StepsEntropyCalculator
+from lm_polygraph.estimators.cocoa import CocoaMTE
+from lm_polygraph.estimators.step.steps_cocoa import StepsCocoaSEE, StepsCocoaMTE, StepsCocoaMSP, StepsCocoaPPL
+from lm_polygraph.stat_calculators.cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
+from lm_polygraph.stat_calculators.step.steps_greedy_similarity import StepsGreedySimilarityCalculator
+from lm_polygraph.stat_calculators.step.steps_cross_encoder_similarity import StepsCrossEncoderSimilarityCalculator
 
 EXCLUDE_SAVE_STATS: list[str] = [
     "embeddings",
@@ -107,7 +113,7 @@ def main(args):
     is_chat_formatted = True if args.is_chat_formatted == "True" else False
     instruct = is_chat_formatted
 
-    model = WhiteboxModel.from_pretrained(args.model_path, torch_dtype="auto", device_map=args.device, instruct=instruct)
+    model = WhiteboxModel.from_pretrained(args.model_path, torch_dtype=torch.bfloat16, device_map=args.device, instruct=instruct)
 
     data = Dataset.from_datasets(
         args.dataset_path,
@@ -125,37 +131,28 @@ def main(args):
 
     stat_calculators: list[StatCalculator] = [
         GreedyProbsCalculator(),
-        StepsExtractor(),
-        EntropyCalculator(),
-        ClaimPromptCalculator(),
-        SamplingGenerationCalculator(samples_n=args.n_samples),
-        SemanticClassesClaimToSamplesCalculator(nli_model),
-        GreedyAlternativesNLICalculator(nli_model),
-        GreedyAlternativesFactPrefNLICalculator(nli_model),
+        StepsExtractor(sent_separators="\n\n", skip_starts=["<|im_start|>think"]),
         StepwiseSamplingCalculator(candidates_per_step=args.n_samples, temperature=0.6),
         StepsSemanticMatrixCalculator(nli_model),
+        StepsGreedySimilarityCalculator(),
         StepsSemanticClassesCalculator(),
-        StepsGreedyNLISimilarityCalculator(nli_model),
+        StepsCrossEncoderSimilarityCalculator(),
+        StepsEntropyCalculator(),
     ]
+    
     estimators: list[Estimator] = [
-        RandomBaselineClaim(),
-        MaximumClaimProbability(),
-        MaxTokenEntropyClaim(),
-        PerplexityClaim(),
-        PTrueClaim(),
-        ClaimConditionedProbabilityClaim(nli_context="no_context"),
-        ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
-        FrequencyScoringClaim(),
         StepsSemanticEntropy(),
-        StepsLexicalSimilarity(),
-        StepsDegMat(),
-        StepsEccentricity(),
-        StepsNumSemSets(),
-        StepsDissimilarity('rougeL'),
-        StepsDissimilarity('nli_entail'),
-        StepsDissimilarity('nli_contra'),
-        StepsDissimilarity('nli_ccp'),
+        StepsCocoaMTE(similarity_key="steps_sample_sentence_similarity"),
+        StepsCocoaMTE(similarity_key="steps_greedy_sentence_similarity"),
+        StepsCocoaMSP(similarity_key="steps_sample_sentence_similarity"),
+        StepsCocoaMSP(similarity_key="steps_greedy_sentence_similarity"),
+        StepsCocoaPPL(similarity_key="steps_sample_sentence_similarity"),
+        StepsCocoaPPL(similarity_key="steps_greedy_sentence_similarity"),
     ]
+    special_estimators = {
+        'StepsCocoaSEE': StepsCocoaSEE(similarity_key="steps_sample_sentence_similarity"),
+        'StepsCocoaSEE': StepsCocoaSEE(similarity_key="steps_greedy_sentence_similarity"),
+    }
     man: dict = {
         'stats': [],
         'estimates': [],
@@ -191,11 +188,36 @@ def main(args):
                     print(f"{key}: {val}")
 
         estimates: dict[str, list] = {}
+        
+        # First, run regular estimators
         for estimator in estimators:
             name = str(estimator)
             print(f"Estimating {name}...")
             start_time = time.time()
             result = estimator(stats)
+            elapsed = time.time() - start_time
+            estimates[name] = result
+            print(f"Done estimating in {elapsed:.2f} seconds...")
+            wandb.log({f"timing/estimator/{name}": elapsed})
+            if args.verbose:
+                print(f"{estimator}: {result}")
+        
+        # Then, run special estimators that depend on other estimators' outputs
+        for name, estimator in special_estimators.items():
+            print(f"Estimating {name}...")
+            start_time = time.time()
+            
+            if name == 'StepsCocoaSEE':
+                # StepsCocoaSEE needs StepsSemanticEntropy output
+                semantic_entropy_output = estimates.get('StepsSemanticEntropy', None)
+                if semantic_entropy_output is None:
+                    print(f"Warning: StepsSemanticEntropy output not found for {name}, skipping...")
+                    continue
+                result = estimator(stats, semantic_entropy_output=semantic_entropy_output)
+            else:
+                # For other special estimators, call normally
+                result = estimator(stats)
+            
             elapsed = time.time() - start_time
             estimates[name] = result
             print(f"Done estimating in {elapsed:.2f} seconds...")

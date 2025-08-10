@@ -17,6 +17,7 @@ from transformers import (
     StoppingCriteria,
     StoppingCriteriaList,
     PreTrainedTokenizer,
+    BitsAndBytesConfig,
 )
 from huggingface_hub import InferenceClient
 
@@ -627,11 +628,48 @@ class WhiteboxModel(Model):
 
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
+            
+            # Choose quantization strategy based on available memory and requirements
+            # You can modify this to choose between 4-bit and 8-bit
+            use_4bit = True  # Set to False to use 8-bit instead
+            
+            if use_4bit:
+                # 4-bit quantization (more memory efficient, some precision loss)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.bfloat16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4"
+                )
+                print("✓ Using 4-bit quantization (most memory efficient)")
+            else:
+                # 8-bit quantization (balanced memory and precision)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_8bit=True,
+                    llm_int8_threshold=6.0,
+                    llm_int8_has_fp16_weight=False
+                )
+                print("✓ Using 8-bit quantization (balanced performance)")
+            
+            # Make FlashAttention2 optional, fallback to SDPA
+            model_kwargs = {
+                "trust_remote_code": True,
+                "quantization_config": quantization_config,
+                **kwargs
+            }
+            
+            # Try to use FlashAttention2 if available, otherwise use SDPA
+            try:
+                import flash_attn
+                model_kwargs["attn_implementation"] = "flash_attention_2"
+                print("✓ Using FlashAttention2 for best performance")
+            except ImportError:
+                model_kwargs["attn_implementation"] = "sdpa"
+                print("⚠️ FlashAttention2 not available, using SDPA (PyTorch optimized attention)")
+            
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
-                trust_remote_code=True,
-                attn_implementation="sdpa",
-                **kwargs
+                **model_kwargs
             )
         elif any(
             [
@@ -641,10 +679,47 @@ class WhiteboxModel(Model):
             ]
         ):
             model_type = "Seq2SeqLM"
+            
+            # Choose quantization strategy based on available memory and requirements
+            # You can modify this to choose between 4-bit and 8-bit
+            use_4bit = False  # Set to False to use 8-bit instead
+            
+            if use_4bit:
+                # 4-bit quantization (more memory efficient, some precision loss)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.bfloat16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4"
+                )
+                print("✓ Using 4-bit quantization (most memory efficient)")
+            else:
+                # 8-bit quantization (balanced memory and precision)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_8bit=True,
+                    llm_int8_threshold=6.0,
+                    llm_int8_has_fp16_weight=False
+                )
+                print("✓ Using 8-bit quantization (balanced performance)")
+            
+            # Make FlashAttention2 optional, fallback to SDPA
+            model_kwargs = {
+                "quantization_config": quantization_config,
+                **kwargs
+            }
+            
+            # Try to use FlashAttention2 if available, otherwise use SDPA
+            try:
+                import flash_attn
+                model_kwargs["attn_implementation"] = "flash_attention_2"
+                print("✓ Using FlashAttention2 for best performance")
+            except ImportError:
+                model_kwargs["attn_implementation"] = "sdpa"
+                print("⚠️ FlashAttention2 not available, using SDPA (PyTorch optimized attention)")
+            
             model = AutoModelForSeq2SeqLM.from_pretrained(
                 model_path, 
-                attn_implementation="sdpa",
-                **kwargs
+                **model_kwargs
                 )
             if "falcon" in model_path:
                 model.transformer.alibi = True
@@ -652,20 +727,94 @@ class WhiteboxModel(Model):
             ["JAISLMHeadModel" in architecture for architecture in config.architectures]
         ):
             model_type = "CausalLM"
+            
+            # Choose quantization strategy based on available memory and requirements
+            # You can modify this to choose between 4-bit and 8-bit
+            use_4bit = True  # Set to False to use 8-bit instead
+            
+            if use_4bit:
+                # 4-bit quantization (more memory efficient, some precision loss)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.bfloat16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4"
+                )
+                print("✓ Using 4-bit quantization (most memory efficient)")
+            else:
+                # 8-bit quantization (balanced memory and precision)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_8bit=True,
+                    llm_int8_threshold=6.0,
+                    llm_int8_has_fp16_weight=False
+                )
+                print("✓ Using 8-bit quantization (balanced performance)")
+            
+            # Make FlashAttention2 optional, fallback to SDPA
+            model_kwargs = {
+                "trust_remote_code": True,
+                "quantization_config": quantization_config,
+                **kwargs,
+            }
+            
+            # Try to use FlashAttention2 if available, otherwise use SDPA
+            try:
+                import flash_attn
+                model_kwargs["attn_implementation"] = "flash_attention_2"
+                print("✓ Using FlashAttention2 for best performance")
+            except ImportError:
+                model_kwargs["attn_implementation"] = "sdpa"
+                print("⚠️ FlashAttention2 not available, using SDPA (PyTorch optimized attention)")
+            
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
-                trust_remote_code=True,
-                attn_implementation="sdpa",
-                **kwargs,
+                **model_kwargs
             )
         elif any(
             ["BartModel" in architecture for architecture in config.architectures]
         ):
             model_type = "Seq2SeqLM"
+            
+            # Choose quantization strategy based on available memory and requirements
+            # You can modify this to choose between 4-bit and 8-bit
+            use_4bit = True  # Set to False to use 8-bit instead
+            
+            if use_4bit:
+                # 4-bit quantization (more memory efficient, some precision loss)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.bfloat16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4"
+                )
+                print("✓ Using 4-bit quantization (most memory efficient)")
+            else:
+                # 8-bit quantization (balanced memory and precision)
+                quantization_config = BitsAndBytesConfig(
+                    load_in_8bit=True,
+                    llm_int8_threshold=6.0,
+                    llm_int8_has_fp16_weight=False
+                )
+                print("✓ Using 8-bit quantization (balanced performance)")
+            
+            # Make FlashAttention2 optional, fallback to SDPA
+            model_kwargs = {
+                "quantization_config": quantization_config,
+                **kwargs
+            }
+            
+            # Try to use FlashAttention2 if available, otherwise use SDPA
+            try:
+                import flash_attn
+                model_kwargs["attn_implementation"] = "flash_attention_2"
+                print("✓ Using FlashAttention2 for best performance")
+            except ImportError:
+                model_kwargs["attn_implementation"] = "sdpa"
+                print("⚠️ FlashAttention2 not available, using SDPA (PyTorch optimized attention)")
+            
             model = BartForConditionalGeneration.from_pretrained(
                 model_path, 
-                attn_implementation="sdpa", 
-                **kwargs
+                **model_kwargs
                 )
         else:
             raise ValueError(

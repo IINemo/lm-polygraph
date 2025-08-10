@@ -84,3 +84,4 @@ from .kernel_language_entropy import KernelLanguageEntropy
 from .luq import LUQ
 from .eigenscore import EigenScore
 from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE
+from .step.steps_cocoa import StepsCocoaMTE, StepsCocoaSEE, StepsCocoaMSP, StepsCocoaPPL
