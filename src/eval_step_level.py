@@ -4,6 +4,22 @@ import os
 import random
 import numpy as np
 import transformers
+import dataclasses
+
+# flake8: noqa: E402
+# ✅ Monkey patch: HF config support
+_original_asdict = dataclasses.asdict
+
+
+def patched_asdict(obj):
+    if isinstance(obj, transformers.PretrainedConfig):
+        return obj.to_dict()
+    return _original_asdict(obj)
+
+
+dataclasses.asdict = patched_asdict
+# ✅ End patch
+# flake8: noqa: E402
 import wandb
 from argparse import ArgumentParser, BooleanOptionalAction, ArgumentTypeError
 import nltk
@@ -40,24 +56,8 @@ from lm_polygraph.stat_calculators.step.steps_greedy_similarity import (
 from lm_polygraph.stat_calculators.step.steps_cross_encoder_similarity import (
     StepsCrossEncoderSimilarityCalculator,
 )
-import dataclasses
-
 
 nltk.data.path.append("/mnt/beegfs/work/xie12/tmp/nltk_data")
-
-# ✅ Monkey patch: HF config support
-
-_original_asdict = dataclasses.asdict
-
-
-def patched_asdict(obj):
-    if isinstance(obj, transformers.PretrainedConfig):
-        return obj.to_dict()
-    return _original_asdict(obj)
-
-
-dataclasses.asdict = patched_asdict
-# ✅ End patch
 
 EXCLUDE_SAVE_STATS: list[str] = [
     "embeddings",
@@ -272,7 +272,7 @@ def main(args):
             print(f"Estimating {name}...")
             start_time = time.time()
 
-            if name == "StepsCocoaSEE_sample":
+            if name == "StepsCocoaSEE_sample" or name == "StepsCocoaSEE_greedy":
                 # StepsCocoaSEE needs StepsSemanticEntropy output
                 semantic_entropy_output = estimates.get("StepsSemanticEntropy", None)
                 if semantic_entropy_output is None:
