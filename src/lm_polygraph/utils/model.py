@@ -620,13 +620,18 @@ class WhiteboxModel(Model):
         )
 
         config = AutoConfig.from_pretrained(
-            model_path, trust_remote_code=True, **kwargs
+            model_path,
+            trust_remote_code=True,
+            **kwargs
         )
 
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
             model = AutoModelForCausalLM.from_pretrained(
-                model_path, trust_remote_code=True, attn_implementation="eager", **kwargs
+                model_path,
+                trust_remote_code=True,
+                attn_implementation="sdpa",
+                **kwargs
             )
         elif any(
             [
@@ -636,7 +641,11 @@ class WhiteboxModel(Model):
             ]
         ):
             model_type = "Seq2SeqLM"
-            model = AutoModelForSeq2SeqLM.from_pretrained(model_path, attn_implementation="eager", **kwargs)
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                model_path, 
+                attn_implementation="sdpa",
+                **kwargs
+                )
             if "falcon" in model_path:
                 model.transformer.alibi = True
         elif any(
@@ -646,14 +655,18 @@ class WhiteboxModel(Model):
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
                 trust_remote_code=True,
-                attn_implementation="eager",
+                attn_implementation="sdpa",
                 **kwargs,
             )
         elif any(
             ["BartModel" in architecture for architecture in config.architectures]
         ):
             model_type = "Seq2SeqLM"
-            model = BartForConditionalGeneration.from_pretrained(model_path, attn_implementation="eager", **kwargs)
+            model = BartForConditionalGeneration.from_pretrained(
+                model_path, 
+                attn_implementation="sdpa", 
+                **kwargs
+                )
         else:
             raise ValueError(
                 f"Model {model_path} is not adapted for the sequence generation task"
