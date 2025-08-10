@@ -87,7 +87,7 @@ class StepwiseSamplingCalculator(StatCalculator):
             stopping_criteria=stopping_criteria,
             output_scores=True,
             return_dict_in_generate=True,
-            output_attentions=True,
+            output_attentions=False,
         )
 
         return llm_inputs, llm_outputs

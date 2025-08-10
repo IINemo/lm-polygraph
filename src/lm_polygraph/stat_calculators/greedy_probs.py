@@ -38,7 +38,7 @@ class GreedyProbsCalculator(StatCalculator):
 
     def __init__(
         self,
-        output_attentions: bool = True,
+        output_attentions: bool = False,
         output_hidden_states: bool = False,
         n_alternatives: int = 10,
     ):
