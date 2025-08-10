@@ -128,10 +128,23 @@ def main(args):
     if args.finetuned_deberta_path:
         state_dict = torch.load(args.finetuned_deberta_path)
         nli_model._deberta.load_state_dict(state_dict)
+        
+    skip_starts = [
+       "<|im_start|>think"
+    ] if model.model_path == "simplescaling/s1.1-7B" else [
+        "<think>",
+        "</think>",
+        "**Solution:**",
+        "**Final Answer:**",
+        "     \\[",
+        "     \\]",
+        "\\[",
+        "\\]"
+    ]
 
     stat_calculators: list[StatCalculator] = [
         GreedyProbsCalculator(),
-        StepsExtractor(sent_separators="\n\n", skip_starts=["<|im_start|>think"]),
+        StepsExtractor(skip_starts=skip_starts),
         StepwiseSamplingCalculator(candidates_per_step=args.n_samples, temperature=0.6),
         StepsSemanticMatrixCalculator(nli_model),
         StepsGreedySimilarityCalculator(),
