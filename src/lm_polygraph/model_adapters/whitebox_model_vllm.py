@@ -64,7 +64,7 @@ class WhiteboxModelvLLM(Model):
                     {
                         "role": "user",
                         "content": text,
-                    }
+                    },
                 ]
                 chats.append(chat)
             output = self.model.chat(*args, chats, sampling_params)
