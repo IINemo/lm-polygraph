@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 from typing import List, Dict, Optional
 
@@ -23,7 +22,11 @@ class StepsSemanticEntropy(Estimator):
     ):
         self.class_probability_estimation = class_probability_estimation
         if self.class_probability_estimation == "sum":
-            deps = ["sample_steps_log_probs", "sample_steps_texts", "steps_semantic_classes_entail"]
+            deps = [
+                "sample_steps_log_probs",
+                "sample_steps_texts",
+                "steps_semantic_classes_entail",
+            ]
         elif self.class_probability_estimation == "frequency":
             deps = ["sample_steps_texts", "steps_semantic_classes_entail"]
         else:
@@ -60,8 +63,12 @@ class StepsSemanticEntropy(Estimator):
             loglikelihoods_list: list | None = None
             hyps_list: list = stats["sample_steps_texts"]
 
-        self._class_to_sample = flatten(stats["steps_semantic_classes_entail"]["class_to_sample"])
-        self._sample_to_class = flatten(stats["steps_semantic_classes_entail"]["sample_to_class"])
+        self._class_to_sample = flatten(
+            stats["steps_semantic_classes_entail"]["class_to_sample"]
+        )
+        self._sample_to_class = flatten(
+            stats["steps_semantic_classes_entail"]["sample_to_class"]
+        )
 
         all_se = self.batched_call(flatten(hyps_list), flatten(loglikelihoods_list))
         return reconstruct(all_se, hyps_list)

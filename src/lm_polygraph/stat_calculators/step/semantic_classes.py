@@ -39,7 +39,9 @@ class StepsSemanticClassesCalculator(StatCalculator):
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         sample_steps_texts = dependencies["sample_steps_texts"]
-        steps_semantic_matrix_classes = np.stack(flatten(dependencies["steps_semantic_matrix_classes"]))
+        steps_semantic_matrix_classes = np.stack(
+            flatten(dependencies["steps_semantic_matrix_classes"])
+        )
         self._is_entailment = (
             steps_semantic_matrix_classes == dependencies["entailment_id"]
         )
@@ -48,11 +50,17 @@ class StepsSemanticClassesCalculator(StatCalculator):
         return {
             "steps_semantic_classes_entail": {
                 "sample_to_class": reconstruct(
-                    [self._sample_to_class[i] for i in range(len(flatten(sample_steps_texts)))],
+                    [
+                        self._sample_to_class[i]
+                        for i in range(len(flatten(sample_steps_texts)))
+                    ],
                     sample_steps_texts,
                 ),
                 "class_to_sample": reconstruct(
-                    [self._class_to_sample[i] for i in range(len(flatten(sample_steps_texts)))],
+                    [
+                        self._class_to_sample[i]
+                        for i in range(len(flatten(sample_steps_texts)))
+                    ],
                     sample_steps_texts,
                 ),
             }

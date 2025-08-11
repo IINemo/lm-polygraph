@@ -40,9 +40,13 @@ class StepsEccentricity(Estimator):
         """
         if similarity_score == "NLI_score":
             if affinity == "entail":
-                super().__init__(["steps_semantic_matrix_entail", "ssample_steps_texts"], "claim")
+                super().__init__(
+                    ["steps_semantic_matrix_entail", "ssample_steps_texts"], "claim"
+                )
             else:
-                super().__init__(["steps_semantic_matrix_contra", "sample_steps_texts"], "claim")
+                super().__init__(
+                    ["steps_semantic_matrix_contra", "sample_steps_texts"], "claim"
+                )
         else:
             super().__init__(["sample_steps_texts"], "claim")
 
@@ -111,9 +115,11 @@ class StepsEccentricity(Estimator):
         steps_semantic_matrix_entail = flatten(stats["steps_semantic_matrix_entail"])
         steps_semantic_matrix_contra = flatten(stats["steps_semantic_matrix_contra"])
         for i in range(len(sample_steps_texts)):
-            res.append(self.U_Eccentricity(
-                sample_steps_texts[i],
-                steps_semantic_matrix_entail[i],
-                steps_semantic_matrix_contra[i],
-            )[0])
+            res.append(
+                self.U_Eccentricity(
+                    sample_steps_texts[i],
+                    steps_semantic_matrix_entail[i],
+                    steps_semantic_matrix_contra[i],
+                )[0]
+            )
         return reconstruct(res, stats["sample_steps_texts"])

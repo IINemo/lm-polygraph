@@ -4,7 +4,7 @@ from transformers import StoppingCriteria, StoppingCriteriaList
 
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from .steps_extractor import StepsExtractor, Claim
+from .steps_extractor import StepsExtractor
 
 
 class StopOnNewline(StoppingCriteria):
@@ -87,7 +87,7 @@ class StepwiseSamplingCalculator(StatCalculator):
             stopping_criteria=stopping_criteria,
             output_scores=True,
             return_dict_in_generate=True,
-            output_attentions=True,
+            output_attentions=False,
         )
 
         return llm_inputs, llm_outputs

@@ -21,10 +21,10 @@ class StepsDegMat(Estimator):
     """
 
     def __init__(
-            self,
-            similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
-            affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
-            verbose: bool = False,
+        self,
+        similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
+        affinity: Literal["entail", "contra"] = "entail",  # relevant for NLI score case
+        verbose: bool = False,
     ):
         """
         Parameters:
@@ -37,9 +37,13 @@ class StepsDegMat(Estimator):
         """
         if similarity_score == "NLI_score":
             if affinity == "entail":
-                super().__init__(["steps_semantic_matrix_entail", "sample_steps_texts"], "claim")
+                super().__init__(
+                    ["steps_semantic_matrix_entail", "sample_steps_texts"], "claim"
+                )
             else:
-                super().__init__(["steps_semantic_matrix_contra", "sample_steps_texts"], "claim")
+                super().__init__(
+                    ["steps_semantic_matrix_contra", "sample_steps_texts"], "claim"
+                )
         else:
             super().__init__(["sample_steps_texts"], "claim")
 
@@ -89,9 +93,11 @@ class StepsDegMat(Estimator):
         semantic_matrix_entail = flatten(stats["steps_semantic_matrix_entail"])
         semantic_matrix_contra = flatten(stats["steps_semantic_matrix_contra"])
         for i in range(len(sample_steps_texts)):
-            res.append(self.U_DegMat(
-                sample_steps_texts[i],
-                semantic_matrix_entail[i],
-                semantic_matrix_contra[i],
-            ))
+            res.append(
+                self.U_DegMat(
+                    sample_steps_texts[i],
+                    semantic_matrix_entail[i],
+                    semantic_matrix_contra[i],
+                )
+            )
         return reconstruct(res, stats["sample_steps_texts"])

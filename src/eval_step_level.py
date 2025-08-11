@@ -4,36 +4,60 @@ import os
 import random
 import numpy as np
 import transformers
+import dataclasses
+
+# flake8: noqa: E402
+# ✅ Monkey patch: HF config support
+_original_asdict = dataclasses.asdict
+
+
+def patched_asdict(obj):
+    if isinstance(obj, transformers.PretrainedConfig):
+        return obj.to_dict()
+    return _original_asdict(obj)
+
+
+dataclasses.asdict = patched_asdict
+# ✅ End patch
+# flake8: noqa: E402
 import wandb
 from argparse import ArgumentParser, BooleanOptionalAction, ArgumentTypeError
-
-
+import nltk
 from lm_polygraph.stat_calculators.step.steps_extractor import StepsExtractor
 from lm_polygraph.utils.model import WhiteboxModel
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.estimators import Estimator
-from lm_polygraph.estimators.claim.claim_conditioned_probability import ClaimConditionedProbabilityClaim
-from lm_polygraph.estimators.claim.frequency_scoring import FrequencyScoringClaim
-from lm_polygraph.estimators.claim.p_true import PTrueClaim
-from lm_polygraph.estimators.claim.perplexity import PerplexityClaim
-from lm_polygraph.estimators.claim.random_baseline import RandomBaselineClaim
-from lm_polygraph.estimators.claim.token_entropy import MaxTokenEntropyClaim
-from lm_polygraph.stat_calculators import StatCalculator, GreedyProbsCalculator, EntropyCalculator, \
-    ClaimPromptCalculator, GreedyAlternativesNLICalculator, GreedyAlternativesFactPrefNLICalculator, \
-    SamplingGenerationCalculator
-from lm_polygraph.estimators.claim.max_probability import MaximumClaimProbability
-from lm_polygraph.stat_calculators.semantic_classes_claim_to_samples import SemanticClassesClaimToSamplesCalculator
+from lm_polygraph.stat_calculators import (
+    StatCalculator,
+    GreedyProbsCalculator,
+)
+
 from lm_polygraph.utils.deberta import Deberta
-from lm_polygraph.estimators.step.degmat import StepsDegMat
-from lm_polygraph.estimators.step.eccentricity import StepsEccentricity
-from lm_polygraph.stat_calculators.step.greedy_nli_similarity import StepsGreedyNLISimilarityCalculator
-from lm_polygraph.estimators.step.lexical_similarity import StepsLexicalSimilarity
-from lm_polygraph.estimators.step.num_sem_sets import StepsNumSemSets
-from lm_polygraph.stat_calculators.step.semantic_classes import StepsSemanticClassesCalculator
+from lm_polygraph.stat_calculators.step.semantic_classes import (
+    StepsSemanticClassesCalculator,
+)
 from lm_polygraph.estimators.step.semantic_entropy import StepsSemanticEntropy
-from lm_polygraph.estimators.step.dissimilarity import StepsDissimilarity
-from lm_polygraph.stat_calculators.step.semantic_matrix import StepsSemanticMatrixCalculator
-from lm_polygraph.stat_calculators.step.stepwise_sampling import StepwiseSamplingCalculator
+from lm_polygraph.stat_calculators.step.semantic_matrix import (
+    StepsSemanticMatrixCalculator,
+)
+from lm_polygraph.stat_calculators.step.stepwise_sampling import (
+    StepwiseSamplingCalculator,
+)
+from lm_polygraph.stat_calculators.step.steps_entropy import StepsEntropyCalculator
+from lm_polygraph.estimators.step.steps_cocoa import (
+    StepsCocoaSEE,
+    StepsCocoaMTE,
+    StepsCocoaMSP,
+    StepsCocoaPPL,
+)
+from lm_polygraph.stat_calculators.step.steps_greedy_similarity import (
+    StepsGreedySimilarityCalculator,
+)
+from lm_polygraph.stat_calculators.step.steps_cross_encoder_similarity import (
+    StepsCrossEncoderSimilarityCalculator,
+)
+
+nltk.data.path.append("/mnt/beegfs/work/xie12/tmp/nltk_data")
 
 EXCLUDE_SAVE_STATS: list[str] = [
     "embeddings",
@@ -47,6 +71,7 @@ EXCLUDE_SAVE_STATS: list[str] = [
     "sample_embeddings",
 ]
 
+
 def parse_tuple(s):
     try:
         parts = s.strip("()").split(",")
@@ -57,19 +82,53 @@ def parse_tuple(s):
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser()
-    parser.add_argument('--model-path', type=str, required=True, help='HF path to base model')
-    parser.add_argument('--dataset-path', type=parse_tuple, required=True, help='Path to HF dataset with questions')
-    parser.add_argument('--dataset-split', type=str, required=True, help='HF dataset split')
-    parser.add_argument('--prompt-path', type=str, required=False, help='Path to prompt')
-    parser.add_argument('--device', type=str, default='auto', help='Torch device to run experiments on')
-    parser.add_argument('--max-new-tokens', type=int, default=256, help='Max number of new generated tokens')
-    parser.add_argument('--save-path', type=str, required=True, help='Path to save manager')
-    parser.add_argument('--finetuned-deberta-path', type=str, default=None,
-                        help='Path to fine-tuned version of deberta')
-    parser.add_argument('--deberta-batch-size', type=int, default=10, help='Batch size for deberta')
-    parser.add_argument('--wandb-project', type=str, default='tot-decoding', help='WandB project name')
-    parser.add_argument('--n-samples', type=int, default=5, help='Number of sample chains and steps')
-    parser.add_argument('--verbose', action=BooleanOptionalAction, default=False)
+    parser.add_argument(
+        "--model-path", type=str, required=True, help="HF path to base model"
+    )
+    parser.add_argument(
+        "--dataset-path",
+        type=parse_tuple,
+        required=True,
+        help="Path to HF dataset with questions",
+    )
+    parser.add_argument(
+        "--dataset-split", type=str, required=True, help="HF dataset split"
+    )
+    parser.add_argument(
+        "--prompt-path", type=str, required=False, help="Path to prompt"
+    )
+    parser.add_argument(
+        "--device", type=str, default="auto", help="Torch device to run experiments on"
+    )
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=256,
+        help="Max number of new generated tokens",
+    )
+    parser.add_argument(
+        "--save-path", type=str, required=True, help="Path to save manager"
+    )
+    parser.add_argument(
+        "--finetuned-deberta-path",
+        type=str,
+        default=None,
+        help="Path to fine-tuned version of deberta",
+    )
+    parser.add_argument(
+        "--deberta-batch-size", type=int, default=10, help="Batch size for deberta"
+    )
+    parser.add_argument(
+        "--wandb-project", type=str, default="tot-decoding", help="WandB project name"
+    )
+    parser.add_argument(
+        "--n-samples", type=int, default=5, help="Number of sample chains and steps"
+    )
+    parser.add_argument("--verbose", action=BooleanOptionalAction, default=False)
+    parser.add_argument("--is_chat_formatted", type=str, default="False")
+    parser.add_argument(
+        "--dataset_size", type=int, default=None, help="Size of dataset to use"
+    )
     return parser
 
 
@@ -90,66 +149,86 @@ def main(args):
         project=args.wandb_project,
         config=vars(args),
     )
+    is_chat_formatted = True if args.is_chat_formatted == "True" else False
+    instruct = is_chat_formatted
 
-    model = WhiteboxModel.from_pretrained(args.model_path, torch_dtype="auto", device_map=args.device)
+    model = WhiteboxModel.from_pretrained(
+        args.model_path,
+        torch_dtype=torch.bfloat16,
+        device_map=args.device,
+        instruct=instruct,
+    )
+
     data = Dataset.from_datasets(
         args.dataset_path,
-        x_column='question',
-        y_column='answer',
+        x_column="question",
+        y_column="answer",
         prompt=open(args.prompt_path).read() if args.prompt_path else "",
         split=args.dataset_split,
+        batch_size=1,
+        is_chat_formatted=True,
     )
     nli_model = Deberta(batch_size=args.deberta_batch_size)
     if args.finetuned_deberta_path:
         state_dict = torch.load(args.finetuned_deberta_path)
         nli_model._deberta.load_state_dict(state_dict)
 
+    skip_starts = (
+        ["<|im_start|>think"]
+        if model.model_path == "simplescaling/s1.1-7B"
+        else [
+            "<think>",
+            "</think>",
+            "**Solution:**",
+            "**Final Answer:**",
+            "     \\[",
+            "     \\]",
+            "\\[",
+            "\\]",
+        ]
+    )
+
     stat_calculators: list[StatCalculator] = [
         GreedyProbsCalculator(),
-        StepsExtractor(),
-        EntropyCalculator(),
-        ClaimPromptCalculator(),
-        SamplingGenerationCalculator(samples_n=args.n_samples),
-        SemanticClassesClaimToSamplesCalculator(nli_model),
-        GreedyAlternativesNLICalculator(nli_model),
-        GreedyAlternativesFactPrefNLICalculator(nli_model),
-        StepwiseSamplingCalculator(candidates_per_step=args.n_samples),
+        StepsExtractor(skip_starts=skip_starts),
+        StepwiseSamplingCalculator(candidates_per_step=args.n_samples, temperature=0.6),
         StepsSemanticMatrixCalculator(nli_model),
+        StepsGreedySimilarityCalculator(),
         StepsSemanticClassesCalculator(),
-        StepsGreedyNLISimilarityCalculator(nli_model),
+        StepsCrossEncoderSimilarityCalculator(),
+        StepsEntropyCalculator(),
     ]
+
     estimators: list[Estimator] = [
-        RandomBaselineClaim(),
-        MaximumClaimProbability(),
-        MaxTokenEntropyClaim(),
-        PerplexityClaim(),
-        PTrueClaim(),
-        ClaimConditionedProbabilityClaim(nli_context="no_context"),
-        ClaimConditionedProbabilityClaim(nli_context="fact_pref"),
-        FrequencyScoringClaim(),
         StepsSemanticEntropy(),
-        StepsLexicalSimilarity(),
-        StepsDegMat(),
-        StepsEccentricity(),
-        StepsNumSemSets(),
-        StepsDissimilarity('rougeL'),
-        StepsDissimilarity('nli_entail'),
-        StepsDissimilarity('nli_contra'),
-        StepsDissimilarity('nli_ccp'),
+        StepsCocoaMTE(similarity_key="steps_sample_sentence_similarity"),
+        StepsCocoaMTE(similarity_key="steps_greedy_sentence_similarity"),
+        StepsCocoaMSP(similarity_key="steps_sample_sentence_similarity"),
+        StepsCocoaMSP(similarity_key="steps_greedy_sentence_similarity"),
+        StepsCocoaPPL(similarity_key="steps_sample_sentence_similarity"),
+        StepsCocoaPPL(similarity_key="steps_greedy_sentence_similarity"),
+    ]
+    special_estimators: list[Estimator] = [
+        StepsCocoaSEE(similarity_key="steps_greedy_sentence_similarity"),
+        StepsCocoaSEE(similarity_key="steps_sample_sentence_similarity"),
     ]
     man: dict = {
-        'stats': [],
-        'estimates': [],
+        "stats": [],
+        "estimates": [],
     }
+    steps_cocoa_see_greedy_name = str(StepsCocoaSEE(similarity_key="steps_greedy_sentence_similarity"))
+    steps_cocoa_see_sample_name = str(StepsCocoaSEE(similarity_key="steps_sample_sentence_similarity"))
     if os.path.exists(args.save_path):
         man = torch.load(args.save_path)
     for i, (input_texts, target_texts) in enumerate(data):
-        if len(man['estimates']) > i:
+        if i > args.dataset_size:
+            continue
+        if len(man["estimates"]) > i:
             print(f"Skipping batch#{i}")
             continue
         set_seed(228)
         if args.verbose:
-            print(f'input_texts: {input_texts}')
+            print(f"input_texts: {input_texts}")
         stats: dict = {
             "input_texts": input_texts,
             "target_texts": target_texts,
@@ -158,7 +237,9 @@ def main(args):
             name = stat_calculator.__class__.__name__
             print(f"Calculating {name}...")
             start_time = time.time()
-            result = stat_calculator(stats, input_texts, model, max_new_tokens=args.max_new_tokens)
+            result = stat_calculator(
+                stats, input_texts, model, max_new_tokens=args.max_new_tokens
+            )
             elapsed = time.time() - start_time
             stats.update(result)
             print(f"Done calculating in {elapsed:.2f} seconds...")
@@ -170,6 +251,8 @@ def main(args):
                     print(f"{key}: {val}")
 
         estimates: dict[str, list] = {}
+
+        # First, run regular estimators
         for estimator in estimators:
             name = str(estimator)
             print(f"Estimating {name}...")
@@ -182,13 +265,43 @@ def main(args):
             if args.verbose:
                 print(f"{estimator}: {result}")
 
-        man['stats'].append({k: v for k, v in stats.items() if k not in EXCLUDE_SAVE_STATS})
-        man['estimates'].append(estimates)
+        # Then, run special estimators that depend on other estimators' outputs
+        for estimator in special_estimators:
+            name = str(estimator)
+            print(f"Estimating {name}...")
+            start_time = time.time()
+
+            if name == steps_cocoa_see_greedy_name or name == steps_cocoa_see_sample_name:
+                # StepsCocoaSEE needs StepsSemanticEntropy output
+                semantic_entropy_output = estimates.get("StepsSemanticEntropy", None)
+                if semantic_entropy_output is None:
+                    print(
+                        f"Warning: StepsSemanticEntropy output not found for {name}, skipping..."
+                    )
+                    continue
+                result = estimator(
+                    stats, semantic_entropy_output=semantic_entropy_output
+                )
+            else:
+                # For other special estimators, call normally
+                result = estimator(stats)
+
+            elapsed = time.time() - start_time
+            estimates[name] = result
+            print(f"Done estimating in {elapsed:.2f} seconds...")
+            wandb.log({f"timing/estimator/{name}": elapsed})
+            if args.verbose:
+                print(f"{estimator}: {result}")
+
+        man["stats"].append(
+            {k: v for k, v in stats.items() if k not in EXCLUDE_SAVE_STATS}
+        )
+        man["estimates"].append(estimates)
 
         print(f"Saving to {args.save_path}...")
         torch.save(man, args.save_path)
 
-        wandb.log({f"iteration": i + 1})
+        wandb.log({"iteration": i + 1})
 
         # artifact = wandb.Artifact('results', type='model_output')
         # artifact.add_file(args.save_path)
@@ -197,7 +310,7 @@ def main(args):
     wandb.finish()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     main(args)

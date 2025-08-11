@@ -20,8 +20,8 @@ class StepsNumSemSets(Estimator):
     """
 
     def __init__(
-            self,
-            verbose: bool = False,
+        self,
+        verbose: bool = False,
     ):
         super().__init__(
             [
@@ -114,5 +114,9 @@ class StepsNumSemSets(Estimator):
         steps_semantic_matrix_entail = flatten(stats["steps_semantic_matrix_entail"])
         steps_semantic_matrix_contra = flatten(stats["steps_semantic_matrix_contra"])
         for i in range(len(sample_steps_texts)):
-            res.append(self.U_NumSemSets(steps_semantic_matrix_entail[i], steps_semantic_matrix_contra[i]))
+            res.append(
+                self.U_NumSemSets(
+                    steps_semantic_matrix_entail[i], steps_semantic_matrix_contra[i]
+                )
+            )
         return reconstruct(res, stats["sample_steps_texts"])
