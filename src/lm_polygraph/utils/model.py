@@ -475,6 +475,9 @@ class WhiteboxModel(Model):
             logits_processor = LogitsProcessorList([processor])
         args["logits_processor"] = logits_processor
 
+        if "stop_strings" in args:
+            args["tokenizer"] = self.tokenizer
+
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
