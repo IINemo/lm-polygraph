@@ -208,18 +208,16 @@ def main(args):
         StepsCocoaPPL(similarity_key="steps_sample_sentence_similarity"),
         StepsCocoaPPL(similarity_key="steps_greedy_sentence_similarity"),
     ]
-    special_estimators = {
-        "StepsCocoaSEE_sample": StepsCocoaSEE(
-            similarity_key="steps_sample_sentence_similarity"
-        ),
-        "StepsCocoaSEE_greedy": StepsCocoaSEE(
-            similarity_key="steps_greedy_sentence_similarity"
-        ),
-    }
+    special_estimators: list[Estimator] = [
+        StepsCocoaSEE(similarity_key="steps_greedy_sentence_similarity"),
+        StepsCocoaSEE(similarity_key="steps_sample_sentence_similarity"),
+    ]
     man: dict = {
         "stats": [],
         "estimates": [],
     }
+    steps_cocoa_see_greedy_name = str(StepsCocoaSEE(similarity_key="steps_greedy_sentence_similarity"))
+    steps_cocoa_see_sample_name = str(StepsCocoaSEE(similarity_key="steps_sample_sentence_similarity"))
     if os.path.exists(args.save_path):
         man = torch.load(args.save_path)
     for i, (input_texts, target_texts) in enumerate(data):
@@ -268,11 +266,12 @@ def main(args):
                 print(f"{estimator}: {result}")
 
         # Then, run special estimators that depend on other estimators' outputs
-        for name, estimator in special_estimators.items():
+        for estimator in special_estimators:
+            name = str(estimator)
             print(f"Estimating {name}...")
             start_time = time.time()
 
-            if name == "StepsCocoaSEE_sample" or name == "StepsCocoaSEE_greedy":
+            if name == steps_cocoa_see_greedy_name or name == steps_cocoa_see_sample_name:
                 # StepsCocoaSEE needs StepsSemanticEntropy output
                 semantic_entropy_output = estimates.get("StepsSemanticEntropy", None)
                 if semantic_entropy_output is None:
