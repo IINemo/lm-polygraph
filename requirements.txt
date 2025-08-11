@@ -1,4 +1,4 @@
-datasets>=2.14.2,<4.0.0
+datasets>=2.19.0,<4.0.0
 rouge-score>=0.0.4
 nlpaug>=1.1.10
 scikit-learn>=1.5.1

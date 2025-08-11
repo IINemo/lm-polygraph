@@ -143,6 +143,7 @@ class BlackboxModel(Model):
             "min_new_tokens",
             "num_beams",
             "allow_newlines",
+            "stop_strings",
         ]:
             args_copy.pop(delete_key, None)
 
@@ -475,14 +476,14 @@ class WhiteboxModel(Model):
             logits_processor = LogitsProcessorList([processor])
         args["logits_processor"] = logits_processor
 
-        if "stop_strings" in args:
-            args["tokenizer"] = self.tokenizer
-
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-        args = self._validate_args(args)
 
+        if "stop_strings" in args:
+            args["tokenizer"] = self.tokenizer
+
+        args = self._validate_args(args)
         generation = self.model.generate(**args)
 
         # override generation.scores with original scores from model

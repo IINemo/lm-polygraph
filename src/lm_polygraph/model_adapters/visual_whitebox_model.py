@@ -127,12 +127,13 @@ class VisualWhiteboxModel(Model):
             logits_processor = LogitsProcessorList([processor])
         args["logits_processor"] = logits_processor
 
-        if "stop_strings" in args:
-            args["tokenizer"] = self.tokenizer
-
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
+
+        if "stop_strings" in args:
+            args["tokenizer"] = self.tokenizer
+
         args = self._validate_args(args)
         if "generation_config" not in args:
             generation_config = GenerationConfig(
