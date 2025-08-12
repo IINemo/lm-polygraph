@@ -53,9 +53,22 @@ def build_dataset(dataset_name):
             raise ValueError(
                 "prepare_func must return a tuple (input, output) or (input, output, stripped_input)"
             )
-        result_dataset = datasets.Dataset.from_dict(
-            {"input": x, "output": y, "stripped_input": s}
+
+        def row_iterator():
+            for i in range(len(x)):
+                yield {"input": x[i], "output": y[i], "stripped_input": s[i]}
+
+        result_dataset = datasets.Dataset.from_generator(
+            row_iterator,
+            features=datasets.Features(
+                {
+                    "input": datasets.Value("string"),
+                    "output": datasets.Value("string"),
+                    "stripped_input": datasets.Value("string"),
+                }
+            ),
         )
+
         return result_dataset
 
     result = {}
