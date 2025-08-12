@@ -1,14 +1,32 @@
 from functools import partial
+from .stripped_formatters import qa_stripped, summarization_stripped, continuation_stripped
 
 
 def prepare_base(
-    dataset, input_column, output_column, prompt=None
-) -> tuple[list[str], list[str], dict[str, list[str]]]:
-    x, y = dataset[input_column], dataset[output_column]
-    if prompt:
-        for i in range(len(x)):
-            x[i] = prompt.format(text=x[i])
-    return x, y
+    dataset, input_column, output_column, prompt=None, stripped_mode: str | None = None
+) -> tuple[list[str], list[str], list[str]]:
+    x: list[str] = []
+    y: list[str] = []
+    s: list[str] = []
+
+    for inst in dataset:
+        text = inst[input_column]
+        inp = prompt.format(text=text) if prompt else text
+        x.append(inp)
+        y.append(inst[output_column])
+
+        mode = (stripped_mode or "").lower()
+        if mode == "qa":
+            s.append(qa_stripped(text))
+        elif mode == "summary":
+            s.append(summarization_stripped(text))
+        elif mode == "continuation":
+            s.append(continuation_stripped(text))
+        else:
+            # Default to continuation if unknown
+            s.append(continuation_stripped(text))
+
+    return x, y, s
 
 
 CONFIG = {
@@ -17,7 +35,10 @@ CONFIG = {
         "train_split": "train",
         "test_split": "test",
         "prepare_func": partial(
-            prepare_base, input_column="question", output_column="answer"
+            prepare_base,
+            input_column="question",
+            output_column="answer",
+            stripped_mode="qa",
         ),
         "dataset": "trivia_qa_tiny",
         "subset": "continuation",
@@ -30,6 +51,7 @@ CONFIG = {
             prepare_base,
             input_column="email_body",
             output_column="subject_line",
+            stripped_mode="summary",
             # prompt is set but not used in LM-Polygraph for this dataset (bug)
             # prompt="Write a short subject line for the email. Output only the subject line itself.\n\nEmail:\n{text}\n\nSubject line:\n",
         ),

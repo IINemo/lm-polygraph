@@ -1,4 +1,5 @@
 from functools import partial
+from .stripped_formatters import qa_stripped
 
 
 def prepare_truthfulqa(
@@ -6,11 +7,12 @@ def prepare_truthfulqa(
     prompt,
     few_shot_prompt,
 ):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         x.append(few_shot_prompt + prompt.format(question=inst["question"]))
         y.append([alias for alias in inst["correct_answers"] if len(alias)])
-    return x, y
+        s.append(qa_stripped(inst["question"]))
+    return x, y, s
 
 
 CONFIG = {

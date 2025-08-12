@@ -28,6 +28,19 @@ It supports the following options:
 * `builders` - code and configs for building specific datasets. For example, `builders/mmlu.py` contains code for building `mmlu` dataset and its instruct variations.
 * `template_readme.md` - Template for dataset card for generated datasets.
 
+## Output schema
+
+All generated datasets contain the following columns:
+
+- `input`: Full prompt text used for model inference (may include instructions and few-shot examples depending on subset).
+- `output`: Target text for evaluation (string or list of strings depending on the source dataset).
+- `stripped_input`: Minimal task-only text for presentation, built from original fields without instructions. It is intended to be concatenated with model outputs to form a cohesive unit:
+  - QA: `Q: <question>\nA:`
+  - Multiple choice: `Q: <question>\nA. <choice0>\nB. <choice1>\n...\nA:`
+  - Translation: `Original:\n<source>\nTranslation:`
+  - Summarization: `Original:\n<source>\nSummary:`
+  - Continuation: `Original:\n<source>\nContinuation:`
+
 ## Instructions
 
 ### How to build and save existing dataset to disk.

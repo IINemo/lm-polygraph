@@ -1,15 +1,17 @@
 from functools import partial
+from .stripped_formatters import summarization_stripped
 
 
 def prepare_samsum(
     dataset,
     prompt,
 ):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         x.append(prompt.format(text=inst["dialogue"]))
         y.append(inst["summary"])
-    return x, y
+        s.append(summarization_stripped(inst["dialogue"]))
+    return x, y, s
 
 
 CONFIG = {

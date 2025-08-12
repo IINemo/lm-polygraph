@@ -41,8 +41,21 @@ def build_dataset(dataset_name):
         )
 
     def prepare_dataset(split):
-        x, y = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
-        result_dataset = datasets.Dataset.from_dict({"input": x, "output": y})
+        res = config["prepare_func"](dataset=dataset[config[f"{split}_split"]])
+        # Backward compatibility: allow returning (x, y) or (x, y, stripped)
+        if isinstance(res, tuple) and len(res) == 3:
+            x, y, s = res
+        elif isinstance(res, tuple) and len(res) == 2:
+            x, y = res
+            # Fallback: keep empty stripped_input to avoid breaking
+            s = [""] * len(x)
+        else:
+            raise ValueError(
+                "prepare_func must return a tuple (input, output) or (input, output, stripped_input)"
+            )
+        result_dataset = datasets.Dataset.from_dict(
+            {"input": x, "output": y, "stripped_input": s}
+        )
         return result_dataset
 
     result = {}

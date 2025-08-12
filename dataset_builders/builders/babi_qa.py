@@ -1,8 +1,9 @@
 from functools import partial
+from .stripped_formatters import qa_stripped
 
 
 def prepare_babi_qa(dataset, input_column, output_column, prompt):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         inst = inst["story"]
         context = ""
@@ -12,7 +13,8 @@ def prepare_babi_qa(dataset, input_column, output_column, prompt):
             else:
                 x.append(prompt.format(context=context.strip(), question=text))
                 y.append(answer)
-    return x, y
+                s.append(qa_stripped(text))
+    return x, y, s
 
 
 CONFIG = {

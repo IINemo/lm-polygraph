@@ -1,15 +1,14 @@
 from functools import partial
+from .stripped_formatters import qa_stripped
 
 
 def prepare_person(dataset, input_column, prompt=""):
-    x = dataset[input_column]
-    if len(prompt):
-        for i in range(len(x)):
-            x[i] = prompt.format(text=x[i])
-    y = []
-    for _ in x:
+    x, y, s = [], [], []
+    for q in dataset[input_column]:
+        x.append(prompt.format(text=q) if len(prompt) else q)
         y.append("")
-    return x, y
+        s.append(qa_stripped(q))
+    return x, y, s
 
 
 CONFIG = {

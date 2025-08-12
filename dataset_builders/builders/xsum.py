@@ -1,15 +1,17 @@
 from functools import partial
+from .stripped_formatters import summarization_stripped
 
 
 def prepare_xsum(
     dataset,
     prompt,
 ):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         x.append(prompt.format(text=inst["document"]))
         y.append(inst["summary"])
-    return x, y
+        s.append(summarization_stripped(inst["document"]))
+    return x, y, s
 
 
 CONFIG = {

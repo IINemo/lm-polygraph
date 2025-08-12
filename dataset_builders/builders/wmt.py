@@ -1,4 +1,5 @@
 from functools import partial
+from .stripped_formatters import translation_stripped
 
 
 def prepare_wmt(dataset, input_column, output_column, prompt):
@@ -8,7 +9,7 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
         "en": "English",
         "ru": "Russian",
     }
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset["translation"]:
         x.append(
             prompt.format(
@@ -18,7 +19,8 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
             )
         )
         y.append(inst[output_column])
-    return x, y
+        s.append(translation_stripped(inst[input_column]))
+    return x, y, s
 
 
 CONFIG = {

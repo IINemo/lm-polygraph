@@ -1,12 +1,15 @@
 from functools import partial
+from .stripped_formatters import continuation_stripped
 
 
 def prepare_wiki(dataset, input_column, prompt):
-    x, y = [], []
+    x, y, s = [], [], []
     for sample in dataset[input_column]:
-        x.append(prompt.format(context=sample["context"].strip()))
+        context = sample["context"].strip()
+        x.append(prompt.format(context=context))
         y.append("")
-    return x, y
+        s.append(continuation_stripped(context))
+    return x, y, s
 
 
 CONFIG = {

@@ -1,5 +1,6 @@
 from .constants import TOP_K, SEED
 from functools import partial
+from .stripped_formatters import qa_stripped
 
 
 import datasets
@@ -13,7 +14,7 @@ def prepare_trivia_qa(
     description,
     few_shot_prompt,
     instruct,
-    few_shot_prompt_end,
+    few_shot_prompt_end="Now answer the following question in the same format:",
 ):
     import numpy as np
 
@@ -21,7 +22,7 @@ def prepare_trivia_qa(
 
     few_shot_dataset = few_shot_dataset_func()
 
-    x, y = [], []
+    x, y, s = [], [], []
     formatted_few_shot_prompt = description.format(topk=TOP_K)
     if n_shot > 0:
         few_shot_ids = np.random.choice(len(few_shot_dataset), n_shot, replace=False)
@@ -67,7 +68,8 @@ def prepare_trivia_qa(
                 + prompt.format(question=inst["question"], answer="")
             )
         y.append([alias for alias in inst["answer"]["aliases"]])
-    return x, y
+        s.append(qa_stripped(inst["question"].strip()))
+    return x, y, s
 
 
 def generate_triviaqa_instruct_config(
