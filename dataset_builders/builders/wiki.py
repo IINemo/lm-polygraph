@@ -1,5 +1,6 @@
 from functools import partial
 from .stripped_formatters import continuation_stripped
+import datasets
 
 
 def prepare_wiki(dataset, input_column, prompt):
@@ -23,5 +24,12 @@ CONFIG = {
         ),
         "dataset": "wiki_bio",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

@@ -1,5 +1,6 @@
 from functools import partial
 from .stripped_formatters import qa_stripped, summarization_stripped, continuation_stripped
+import datasets
 
 
 def prepare_base(
@@ -42,6 +43,13 @@ CONFIG = {
         ),
         "dataset": "trivia_qa_tiny",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "aeslc": {
         "name": "aeslc",
@@ -57,6 +65,13 @@ CONFIG = {
         ),
         "dataset": "aeslc",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "gsm8k": {
         "name": ["gsm8k", "main"],
@@ -70,6 +85,13 @@ CONFIG = {
         ),
         "dataset": "gsm8k",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "xsum": {
         "name": "xsum",
@@ -83,5 +105,12 @@ CONFIG = {
         ),
         "dataset": "xsum",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

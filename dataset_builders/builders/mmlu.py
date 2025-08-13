@@ -114,6 +114,13 @@ def generate_mmlu_instruct_config(description, few_shot_prompt, subset, end_answ
         ),
         "dataset": "mmlu",
         "subset": subset,
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     }
 
 
@@ -137,6 +144,13 @@ CONFIG = {
         ),
         "dataset": "mmlu",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "mmlu_empirical_baselines": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>",

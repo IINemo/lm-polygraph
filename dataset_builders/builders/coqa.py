@@ -1,6 +1,7 @@
 from .constants import TOP_K
 from functools import partial
 from .stripped_formatters import qa_stripped
+import datasets
 
 
 def prepare_coqa(
@@ -79,6 +80,13 @@ def generate_coqa_instruct_config(
         ),
         "dataset": "coqa",
         "subset": subset,
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     }
 
 
@@ -98,6 +106,13 @@ CONFIG = {
         ),
         "dataset": "coqa",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "coqa_empirical_baselines": generate_coqa_instruct_config(
         subset="empirical_baselines",

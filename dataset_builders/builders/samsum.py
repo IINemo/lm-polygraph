@@ -1,5 +1,6 @@
 from functools import partial
 from .stripped_formatters import summarization_stripped
+import datasets
 
 
 def prepare_samsum(
@@ -25,6 +26,13 @@ CONFIG = {
         ),
         "dataset": "samsum",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "samsum_simple_instruct": {
         "name": "knkarthick/samsum",
@@ -36,5 +44,12 @@ CONFIG = {
         ),
         "dataset": "samsum",
         "subset": "simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

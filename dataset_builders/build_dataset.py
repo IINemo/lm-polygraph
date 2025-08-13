@@ -58,15 +58,20 @@ def build_dataset(dataset_name):
             for i in range(len(x)):
                 yield {"input": x[i], "output": y[i], "stripped_input": s[i]}
 
-        result_dataset = datasets.Dataset.from_generator(
-            row_iterator,
-            features=datasets.Features(
+        features = config.get(
+            "features",
+            datasets.Features(
                 {
                     "input": datasets.Value("string"),
                     "output": datasets.Value("string"),
                     "stripped_input": datasets.Value("string"),
                 }
             ),
+        )
+
+        result_dataset = datasets.Dataset.from_generator(
+            row_iterator,
+            features=features,
         )
 
         return result_dataset

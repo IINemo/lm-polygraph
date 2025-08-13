@@ -1,5 +1,6 @@
 from functools import partial
 from .stripped_formatters import qa_stripped
+import datasets
 
 
 def prepare_person(dataset, input_column, prompt=""):
@@ -22,6 +23,13 @@ CONFIG = {
         ),
         "dataset": "person_bio",
         "subset": "ar",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "person_bio_en": {
         "name": "rediska0123/person-bio",
@@ -32,6 +40,13 @@ CONFIG = {
         ),
         "dataset": "person_bio",
         "subset": "en",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "person_bio_ru": {
         "name": "rvanova/person-bio",
@@ -42,6 +57,13 @@ CONFIG = {
         ),
         "dataset": "person_bio",
         "subset": "ru",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "person_bio_zh": {
         "name": "ruixing76/person-bio-zh",
@@ -52,5 +74,12 @@ CONFIG = {
         ),
         "dataset": "person_bio",
         "subset": "zh",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

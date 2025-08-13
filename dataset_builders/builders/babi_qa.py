@@ -1,5 +1,6 @@
 from functools import partial
 from .stripped_formatters import qa_stripped
+import datasets
 
 
 def prepare_babi_qa(dataset, input_column, output_column, prompt):
@@ -30,5 +31,12 @@ CONFIG = {
         ),
         "dataset": "babi_qa",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

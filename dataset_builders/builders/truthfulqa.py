@@ -1,5 +1,6 @@
 from functools import partial
 from .stripped_formatters import qa_stripped
+import datasets
 
 
 def prepare_truthfulqa(
@@ -26,6 +27,13 @@ CONFIG = {
         ),
         "dataset": "truthfulqa",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Sequence(datasets.Value("string")),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "truthfulqa_simple_instruct": {
         "name": ["truthful_qa", "generation"],
@@ -37,5 +45,12 @@ CONFIG = {
         ),
         "dataset": "truthfulqa",
         "subset": "simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Sequence(datasets.Value("string")),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

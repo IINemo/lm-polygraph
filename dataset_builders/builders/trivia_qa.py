@@ -100,6 +100,13 @@ def generate_triviaqa_instruct_config(
         ),
         "dataset": "triviaqa",
         "subset": subset,
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Sequence(datasets.Value("string")),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     }
 
 
@@ -124,6 +131,13 @@ CONFIG = {
         ),
         "dataset": "triviaqa",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Sequence(datasets.Value("string")),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "triviaqa_empirical_baselines": generate_triviaqa_instruct_config(
         description="Provide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
