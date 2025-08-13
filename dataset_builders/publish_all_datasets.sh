@@ -18,7 +18,7 @@ DATASETS=(
 
   # babi_qa
   babi_qa
-    
+
   # coqa
   coqa
   coqa_empirical_baselines
@@ -29,7 +29,7 @@ DATASETS=(
   coqa_verb_2s_top1
   coqa_verb_2s_topk
   coqa_simple_instruct
-    
+
   # gsm8k
   gsm8k
   gsm8k_simple_instruct

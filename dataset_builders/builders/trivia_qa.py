@@ -14,7 +14,7 @@ def prepare_trivia_qa(
     description,
     few_shot_prompt,
     instruct,
-    few_shot_prompt_end="Now answer the following question in the same format:",
+    few_shot_prompt_end="Now answer the following question in the same format:\n\n",
 ):
     import numpy as np
 
@@ -43,7 +43,7 @@ def prepare_trivia_qa(
                     )
                     + "\n\n"
                 )
-            formatted_few_shot_prompt += f"{few_shot_prompt_end}:\n\n"
+            formatted_few_shot_prompt += few_shot_prompt_end
         else:
             formatted_few_shot_prompt = ""
             for inst in few_shot_data:
@@ -77,7 +77,7 @@ def generate_triviaqa_instruct_config(
     few_shot_prompt,
     subset,
     end_answer="",
-    few_shot_prompt_end="Now answer the following question in the same format:",
+    few_shot_prompt_end="Now answer the following question in the same format:\n\n",
 ):
     return {
         "name": ["trivia_qa", "rc.nocontext"],
