@@ -22,7 +22,7 @@ CONFIG = {
         "test_split": "test",
         "prepare_func": partial(
             prepare_xsum,
-            prompt="Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):",
+            prompt="Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):\n",
         ),
         "dataset": "xsum",
         "subset": "continuation",
