@@ -16,7 +16,7 @@ def prepare_samsum(
 
 CONFIG = {
     "samsum": {
-        "name": "samsum",
+        "name": "knkarthick/samsum",
         "train_split": "train",
         "test_split": "test",
         "prepare_func": partial(
