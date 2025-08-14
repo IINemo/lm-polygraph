@@ -36,9 +36,12 @@ def vn_entropy(
     if normalize:
         K = normalize_kernel(K) / K.shape[0]
     result = 0
-    eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0])).eigenvalues.astype(
-        np.float64
-    )
+    try:
+        eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0])).eigenvalues.astype(
+            np.float64
+        )
+    except AttributeError:
+        eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0]))[0].astype(np.float64)
     for e in eigvs:
         if np.abs(e) > 1e-8:
             result -= e * np.log(e)
