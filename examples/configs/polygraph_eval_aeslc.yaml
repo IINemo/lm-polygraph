@@ -6,6 +6,7 @@ defaults:
   - model: bloomz-560m
   - estimators: default_estimators
   - stat_calculators: default_calculators
+  - similarity_model: default_en
   - _self_
 
 cache_path: ./workdir/output
@@ -38,4 +39,3 @@ generation_metrics: null
 ignore_exceptions: false
 seed:
     - 1
-

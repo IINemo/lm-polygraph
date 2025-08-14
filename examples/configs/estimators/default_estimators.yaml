@@ -64,26 +64,26 @@
 - name: EigenScore
 - name: RenyiNeg
 - name: FisherRao
-- name: MahalanobisDistanceSeq
-- name: RelativeMahalanobisDistanceSeq
-- name: RDESeq
-- name: PPLMDSeq
-  cfg:
-    md_type: "MD"
-- name: PPLMDSeq
-  cfg:
-    md_type: "RMD"
-- name: Focus
-  cfg:
-    model_name: '${model.path}'
-    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
-    gamma: 0.9
-    p: 0.01
-    idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
-    trust_remote_code: True
-    idf_seed: 42
-    idf_dataset_size: -1
-    spacy_path: "en_core_web_sm"
+#- name: MahalanobisDistanceSeq
+#- name: RelativeMahalanobisDistanceSeq
+#- name: RDESeq
+#- name: PPLMDSeq
+#  cfg:
+#    md_type: "MD"
+#- name: PPLMDSeq
+#  cfg:
+#    md_type: "RMD"
+#- name: Focus
+#  cfg:
+#    model_name: '${model.path}'
+#    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
+#    gamma: 0.9
+#    p: 0.01
+#    idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+#    trust_remote_code: True
+#    idf_seed: 42
+#    idf_dataset_size: -1
+#    spacy_path: "en_core_web_sm"
 - name: AttentionScore
   cfg:
     gen_only: False

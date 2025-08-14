@@ -2,6 +2,8 @@ import torch
 from transformers import (
     DebertaForSequenceClassification,
     DebertaTokenizer,
+    DebertaV2ForSequenceClassification,
+    DebertaV2Tokenizer,
     AutoTokenizer,
     AutoModelForSequenceClassification,
 )
@@ -18,7 +20,6 @@ class Deberta:
         deberta_path: str = "microsoft/deberta-large-mnli",
         batch_size: int = 10,
         device: str = None,
-        hf_cache: str = None,
     ):
         """
         Parameters
@@ -36,7 +37,6 @@ class Deberta:
             self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
-        self.hf_cache = hf_cache
         self.setup()
 
     @property
@@ -64,15 +64,26 @@ class Deberta:
         """
         if self._deberta is not None:
             return
-        self._deberta = DebertaForSequenceClassification.from_pretrained(
-            self.deberta_path,
-            problem_type="multi_label_classification",
-            cache_dir=self.hf_cache,
-        )
-        self._deberta_tokenizer = DebertaTokenizer.from_pretrained(
-            self.deberta_path, cache_dir=self.hf_cache
-        )
-        self._deberta.to(self.device)
+
+        if "v2" in self.deberta_path or "v3" in self.deberta_path:
+            self._deberta = DebertaV2ForSequenceClassification.from_pretrained(
+                self.deberta_path,
+                problem_type="multi_label_classification",
+                device_map="auto",
+            )
+            self._deberta_tokenizer = DebertaV2Tokenizer.from_pretrained(
+                self.deberta_path
+            )
+        else:
+            self._deberta = DebertaForSequenceClassification.from_pretrained(
+                self.deberta_path,
+                problem_type="multi_label_classification",
+            )
+            self._deberta_tokenizer = DebertaTokenizer.from_pretrained(
+                self.deberta_path
+            )
+            self._deberta.to(self.device)
+
         self._deberta.eval()
 
 
@@ -87,7 +98,6 @@ class MultilingualDeberta(Deberta):
         deberta_path: str = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
         batch_size: int = 10,
         device: str = None,
-        hf_cache: str = None,
     ):
         """
         Parameters
@@ -106,7 +116,6 @@ class MultilingualDeberta(Deberta):
             self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
-        self.hf_cache = hf_cache
         self.setup()
 
     def setup(self):
@@ -115,12 +124,9 @@ class MultilingualDeberta(Deberta):
         """
         if self._deberta is not None:
             return
-        self._deberta_tokenizer = AutoTokenizer.from_pretrained(
-            self.deberta_path, cache_dir=self.hf_cache
-        )
+        self._deberta_tokenizer = AutoTokenizer.from_pretrained(self.deberta_path)
         self._deberta = AutoModelForSequenceClassification.from_pretrained(
             self.deberta_path,
-            cache_dir=self.hf_cache,
         )
         self._deberta.to(self.device)
         self._deberta.eval()
