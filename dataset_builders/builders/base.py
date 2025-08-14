@@ -1,5 +1,9 @@
 from functools import partial
-from .stripped_formatters import qa_stripped, summarization_stripped, continuation_stripped
+from .stripped_formatters import (
+    qa_stripped,
+    summarization_stripped,
+    continuation_stripped,
+)
 import datasets
 
 

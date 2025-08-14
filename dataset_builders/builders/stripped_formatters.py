@@ -30,4 +30,3 @@ def summarization_stripped(original_text: str) -> str:
 def continuation_stripped(original_text: str) -> str:
     t = (original_text or "").strip()
     return f"Original:\n{t}\nContinuation:"
-
