@@ -35,7 +35,13 @@ class UncertaintyOutput:
 
 
 def estimate_uncertainty(
-    model: Model, estimator: Estimator, input_text: str
+    model: Model,
+    estimator: Estimator, 
+    input_text: str,
+    nli_deberta_path: Optional[str] = "microsoft/deberta-large-mnli",
+    nli_batch_size: Optional[int] = 10,
+    cross_encoder_name: Optional[str] = "cross-encoder/stsb-roberta-large",
+    cross_encoder_batch_size: Optional[int] = 10,
 ) -> UncertaintyOutput:
     """
     Estimated uncertainty of the model generation using the provided esitmator.
@@ -87,7 +93,11 @@ def estimate_uncertainty(
         model,
         [estimator],
         available_stat_calculators=register_default_stat_calculators(
-            model_type
+            model_type,
+            nli_deberta_path=nli_deberta_path,
+            nli_batch_size=nli_batch_size,
+            cross_encoder_name=cross_encoder_name,
+            cross_encoder_batch_size=cross_encoder_batch_size,
         ),  # TODO:
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],
