@@ -39,7 +39,6 @@ All generated datasets contain the following columns:
   - Multiple choice: `Q: <question>\nA. <choice0>\nB. <choice1>\n...\nA:`
   - Translation: `Original:\n<source>\nTranslation:`
   - Summarization: `Original:\n<source>\nSummary:`
-  - Continuation: `Original:\n<source>\nContinuation:`
 
 ## Instructions
 
