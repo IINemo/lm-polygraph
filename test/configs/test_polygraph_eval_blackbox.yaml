@@ -6,6 +6,7 @@ defaults:
   - model: gpt-4o-mini
   - test_default_blackbox_estimators
   - test_default_calculators
+  - similarity_model: default_en
   
   - _self_
 

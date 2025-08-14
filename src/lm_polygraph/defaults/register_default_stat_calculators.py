@@ -14,7 +14,6 @@ def register_default_stat_calculators(
     blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
-    *,
     nli_deberta_path: Optional[str] = None,
     nli_batch_size: Optional[int] = None,
     cross_encoder_name: Optional[str] = None,

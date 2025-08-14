@@ -5,6 +5,7 @@ hydra:
 defaults:
   - model: vllm
   - test_default_estimators_vllm
+  - similarity_model: default_en
   - _self_
 
 cache_path: ./workdir/output

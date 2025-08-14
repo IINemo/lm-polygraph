@@ -1,0 +1,7 @@
+nli:
+  deberta_path: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  batch_size: 10
+cross_encoder:
+  cross_encoder_name: cross-encoder/stsb-roberta-large
+  batch_size: 10
+
