@@ -1,4 +1,6 @@
 from functools import partial
+from .stripped_formatters import translation_stripped
+import datasets
 
 
 def prepare_wmt(dataset, input_column, output_column, prompt):
@@ -8,7 +10,7 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
         "en": "English",
         "ru": "Russian",
     }
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset["translation"]:
         x.append(
             prompt.format(
@@ -18,7 +20,8 @@ def prepare_wmt(dataset, input_column, output_column, prompt):
             )
         )
         y.append(inst[output_column])
-    return x, y
+        s.append(translation_stripped(inst[input_column]))
+    return x, y, s
 
 
 CONFIG = {
@@ -34,6 +37,13 @@ CONFIG = {
         ),
         "dataset": "wmt14",
         "subset": "deen",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "wmt14_fren": {
         "name": ["wmt14", "fr-en"],
@@ -47,6 +57,13 @@ CONFIG = {
         ),
         "dataset": "wmt14",
         "subset": "fren",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "wmt14_fren_simple_instruct": {
         "name": ["wmt14", "fr-en"],
@@ -60,6 +77,13 @@ CONFIG = {
         ),
         "dataset": "wmt14",
         "subset": "fren_simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "wmt19_deen": {
         "name": ["wmt19", "de-en"],
@@ -73,6 +97,13 @@ CONFIG = {
         ),
         "dataset": "wmt19",
         "subset": "deen",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "wmt19_deen_simple_instruct": {
         "name": ["wmt19", "de-en"],
@@ -86,6 +117,13 @@ CONFIG = {
         ),
         "dataset": "wmt19",
         "subset": "deen_simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "wmt19_ruen": {
         "name": ["wmt19", "ru-en"],
@@ -99,6 +137,13 @@ CONFIG = {
         ),
         "dataset": "wmt19",
         "subset": "ruen",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "wmt19_ruen_simple_instruct": {
         "name": ["wmt19", "ru-en"],
@@ -112,5 +157,12 @@ CONFIG = {
         ),
         "dataset": "wmt19",
         "subset": "ruen_simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

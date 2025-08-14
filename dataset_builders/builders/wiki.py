@@ -1,12 +1,16 @@
 from functools import partial
+from .stripped_formatters import continuation_stripped
+import datasets
 
 
 def prepare_wiki(dataset, input_column, prompt):
-    x, y = [], []
+    x, y, s = [], [], []
     for sample in dataset[input_column]:
-        x.append(prompt.format(context=sample["context"].strip()))
+        context = sample["context"].strip()
+        x.append(prompt.format(context=context))
         y.append("")
-    return x, y
+        s.append(continuation_stripped(context))
+    return x, y, s
 
 
 CONFIG = {
@@ -20,5 +24,12 @@ CONFIG = {
         ),
         "dataset": "wiki_bio",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

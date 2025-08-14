@@ -1,5 +1,7 @@
 from .constants import TOP_K
 from functools import partial
+from .stripped_formatters import qa_stripped
+import datasets
 
 
 def prepare_coqa(
@@ -10,7 +12,7 @@ def prepare_coqa(
     prompt,
     few_shot_prompt,
     instruct,
-    few_shot_prompt_end,
+    few_shot_prompt_end="Now answer the following question in the same format.",
 ):
     def doc_to_text(doc, prompt, i=0):
         # Given a passage p, the conversation history {q1, a1, . . . qi−1, ai−1}
@@ -20,7 +22,7 @@ def prepare_coqa(
             doc_text += "\n\n" + prompt.format(question=q, answer=a, topk=TOP_K)
         return doc_text
 
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         formatted_description = description.format(story=inst["story"], topk=TOP_K)
         for j, (question, answer) in enumerate(
@@ -51,7 +53,8 @@ def prepare_coqa(
             )
             x.append(formatted_prompt)
             y.append(answer)
-    return x, y
+            s.append(qa_stripped(question))
+    return x, y, s
 
 
 def generate_coqa_instruct_config(
@@ -77,6 +80,13 @@ def generate_coqa_instruct_config(
         ),
         "dataset": "coqa",
         "subset": subset,
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     }
 
 
@@ -96,6 +106,13 @@ CONFIG = {
         ),
         "dataset": "coqa",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "coqa_empirical_baselines": generate_coqa_instruct_config(
         subset="empirical_baselines",
@@ -108,27 +125,27 @@ CONFIG = {
         few_shot_prompt="Question: {question}\nGuess: {answer}\nConfidence: <appropriate level of confidence in this guess>",
     ),
     "coqa_verb_1s_top1": generate_coqa_instruct_config(
-        subset="1s_top1",
+        subset="verb_1s_top1",
         description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess and the probability that it is correct (0.0 to 1.0) for the following question. Give ONLY the guess and probability, no other words or explanation. For example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>\nProbability: <the probability between 0.0 and 1.0 that your guess is correct, without any extra commentary whatsoever; just the probability!>",
         few_shot_prompt="Question: {question}\nGuess: {answer}\nProbability: <number between 0.0 and 1.0 reflecting confidence in the guess>",
     ),
     "coqa_verb_1s_topk": generate_coqa_instruct_config(
-        subset="1s_topk",
+        subset="verb_1s_topk",
         description="Here's a short story:\n\n{story} (End of story)\n\nProvide your {topk} best guesses and the probability that each is correct (0.0 to 1.0) for the following question. Give ONLY the guesses and probabilities, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\nP1: <the probability between 0.0 and 1.0 that G1 is correct, without any extra commentary whatsoever; just the probability!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>\nP{topk}: <the probability between 0.0 and 1.0 that G{topk} is correct, without any extra commentary whatsoever; just the probability!>",
         few_shot_prompt="Question: {question}\nG1: {answer}\nP1: <number between 0.0 and 1.0 reflecting confidence in this guess>\n...\nG{topk}: <other guess>\nP{topk}: <probability of this guess>",
     ),
     "coqa_verb_2s_cot": generate_coqa_instruct_config(
-        subset="2s_cot",
+        subset="verb_2s_cot",
         description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question. Before giving your answer, provide a step-by-step explanation of your thought process. Then on a new line give the guess with no other words or explanation.\n\nFor example:\n\nExplanation: <one sentence step-by-step explanation of your thought process>\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Question: {question}\nExplanation: <step-by-step explanation of your thought process>\nGuess: {answer}",
     ),
     "coqa_verb_2s_top1": generate_coqa_instruct_config(
-        subset="2s_top1",
+        subset="verb_2s_top1",
         description="Here's a short story:\n\n{story} (End of story)\n\nProvide your best guess for the following question. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Question: {question}\nGuess: {answer}",
     ),
     "coqa_verb_2s_topk": generate_coqa_instruct_config(
-        subset="2s_topk",
+        subset="verb_2s_topk",
         description="Here's a short story:\n\n{story} (End of story)\n\nProvide your {topk} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Question: {question}\nG1: {answer}\n...\nG{topk}: <other guess>",
     ),
