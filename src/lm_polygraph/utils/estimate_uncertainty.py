@@ -36,7 +36,7 @@ class UncertaintyOutput:
 
 def estimate_uncertainty(
     model: Model,
-    estimator: Estimator, 
+    estimator: Estimator,
     input_text: str,
     nli_deberta_path: Optional[str] = "microsoft/deberta-large-mnli",
     nli_batch_size: Optional[int] = 10,
