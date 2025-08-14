@@ -64,3 +64,25 @@ Note the following:
 *  If this dataset was never published before, then new repository will be created and its dataset card will be created automatically.
 
 * If this dataset was already published, then dataset will be updated, **but dataset card will remain the same**.
+
+### How to check if your updates to existing dataset did not break anything
+
+Suppose your dataset is `{DATASET}`. Then, run the following command to publish updated version to a temporary namespace:
+
+```bash
+export HF_TOKEN={your hf token}
+python3 manager.py --dataset {DATASET} --publish --namespace {your temporary namespace}
+```
+
+Then check if your updates did not break anything by running the following command:
+
+```bash
+python3 validate_datasets.py --new-namespace {your temporary namespace} --datasets {DATASET}
+```
+
+Now you can publish your dataset to the main namespace:
+
+```bash
+export HF_TOKEN={your hf token}
+python3 manager.py --dataset {DATASET} --publish --namespace LM-Polygraph
+```
