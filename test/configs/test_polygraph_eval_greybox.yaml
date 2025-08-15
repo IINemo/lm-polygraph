@@ -7,7 +7,6 @@ defaults:
   - test_default_greybox_estimators
   - test_default_calculators
   - similarity_model: default_en
-  
   - _self_
 
 cache_path: ./workdir/output
