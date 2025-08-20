@@ -407,6 +407,14 @@ class UEManager:
 
         self._process(iterable_data, fn_on_batch_callback)
 
+        self.eval_ue()
+
+        for processor in self.processors:
+            processor.on_eval(self.metrics, self.total_bad_estimators)
+
+        return self.metrics
+
+    def eval_ue(self):
         for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
             for ue_metric in self.ue_metrics:
                 log.info(f"Metric: {ue_metric}")
@@ -461,11 +469,6 @@ class UEManager:
                             ] = normalize_metric(
                                 ue_metric_val, oracle_score, random_score
                             )
-
-        for processor in self.processors:
-            processor.on_eval(self.metrics, self.total_bad_estimators)
-
-        return self.metrics
 
     def save(self, save_path: str):
         """
