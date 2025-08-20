@@ -214,7 +214,11 @@ Currently unsupported.
 **TACL-2025:**
 ```
 @article{shelmanovvashurin2025,
-    author = {Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and Rvanova, Lyudmila and Vasilev, Daniil and Tsvigun, Akim and Petrakov, Sergey and Xing, Rui and Sadallah, Abdelrahman and Grishchenkov, Kirill and Panchenko, Alexander and Baldwin, Timothy and Nakov, Preslav and Panov, Maxim and Shelmanov, Artem},
+    author = {Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and
+              Rvanova, Lyudmila and Vasilev, Daniil and Tsvigun, Akim and 
+              Petrakov, Sergey and Xing, Rui and Sadallah, Abdelrahman and 
+              Grishchenkov, Kirill and Panchenko, Alexander and Baldwin, Timothy and
+              Nakov, Preslav and Panov, Maxim and Shelmanov, Artem},
     title = {Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph},
     journal = {Transactions of the Association for Computational Linguistics},
     volume = {13},
