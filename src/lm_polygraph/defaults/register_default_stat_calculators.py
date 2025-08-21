@@ -11,11 +11,13 @@ from lm_polygraph.utils.factory_stat_calculator import (
 def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
-    hf_cache: Optional[str] = None,
     blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
-    deberta_batch_size: int = 10,
+    nli_deberta_path: Optional[str] = None,
+    nli_batch_size: Optional[int] = None,
+    cross_encoder_name: Optional[str] = None,
+    cross_encoder_batch_size: Optional[int] = None,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -43,16 +45,10 @@ def register_default_stat_calculators(
         )
         all_stat_calculators.append(sc)
 
-    if language == "en":
-        deberta_model_path = "microsoft/deberta-large-mnli"
-    else:
-        deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
-
     # Shared NLI model config
     nli_model_cfg = {
-        "deberta_path": deberta_model_path,
-        "hf_cache": hf_cache,
-        "batch_size": deberta_batch_size,
+        "deberta_path": nli_deberta_path,
+        "batch_size": nli_batch_size,
         "device": None,
     }
 
@@ -111,16 +107,16 @@ def register_default_stat_calculators(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
             {
-                "batch_size": deberta_batch_size,
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+                "batch_size": cross_encoder_batch_size,
+                "cross_encoder_name": cross_encoder_name,
             },
         )
         _register(
             GreedyCrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyCrossEncoderSimilarityMatrixCalculator",
             {
-                "batch_size": 10,
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+                "batch_size": cross_encoder_batch_size,
+                "cross_encoder_name": cross_encoder_name,
             },
         )
         _register(
@@ -170,8 +166,8 @@ def register_default_stat_calculators(
             CrossEncoderSimilarityMatrixVisualCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixVisualCalculator",
             {
-                "batch_size": deberta_batch_size,
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+                "batch_size": cross_encoder_batch_size,
+                "cross_encoder_name": cross_encoder_name,
             },
         )
         _register(

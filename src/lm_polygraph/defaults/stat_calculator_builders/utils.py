@@ -9,14 +9,11 @@ def load_nli_model(
     deberta_path="microsoft/deberta-large-mnli",
     batch_size=10,
     device=None,
-    hf_cache: str = None,
 ):
     if deberta_path.startswith("microsoft"):
-        nli_model = Deberta(deberta_path, batch_size, device=device, hf_cache=hf_cache)
+        nli_model = Deberta(deberta_path, batch_size, device=device)
     else:
-        nli_model = MultilingualDeberta(
-            deberta_path, batch_size, device=device, hf_cache=hf_cache
-        )
+        nli_model = MultilingualDeberta(deberta_path, batch_size, device=device)
     log.info(
         f"Initialized {nli_model.deberta_path} on {nli_model.device} with batch_size={nli_model.batch_size}"
     )
