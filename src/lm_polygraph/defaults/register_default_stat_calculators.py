@@ -148,6 +148,30 @@ def register_default_stat_calculators(
             },
         )
         _register(AttentionForwardPassCalculator)
+        _register(
+            TrainMTopDivCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_TrainMTopDivCalculator",
+            {
+                "heads_extraction_priority": "cache",
+                "cache_path": "./workdir/output",
+                "model_heads_cache": "model_heads_cache.yaml",
+                "max_heads": 6,
+                "n_jobs": -1,
+                "dataset": ["LM-polygraph/coqa", "continuation"],
+                "text_column": "input",
+                "label_column": "output",
+                "description": "",
+                "prompt": "",
+                "few_shot_split": "train",
+                "train_split": "train",
+                "load_from_disk": False,
+                "subsample_train_dataset": 100,
+                "n_shot": 0,
+                "batch_size": 1,
+                "seed": [1],
+                "size": None,
+            },
+        )
     elif model_type == "VisualLM":
         _register(
             GreedyProbsVisualCalculator,
