@@ -94,7 +94,7 @@ class BaseAttentionCalculator(StatCalculator):
                             torch.float16
                         )  # numpy does not support bfloat16
                     attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
-                attention_all.append(attn_mask.max(0))
+                attention_all.append(attn_mask)
         result_dict = {
             "attention_all": attention_all,
         }

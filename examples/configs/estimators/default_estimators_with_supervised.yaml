@@ -86,8 +86,20 @@
     spacy_path: "en_core_web_sm"
 - name: AttentionScore
   cfg:
-    layer: 16
     gen_only: False
+- name: RAUQ
+  cfg:
+    alpha: 0.2
+    use_entropy: False
+- name: RAUQ
+  cfg:
+    alpha: 0.8
+    use_entropy: True
+- name: CSL
+- name: CocoaMSP
+- name: CocoaPPL
+- name: CocoaMTE
+- name: SemanticDensity
 - name: SAPLMA
   cfg:
     model_name: '${model.path}'
