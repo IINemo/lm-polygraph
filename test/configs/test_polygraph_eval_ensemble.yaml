@@ -17,6 +17,7 @@ eval_split: test
 text_column: input
 load_from_disk: false
 label_column: output
+instruct: false
 prompt: ""
 
 model:

@@ -1,0 +1,40 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
+  - estimators: default_estimators
+  - stat_calculators: default_calculators
+  - base_processing_coqa
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+instruct: true
+
+dataset: ['LM-polygraph/coqa', 'simple_instruct']
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
+n_shot: 0
+few_shot_split: train
+few_shot_prompt: null
+trust_remote_code: false
+size: null
+
+max_new_tokens: 20
+load_from_disk: false
+generation_params:
+  stop_strings:
+    - "\n"
+subsample_eval_dataset: -1
+batch_size: 1
+
+generation_metrics: null
+ignore_exceptions: false
+seed:
+    - 1

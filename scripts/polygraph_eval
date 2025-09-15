@@ -135,6 +135,7 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
+            save_stats=getattr(args, 'save_stats', []),
             log_time=getattr(args, "log_time", False),
         )
 
@@ -159,6 +160,8 @@ def get_ue_metrics(args):
     ue_metrics = [
         PredictionRejectionArea(),
         PredictionRejectionArea(max_rejection=0.5),
+        IsotonicPCC(),
+        ECE(normalize=True),
     ]
     if getattr(args, "use_claim_ue", False):
         ue_metrics += [
@@ -316,6 +319,8 @@ def get_blackbox_model(args):
             "Blackbox model provider cannot be empty or None. Please specify a valid provider."
         )
 
+    supports_logprobs = getattr(args.model, "supports_logprobs", False)
+
     if provider == "openai":
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key is None:
@@ -323,7 +328,7 @@ def get_blackbox_model(args):
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
             model_path=args.model.path,
-            supports_logprobs=args.model.supports_logprobs,
+            supports_logprobs=supports_logprobs,
         )
     elif provider == "huggingface":
         hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
@@ -370,13 +375,17 @@ def get_whitebox_model(args, cache_kwargs={}):
     )
 
     model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params, instruct=getattr(args, "instruct", False)
+        base_model,
+        tokenizer,
+        args.model.path,
+        args.model.type,
+        generation_params,
+        instruct=getattr(args, "instruct", False)
     )
 
     return model
 
 def get_vllm_model(args):
-    
     path_to_load_script = get_abs_path_from_hydra_config(
             args.model.path_to_load_script
         )

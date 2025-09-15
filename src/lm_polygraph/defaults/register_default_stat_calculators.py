@@ -57,9 +57,20 @@ def register_default_stat_calculators(
     }
 
     _register(InitialStateCalculator)
+    _register(RawInputCalculator)
     _register(
         SemanticMatrixCalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        GreedySemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedySemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        ConcatGreedySemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_ConcatGreedySemanticMatrixCalculator",
         {"nli_model": nli_model_cfg},
     )
     _register(SemanticClassesCalculator)
@@ -95,7 +106,7 @@ def register_default_stat_calculators(
         _register(PromptCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
-        _register(BestSampleCalculator)
+        _register(AttentionElicitingPromptCalculator)
         _register(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",

@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+path: google/gemma-3-12b-pt
+type: CausalLM
+path_to_load_script: model/gemma_3.py
+
+load_model_args:
+  device_map: auto
+load_tokenizer_args: {}

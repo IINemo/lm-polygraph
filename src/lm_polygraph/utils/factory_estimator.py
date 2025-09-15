@@ -55,6 +55,9 @@ def load_simple_estimators(name: str, config):
         CocoaMSP,
         CocoaPPL,
         CocoaMTE,
+        RAUQ,
+        CSL,
+        SemanticDensity,
     ]
 
     try:
