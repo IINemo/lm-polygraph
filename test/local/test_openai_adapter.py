@@ -17,10 +17,19 @@ Usage:
 """
 
 import os
-import sys
-from pathlib import Path
 
 import pytest
+
+# Import the local OpenAI adapter so it registers itself
+import lm_polygraph.model_adapters.openai_adapter  # noqa: F401
+
+from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
+from lm_polygraph.estimators import Perplexity
+from lm_polygraph.utils.estimate_uncertainty import estimate_uncertainty
+from lm_polygraph.model_adapters.api_provider_adapter import (
+    get_adapter,
+    list_available_adapters,
+)
 
 # Load environment variables from .env file
 try:
@@ -29,25 +38,6 @@ try:
     load_dotenv()
 except ImportError:
     print("Warning: python-dotenv not installed. Using environment variables only.")
-
-# Add the source code to Python path
-src_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(src_path))
-
-# Add the test adapters to the Python path (if present)
-test_adapters_path = Path(__file__).parent / "adapters"
-sys.path.insert(0, str(test_adapters_path))
-
-# Import the local OpenAI adapter so it registers itself
-import lm_polygraph.model_adapters.openai_adapter
-
-from lm_polygraph.estimators import Perplexity
-from lm_polygraph.model_adapters.api_provider_adapter import (
-    get_adapter,
-    list_available_adapters,
-)
-from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
-from lm_polygraph.utils.estimate_uncertainty import estimate_uncertainty
 
 
 @pytest.fixture(scope="module")

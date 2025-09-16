@@ -15,29 +15,12 @@ Usage:
     pytest test/local/test_together_ai_smoke.py -v -k "not together_api_key"
 """
 
-import pytest
 import os
-import sys
-from pathlib import Path
 
-# Load environment variables from .env file
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ImportError:
-    print("Warning: python-dotenv not installed. Using environment variables only.")
-
-# Add the source code to Python path
-src_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(src_path))
-
-# Add the test adapters to the Python path
-test_adapters_path = Path(__file__).parent / "adapters"
-sys.path.insert(0, str(test_adapters_path))
+import pytest
 
 # Import the local together.ai adapter (this registers it)
-import lm_polygraph.model_adapters.togetherai_adapter
+import lm_polygraph.model_adapters.togetherai_adapter  # noqa: F401
 
 from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
 from lm_polygraph.estimators import Perplexity
@@ -46,6 +29,14 @@ from lm_polygraph.model_adapters.api_provider_adapter import (
     get_adapter,
     list_available_adapters,
 )
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    print("Warning: python-dotenv not installed. Using environment variables only.")
 
 
 def test_together_ai_adapter_registration():
@@ -138,7 +129,7 @@ def test_together_ai_api_smoke():
     ), f"Perplexity should be non-negative, got: {result.uncertainty}"
 
     # Log results for manual verification
-    print(f"\n--- Together.ai Smoke Test Results ---")
+    print("\n--- Together.ai Smoke Test Results ---")
     print(f"Input: {result.input_text}")
     print(f"Generated: {result.generation_text}")
     print(f"Uncertainty: {result.uncertainty}")
@@ -191,7 +182,7 @@ def test_together_ai_api_smoke_with_logprobs():
     assert isinstance(result.uncertainty, (int, float))
     assert result.uncertainty >= 0
 
-    print(f"\n--- Together.ai Logprobs Test Results ---")
+    print("\n--- Together.ai Logprobs Test Results ---")
     print(f"Input: {result.input_text}")
     print(f"Generated: {result.generation_text}")
     print(f"Perplexity: {result.uncertainty}")
