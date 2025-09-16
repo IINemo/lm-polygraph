@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
 INPUT = "When was Julius Caesar born?"
 

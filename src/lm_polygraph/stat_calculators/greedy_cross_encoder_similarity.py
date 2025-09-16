@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
 
 class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):

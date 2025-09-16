@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
 
 class CrossEncoderSimilarityMatrixCalculator(StatCalculator):

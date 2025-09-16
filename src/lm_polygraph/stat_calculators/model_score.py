@@ -5,7 +5,7 @@ import numpy as np
 from torch.nn.utils.rnn import pad_sequence
 from typing import List, Dict, Tuple
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
 log = logging.getLogger(__name__)
 
