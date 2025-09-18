@@ -45,6 +45,15 @@ def get_hydra_config_path():
     return None
 
 
+def wandb_save_directory(directory_path):
+    import wandb
+
+    for file_name in os.listdir(directory_path):
+        full_path = os.path.join(directory_path, file_name)
+        if os.path.isfile(full_path):  # Make sure it's a file, not a directory
+            wandb.save(full_path)
+
+
 @hydra.main(
     version_base=None,
     config_path=str(hydra_config.parent),
@@ -149,6 +158,9 @@ def main(args):
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
             wandb.log({str(k) : v for k, v in man.gen_metrics})
             wandb.log({str(k) : v for k, v in man.metrics.items()})
+
+            wandb_save_directory(save_path + f"/ue_manager_seed{seed}")
+
     
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
