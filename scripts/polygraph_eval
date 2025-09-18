@@ -121,7 +121,7 @@ def main(args):
         ue_metrics = get_ue_metrics(args)
 
         builder_env_stat_calc = BuilderEnvironmentStatCalculator(model=model)
-        available_stat_calculators = get_stat_calculator_names(args)
+        available_stat_calculators = get_stat_calculator_names(args, model)
 
         man = UEManager(
             data=dataset,
@@ -172,16 +172,13 @@ def get_ue_metrics(args):
     return ue_metrics
 
 
-def get_stat_calculator_names(config):
+def get_stat_calculator_names(config, model):
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
     language = getattr(config, "language", "en")
     output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
     output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
     hf_cache = getattr(config, "hf_cache", None)
     deberta_batch_size = getattr(config, "deberta_batch_size", 10)
-    blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
-        config.model, "supports_logprobs", False
-    )
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
@@ -191,8 +188,8 @@ def get_stat_calculator_names(config):
             hf_cache,
             output_attentions=output_attentions, 
             output_hidden_states=output_hidden_states,
-            blackbox_supports_logprobs=blackbox_supports_logprobs,
             deberta_batch_size=deberta_batch_size,
+            model=model,
         )
 
     for stat_calculator in config.stat_calculators:
@@ -317,10 +314,8 @@ def get_blackbox_model(args):
     provider = getattr(args.model, "provider", "")
     if provider is None or provider.strip() == "":
         raise ValueError(
-            "Blackbox model provider cannot be empty or None. Please specify a valid provider."
+            "Blackbox model provider cannot be empty or None. Please specify a valid provider. Supported options are 'openai', 'huggingface', 'together_ai'."
         )
-
-    supports_logprobs = getattr(args.model, "supports_logprobs", False)
 
     if provider == "openai":
         openai_api_key = os.environ.get("OPENAI_API_KEY")
@@ -329,7 +324,6 @@ def get_blackbox_model(args):
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
             model_path=args.model.path,
-            supports_logprobs=supports_logprobs,
         )
     elif provider == "huggingface":
         hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")

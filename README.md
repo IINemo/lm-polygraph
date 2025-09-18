@@ -79,8 +79,7 @@ from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
 
 model = BlackboxModel.from_openai(
     openai_api_key='YOUR_API_KEY',
-    model_path='gpt-4o',
-    supports_logprobs=True  # Enable for deployments 
+    model_path='gpt-4o'
 )
 
 ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.

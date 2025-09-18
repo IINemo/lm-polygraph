@@ -74,7 +74,6 @@ def test_openai_api_smoke(openai_api_key):
         model_path=model_name,
         openai_api_key=openai_api_key,
         api_provider_name="openai",
-        supports_logprobs=True,
     )
 
     model.generation_parameters.max_new_tokens = 20
@@ -127,7 +126,6 @@ def test_openai_api_smoke_with_logprobs(openai_api_key):
         model_path=model_name,
         openai_api_key=openai_api_key,
         api_provider_name="openai",
-        supports_logprobs=True,
     )
 
     model.generation_parameters.max_new_tokens = 5

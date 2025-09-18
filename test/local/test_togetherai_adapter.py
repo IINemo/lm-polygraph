@@ -78,7 +78,6 @@ def test_together_ai_api_smoke():
         model_path=model_name,
         openai_api_key=api_key,
         api_provider_name="together_ai",
-        supports_logprobs=True,
     )
 
     # Override base URL for together.ai (BlackboxModel uses openai client)
@@ -154,7 +153,6 @@ def test_together_ai_api_smoke_with_logprobs():
         model_path=model_name,
         openai_api_key=api_key,
         api_provider_name="together_ai",
-        supports_logprobs=True,
     )
 
     # Override base URL for together.ai

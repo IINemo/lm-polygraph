@@ -6,3 +6,4 @@ from .blackbox_model import BlackboxModel
 
 from . import openai_adapter
 from . import togetherai_adapter
+from . import huggingface_adapter

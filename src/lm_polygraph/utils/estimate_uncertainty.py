@@ -88,7 +88,8 @@ def estimate_uncertainty(
         model,
         [estimator],
         available_stat_calculators=register_default_stat_calculators(
-            model_type
+            model_type,
+            model=model,
         ),  # TODO:
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],

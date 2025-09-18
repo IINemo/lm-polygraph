@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from omegaconf import OmegaConf
 from pathlib import Path
 
@@ -12,14 +12,23 @@ def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
     hf_cache: Optional[str] = None,
-    blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
     deberta_batch_size: int = 10,
+    model: Optional[Any] = None,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
     estimate_uncertainty() function with default configurations.
+
+    Args:
+        model_type: Type of the model ("Blackbox", "Whitebox", or "VisualLM").
+        language: Dataset language code.
+        hf_cache: Optional Hugging Face cache location.
+        output_attentions: Whether whitebox models should output attentions.
+        output_hidden_states: Whether whitebox models should output hidden states.
+        deberta_batch_size: Batch size for NLI-based calculators.
+        model: Optional model instance used to derive provider-specific behavior (e.g., logprob support).
     """
 
     all_stat_calculators = []
@@ -76,6 +85,9 @@ def register_default_stat_calculators(
     _register(SemanticClassesCalculator)
 
     if model_type == "Blackbox":
+        blackbox_supports_logprobs = bool(
+            getattr(model, "supports_logprobs", False)
+        )
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
         if blackbox_supports_logprobs:

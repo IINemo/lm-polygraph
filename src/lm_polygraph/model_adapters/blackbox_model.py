@@ -45,7 +45,6 @@ class BlackboxModel(Model):
         model_path: str = None,
         hf_api_token: str = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
-        supports_logprobs: bool = False,
         api_provider_name: str = "openai",
     ):
         """
@@ -55,12 +54,10 @@ class BlackboxModel(Model):
                 huggingface path, if `hf_api_token` is specified. Default: None.
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
-            supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
         """
         super().__init__(model_path, "Blackbox")
         self.generation_parameters = generation_parameters
         self.openai_api_key = openai_api_key
-        self.supports_logprobs = supports_logprobs
         self.api_provider_name = api_provider_name
 
         # Initialize the adapter for this provider
@@ -72,6 +69,11 @@ class BlackboxModel(Model):
             self.openai_api = openai.OpenAI(api_key=openai_api_key, base_url=base_url)
 
         self.hf_api_token = hf_api_token
+
+    @property
+    def supports_logprobs(self) -> bool:
+        """Expose adapter-defined logprob support."""
+        return self.adapter.supports_logprobs(self.model_path)
 
     def _validate_args(self, args):
         """
@@ -111,13 +113,13 @@ class BlackboxModel(Model):
             hf_api_token=hf_api_token,
             model_path=hf_model_id,
             generation_parameters=generation_parameters,
+            api_provider_name="huggingface",
         )
 
     @staticmethod
     def from_openai(
         openai_api_key: str,
         model_path: str,
-        supports_logprobs: bool = False,
         api_provider_name: str = "openai",
         **kwargs,
     ):
@@ -127,7 +129,6 @@ class BlackboxModel(Model):
         Parameters:
             openai_api_key (Optional[str]): OpenAI API key. Default: None.
             model_path (Optional[str]): model name in OpenAI.
-            supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
             api_provider_name (str): API provider adapter to use. Default: "openai".
         """
         generation_parameters = kwargs.pop(
@@ -137,7 +138,6 @@ class BlackboxModel(Model):
         return BlackboxModel(
             openai_api_key=openai_api_key,
             model_path=model_path,
-            supports_logprobs=supports_logprobs,
             generation_parameters=generation_parameters,
             api_provider_name=api_provider_name,
         )
@@ -167,11 +167,7 @@ class BlackboxModel(Model):
         )
 
         # Use adapter to check logprobs support (considering model-specific rules)
-        adapter_supports_logprobs = self.adapter.supports_logprobs(self.model_path)
-
-        if requires_logprobs and not (
-            self.supports_logprobs and adapter_supports_logprobs
-        ):
+        if requires_logprobs and not self.supports_logprobs:
             raise Exception(
                 f"Cannot access logits for blackbox model with provider '{self.api_provider_name}'"
             )

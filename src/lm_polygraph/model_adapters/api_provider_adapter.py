@@ -82,7 +82,7 @@ class APIProviderAdapter(ABC):
         Returns:
             True if logprobs are supported, False otherwise
         """
-        return True
+        return False
 
     def validate_parameter_ranges(self, params: dict) -> dict:
         """
