@@ -1,0 +1,89 @@
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: ClaimConditionedProbability
+- name: PTrue
+- name: MonteCarloSequenceEntropy
+- name: MonteCarloNormalizedSequenceEntropy
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge1"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge2"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rougeL"
+- name: LexicalSimilarity
+  cfg:
+    metric: "BLEU"
+- name: NumSemSets
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: DegMat
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: Eccentricity
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: SemanticEntropy
+- name: SAR
+- name: TokenSAR
+- name: SentenceSAR
+- name: LUQ
+- name: KernelLanguageEntropy
+- name: EigenScore
+- name: Focus
+  cfg:
+    model_name: '${model.path}'
+    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
+    gamma: 0.9
+    p: 0.01
+    idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+    trust_remote_code: True
+    idf_seed: 42
+    idf_dataset_size: -1
+    spacy_path: "en_core_web_sm"
+- name: AttentionScore
+  cfg:
+    gen_only: False
+- name: RAUQ
+  cfg:
+    instruct: '${instruct}'
+    use_entropy: False
+- name: RAUQ
+  cfg:
+    instruct: '${instruct}'
+    use_entropy: True
+- name: CSL
+- name: CocoaMSP
+- name: CocoaPPL
+- name: CocoaMTE
+- name: SemanticDensity
+  cfg:
+    concat_input: False

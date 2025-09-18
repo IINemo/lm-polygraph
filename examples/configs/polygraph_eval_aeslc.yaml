@@ -29,7 +29,7 @@ size: 10000
 max_new_tokens: 31
 load_from_disk: false
 generation_params:
-  generate_until:
+  stop_strings:
     - "\n"
 subsample_eval_dataset: -1
 batch_size: 1
@@ -38,4 +38,3 @@ generation_metrics: null
 ignore_exceptions: false
 seed:
     - 1
-

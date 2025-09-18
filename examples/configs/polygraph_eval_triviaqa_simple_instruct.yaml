@@ -1,0 +1,40 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
+  - estimators: default_estimators
+  - stat_calculators: default_calculators
+  - base_processing_triviaqa
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+instruct: true
+task: qa
+
+dataset: ['LM-Polygraph/triviaqa', 'simple_instruct']
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
+max_new_tokens: 20
+load_from_disk: false
+multiref: true
+trust_remote_code: false
+size: 10000
+generation_params:
+  stop_strings:
+    - "\n"
+
+subsample_eval_dataset: -1
+
+generation_metrics: null
+
+ignore_exceptions: false
+
+batch_size: 2
+
+seed:
+    - 1

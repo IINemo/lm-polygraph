@@ -190,7 +190,7 @@ def token_level_focus_scores(
         Tuple[List, List]: List of token-level uncertainty scores and keyword masks.
     """
 
-    attention_weights = stats["attention_all"]
+    attention_weights = [np.max(weights, axis=0) for weights in stats["attention_all"]]
     greedy_log_probs = stats["greedy_log_probs"]
     greedy_tokens = stats["greedy_tokens"]
     greedy_texts = stats["greedy_texts"]
