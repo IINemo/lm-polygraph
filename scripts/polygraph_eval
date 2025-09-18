@@ -169,8 +169,7 @@ def main(args):
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
             wandb.log({str(k) : v for k, v in man.gen_metrics})
             wandb.log({str(k) : v for k, v in man.metrics.items()})
-
-            wandb_save_directory(save_path + f"/ue_manager_seed{seed}")
+            wandb.save(save_path + f"/ue_manager_seed{seed}")
 
     
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
