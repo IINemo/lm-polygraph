@@ -78,12 +78,6 @@ class BlackboxModel(Model):
         # Then adapt the request format for the specific provider
         return self.adapter.adapt_request(validated_args)
 
-    def _query(self, payload):
-        client = InferenceClient(model=self.model_path, token=self.hf_api_token)
-        response = client.chat_completion(payload)
-        raw_json = json.dumps(response, indent=2)
-        return raw_json
-
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
         Generates a list of model answers using input texts batch.
@@ -192,6 +186,8 @@ class BlackboxModel(Model):
             if self.model_path is None:
                 raise ValueError("model_path must be specified for Huggingface API inference.")
 
+            client = InferenceClient(model=self.model_path)
+
             for prompt in input_texts:
                 start = time.time()
                 while True:
@@ -200,7 +196,10 @@ class BlackboxModel(Model):
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt},
                     ]
-                    output = self._query(messages)
+
+                    # tf is going on here, this definitely doesn't work
+                    response = client.chat_completion(messages)
+                    output = json.dumps(response, indent=2)
 
                     if isinstance(output, dict):
                         if (list(output.keys())[0] == "error") & (
