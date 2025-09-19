@@ -6,7 +6,7 @@ using the estimate_uncertainty method and Perplexity estimator.
 
 Usage:
     # Set your Together.ai API key
-    export TOGETHER_API_KEY="your-api-key-here"
+    export OPENAI_API_KEY="your-api-key-here"
 
     # Run the test
     pytest test/local/test_together_ai_smoke.py -v
@@ -65,9 +65,9 @@ def test_together_ai_api_smoke():
     4. estimate_uncertainty returns expected structure
     """
     # Skip test if no API key is provided
-    api_key = os.environ.get("TOGETHER_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        pytest.skip("TOGETHER_API_KEY environment variable not set")
+        pytest.skip("OPENAI_API_KEY environment variable not set")
 
     # Test configuration
     test_input = "What is the capital of France?"
@@ -140,9 +140,9 @@ def test_together_ai_api_smoke_with_logprobs():
     """
     Enhanced smoke test that specifically tests logprobs functionality with 5 alternatives.
     """
-    api_key = os.environ.get("TOGETHER_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        pytest.skip("TOGETHER_API_KEY environment variable not set")
+        pytest.skip("OPENAI_API_KEY environment variable not set")
 
     test_input = "The sky is"
     model_name = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
@@ -228,9 +228,9 @@ def test_together_ai_api_error_handling():
     """
     Test error handling for invalid configurations.
     """
-    api_key = os.environ.get("TOGETHER_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        pytest.skip("TOGETHER_API_KEY environment variable not set")
+        pytest.skip("OPENAI_API_KEY environment variable not set")
 
     # Test with invalid model name
     with pytest.raises(Exception):

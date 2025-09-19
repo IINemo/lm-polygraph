@@ -28,7 +28,6 @@ class OpenAIChatCompletionMixin:
         args: dict,
     ) -> List[Any]:
         openai_api = self._create_client(model)
-        model.openai_api = openai_api
 
         model.last_response = None
         model.logprobs = []
