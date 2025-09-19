@@ -67,9 +67,9 @@ def estimate_uncertainty(
     ```python
     >>> from lm_polygraph import BlackboxModel
     >>> from lm_polygraph.estimators import EigValLaplacian
-    >>> model = BlackboxModel.from_openai(
-    ...     'YOUR_OPENAI_TOKEN',
-    ...     'gpt-3.5-turbo'
+    >>> model = BlackboxModel(
+    ...     model_path='gpt-3.5-turbo',
+    ...     api_provider_name='openai'
     ... )
     >>> estimator = EigValLaplacian()
     >>> estimate_uncertainty(model, estimator, input_text='When did Albert Einstein die?')

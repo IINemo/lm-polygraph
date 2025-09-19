@@ -314,28 +314,12 @@ def get_blackbox_model(args):
     provider = getattr(args.model, "provider", "")
     if provider is None or provider.strip() == "":
         raise ValueError(
-            "Blackbox model provider cannot be empty or None. Please specify a valid provider. Supported options are 'openai', 'huggingface', 'together_ai'."
+            "Blackbox model provider cannot be empty or None. Please specify a valid provider (e.g. 'openai', 'huggingface', 'together_ai')."
         )
-
-    if provider == "openai":
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-        if openai_api_key is None:
-            raise ValueError("OpenAI API key is not set in the environment variables.")
-        return BlackboxModel.from_openai(
-            openai_api_key=openai_api_key,
-            model_path=args.model.path,
-        )
-    elif provider == "huggingface":
-        hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
-        if hf_api_key is None:
-            raise ValueError(
-                "HuggingFace API key is not set in the environment variables."
-            )
-        return BlackboxModel.from_huggingface(
-            hf_api_token=hf_api_key, hf_model_id=args.model.path
-        )
-    else:
+    elif provider not in ["openai", "huggingface", "together_ai"]:
         raise ValueError(f"Unsupported black-box model provider: {provider}")
+
+    return BlackboxModel(model_path=args.model.path, api_provider_name=provider)
 
 
 def get_whitebox_model(args, cache_kwargs={}):

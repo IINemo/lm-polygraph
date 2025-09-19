@@ -76,7 +76,6 @@ def test_together_ai_api_smoke():
     # Initialize model with together.ai configuration
     model = BlackboxModel(
         model_path=model_name,
-        openai_api_key=api_key,
         api_provider_name="together_ai",
     )
 
@@ -151,7 +150,6 @@ def test_together_ai_api_smoke_with_logprobs():
     # Initialize model with logprobs enabled
     model = BlackboxModel(
         model_path=model_name,
-        openai_api_key=api_key,
         api_provider_name="together_ai",
     )
 
@@ -238,7 +236,6 @@ def test_together_ai_api_error_handling():
     with pytest.raises(Exception):
         model = BlackboxModel(
             model_path="nonexistent-model-12345",
-            openai_api_key=api_key,
             api_provider_name="together_ai",
         )
 

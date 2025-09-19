@@ -72,7 +72,6 @@ def test_openai_api_smoke(openai_api_key):
 
     model = BlackboxModel(
         model_path=model_name,
-        openai_api_key=openai_api_key,
         api_provider_name="openai",
     )
 
@@ -124,7 +123,6 @@ def test_openai_api_smoke_with_logprobs(openai_api_key):
 
     model = BlackboxModel(
         model_path=model_name,
-        openai_api_key=openai_api_key,
         api_provider_name="openai",
     )
 

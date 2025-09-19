@@ -24,51 +24,38 @@ class BlackboxModel(Model):
 
     ```python
     >>> from lm_polygraph import BlackboxModel
-    >>> model = BlackboxModel.from_openai(
-    ...     'YOUR_OPENAI_TOKEN',
-    ...     'gpt-3.5-turbo'
+    >>> model = BlackboxModel(
+    ...     model_path='gpt-3.5-turbo',
+    ...     api_provider_name='openai'
     ... )
     ```
 
     ```python
     >>> from lm_polygraph import BlackboxModel
-    >>> model = BlackboxModel.from_huggingface(
-    ...     hf_api_token='YOUR_API_TOKEN',
-    ...     hf_model_id='google/t5-large-ssm-nqo'
+    >>> model = BlackboxModel(
+    ...     model_path='google/t5-large-ssm-nqo',
+    ...     api_provider_name='huggingface'
     ... )
     ```
     """
 
     def __init__(
         self,
-        openai_api_key: str = None,
         model_path: str = None,
-        hf_api_token: str = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
         api_provider_name: str = "openai",
     ):
         """
         Parameters:
-            openai_api_key (Optional[str]): OpenAI API key if the blackbox model comes from OpenAI. Default: None.
-            model_path (Optional[str]): Unique model path. Openai model name, if `openai_api_key` is specified,
-                huggingface path, if `hf_api_token` is specified. Default: None.
-            hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
+            model_path (Optional[str]): Unique model path or identifier understood by the provider.
             generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
         """
         super().__init__(model_path, "Blackbox")
         self.generation_parameters = generation_parameters
-        self.openai_api_key = openai_api_key
         self.api_provider_name = api_provider_name
 
         # Initialize the adapter for this provider
         self.adapter = get_adapter(self.api_provider_name)
-
-        if openai_api_key is not None:
-            # Support custom base_url from environment
-            base_url = os.environ.get("OPENAI_BASE_URL", None)
-            self.openai_api = openai.OpenAI(api_key=openai_api_key, base_url=base_url)
-
-        self.hf_api_token = hf_api_token
 
     @property
     def supports_logprobs(self) -> bool:
@@ -96,51 +83,6 @@ class BlackboxModel(Model):
         response = client.chat_completion(payload)
         raw_json = json.dumps(response, indent=2)
         return raw_json
-
-    @staticmethod
-    def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
-        """
-        Initializes a blackbox model from huggingface.
-
-        Parameters:
-            hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
-            hf_model_id (Optional[str]): model path in huggingface.
-        """
-        generation_parameters = kwargs.pop(
-            "generation_parameters", GenerationParameters()
-        )
-        return BlackboxModel(
-            hf_api_token=hf_api_token,
-            model_path=hf_model_id,
-            generation_parameters=generation_parameters,
-            api_provider_name="huggingface",
-        )
-
-    @staticmethod
-    def from_openai(
-        openai_api_key: str,
-        model_path: str,
-        api_provider_name: str = "openai",
-        **kwargs,
-    ):
-        """
-        Initializes a blackbox model from OpenAI API.
-
-        Parameters:
-            openai_api_key (Optional[str]): OpenAI API key. Default: None.
-            model_path (Optional[str]): model name in OpenAI.
-            api_provider_name (str): API provider adapter to use. Default: "openai".
-        """
-        generation_parameters = kwargs.pop(
-            "generation_parameters", GenerationParameters()
-        )
-
-        return BlackboxModel(
-            openai_api_key=openai_api_key,
-            model_path=model_path,
-            generation_parameters=generation_parameters,
-            api_provider_name=api_provider_name,
-        )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
@@ -174,7 +116,15 @@ class BlackboxModel(Model):
 
         texts = []
 
-        if self.openai_api_key is not None:
+        if self.api_provider_name == "openai":
+            base_url = os.environ.get("OPENAI_BASE_URL")
+            if base_url is None:
+                openai_api = openai.OpenAI()
+            else:
+                openai_api = openai.OpenAI(
+                    base_url=base_url
+                )
+
             # Save log probabilities if requested
             self.last_response = None
             self.logprobs = []
@@ -206,7 +156,7 @@ class BlackboxModel(Model):
                 retries = 0
                 while True:
                     try:
-                        response = self.openai_api.chat.completions.create(
+                        response = openai_api.chat.completions.create(
                             model=self.model_path,
                             messages=messages,
                             **args,
@@ -216,13 +166,11 @@ class BlackboxModel(Model):
                     except Exception as e:
                         if retries > 4:
                             raise Exception from e
-                        else:
-                            retries += 1
-                            continue
+                        retries += 1
+                        continue
 
                 # Parse response using the adapter
                 if args.get("n", 1) == 1:
-                    # Convert response to dict for adapter processing
                     response_dict = (
                         response.model_dump()
                         if hasattr(response, "model_dump")
@@ -231,20 +179,19 @@ class BlackboxModel(Model):
                     parsed_response = self.adapter.parse_response(response_dict)
 
                     texts.append(parsed_response.text)
-                    # Store logprobs if available
                     if return_logprobs and parsed_response.logprobs:
                         self.logprobs.append(parsed_response.logprobs)
-                        # Store tokens if available
                         if parsed_response.tokens:
                             self.tokens.append(parsed_response.tokens)
                 else:
-                    # For multiple returns, use original parsing for now
                     texts.append([resp.message.content for resp in response.choices])
 
-                # Store the last response for later use
                 self.last_response = response
 
-        elif (self.hf_api_token is not None) & (self.model_path is not None):
+        elif self.api_provider_name == "huggingface":
+            if self.model_path is None:
+                raise ValueError("model_path must be specified for Huggingface API inference.")
+
             for prompt in input_texts:
                 start = time.time()
                 while True:
@@ -275,8 +222,9 @@ class BlackboxModel(Model):
 
                 texts.append(output[0]["generated_text"])
         else:
-            print(
-                "Please provide HF API token and model id for using models from HF or openai API key for using OpenAI models"
+            raise ValueError(
+                f"Unsupported configuration for provider '{self.api_provider_name}'. "
+                "Ensure the necessary credentials are available."
             )
 
         return texts

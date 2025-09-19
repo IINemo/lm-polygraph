@@ -77,9 +77,9 @@ LM-Polygraph can work with any OpenAI-compatible API services:
 from lm_polygraph import BlackboxModel
 from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
 
-model = BlackboxModel.from_openai(
-    openai_api_key='YOUR_API_KEY',
-    model_path='gpt-4o'
+model = BlackboxModel(
+    model_path='gpt-4o',
+    api_provider_name='openai'
 )
 
 ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.
