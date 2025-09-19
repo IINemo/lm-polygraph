@@ -1,11 +1,10 @@
-"""
-OpenAI API Provider Adapter
-
-This adapter handles the OpenAI API format, maintaining backward compatibility
-with the existing BlackboxModel implementation.
-"""
+"""OpenAI-compatible API Provider Adapter implementations."""
 
 import logging
+import os
+from typing import Any, List
+
+import openai
 
 from .api_provider_adapter import (
     APIProviderAdapter,
@@ -16,8 +15,85 @@ from .api_provider_adapter import (
 log = logging.getLogger("lm_polygraph")
 
 
+class OpenAIChatCompletionMixin:
+    """Reusable chat completion inference flow for OpenAI-compatible providers."""
+
+    def _create_client(self, model):
+        raise NotImplementedError
+
+    def generate_texts(
+        self,
+        model,
+        input_texts: List[Any],
+        args: dict,
+    ) -> List[Any]:
+        openai_api = self._create_client(model)
+        model.openai_api = openai_api
+
+        model.last_response = None
+        model.logprobs = []
+        model.tokens = []
+
+        return_logprobs = args.pop("output_scores", False)
+        logprobs_args = {}
+
+        if return_logprobs and model.supports_logprobs:
+            logprobs_args["logprobs"] = True
+            logprobs_args["top_logprobs"] = args.pop("top_logprobs", 5)
+
+        texts = []
+
+        for prompt in input_texts:
+            if isinstance(prompt, str):
+                messages = [{"role": "user", "content": prompt}]
+            elif isinstance(prompt, list) and all(
+                isinstance(item, dict) for item in prompt
+            ):
+                messages = prompt
+            else:
+                raise ValueError(
+                    "Invalid prompt format. Must be either a string or a list of dictionaries."
+                )
+
+            retries = 0
+            while True:
+                try:
+                    response = openai_api.chat.completions.create(
+                        model=model.model_path,
+                        messages=messages,
+                        **args,
+                        **logprobs_args,
+                    )
+                    break
+                except Exception as e:
+                    if retries > 4:
+                        raise Exception from e
+                    retries += 1
+                    continue
+
+            if args.get("n", 1) == 1:
+                response_dict = (
+                    response.model_dump()
+                    if hasattr(response, "model_dump")
+                    else response
+                )
+                parsed_response = self.parse_response(response_dict)
+
+                texts.append(parsed_response.text)
+                if return_logprobs and parsed_response.logprobs:
+                    model.logprobs.append(parsed_response.logprobs)
+                    if parsed_response.tokens:
+                        model.tokens.append(parsed_response.tokens)
+            else:
+                texts.append([resp.message.content for resp in response.choices])
+
+            model.last_response = response
+
+        return texts
+
+
 @register_adapter("openai")
-class OpenAIAdapter(APIProviderAdapter):
+class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
     """
     Adapter for OpenAI API.
 
@@ -177,3 +253,6 @@ class OpenAIAdapter(APIProviderAdapter):
                         )
 
         return validated_params
+
+    def _create_client(self, model):
+        return openai.OpenAI()

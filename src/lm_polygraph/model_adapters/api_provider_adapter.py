@@ -72,6 +72,25 @@ class APIProviderAdapter(ABC):
         """
         pass
 
+    @abstractmethod
+    def generate_texts(
+        self,
+        model,
+        input_texts: List[Any],
+        args: Dict[str, Any],
+    ) -> List[Any]:
+        """Execute provider-specific inference.
+
+        Args:
+            model: The calling BlackboxModel instance for state updates.
+            input_texts: List of prompts/messages to generate for.
+            args: Provider-specific generation parameters.
+
+        Returns:
+            List of generated outputs matching the provider's format.
+        """
+        pass
+
     def supports_logprobs(self, model_path: str = None) -> bool:
         """
         Check if the provider/model supports logprobs.

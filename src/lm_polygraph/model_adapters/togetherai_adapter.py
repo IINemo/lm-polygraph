@@ -1,23 +1,22 @@
-"""
-Together.ai API Provider Adapter for Testing
-
-This adapter handles the together.ai API format, which is highly compatible
-with OpenAI's API but uses different base URL and authentication.
-"""
+"""Together.ai API Provider Adapter."""
 
 import logging
+import os
+
+import openai
 
 from .api_provider_adapter import (
     APIProviderAdapter,
     StandardizedResponse,
     register_adapter,
 )
+from .openai_adapter import OpenAIChatCompletionMixin
 
 log = logging.getLogger("lm_polygraph")
 
 
 @register_adapter("together_ai")
-class TogetherAIAdapter(APIProviderAdapter):
+class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
     """
     Adapter for Together.ai API.
 
@@ -204,3 +203,6 @@ class TogetherAIAdapter(APIProviderAdapter):
                         )
 
         return validated_params
+
+    def _create_client(self, model):
+        return openai.OpenAI(base_url="https://api.together.xyz/v1")
