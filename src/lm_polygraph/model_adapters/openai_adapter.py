@@ -1,7 +1,6 @@
 """OpenAI-compatible API Provider Adapter implementations."""
 
 import logging
-import os
 from typing import Any, List
 
 import openai

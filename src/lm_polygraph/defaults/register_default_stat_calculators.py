@@ -85,9 +85,7 @@ def register_default_stat_calculators(
     _register(SemanticClassesCalculator)
 
     if model_type == "Blackbox":
-        blackbox_supports_logprobs = bool(
-            getattr(model, "supports_logprobs", False)
-        )
+        blackbox_supports_logprobs = bool(getattr(model, "supports_logprobs", False))
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
         if blackbox_supports_logprobs:

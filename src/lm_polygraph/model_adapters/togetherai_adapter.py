@@ -1,7 +1,6 @@
 """Together.ai API Provider Adapter."""
 
 import logging
-import os
 
 import openai
 

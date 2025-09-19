@@ -30,9 +30,7 @@ class HuggingFaceAdapter(APIProviderAdapter):
         try:
             text = response["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
-            raise ValueError(
-                f"Invalid Hugging Face response structure: {exc}"
-            ) from exc
+            raise ValueError(f"Invalid Hugging Face response structure: {exc}") from exc
 
         return StandardizedResponse(
             text=text,
