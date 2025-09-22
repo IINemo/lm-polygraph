@@ -16,9 +16,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
-from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
-from lm_polygraph.model_adapters import WhiteboxModelvLLM
+from lm_polygraph.model_adapters import *
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *

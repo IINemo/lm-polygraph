@@ -20,6 +20,7 @@ class OpenAIChatCompletionMixin:
     def _create_client(self, model):
         raise NotImplementedError
 
+
     def generate_texts(
         self,
         model,
@@ -28,10 +29,6 @@ class OpenAIChatCompletionMixin:
     ) -> List[Any]:
         openai_api = self._create_client(model)
 
-        model.last_response = None
-        model.logprobs = []
-        model.tokens = []
-
         return_logprobs = args.pop("output_scores", False)
         logprobs_args = {}
 
@@ -39,8 +36,7 @@ class OpenAIChatCompletionMixin:
             logprobs_args["logprobs"] = True
             logprobs_args["top_logprobs"] = args.pop("top_logprobs", 5)
 
-        texts = []
-
+        parsed_responses = []
         for prompt in input_texts:
             if isinstance(prompt, str):
                 messages = [{"role": "user", "content": prompt}]
@@ -69,25 +65,9 @@ class OpenAIChatCompletionMixin:
                     retries += 1
                     continue
 
-            if args.get("n", 1) == 1:
-                response_dict = (
-                    response.model_dump()
-                    if hasattr(response, "model_dump")
-                    else response
-                )
-                parsed_response = self.parse_response(response_dict)
+            parsed_responses.append([self.parse_response(resp) for resp in response.choices])
 
-                texts.append(parsed_response.text)
-                if return_logprobs and parsed_response.logprobs:
-                    model.logprobs.append(parsed_response.logprobs)
-                    if parsed_response.tokens:
-                        model.tokens.append(parsed_response.tokens)
-            else:
-                texts.append([resp.message.content for resp in response.choices])
-
-            model.last_response = response
-
-        return texts
+        return parsed_responses
 
 
 @register_adapter("openai")
@@ -124,8 +104,8 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
         # Map HF argument names to OpenAI API argument names
         key_mapping = {
             "num_return_sequences": "n",
-            "max_length": "max_tokens",
-            "max_new_tokens": "max_tokens",
+            "max_length": "max_completion_tokens",
+            "max_new_tokens": "max_completion_tokens",
         }
         for key, replace_key in key_mapping.items():
             if key in args_copy:
@@ -146,20 +126,17 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
         """
         try:
             # Extract main text content
-            text = response["choices"][0]["message"]["content"]
+            text = response.message.content
 
             # Extract logprobs if available
             logprobs = None
             tokens = None
-            if (
-                "logprobs" in response["choices"][0]
-                and response["choices"][0]["logprobs"]
-            ):
-                logprobs_data = response["choices"][0]["logprobs"]
-                if "content" in logprobs_data and logprobs_data["content"]:
+            if hasattr(response, "logprobs") and response.logprobs:
+                logprobs_data = response.logprobs
+                if hasattr(logprobs_data, "content") and logprobs_data.content:
                     # Extract tokens from logprobs content
                     tokens = [
-                        item.get("token", "") for item in logprobs_data["content"]
+                        getattr(item, "token", "") for item in logprobs_data.content
                     ]
 
                     # Create mock objects for stat calculator compatibility
@@ -171,14 +148,15 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
 
                     class MockLogprobContent:
                         def __init__(self, item_dict):
-                            self.token = item_dict["token"]
-                            self.logprob = item_dict["logprob"]
+                            self.token = item_dict.token
+                            self.logprob = item_dict.logprob
                             self.top_logprobs = []
-                            if "top_logprobs" in item_dict:
-                                for top_item in item_dict["top_logprobs"]:
+                            if hasattr(item_dict, "top_logprobs") and item_dict.top_logprobs:
+                                for top_item in item_dict.top_logprobs:
                                     self.top_logprobs.append(
                                         MockTopLogprob(
-                                            top_item["token"], top_item["logprob"]
+                                            top_item.token,
+                                            top_item.logprob
                                         )
                                     )
 
@@ -188,10 +166,10 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                                 MockLogprobContent(item) for item in content_list
                             ]
 
-                    logprobs = MockLogprobs(logprobs_data["content"])
+                    logprobs = MockLogprobs(logprobs_data.content)
 
             # Extract finish reason
-            finish_reason = response["choices"][0].get("finish_reason")
+            finish_reason = response.finish_reason
 
             return StandardizedResponse(
                 text=text,
