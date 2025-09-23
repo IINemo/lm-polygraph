@@ -13,7 +13,6 @@ from .api_provider_adapter import (
 
 log = logging.getLogger("lm_polygraph")
 
-
 class OpenAIChatCompletionMixin:
     """Reusable chat completion inference flow for OpenAI-compatible providers."""
 
@@ -38,16 +37,7 @@ class OpenAIChatCompletionMixin:
 
         parsed_responses = []
         for prompt in input_texts:
-            if isinstance(prompt, str):
-                messages = [{"role": "user", "content": prompt}]
-            elif isinstance(prompt, list) and all(
-                isinstance(item, dict) for item in prompt
-            ):
-                messages = prompt
-            else:
-                raise ValueError(
-                    "Invalid prompt format. Must be either a string or a list of dictionaries."
-                )
+            messages = model.prepare_input(prompt)
 
             retries = 0
             while True:
@@ -82,9 +72,6 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
     def adapt_request(self, params: dict) -> dict:
         """
         Adapts parameters for OpenAI API format.
-
-        This method contains the exact logic that was previously in
-        BlackboxModel._validate_args() to ensure backward compatibility.
         """
         args_copy = params.copy()
 
@@ -131,51 +118,33 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
             # Extract logprobs if available
             logprobs = None
             tokens = None
+            top_logprobs = None
             if hasattr(response, "logprobs") and response.logprobs:
                 logprobs_data = response.logprobs
                 if hasattr(logprobs_data, "content") and logprobs_data.content:
                     # Extract tokens from logprobs content
-                    tokens = [
-                        getattr(item, "token", "") for item in logprobs_data.content
-                    ]
+                    for item in logprobs_data.content:
+                        if hasattr(item, "token"):
+                            tokens = tokens or []
+                            tokens.append(item.token)
 
-                    # Create mock objects for stat calculator compatibility
-                    # The stat calculator expects each content item to have .token, .logprob, .top_logprobs attributes
-                    class MockTopLogprob:
-                        def __init__(self, token, logprob):
-                            self.token = token
-                            self.logprob = logprob
+                        if hasattr(item, "logprob"):
+                            logprobs = logprobs or []
+                            logprobs.append(item.logprob)
 
-                    class MockLogprobContent:
-                        def __init__(self, item_dict):
-                            self.token = item_dict.token
-                            self.logprob = item_dict.logprob
-                            self.top_logprobs = []
-                            if hasattr(item_dict, "top_logprobs") and item_dict.top_logprobs:
-                                for top_item in item_dict.top_logprobs:
-                                    self.top_logprobs.append(
-                                        MockTopLogprob(
-                                            top_item.token,
-                                            top_item.logprob
-                                        )
-                                    )
-
-                    class MockLogprobs:
-                        def __init__(self, content_list):
-                            self.content = [
-                                MockLogprobContent(item) for item in content_list
-                            ]
-
-                    logprobs = MockLogprobs(logprobs_data.content)
+                        if hasattr(item, "top_logprobs"):
+                            top_logprobs = top_logprobs or []
+                            top_logprobs.append([item.logprob for item in item.top_logprobs])
 
             # Extract finish reason
             finish_reason = response.finish_reason
 
             return StandardizedResponse(
                 text=text,
-                logprobs=logprobs,
-                finish_reason=finish_reason,
                 tokens=tokens,
+                logprobs=logprobs,
+                top_logprobs=top_logprobs,
+                finish_reason=finish_reason,
                 raw_response=response,
             )
 

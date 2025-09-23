@@ -69,6 +69,20 @@ class BlackboxModel(Model):
         # Then adapt the request format for the specific provider
         return self.adapter.adapt_request(validated_args)
 
+    def prepare_input(self, prompt: List[str]) -> List[dict]:
+        if isinstance(prompt, str):
+            messages = [{"role": "user", "content": prompt}]
+        elif isinstance(prompt, list) and all(
+            isinstance(item, dict) for item in prompt
+        ):
+            messages = prompt
+        else:
+            raise ValueError(
+                "Invalid prompt format. Must be either a string or a list of dictionaries."
+            )
+
+        return messages
+
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
         Generates a list of model answers using input texts batch.

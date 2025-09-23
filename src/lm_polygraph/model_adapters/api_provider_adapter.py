@@ -31,9 +31,10 @@ class StandardizedResponse:
     """A unified data structure for API responses."""
 
     text: str
-    logprobs: Optional[List[Dict[str, Any]]] = None
-    finish_reason: Optional[str] = None
     tokens: Optional[List[str]] = None
+    logprobs: Optional[List[float]] = None
+    top_logprobs: Optional[List[List[float]]] = None
+    finish_reason: Optional[str] = None
     raw_response: Optional[Dict[str, Any]] = None
 
 

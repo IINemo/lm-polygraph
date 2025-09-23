@@ -21,27 +21,75 @@ class HuggingFaceAdapter(APIProviderAdapter):
     """Minimal adapter for Hugging Face text generation endpoints."""
 
     def adapt_request(self, params: dict) -> dict:
-        # Hugging Face Inference API accepts OpenAI-style payloads for chat completion,
-        # so pass parameters through unchanged.
-        return params.copy()
+        """
+        Adapts parameters for HF API format.
+        """
+        args_copy = params.copy()
+
+        # BlackboxModel specific validation - remove unsupported parameters
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+            "num_beams",
+            "allow_newlines",
+        ]:
+            args_copy.pop(delete_key, None)
+
+        key_mapping = {
+            "num_return_sequences": "n",
+            "max_length": "max_tokens",
+            "max_new_tokens": "max_tokens",
+            "stop_strings": "stop",
+        }
+        for key, replace_key in key_mapping.items():
+            if key in args_copy:
+                args_copy[replace_key] = args_copy[key]
+                args_copy.pop(key)
+
+        return args_copy
 
     def parse_response(self, response: dict) -> StandardizedResponse:
         """Parse the response into the standardized structure."""
-        try:
-            text = response["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise ValueError(f"Invalid Hugging Face response structure: {exc}") from exc
+        text = response.message.content
+
+        # Extract logprobs if available
+        logprobs = None
+        tokens = None
+        top_logprobs = None
+        if hasattr(response, "logprobs") and response.logprobs:
+            logprobs_data = response.logprobs
+            if hasattr(logprobs_data, "content") and logprobs_data.content:
+                # Extract tokens from logprobs content
+                for item in logprobs_data.content:
+                    if hasattr(item, "token"):
+                        tokens = tokens or []
+                        tokens.append(item.token)
+
+                    if hasattr(item, "logprob"):
+                        logprobs = logprobs or []
+                        logprobs.append(item.logprob)
+
+                    if hasattr(item, "top_logprobs"):
+                        top_logprobs = top_logprobs or []
+                        top_logprobs.append([item.logprob for item in item.top_logprobs])
+
+            # Extract finish reason
+            finish_reason = response.finish_reason
 
         return StandardizedResponse(
             text=text,
-            logprobs=None,
-            finish_reason=response["choices"][0].get("finish_reason"),
-            tokens=None,
+            tokens=tokens,
+            logprobs=logprobs,
+            top_logprobs=top_logprobs,
+            finish_reason=response.finish_reason,
             raw_response=response,
         )
 
     def supports_logprobs(self, model_path: str = None) -> bool:
-        return False
+        return True
 
     def generate_texts(
         self,
@@ -56,39 +104,32 @@ class HuggingFaceAdapter(APIProviderAdapter):
 
         client = InferenceClient(model=model.model_path)
 
-        texts = []
+        return_logprobs = args.pop("output_scores", False)
+        logprobs_args = {}
 
+        if return_logprobs and model.supports_logprobs:
+            logprobs_args["logprobs"] = True
+            logprobs_args["top_logprobs"] = args.pop("top_logprobs", 5)
+
+        parsed_responses = []
         for prompt in input_texts:
-            start = time.time()
+            messages = model.prepare_input(prompt)
+
+            retries = 0
             while True:
-                current_time = time.time()
-                messages = [
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt},
-                ]
-
-                # tf is going on here, this definitely doesn't work
-                response = client.chat_completion(messages)
-                output = json.dumps(response, indent=2)
-
-                if isinstance(output, dict):
-                    if (list(output.keys())[0] == "error") & (
-                        "estimated_time" in output.keys()
-                    ):
-                        estimated_time = float(output["estimated_time"])
-                        elapsed_time = current_time - start
-                        print(
-                            f"{output['error']}. Estimated time: {round(estimated_time - elapsed_time, 2)} sec."
-                        )
-                        time.sleep(5)
-                    elif (list(output.keys())[0] == "error") & (
-                        "estimated_time" not in output.keys()
-                    ):
-                        log.error(f"{output['error']}")
-                        break
-                elif isinstance(output, list):
+                try:
+                    response = client.chat_completion(
+                        messages=messages,
+                        **args,
+                        **logprobs_args,
+                    )
                     break
+                except Exception as e:
+                    if retries > 4:
+                        raise Exception from e
+                    retries += 1
+                    continue
 
-            texts.append(output[0]["generated_text"])
+            parsed_responses.append([self.parse_response(resp) for resp in response.choices])
 
-        return texts
+        return parsed_responses

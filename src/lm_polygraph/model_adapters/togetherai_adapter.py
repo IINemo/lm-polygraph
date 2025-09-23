@@ -81,72 +81,31 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
         """
         try:
             # Extract main text content (same as OpenAI format)
-            text = response["choices"][0]["message"]["content"]
+            text = response.message.content
 
             # Extract logprobs if available - transform to OpenAI format for stat calculator compatibility
             logprobs = None
             tokens = None
-            if (
-                "logprobs" in response["choices"][0]
-                and response["choices"][0]["logprobs"]
-            ):
-                logprobs_data = response["choices"][0]["logprobs"]
+            top_logprobs = None
+            if hasattr(response, "logprobs") and response.logprobs:
+                logprobs_data = response.logprobs
 
-                if "tokens" in logprobs_data and "token_logprobs" in logprobs_data:
-                    raw_tokens = logprobs_data["tokens"]
-                    raw_logprobs = logprobs_data["token_logprobs"]
-                    raw_top_logprobs = logprobs_data.get("top_logprobs", [])
-
-                    # Filter out special end-of-text tokens
-                    if raw_tokens and raw_tokens[-1] == "<|eot_id|>":
-                        raw_tokens = raw_tokens[:-1]
-                        raw_logprobs = raw_logprobs[: len(raw_tokens)]
-                        if raw_top_logprobs:
-                            raw_top_logprobs = raw_top_logprobs[: len(raw_tokens)]
-
-                    tokens = raw_tokens
-
-                    # Create a mock OpenAI-style logprobs object with .content attribute
-                    # that the stat calculator can use
-                    class MockLogprobContent:
-                        def __init__(self, token, logprob, top_logprobs_dict):
-                            self.token = token
-                            self.logprob = logprob
-                            self.top_logprobs = []
-                            for tok, prob in top_logprobs_dict.items():
-                                mock_top = type(
-                                    "MockTopLogprob",
-                                    (),
-                                    {"token": tok, "logprob": prob},
-                                )()
-                                self.top_logprobs.append(mock_top)
-
-                    content = []
-                    for i, (token, logprob) in enumerate(zip(raw_tokens, raw_logprobs)):
-                        top_logprobs_dict = (
-                            raw_top_logprobs[i]
-                            if i < len(raw_top_logprobs)
-                            else {token: logprob}
-                        )
-                        content.append(
-                            MockLogprobContent(token, logprob, top_logprobs_dict)
-                        )
-
-                    # Create mock logprobs object with .content attribute
-                    class MockLogprobs:
-                        def __init__(self, content):
-                            self.content = content
-
-                    logprobs = MockLogprobs(content)
+                if hasattr(logprobs_data, "tokens"):
+                    tokens = logprobs_data.tokens
+                if hasattr(logprobs_data, "token_logprobs"):
+                    logprobs = logprobs_data.token_logprobs
+                if hasattr(logprobs_data, "top_logprobs"):
+                    top_logprobs = [list(tl_dict.values()) for tl_dict in logprobs_data.top_logprobs]
 
             # Extract finish reason
-            finish_reason = response["choices"][0].get("finish_reason")
+            finish_reason = response.finish_reason
 
             return StandardizedResponse(
                 text=text,
-                logprobs=logprobs,
+                tokens=raw_tokens,
+                logprobs=raw_logprobs,
+                top_logprobs=raw_top_logprobs,
                 finish_reason=finish_reason,
-                tokens=tokens,
                 raw_response=response,
             )
 
