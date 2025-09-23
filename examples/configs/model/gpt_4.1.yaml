@@ -1,0 +1,3 @@
+path: gpt-4.1
+type: Blackbox
+provider: openai
