@@ -87,6 +87,7 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
             logprobs = None
             tokens = None
             top_logprobs = None
+            alternative_tokens = None
             if hasattr(response, "logprobs") and response.logprobs:
                 logprobs_data = response.logprobs
 
@@ -96,6 +97,7 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                     logprobs = logprobs_data.token_logprobs
                 if hasattr(logprobs_data, "top_logprobs"):
                     top_logprobs = [list(tl_dict.values()) for tl_dict in logprobs_data.top_logprobs]
+                    alternative_tokens = [list(tl_dict.keys()) for tl_dict in logprobs_data.top_logprobs] 
 
             # Extract finish reason
             finish_reason = response.finish_reason
@@ -105,6 +107,7 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                 tokens=raw_tokens,
                 logprobs=raw_logprobs,
                 top_logprobs=raw_top_logprobs,
+                alternative_tokens=raw_alternative_tokens,
                 finish_reason=finish_reason,
                 raw_response=response,
             )

@@ -34,6 +34,7 @@ class StandardizedResponse:
     tokens: Optional[List[str]] = None
     logprobs: Optional[List[float]] = None
     top_logprobs: Optional[List[List[float]]] = None
+    alternative_tokens: Optional[List[List[str]]] = None
     finish_reason: Optional[str] = None
     raw_response: Optional[Dict[str, Any]] = None
 

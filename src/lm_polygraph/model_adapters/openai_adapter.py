@@ -119,6 +119,7 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
             logprobs = None
             tokens = None
             top_logprobs = None
+            alternative_tokens = None
             if hasattr(response, "logprobs") and response.logprobs:
                 logprobs_data = response.logprobs
                 if hasattr(logprobs_data, "content") and logprobs_data.content:
@@ -136,6 +137,11 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                             top_logprobs = top_logprobs or []
                             top_logprobs.append([item.logprob for item in item.top_logprobs])
 
+                            alternative_tokens = alternative_tokens or []
+                            alternative_tokens.append(
+                                [pair.token for pair in item.top_logprobs]
+                            )
+
             # Extract finish reason
             finish_reason = response.finish_reason
 
@@ -144,6 +150,7 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                 tokens=tokens,
                 logprobs=logprobs,
                 top_logprobs=top_logprobs,
+                alternative_tokens=alternative_tokens,
                 finish_reason=finish_reason,
                 raw_response=response,
             )
