@@ -13,12 +13,12 @@ from .api_provider_adapter import (
 
 log = logging.getLogger("lm_polygraph")
 
+
 class OpenAIChatCompletionMixin:
     """Reusable chat completion inference flow for OpenAI-compatible providers."""
 
     def _create_client(self, model):
         raise NotImplementedError
-
 
     def generate_texts(
         self,
@@ -55,7 +55,9 @@ class OpenAIChatCompletionMixin:
                     retries += 1
                     continue
 
-            parsed_responses.append([self.parse_response(resp) for resp in response.choices])
+            parsed_responses.append(
+                [self.parse_response(resp) for resp in response.choices]
+            )
 
         return parsed_responses
 
@@ -135,15 +137,14 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
 
                         if hasattr(item, "top_logprobs"):
                             top_logprobs = top_logprobs or []
-                            top_logprobs.append([item.logprob for item in item.top_logprobs])
+                            top_logprobs.append(
+                                [item.logprob for item in item.top_logprobs]
+                            )
 
                             alternative_tokens = alternative_tokens or []
                             alternative_tokens.append(
                                 [pair.token for pair in item.top_logprobs]
                             )
-
-            # Extract finish reason
-            finish_reason = response.finish_reason
 
             return StandardizedResponse(
                 text=text,
@@ -151,7 +152,7 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                 logprobs=logprobs,
                 top_logprobs=top_logprobs,
                 alternative_tokens=alternative_tokens,
-                finish_reason=finish_reason,
+                finish_reason=response.finish_reason,
                 raw_response=response,
             )
 

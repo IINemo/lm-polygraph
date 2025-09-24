@@ -1,9 +1,10 @@
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 
 import numpy as np
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.model_adapters import WhiteboxModel, BlackboxModel, WhiteboxModelvLLM
+from lm_polygraph.model_adapters import BlackboxModel
+
 
 class BlackboxSamplingGenerationCalculator(StatCalculator):
     """
@@ -67,8 +68,12 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
             for out in output:
                 sample_texts.append([sample_out.text for sample_out in out])
                 sample_tokens.append([sample_out.tokens for sample_out in out])
-                sample_log_probs.append([np.sum(sample_out.logprobs) for sample_out in out])
-                sample_log_likelihoods.append([sample_out.logprobs for sample_out in out])
+                sample_log_probs.append(
+                    [np.sum(sample_out.logprobs) for sample_out in out]
+                )
+                sample_log_likelihoods.append(
+                    [sample_out.logprobs for sample_out in out]
+                )
 
             result = {
                 "sample_texts": sample_texts,

@@ -66,7 +66,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 n=1,
                 output_scores=True,
                 top_logprobs=self.top_logprobs,
-                temperature=0.0, # Greedy generation
+                temperature=0.0,  # Greedy generation
             )
 
             # For each input in batch model returns a list with one generation
@@ -105,7 +105,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
                 n=1,
-                temperature=0.0, # Greedy generation
+                temperature=0.0,  # Greedy generation
             )
 
             # For each input in batch model returns a list with one generation

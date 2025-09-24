@@ -1,8 +1,6 @@
 """Hugging Face Inference API adapter."""
 
-import json
 import logging
-import time
 from typing import Any, List
 
 from huggingface_hub import InferenceClient
@@ -75,15 +73,14 @@ class HuggingFaceAdapter(APIProviderAdapter):
 
                     if hasattr(item, "top_logprobs"):
                         top_logprobs = top_logprobs or []
-                        top_logprobs.append([item.logprob for pair in item.top_logprobs])
-                        
+                        top_logprobs.append(
+                            [item.logprob for pair in item.top_logprobs]
+                        )
+
                         alternative_tokens = alternative_tokens or []
                         alternative_tokens.append(
                             [pair.token for pair in item.top_logprobs]
                         )
-
-            # Extract finish reason
-            finish_reason = response.finish_reason
 
         return StandardizedResponse(
             text=text,
@@ -137,6 +134,8 @@ class HuggingFaceAdapter(APIProviderAdapter):
                     retries += 1
                     continue
 
-            parsed_responses.append([self.parse_response(resp) for resp in response.choices])
+            parsed_responses.append(
+                [self.parse_response(resp) for resp in response.choices]
+            )
 
         return parsed_responses

@@ -96,11 +96,12 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                 if hasattr(logprobs_data, "token_logprobs"):
                     logprobs = logprobs_data.token_logprobs
                 if hasattr(logprobs_data, "top_logprobs"):
-                    top_logprobs = [list(tl_dict.values()) for tl_dict in logprobs_data.top_logprobs]
-                    alternative_tokens = [list(tl_dict.keys()) for tl_dict in logprobs_data.top_logprobs] 
-
-            # Extract finish reason
-            finish_reason = response.finish_reason
+                    top_logprobs = [
+                        list(tl_dict.values()) for tl_dict in logprobs_data.top_logprobs
+                    ]
+                    alternative_tokens = [
+                        list(tl_dict.keys()) for tl_dict in logprobs_data.top_logprobs
+                    ]
 
             return StandardizedResponse(
                 text=text,
@@ -108,7 +109,7 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                 logprobs=logprobs,
                 top_logprobs=top_logprobs,
                 alternative_tokens=alternative_tokens,
-                finish_reason=finish_reason,
+                finish_reason=response.finish_reason,
                 raw_response=response,
             )
 
