@@ -227,7 +227,7 @@ def get_generation_metrics(args):
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
             BLEUMetric(),
-            BertScoreMetric("rh"),
+            BertScoreMetric(),
             SbertMetric(),
             AccuracyMetric(
                 target_ignore_regex=getattr(args, "target_ignore_regex", None),

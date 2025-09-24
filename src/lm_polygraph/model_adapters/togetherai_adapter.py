@@ -104,10 +104,10 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
 
             return StandardizedResponse(
                 text=text,
-                tokens=raw_tokens,
-                logprobs=raw_logprobs,
-                top_logprobs=raw_top_logprobs,
-                alternative_tokens=raw_alternative_tokens,
+                tokens=tokens,
+                logprobs=logprobs,
+                top_logprobs=top_logprobs,
+                alternative_tokens=alternative_tokens,
                 finish_reason=finish_reason,
                 raw_response=response,
             )
