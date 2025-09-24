@@ -29,6 +29,35 @@ generation_params:
 
 estimators: 
   - name: MaximumSequenceProbability
+  - name: Perplexity
+  - name: MeanTokenEntropy
+  - name: MonteCarloSequenceEntropy
+  - name: MonteCarloNormalizedSequenceEntropy
+  - name: LexicalSimilarity
+    cfg:
+      metric: "rougeL"
+  - name: NumSemSets
+  - name: EigValLaplacian
+    cfg:
+      similarity_score: "NLI_score"
+      affinity: "entail"
+  - name: DegMat
+    cfg:
+      similarity_score: "NLI_score"
+      affinity: "entail"
+  - name: Eccentricity
+    cfg:
+      similarity_score: "NLI_score"
+      affinity: "entail"
+  - name: SemanticEntropy
+  - name: SAR
+  - name: TokenSAR
+  - name: SentenceSAR
+  - name: CocoaMSP
+  - name: CocoaPPL
+  - name: CocoaMTE
+  - name: SemanticDensity
+
 
 subsample_eval_dataset: -1
 

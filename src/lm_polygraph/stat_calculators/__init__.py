@@ -36,8 +36,8 @@ from .claim_level_prompts import (
 from .entropy import EntropyCalculator
 from .sample import (
     SamplingGenerationCalculator,
-    BlackboxSamplingGenerationCalculator,
 )
+from .sample_blackbox import BlackboxSamplingGenerationCalculator
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,
     GreedyAlternativesFactPrefNLICalculator,

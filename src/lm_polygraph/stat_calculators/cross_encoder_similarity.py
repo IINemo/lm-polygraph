@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 import itertools
 from typing import Dict, List, Tuple
@@ -45,7 +46,13 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
         model: WhiteboxModel,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        device = model.device()
+        if not isinstance(model, WhiteboxModel):
+            if torch.cuda.is_available():
+                device = "cuda"
+            else:
+                device = "cpu"
+        else:
+            device = model.device()
         tokenizer = model.tokenizer
 
         if not self.crossencoder_setup:

@@ -77,7 +77,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
             greedy_texts = [out.text for out in output]
             greedy_tokens = [out.tokens for out in output]
             greedy_log_likelihoods = [out.logprobs for out in output]
-            greedy_log_probs = [out.top_logprobs for out in output]
+            greedy_log_probs = [np.array(out.top_logprobs) for out in output]
             greedy_tokens_alternatives = []
 
             # iterate over batch
