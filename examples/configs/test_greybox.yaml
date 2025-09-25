@@ -50,8 +50,6 @@ estimators:
       similarity_score: "NLI_score"
       affinity: "entail"
   - name: SemanticEntropy
-  - name: SAR
-  - name: TokenSAR
   - name: SentenceSAR
   - name: CocoaMSP
   - name: CocoaPPL

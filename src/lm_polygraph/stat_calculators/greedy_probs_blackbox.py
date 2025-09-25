@@ -60,18 +60,12 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         """
         if model.supports_logprobs:
             # Greybox path: generate with logprobs
-            output = model.generate_texts(
+            output = model.generate(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
-                n=1,
                 output_scores=True,
                 top_logprobs=self.top_logprobs,
-                temperature=0.0,  # Greedy generation
             )
-
-            # For each input in batch model returns a list with one generation
-            # we take the first generation from each list
-            output = [out[0] for out in output]
 
             # Process the results
             greedy_texts = [out.text for out in output]
@@ -104,13 +98,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
             output = model.generate_texts(
                 input_texts=texts,
                 max_new_tokens=max_new_tokens,
-                n=1,
-                temperature=0.0,  # Greedy generation
             )
-
-            # For each input in batch model returns a list with one generation
-            # we take the first generation from each list
-            output = [out[0] for out in output]
 
             # For blackbox models, only return the generated texts
             result = {"greedy_texts": [out.text for out in output]}

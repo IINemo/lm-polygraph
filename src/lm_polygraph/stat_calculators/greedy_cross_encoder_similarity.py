@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 import itertools
 from typing import Dict, List, Tuple
@@ -6,7 +7,8 @@ from tqdm import tqdm
 
 from .stat_calculator import StatCalculator
 from sentence_transformers import CrossEncoder
-from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
+from lm_polygraph.model_adapters import *
+from lm_polygraph.utils.model import Model
 
 
 class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
@@ -46,10 +48,16 @@ class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Model,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        device = model.device()
+        if isinstance(model, BlackboxModel):
+            if torch.cuda.is_available():
+                device = "cuda"
+            else:
+                device = "cpu"
+        else:
+            device = model.device()
 
         if not self.crossencoder_setup:
             self._setup(device=device)

@@ -98,14 +98,7 @@ class BlackboxModel(Model):
         args = self._validate_args(default_params)
 
         # Check if we're trying to access features that require logprobs support
-        requires_logprobs = any(
-            args.get(arg, False)
-            for arg in [
-                "output_scores",
-                "output_attentions",
-                "output_hidden_states",
-            ]
-        )
+        requires_logprobs = getattr(args, "output_scores", False)
 
         # Use adapter to check logprobs support (considering model-specific rules)
         if requires_logprobs and not self.supports_logprobs:
@@ -117,43 +110,31 @@ class BlackboxModel(Model):
 
     def generate(self, **args):
         """
-        For OpenAI models with logprobs support, returns a lightweight wrapper around OpenAI API response.
-        For other blackbox models, raises an exception as this is not implemented.
-
+        Generates a single model answer using greedy decoding.
         Parameters:
-            **args: Arguments to pass to the generate method.
+            args: input arguments for generation.
         Returns:
-            object: A wrapper around the OpenAI API response if logprobs are supported.
-        Raises:
-            Exception: If the model doesn't support logprobs.
-        """
-        if self.supports_logprobs:
-            # Apply default parameters first, then override with provided args
-            default_params = asdict(self.generation_parameters)
-            default_params.update(args)
-            args = self._validate_args(default_params)
+            List[str]: corresponding model generations. Have the same length as `input_texts`.
+        """ 
+        args["temperature"] = 0.0
+        args["n"] = 1
 
-            args["output_scores"] = True
-            sequences = self.generate_texts(**args)
+        output = self.generate_texts(**args)
 
-            # Return a simple object with the necessary attributes for compatibility
-            class OpenAIGenerationOutput:
-                def __init__(self, sequences, scores):
-                    self.sequences = sequences
-                    self.scores = scores
+        # For each input in batch model returns a list with one generation
+        # we take the first generation from each list
+        output = [out[0] for out in output]
 
-            return OpenAIGenerationOutput(sequences, self.logprobs)
-        else:
-            raise Exception("Cannot access logits of blackbox model")
+        return output
 
     def __call__(self, **args):
         """
         Not implemented for blackbox models.
         """
-        raise Exception("Cannot access logits of blackbox model")
+        raise Exception("Cannot call blackbox model directly, use generate or generate_texts methods.")
 
     def tokenizer(self, *args, **kwargs):
         """
         Not implemented for blackbox models.
         """
-        raise Exception("Cannot access logits of blackbox model")
+        raise Exception("Cannot access tokenizer of blackbox model")

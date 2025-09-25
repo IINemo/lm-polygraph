@@ -84,8 +84,8 @@ def register_default_stat_calculators(
     )
     _register(SemanticClassesCalculator)
     _register(
-        CrossEncoderSimilarityMatrixCalculator,
-        "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
+        SequenceCrossEncoderSimilarityMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_SequenceCrossEncoderSimilarityMatrixCalculator",
         {
             "batch_size": deberta_batch_size,
             "cross_encoder_name": "cross-encoder/stsb-roberta-large",
@@ -112,7 +112,6 @@ def register_default_stat_calculators(
         if blackbox_supports_logprobs:
             # For blackbox models that support logprobs (like OpenAI models)
             _register(EntropyCalculator)
-
     elif model_type == "Whitebox":
         _register(
             GreedyProbsCalculator,
@@ -153,6 +152,14 @@ def register_default_stat_calculators(
             },
         )
         _register(AttentionForwardPassCalculator)
+        _register(
+            TokenCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_TokenCrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": deberta_batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
     elif model_type == "VisualLM":
         _register(
             GreedyProbsVisualCalculator,
@@ -183,6 +190,14 @@ def register_default_stat_calculators(
                 "openai_model": "gpt-4o",
                 "cache_path": str(Path.home() / ".cache"),
                 "language": language,
+            },
+        )
+        _register(
+            TokenCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_TokenCrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": deberta_batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
 

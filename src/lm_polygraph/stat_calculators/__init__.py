@@ -53,7 +53,10 @@ from .greedy_semantic_matrix import (
     GreedySemanticMatrixCalculator,
     ConcatGreedySemanticMatrixCalculator,
 )
-from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
+from .cross_encoder_similarity import (
+    SequenceCrossEncoderSimilarityMatrixCalculator,
+    TokenCrossEncoderSimilarityMatrixCalculator,
+)
 from .greedy_cross_encoder_similarity import (
     GreedyCrossEncoderSimilarityMatrixCalculator,
 )
