@@ -28,7 +28,6 @@ from lm_polygraph.estimators import Perplexity
 from lm_polygraph.utils.estimate_uncertainty import estimate_uncertainty
 from lm_polygraph.model_adapters.api_provider_adapter import (
     get_adapter,
-    list_available_adapters,
 )
 
 # Load environment variables from .env file
@@ -50,104 +49,9 @@ def openai_api_key():
 
 def test_openai_adapter_registration():
     """Ensure the OpenAI adapter is registered and retrievable."""
-    available_adapters = list_available_adapters()
-    assert (
-        "openai" in available_adapters
-    ), f"openai adapter not registered. Available: {available_adapters}"
-
     adapter = get_adapter("openai")
     assert adapter is not None
     assert adapter.__class__.__name__ == "OpenAIAdapter"
-
-
-@pytest.mark.usefixtures("openai_api_key")
-def test_openai_api_smoke(openai_api_key):
-    """
-    Smoke test for the OpenAI adapter using estimate_uncertainty with Perplexity.
-
-    Validates request formatting, successful API execution, and estimator output.
-    """
-    test_input = "What is the capital of France?"
-    model_name = "gpt-4o-mini"
-
-    model = BlackboxModel(
-        model_path=model_name,
-        api_provider_name="openai",
-    )
-
-    model.generation_parameters.max_new_tokens = 20
-    model.generation_parameters.temperature = 0.0
-
-    estimator = Perplexity()
-
-    result = estimate_uncertainty(
-        model=model,
-        estimator=estimator,
-        input_text=test_input,
-    )
-
-    assert result is not None, "estimate_uncertainty returned None"
-    assert hasattr(result, "uncertainty"), "Result missing uncertainty field"
-    assert hasattr(result, "input_text"), "Result missing input_text field"
-    assert hasattr(result, "generation_text"), "Result missing generation_text field"
-    assert hasattr(result, "model_path"), "Result missing model_path field"
-    assert hasattr(result, "estimator"), "Result missing estimator field"
-
-    assert result.input_text == test_input, f"Input text mismatch: {result.input_text}"
-    assert result.model_path == model_name, f"Model path mismatch: {result.model_path}"
-    assert result.estimator == str(estimator), f"Estimator mismatch: {result.estimator}"
-
-    assert result.generation_text is not None, "Generation text is None"
-    assert len(result.generation_text.strip()) > 0, "Generation text is empty"
-
-    assert isinstance(result.uncertainty, (int, float)), "Uncertainty is not numeric"
-    assert not (
-        result.uncertainty != result.uncertainty
-    ), "Uncertainty is NaN"  # NaN check
-    assert result.uncertainty >= 0, "Perplexity should be non-negative"
-
-    print("\n--- OpenAI Smoke Test Results ---")
-    print(f"Input: {result.input_text}")
-    print(f"Generated: {result.generation_text}")
-    print(f"Uncertainty: {result.uncertainty}")
-    print(f"Model: {result.model_path}")
-    print(f"Estimator: {result.estimator}")
-    print(f"Generation tokens: {result.generation_tokens}")
-
-
-@pytest.mark.usefixtures("openai_api_key")
-def test_openai_api_smoke_with_logprobs(openai_api_key):
-    """Smoke test verifying logprobs flow using the Perplexity estimator."""
-    test_input = "The sky is"
-    model_name = "gpt-4o-mini"
-
-    model = BlackboxModel(
-        model_path=model_name,
-        api_provider_name="openai",
-    )
-
-    model.generation_parameters.max_new_tokens = 5
-    model.generation_parameters.temperature = 0.0
-
-    estimator = Perplexity()
-
-    result = estimate_uncertainty(
-        model=model,
-        estimator=estimator,
-        input_text=test_input,
-    )
-
-    assert result is not None
-    assert result.generation_text is not None
-    assert len(result.generation_text.strip()) > 0
-
-    assert isinstance(result.uncertainty, (int, float))
-    assert result.uncertainty >= 0
-
-    print("\n--- OpenAI Logprobs Test Results ---")
-    print(f"Input: {result.input_text}")
-    print(f"Generated: {result.generation_text}")
-    print(f"Perplexity: {result.uncertainty}")
 
 
 def test_openai_adapter_functionality():

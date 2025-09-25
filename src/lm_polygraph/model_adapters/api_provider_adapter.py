@@ -130,39 +130,11 @@ def get_adapter(api_provider_name: str) -> APIProviderAdapter:
 
     Defaults to 'openai' if the requested provider is not found.
     """
-    # Default to 'openai' for backward compatibility
-    name_to_get = (
-        api_provider_name if api_provider_name in ADAPTER_REGISTRY else "openai"
-    )
-
-    if name_to_get not in ADAPTER_REGISTRY:
-        log.warning(
-            f"No adapter found for provider '{api_provider_name}', falling back to 'openai'"
+    if api_provider_name not in ADAPTER_REGISTRY:
+        raise ValueError(
+            f"No adapter found for provider '{api_provider_name}'. Available providers: {list(ADAPTER_REGISTRY.keys())}"
         )
-        name_to_get = "openai"
 
     adapter_class = ADAPTER_REGISTRY[name_to_get]
+
     return adapter_class()
-
-
-def list_available_adapters() -> List[str]:
-    """
-    Get a list of all registered adapters.
-
-    Returns:
-        List of adapter names
-    """
-    return list(ADAPTER_REGISTRY.keys())
-
-
-def is_adapter_registered(api_provider_name: str) -> bool:
-    """
-    Check if an adapter is registered for the given provider.
-
-    Args:
-        api_provider_name: Name of the API provider
-
-    Returns:
-        True if adapter is registered, False otherwise
-    """
-    return api_provider_name in ADAPTER_REGISTRY
