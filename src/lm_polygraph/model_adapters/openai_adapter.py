@@ -31,7 +31,7 @@ class OpenAIChatCompletionMixin:
         return_logprobs = args.pop("output_scores", False)
         logprobs_args = {}
 
-        if return_logprobs and model.supports_logprobs:
+        if return_logprobs:
             logprobs_args["logprobs"] = True
             logprobs_args["top_logprobs"] = args.pop("top_logprobs", 5)
 
@@ -156,7 +156,7 @@ class OpenAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
                 raw_response=response,
             )
 
-        except (KeyError, IndexError, TypeError) as e:
+        except (AttributeError, IndexError, TypeError) as e:
             log.error(f"Error parsing OpenAI response: {e}")
             log.error(f"Response structure: {response}")
             raise ValueError(f"Invalid OpenAI API response format: {e}")

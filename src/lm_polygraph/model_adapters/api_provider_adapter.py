@@ -135,6 +135,6 @@ def get_adapter(api_provider_name: str) -> APIProviderAdapter:
             f"No adapter found for provider '{api_provider_name}'. Available providers: {list(ADAPTER_REGISTRY.keys())}"
         )
 
-    adapter_class = ADAPTER_REGISTRY[name_to_get]
+    adapter_class = ADAPTER_REGISTRY[api_provider_name]
 
     return adapter_class()

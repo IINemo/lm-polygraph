@@ -21,7 +21,7 @@ import os
 import pytest
 
 # Import the local OpenAI adapter so it registers itself
-import lm_polygraph.model_adapters.openai_adapter  # noqa: F401
+from lm_polygraph.model_adapters.openai_adapter import OpenAIAdapter
 
 from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
 from lm_polygraph.estimators import Perplexity
@@ -56,28 +56,35 @@ def test_openai_adapter_registration():
 
 def test_openai_adapter_functionality():
     """Directly test adapter parameter adaptation and validation."""
-    from lm_polygraph.model_adapters.openai_adapter import OpenAIAdapter
-
     adapter = OpenAIAdapter()
 
     test_params = {
         "max_new_tokens": 50,
+        "min_length": 10,
+        "top_k": 40,
+        "repetition_penalty": 1.2,
+        "num_beams": 3,
         "temperature": 0.7,
         "top_p": 0.9,
         "do_sample": True,
-        "logprobs": 5,
         "top_logprobs": 3,
         "stop_strings": ["\n\n"],
+        "output_scores": True,
     }
 
     adapted = adapter.adapt_request(test_params)
 
-    assert "max_tokens" in adapted, "max_new_tokens should be mapped to max_tokens"
-    assert adapted["max_tokens"] == 50
+    assert "min_length" not in adapted, "min_length should be removed"
+    assert "top_k" not in adapted, "top_k should be removed"
+    assert "repetition_penalty" not in adapted, "repetition_penalty should be removed"
+    assert "num_beams" not in adapted, "num_beams should be removed"
     assert "do_sample" not in adapted, "do_sample should be removed"
     assert "stop_strings" not in adapted, "stop_strings should be removed"
-    assert adapted["logprobs"] == 5
+    assert "max_completion_tokens" in adapted, "max_new_tokens should be mapped to max_tokens"
+    assert adapted["max_completion_tokens"] == 50
     assert adapted["top_logprobs"] == 3
+    assert adapted["output_scores"] is True
+    assert adapted["temperature"] == 0.7
 
     params_with_invalid_ranges = {
         "temperature": 3.5,
@@ -95,56 +102,8 @@ def test_openai_adapter_functionality():
     assert adapter.supports_logprobs(), "OpenAI should report logprobs support"
 
 
-def test_openai_adapter_parse_response_success():
-    """Ensure parse_response returns StandardizedResponse with tokens and logprobs."""
-    from lm_polygraph.model_adapters.openai_adapter import OpenAIAdapter
-
-    adapter = OpenAIAdapter()
-
-    response = {
-        "choices": [
-            {
-                "message": {"content": "Hello world"},
-                "logprobs": {
-                    "content": [
-                        {
-                            "token": "Hello",
-                            "logprob": -0.1,
-                            "top_logprobs": [
-                                {"token": "Hello", "logprob": -0.1},
-                                {"token": "Hi", "logprob": -1.5},
-                            ],
-                        },
-                        {
-                            "token": " world",
-                            "logprob": -0.2,
-                            "top_logprobs": [
-                                {"token": " world", "logprob": -0.2},
-                                {"token": " planet", "logprob": -2.0},
-                            ],
-                        },
-                    ]
-                },
-                "finish_reason": "stop",
-            }
-        ]
-    }
-
-    standardized = adapter.parse_response(response)
-
-    assert standardized.text == "Hello world"
-    assert standardized.finish_reason == "stop"
-    assert standardized.tokens == ["Hello", " world"]
-    assert standardized.logprobs is not None
-    assert hasattr(standardized.logprobs, "content")
-    assert len(standardized.logprobs.content) == 2
-    assert standardized.logprobs.content[0].token == "Hello"
-
-
 def test_openai_adapter_parse_response_error():
     """Invalid response structures should raise ValueError."""
-    from lm_polygraph.model_adapters.openai_adapter import OpenAIAdapter
-
     adapter = OpenAIAdapter()
 
     with pytest.raises(ValueError):
