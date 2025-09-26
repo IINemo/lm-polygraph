@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from .stat_calculator import StatCalculator
 from lm_polygraph.utils.openai_chat import OpenAIChat
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 from .claim_level_prompts import CLAIM_EXTRACTION_PROMPTS, MATCHING_PROMPTS
 
 from tqdm import tqdm

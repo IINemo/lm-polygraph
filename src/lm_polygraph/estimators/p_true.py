@@ -9,7 +9,7 @@ class PTrue(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "P(True)" as provided in the paper https://arxiv.org/abs/2207.05221.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
 
     On input question q and model generation a, the method uses the following prompt:
         Question: {q}

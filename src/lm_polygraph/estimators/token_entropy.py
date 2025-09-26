@@ -9,7 +9,7 @@ class MeanTokenEntropy(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model by calculating the
     mean entropy among all tokens in the generation.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     """
 
     def __init__(self):
@@ -37,7 +37,7 @@ class TokenEntropy(Estimator):
     """
     Estimates the token-level uncertainty of a language model by calculating the
     entropy for each token in the generation.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     """
 
     def __init__(self):

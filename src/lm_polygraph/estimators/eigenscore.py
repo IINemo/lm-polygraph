@@ -9,7 +9,7 @@ class EigenScore(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "EigenScore" as provided in the paper https://openreview.net/forum?id=Zj12nzlQbz.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     Uses embeddings for the last generated token from the middle layer of the model.
     """
 

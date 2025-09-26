@@ -1,0 +1,69 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: gpt_4.1
+  - stat_calculators: default_calculators
+  - base_processing_triviaqa
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+instruct: false
+task: qa
+
+dataset: ['LM-Polygraph/triviaqa', 'continuation']
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
+max_new_tokens: 500
+load_from_disk: false
+multiref: true
+trust_remote_code: false
+size: 10000
+generation_params:
+  stop_strings:
+    - "\n"
+
+estimators: 
+  - name: MaximumSequenceProbability
+  - name: Perplexity
+  - name: MeanTokenEntropy
+  - name: MonteCarloSequenceEntropy
+  - name: MonteCarloNormalizedSequenceEntropy
+  - name: LexicalSimilarity
+    cfg:
+      metric: "rougeL"
+  - name: NumSemSets
+  - name: EigValLaplacian
+    cfg:
+      similarity_score: "NLI_score"
+      affinity: "entail"
+  - name: DegMat
+    cfg:
+      similarity_score: "NLI_score"
+      affinity: "entail"
+  - name: Eccentricity
+    cfg:
+      similarity_score: "NLI_score"
+      affinity: "entail"
+  - name: SemanticEntropy
+  - name: SentenceSAR
+  - name: CocoaMSP
+  - name: CocoaPPL
+  - name: CocoaMTE
+  - name: SemanticDensity
+
+
+subsample_eval_dataset: -1
+
+generation_metrics: null
+
+ignore_exceptions: false
+
+batch_size: 2
+
+seed:
+    - 1

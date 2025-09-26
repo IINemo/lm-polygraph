@@ -10,7 +10,8 @@ from typing import List, Set, Dict, Tuple
 from tqdm import tqdm
 
 from lm_polygraph.utils.dataset import Dataset
-from lm_polygraph.utils.model import BlackboxModel, Model
+from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
+from lm_polygraph.utils.model import Model
 from lm_polygraph.utils.processor import Processor
 from lm_polygraph.generation_metrics.generation_metric import GenerationMetric
 from lm_polygraph.ue_metrics.ue_metric import (

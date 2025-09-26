@@ -25,7 +25,7 @@ class TokenSAR(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "Token SAR" as provided in the paper https://arxiv.org/abs/2307.01379.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
 
     This method calculates the weighted sum of log_likelihoods with weights computed using token relevance.
     """
