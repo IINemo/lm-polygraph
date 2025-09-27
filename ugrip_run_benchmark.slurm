@@ -2,14 +2,14 @@
 
 #SBATCH --job-name=ugrip_polygraph_benchmarks
 #SBATCH --output=slurm_logs/%x-%j.out
-#SBATCH --partition=gpu-1
-#SBATCH --account=ugrip-1
+#SBATCH --partition=cscc-gpu-p
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --gres=gpu:2
-#SBATCH --mem=96G
-#SBATCH --time=24:00:00
+#SBATCH --mem=40G
+#SBATCH --cpus-per-task=64
+#SBATCH --gres=gpu:1
+#SBATCH --time=10:00
+#SBATCH --qos=cscc-gpu-qos
 
 # Create directory for slurm logs if it doesn't 
 # exist yet
