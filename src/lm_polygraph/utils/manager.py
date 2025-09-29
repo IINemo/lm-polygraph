@@ -136,6 +136,8 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
+        # percentages: List[int] = [1, 5, 50, 100],  # <-- NEW PARAMETER
+        # truncation_mode: str = 'percentages',  # <-- NEW PARAMETER
     ):
         """
         Parameters:
@@ -156,6 +158,9 @@ class UEManager:
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
+
+        # self.percentages = percentages
+        # self.truncation_mode = truncation_mode
 
         self.model: Model = model
         self.data: Dataset = data
@@ -292,33 +297,91 @@ class UEManager:
         batch_estimations = defaultdict(list)
         bad_estimators = []
 
+        # hardcoded for now, we should make them parameters in the yaml files later
+        percentages: List[int] = [1, 5, 50, 100]
+        truncation_mode = 'percentages'  # 'percentages' or 'tokens'
+
         for estimator in estimators:
-            try:
-                if self.log_time:
-                    start_time = time.time()
-                    log.info(f"Estimating {estimator}...")
-                e = estimator(batch_stats)
-                if self.log_time:
-                    log.info(
-                        f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
-                    )
-                if not isinstance(e, list):
-                    e = e.tolist()
-                if estimator.level == "claim":
-                    e = flatten_results(e, estimator)
-                self.estimations[estimator.level, str(estimator)] += e
-                batch_estimations[estimator.level, str(estimator)] += e
-            except Exception as e:
-                if self.ignore_exceptions:
-                    bad_estimators.append(estimator)
-                    lineno = e.__traceback__.tb_lineno
-                    log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
-                    sys.stderr.write("\n\n")
-                    sys.stderr.write(log_msg)
-                    sys.stderr.write(traceback.format_exc())
-                    continue
-                else:
-                    raise e
+            if str(estimator) in ["MaximumSequenceProbability", "Perplexity", "MeanTokenEntropy"]:
+                for pct in percentages:
+                    try:
+                        if self.log_time:
+                            start_time = time.time()
+                            log.info(f"Estimating {estimator} for {pct}% tokens...")
+                        tokens = batch_stats.get('input_tokens', None)
+                        entropy = batch_stats.get('entropy', None)
+                        greedy_log_likelihoods = batch_stats.get('greedy_log_likelihoods', None)
+                        batch_stats_pct = batch_stats.copy()
+                        if tokens is not None and entropy is not None and greedy_log_likelihoods is not None:
+                            if truncation_mode == 'percentages':
+                                # Truncate each sample in the batch
+                                batch_stats_pct['greedy_log_likelihoods'] = [
+                                    arr[:max(1, int(len(arr) * pct / 100))]
+                                    for arr in greedy_log_likelihoods
+                                ]
+                                batch_stats_pct['entropy'] = [
+                                    arr[:max(1, int(len(arr) * pct / 100))]
+                                    for arr in entropy
+                                ]
+                            elif truncation_mode == 'tokens':
+                                # Truncate each sample in the batch
+                                batch_stats_pct['greedy_log_likelihoods'] = [
+                                    arr[:pct] for arr in greedy_log_likelihoods
+                                ]
+                                batch_stats_pct['entropy'] = [
+                                    arr[:pct] for arr in entropy
+                                ]
+                        e = estimator(batch_stats_pct)
+                        if self.log_time:
+                            log.info(
+                                f"Done calculating {estimator} for {pct}% in {round(time.time() - start_time, 2)} secs"
+                            )
+                        if not isinstance(e, list):
+                            e = e.tolist()
+                        if estimator.level == "claim":
+                            e = flatten_results(e, estimator)
+                        key = (estimator.level, f"{estimator}_{pct}pct")
+                        self.estimations[key] += e
+                        batch_estimations[key] += e
+                        print(f"Results for {estimator} at {pct}%: {e}")
+                    except Exception as e:
+                        if self.ignore_exceptions:
+                            bad_estimators.append(estimator)
+                            lineno = e.__traceback__.tb_lineno
+                            log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
+                            sys.stderr.write("\n\n")
+                            sys.stderr.write(log_msg)
+                            sys.stderr.write(traceback.format_exc())
+                            continue
+                        else:
+                            raise e
+            else:
+                try:
+                    if self.log_time:
+                        start_time = time.time()
+                        log.info(f"Estimating {estimator}...")
+                    e = estimator(batch_stats)
+                    if self.log_time:
+                        log.info(
+                            f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                        )
+                    if not isinstance(e, list):
+                        e = e.tolist()
+                    if estimator.level == "claim":
+                        e = flatten_results(e, estimator)
+                    self.estimations[estimator.level, str(estimator)] += e
+                    batch_estimations[estimator.level, str(estimator)] += e
+                except Exception as e:
+                    if self.ignore_exceptions:
+                        bad_estimators.append(estimator)
+                        lineno = e.__traceback__.tb_lineno
+                        log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
+                        sys.stderr.write("\n\n")
+                        sys.stderr.write(log_msg)
+                        sys.stderr.write(traceback.format_exc())
+                        continue
+                    else:
+                        raise e
 
         return batch_estimations, bad_estimators
 
