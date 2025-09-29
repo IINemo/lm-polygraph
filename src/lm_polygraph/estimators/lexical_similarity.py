@@ -17,7 +17,7 @@ class LexicalSimilarity(Estimator):
     Estimates the sequence-level uncertainty of a language model following the method of
     "Lexical Similarity" as provided in the paper https://arxiv.org/abs/2302.09664.
     Works with both whitebox and blackbox models (initialized using
-    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+    lm_polygraph.model_adapters.blackbox_model.BlackboxModel/WhiteboxModel).
 
     The method calculates mean similarity between all pairs of sampled generations with minus sign.
     The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator

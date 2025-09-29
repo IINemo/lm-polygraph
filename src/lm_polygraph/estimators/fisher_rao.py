@@ -10,7 +10,7 @@ class FisherRao(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "FisherRao" as provided in the paper https://arxiv.org/pdf/2212.09171.pdf.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
 
     This method calculates the generation Fisher-Rao distance between probability distribution for each token and uniform distribution.
     Code adapted from https://github.com/icannos/Todd/blob/master/Todd/itscorers.py

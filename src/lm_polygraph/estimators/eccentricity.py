@@ -13,7 +13,7 @@ class Eccentricity(Estimator):
     Estimates the sequence-level uncertainty of a language model following the method of
     "Eccentricity" as provided in the paper https://arxiv.org/abs/2305.19187.
     Works with both whitebox and blackbox models (initialized using
-    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+    lm_polygraph.model_adapters.blackbox_model.BlackboxModel/WhiteboxModel).
 
     Method calculates a frobenious (euclidian) norm between all eigenvectors that are informative embeddings
     of graph Laplacian (lower norm -> closer embeddings -> higher eigenvectors -> greater uncertainty).
