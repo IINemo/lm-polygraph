@@ -10,19 +10,20 @@
 #SBATCH -p cscc-gpu-p               # Use the gpu partition
 #SBATCH --time=12:00:00             # Specify the time needed for your experiment
 #SBATCH --qos=cscc-gpu-qos          # To enable the use of up to 8 GPUs
-#SBATCH --array=0-2 # job array with 3 tasks 0 1 2
+#SBATCH --array=0-1 # job array with 2 tasks 0 1
 
 mkdir -p slurm_logs/$SLURM_JOB_ID
 
 # Experiment settings
 CONFIG_FILES=(
-  "polygraph_eval_ugrip.yaml"                        # full answer
+  # "polygraph_eval_ugrip.yaml"                        # full answer
   "polygraph_eval_ugrip_segmentation_reasoning.yaml" # reasoning only
   "polygraph_eval_ugrip_segmentation_answer.yaml"    # answer only
 )
-MODEL="ugrip_gemma_instruct_vllm"
+MODEL="ugrip_llama_instruct_vllm"
+# MODEL="ugrip_gemma_instruct_vllm"
 DATASET="UGRIP-LM-Polygraph/gsm8k-reasoning"
-SAMPLE_SIZE=10
+SAMPLE_SIZE=5
 
 CONFIG_FILE_NAME=${CONFIG_FILES[$SLURM_ARRAY_TASK_ID]}
 

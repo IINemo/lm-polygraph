@@ -5,7 +5,7 @@ hydra:
 task: qa
 
 defaults:
-  - model: ugrip_llama_instruct
+  - model: ugrip_llama_instruct_vllm
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
   - generation_metrics: null
@@ -19,7 +19,7 @@ defaults:
 #  UGRIP-LM-Polygraph/medmcqa-reasoning
 #  UGRIP-LM-Polygraph/mmlu-direct
 #  UGRIP-LM-Polygraph/mmlu-reasoning
-dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
+dataset: "UGRIP-LM-Polygraph/gsm8k-reasoning"
 
 text_column: question
 label_column: answer
