@@ -106,10 +106,9 @@ def register_default_stat_calculators(
     )
 
     if model_type == "Blackbox":
-        blackbox_supports_logprobs = bool(getattr(model, "supports_logprobs", False))
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
-        if blackbox_supports_logprobs:
+        if model.supports_logprobs:
             # For blackbox models that support logprobs (like OpenAI models)
             _register(EntropyCalculator)
     elif model_type == "Whitebox":
