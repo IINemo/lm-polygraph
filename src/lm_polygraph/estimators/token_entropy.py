@@ -30,7 +30,7 @@ class MeanTokenEntropy(Estimator):
                 Higher values indicate more uncertain samples.
         """
         entropy = stats["entropy"]
-        return np.array([np.mean(e) for e in entropy])
+        return [ np.cumsum(e) / np.arange(1, len(e) + 1) for e in entropy ] # np.array([np.mean(e) for e in entropy])
 
 
 class TokenEntropy(Estimator):
