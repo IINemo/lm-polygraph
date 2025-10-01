@@ -1,0 +1,6 @@
+nli:
+  deberta_path: microsoft/deberta-large-mnli
+  batch_size: 1
+cross_encoder:
+  cross_encoder_name: cross-encoder/stsb-roberta-large
+  batch_size: 1
