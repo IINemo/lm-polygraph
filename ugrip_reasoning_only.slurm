@@ -19,7 +19,7 @@ echo "Job Name: $SLURM_JOB_NAME, Job ID: $SLURM_JOB_ID"
 scripts/polygraph_eval \
   --config-dir=./examples/configs \
   --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-  model=ugrip_gemma_instruct_vllm \
+  model=ugrip_llama_instruct_vllm \
   dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
   subsample_eval_dataset=10 \
 
