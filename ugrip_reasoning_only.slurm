@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=10
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH -p cscc-gpu-p
 #SBATCH --time=12:00:00
 #SBATCH --qos=cscc-gpu-qos
