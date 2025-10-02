@@ -1,5 +1,6 @@
 import torch
 import pytest
+from joblib.externals.loky import get_reusable_executor
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -249,6 +250,28 @@ def test_eigenscore(model):
 def test_attentionscore(model):
     estimator = AttentionScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_topological_divergence_fixed_heads(model):
+    estimator = TopologicalDivergence(
+        heads=[[0, 0], [0, 1], [1, 0], [1, 1]],
+        n_jobs=-1,
+    )
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    get_reusable_executor().shutdown(wait=True)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_topological_divergence_select_heads(model):
+    estimator = TopologicalDivergence(n_jobs=-1)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    get_reusable_executor().shutdown(wait=True)
+    assert isinstance(ue.uncertainty, float)
+    # second time heads should be loaded from cache
+    estimator = TopologicalDivergence(n_jobs=-1)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    get_reusable_executor().shutdown(wait=True)
     assert isinstance(ue.uncertainty, float)
 
 
