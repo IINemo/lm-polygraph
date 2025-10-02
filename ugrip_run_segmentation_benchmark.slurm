@@ -8,37 +8,50 @@
 #SBATCH --cpus-per-task=10          # Number of CPU cores
 #SBATCH --gres=gpu:2                # Number of GPUs (per node)
 #SBATCH -p cscc-gpu-p               # Use the gpu partition
-#SBATCH --time=12:00:00             # Specify the time needed for your experiment
+#SBATCH --time=24:00:00             # Specify the time needed for your experiment
 #SBATCH --qos=cscc-gpu-qos          # To enable the use of up to 8 GPUs
-#SBATCH --array=0-1 # job array with 2 tasks 0 1
 
 mkdir -p slurm_logs/$SLURM_JOB_ID
 
-# Experiment settings
-CONFIG_FILES=(
-  # "polygraph_eval_ugrip.yaml"                        # full answer
-  "polygraph_eval_ugrip_segmentation_reasoning.yaml" # reasoning only
-  "polygraph_eval_ugrip_segmentation_answer.yaml"    # answer only
-)
 MODEL="ugrip_llama_instruct_vllm"
 # MODEL="ugrip_gemma_instruct_vllm"
 DATASET="UGRIP-LM-Polygraph/gsm8k-reasoning"
-SAMPLE_SIZE=5
+SAMPLE_SIZE=10
+TOTAL_START_TIME=$SECONDS
 
-CONFIG_FILE_NAME=${CONFIG_FILES[$SLURM_ARRAY_TASK_ID]}
 
 # experiment info
 echo "Running on host: $(hostname)"
-echo "Job ID: $SLURM_JOB_ID, Task ID: $SLURM_ARRAY_TASK_ID"
+echo "Job Name: $SLURM_JOB_NAME Job ID: $SLURM_JOB_ID"
 echo "Config file: $CONFIG_FILE_NAME"
 echo "Model: $MODEL, Dataset: $DATASET, Sample Size: $SAMPLE_SIZE"
 
-# Run experiments
+# reasoning only
+echo "====STARTING REASONING ANALYSIS===="
+TASK1_START_TIME=$SECONDS
 scripts/polygraph_eval \
   --config-dir=./examples/configs \
-  --config-name=$CONFIG_FILE_NAME \
+  --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
   model=$MODEL \
   dataset=$DATASET \
-  subsample_eval_dataset=$SAMPLE_SIZE
+  subsample_eval_dataset=$SAMPLE_SIZE \
+  model.load_model_args.gpu_memory_utilization=0.60  
+TASK1_ELAPSED_TIME=$(($SECONDS - $TASK1_START_TIME))
+echo "====FINISHED REASONING ANALYSIS===="
 
-echo "Task $SLURM_ARRAY_TASK_ID finished."
+# answer only
+echo "====STARTING ANSWER ANALYSIS===="
+TASK2_START_TIME=$SECONDS
+scripts/polygraph_eval \
+  --config-dir=./examples/configs \
+  --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
+  model=$MODEL \
+  dataset=$DATASET \
+  subsample_eval_dataset=$SAMPLE_SIZE \
+  model.load_model_args.gpu_memory_utilization=0.60  
+TASK2_ELAPSED_TIME=$(($SECONDS - $TASK2_START_TIME))
+echo "====FINISHED ANSWER ANALYSIS===="
+
+echo "====BENCHMARK RUNTIME STATISTICS===="
+echo "Reasoning analysis: $(($TASK1_ELAPSED_TIME / 3600)) hrs, $((($TASK1_ELAPSED_TIME / 60) % 60)) min, $(($TASK1_ELAPSED_TIME % 60)) sec"
+echo "Answer analysis: $(($TASK2_ELAPSED_TIME / 3600)) hrs, $((($TASK2_ELAPSED_TIME / 60) % 60)) min, $(($TASK2_ELAPSED_TIME % 60)) sec"
