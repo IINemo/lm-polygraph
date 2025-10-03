@@ -1,0 +1,69 @@
+hydra:
+  run:
+    dir: ${cache_path}/wmt19_deen/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+defaults:
+  - model: bloomz-560m
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+device: cpu
+
+task: nmt
+
+base_manager: null
+overwrite_base_estimations: false
+
+dataset: [wmt19, de-en]
+text_column: de
+label_column: en
+prompt: "Here is a sentence in {source_lang} language and its translation in {target_lang} language.\n\nOriginal:\n{text}\nTranslation:\n"
+train_split: train
+eval_split: validation
+max_new_tokens: 107
+load_from_disk: false
+generation_params:
+  generate_until:
+    - "\n"
+save_stats: []
+entropy_top_k: 50
+
+source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
+
+train_dataset: null
+train_test_split: false
+test_split_size: 1
+
+background_train_dataset: allenai/c4
+background_train_dataset_text_column: text
+background_train_dataset_label_column: url
+background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+background_load_from_disk: false
+
+subsample_background_train_dataset: 1000
+subsample_train_dataset: 1000
+subsample_eval_dataset: -1
+
+use_density_based_ue: false
+use_ens_ue: false
+use_seq_ue: false
+use_tok_ue: false
+
+additional_estimators:
+  - module: lm_polygraph.estimators.p_true
+    class_name: PTrue
+    kwargs: {}
+
+generation_metrics:
+  - name: BLEUMetric
+    args: {}
+
+ignore_exceptions: false
+
+batch_size: 1
+deberta_batch_size: 1
+
+seed:
+    - 1
+

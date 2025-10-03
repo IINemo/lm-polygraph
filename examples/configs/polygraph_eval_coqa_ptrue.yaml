@@ -1,0 +1,66 @@
+hydra:
+  run:
+    dir: ${cache_path}/coqa/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+defaults:
+  - model: bloomz-560m
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+
+base_manager: null
+overwrite_base_estimations: false
+
+dataset: coqa
+text_column: questions
+label_column: answers
+description: "The following are stories and questions about them. Each story is followed by a question and answer to a given question.\n\nStory: {story}"
+prompt: "Question: {question}\nAnswer:{answer}"
+train_split: train
+eval_split: validation
+max_new_tokens: 30
+load_from_disk: false
+normalize: true
+generation_params:
+  generate_until:
+    - "\n"
+save_stats: []
+entropy_top_k: 50
+
+train_dataset: null
+train_test_split: false
+test_split_size: 1
+
+background_train_dataset: allenai/c4
+background_train_dataset_text_column: text
+background_train_dataset_label_column: url
+background_train_dataset_data_files: en/c4-train.00000-of-01024.json.gz
+background_load_from_disk: false
+
+subsample_background_train_dataset: 1000
+subsample_train_dataset: 1000
+subsample_eval_dataset: -1
+
+use_density_based_ue: false
+use_seq_ue: false
+use_tok_ue: false
+use_ens_ue: false
+
+additional_estimators: 
+  - module: lm_polygraph.estimators.p_true
+    class_name: PTrue
+    kwargs: {}
+
+generation_metrics:
+  - name: AccuracyMetric
+    args: {}
+
+ignore_exceptions: false
+
+batch_size: 1
+deberta_batch_size: 1
+
+seed:
+    - 1
