@@ -1,4 +1,36 @@
 - auto
+- name: EmbeddingsCalculator
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_Embeddings
+  cfg:
+    embeddings_level: "sequence"
+  stats:
+    - "embeddings"
+  dependencies:
+    - "embeddings_raw"
+- name: TokenEmbeddingsCalculator
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_Embeddings
+  cfg:
+    embeddings_level: "token"
+  stats:
+    - "token_embeddings"
+  dependencies:
+    - "embeddings_raw"
+- name: LookbackRatioCalculator
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_Attentions
+  cfg:
+    attentions: "lookback_ratio"
+  stats:
+    - "lookback_ratios"
+  dependencies:
+    - "attention_raw"
+- name: AttentionFeaturesCalculator
+  builder: lm_polygraph.defaults.stat_calculator_builders.default_Attentions
+  cfg:
+    attentions: "attention_features"
+  stats:
+    - "attention_features"
+  dependencies:
+    - "attention_raw"
 - name: TrainingStatisticExtractionCalculator
   builder: lm_polygraph.defaults.stat_calculator_builders.default_TrainingStatisticExtractionCalculator
   cfg:
@@ -23,8 +55,15 @@
     size: '${size}'
     bg_size: 100000
     output_attentions: True
+    output_hidden_states: True
+    target_metric: "Accuracy"
   stats: 
     - "train_embeddings"
+    - "train_token_embeddings"
     - "background_train_embeddings"
+    - "background_train_token_embeddings"
     - "train_greedy_log_likelihoods"
+    - "train_metrics"
+    - "train_lookback_ratios"
+    - "train_attention_features"
   dependencies:
