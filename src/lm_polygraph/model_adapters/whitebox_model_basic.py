@@ -35,7 +35,7 @@ class WhiteboxModelBasic(Model):
         """
         assert "generation_config" not in kwargs
         return self.model.generate(
-            *args, generation_config=self.generation_parameters, **kwargs
+            *args, **kwargs#generation_config=self.generation_parameters, **kwargs
         )
 
     def tokenize(self, texts: List[str], **kwargs) -> Dict:

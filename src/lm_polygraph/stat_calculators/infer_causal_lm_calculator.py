@@ -189,7 +189,9 @@ class InferCausalLMCalculator(StatCalculator):
             "max_new_tokens": max_new_tokens,
         }
         args_generate.update(kwargs)
-        out = model.generate(**model_inputs, **args_generate)
+        model_inputs.update(args_generate)
+        #out = model.generate(**model_inputs, **args_generate)
+        out = model.generate(**model_inputs)
 
         result_dict = self._post_process_logits(
             out, input_ids, model.model.generation_config.eos_token_id
