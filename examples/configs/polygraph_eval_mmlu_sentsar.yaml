@@ -148,11 +148,11 @@ additional_estimators:
     kwargs: {}
 
   - module: lm_polygraph.estimators.semantic_average_ue_average_similarity
-    class_name: SemanticAveMaxprobAveSimilarity
+    class_name: SemanticEnrichedMaxprobAveDissimilarity
     kwargs: {}
 
   - module: lm_polygraph.estimators.greedy_semantic_average_ue_average_similarity
-    class_name: GreedySemanticAveMaxprobAveSimilarity
+    class_name: GreedySemanticEnrichedMaxprobAveDissimilarity
     kwargs: {}
 
 ignore_exceptions: false
