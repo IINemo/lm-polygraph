@@ -21,7 +21,7 @@ class CausalLMWithUncertainty:
 
         self.args_generate = args_generate
 
-    def generate(self, input_ids, *args, **kwargs):
+    def generate(self, input_ids, *args, attention_mask=None, **kwargs):
         self.model_adapter = WhiteboxModelBasic(
             model=self.llm,
             tokenizer=self.tokenizer,
@@ -42,7 +42,7 @@ class CausalLMWithUncertainty:
         }
         texts = self.tokenizer.batch_decode(input_ids)
         for calc in self.stat_calculators:
-            deps.update(calc(deps, texts=texts, model=self.model_adapter, max_new_tokens=kwargs.get("max_new_tokens")))
+            deps.update(calc(deps, texts=texts, model=self.model_adapter, **kwargs))
 
         uncertainty_score = self.estimator(deps)
 
