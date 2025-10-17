@@ -98,7 +98,7 @@ class InferCausalLMCalculator(StatCalculator):
         lls = []
 
         all_logits = torch.stack(out.scores, dim=1)
-        for i in range(len(model_inputs)):
+        for i in range(len(out.sequences)):
             seq = out.sequences[i, model_inputs.shape[1]:].cpu()
 
             length = len(seq)
