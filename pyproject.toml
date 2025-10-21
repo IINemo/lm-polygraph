@@ -62,6 +62,7 @@ dependencies = [
     "unbabel-comet==2.2.1",
     "vllm>=0.8.5.post1",
     "wget>=3.2",
+    "wquantiles>=0.6",
 ]
 
 
