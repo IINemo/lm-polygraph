@@ -250,7 +250,7 @@ def get_generation_metrics(args):
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
             BLEUMetric(),
-            BertScoreMetric("rh"),
+            BertScoreMetric(),
             SbertMetric(),
             AccuracyMetric(
                 target_ignore_regex=getattr(args, "target_ignore_regex", None),
@@ -421,7 +421,8 @@ def get_vllm_model(args):
     model = WhiteboxModelvLLM(model=base_model, 
                               sampling_params=sampling_params,
                               generation_parameters=generation_parameters,
-                              device=args.model.device)
+                              device=args.model.device,
+                              instruct= getattr(args.model, "instruct", False))
 
     return model
 
