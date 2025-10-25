@@ -34,9 +34,7 @@ class WhiteboxModelBasic(Model):
             The output from model.generate() with the combined generation parameters.
         """
         all_kwargs = {**self.generation_parameters, **kwargs}
-        return self.model.generate(
-            *args, **all_kwargs
-        )
+        return self.model.generate(*args, **all_kwargs)
 
     def tokenize(self, texts: List[str], **kwargs) -> Dict:
         """Tokenizes input texts using the model's tokenizer.

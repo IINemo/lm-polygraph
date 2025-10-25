@@ -43,7 +43,14 @@ class CausalLMWithUncertainty:
         }
         texts = self.tokenizer.batch_decode(input_ids)
         for calc in self.stat_calculators:
-            deps.update(calc(deps, texts=texts, model=self.model_adapter, max_new_tokens=max_new_tokens))
+            deps.update(
+                calc(
+                    deps,
+                    texts=texts,
+                    model=self.model_adapter,
+                    max_new_tokens=max_new_tokens,
+                )
+            )
 
         uncertainty_score = self.estimator(deps)
 
