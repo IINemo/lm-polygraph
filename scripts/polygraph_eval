@@ -5,9 +5,7 @@ import os
 import transformers
 from pathlib import Path
 from omegaconf import OmegaConf
-import uuid
 from hydra.core.hydra_config import HydraConfig
-from dataclasses import asdict
 
 import logging
 
@@ -45,14 +43,22 @@ def get_hydra_config_path():
     return None
 
 
+def wandb_save_directory(directory_path):
+    import wandb
+
+    for file_name in os.listdir(directory_path):
+        full_path = os.path.join(directory_path, file_name)
+        if os.path.isfile(full_path):  # Make sure it's a file, not a directory
+            wandb.save(full_path)
+
+
 @hydra.main(
     version_base=None,
     config_path=str(hydra_config.parent),
     config_name=str(hydra_config.name),
 )
 def main(args):
-    save_path = os.getcwd()
-    log.info(f"Main directory: {save_path}")
+    save_path = HydraConfig.get().runtime.output_dir
     os.chdir(hydra.utils.get_original_cwd())
 
     global hydra_config
@@ -61,12 +67,23 @@ def main(args):
 
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         import wandb
-        wandb.config = OmegaConf.to_container(
-        args, resolve=True, throw_on_missing=True
-        )
-        wandb.init(dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
+        wandb_cfg = OmegaConf.to_container(args, resolve=True, throw_on_missing=True)
+        config_path_hydra = [
+            path["path"]
+            for path in HydraConfig.get().runtime.config_sources
+            if path["schema"] == "file"
+        ][0]
+        wandb_cfg["HYDRA_CONFIG"] = (
+            Path(config_path_hydra) / HydraConfig.get().job.config_name
+        )
+        os.environ["WANDB_DIR"] = str(Path(save_path))
+        project = os.environ["WANDB_PROJECT"]
+        wandb.init(project=project, dir=save_path, config=wandb_cfg)
+        wandb_save_directory(Path(save_path) / ".hydra")
+    
     save_path = args.save_path if "save_path" in args else save_path
+    log.info(f"Main directory: {save_path}")
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -150,6 +167,8 @@ def main(args):
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
             wandb.log({str(k) : v for k, v in man.gen_metrics})
             wandb.log({str(k) : v for k, v in man.metrics.items()})
+            wandb.save(save_path + f"/ue_manager_seed{seed}")
+
     
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
