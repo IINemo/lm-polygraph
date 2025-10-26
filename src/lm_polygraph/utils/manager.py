@@ -136,7 +136,8 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
-        # percentages: List[int] = [1, 5, 50, 100],  # <-- NEW PARAMETER
+        percentages: List[int] = [100],  # <-- NEW PARAMETER
+        tokens: List[int] = [100],  # <-- NEW PARAMETER
         # truncation_mode: str = 'percentages',  # <-- NEW PARAMETER
     ):
         """
@@ -185,6 +186,9 @@ class UEManager:
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
+
+        self.percentages = percentages
+        self.tokens = tokens
 
         self.init()
 
@@ -297,10 +301,6 @@ class UEManager:
         batch_estimations = defaultdict(list)
         bad_estimators = []
 
-        # hardcoded for now, we should make them parameters in the yaml files later
-        percentages: List[int] = [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 100]
-        tokens: List[int] = [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 100]
-
         for estimator in estimators:
             if str(estimator) in ["MaximumSequenceProbability", "Perplexity", "MeanTokenEntropy"]:
 
@@ -314,7 +314,7 @@ class UEManager:
                             f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
                         )
 
-                    for pct in percentages:
+                    for pct in self.percentages:
                         e_pct = [ arr[max(1, int(len(arr) * pct / 100)-1)] for arr in e ]
 
                         if not isinstance(e_pct, list):
@@ -326,8 +326,8 @@ class UEManager:
                         batch_estimations[key] += e_pct
                     print(f"Results for {estimator}: {e}")
                     
-                    for tkn in tokens:
-                        e_tkn = [ arr[min(tkn, len(arr)-1)] for arr in e ]
+                    for tkn in self.tokens:
+                        e_tkn = [ arr[min(tkn-1, len(arr)-1)] for arr in e ]
 
                         if not isinstance(e_tkn, list):
                             e_tkn = e_tkn.tolist()
@@ -454,7 +454,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
+            for key in ["greedy_texts", "greedy_tokens", "greedy_log_likelihoods"]:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
