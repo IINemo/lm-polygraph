@@ -10,7 +10,7 @@ defaults:
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-
+instruct: false
 task: qa
 
 dataset: ['LM-Polygraph/mmlu', 'continuation']
@@ -22,7 +22,7 @@ max_new_tokens: 3
 load_from_disk: false
 size: 10000
 generation_params:
-  generate_until:
+  stop_strings:
     - "\n"
 
 subsample_eval_dataset: -1

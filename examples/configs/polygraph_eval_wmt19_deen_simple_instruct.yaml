@@ -1,0 +1,40 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
+  - estimators: default_estimators
+  - stat_calculators: default_calculators
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+device: cpu
+instruct: true
+task: nmt
+
+dataset: ['LM-Polygraph/wmt19', 'deen_simple_instruct']
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
+max_new_tokens: 107
+load_from_disk: false
+trust_remote_code: false
+size: 10000
+
+source_ignore_regex: "(?s).*Original:\n(.*?)\nTranslation:\n"
+
+subsample_eval_dataset: -1
+
+generation_metrics: null
+
+ignore_exceptions: false
+
+batch_size: 1
+
+seed:
+    - 1
+    

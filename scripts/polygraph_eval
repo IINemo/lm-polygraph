@@ -5,7 +5,6 @@ import os
 import transformers
 from pathlib import Path
 from omegaconf import OmegaConf
-import uuid
 from hydra.core.hydra_config import HydraConfig
 
 import logging
@@ -22,7 +21,7 @@ from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module
-from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
@@ -44,14 +43,22 @@ def get_hydra_config_path():
     return None
 
 
+def wandb_save_directory(directory_path):
+    import wandb
+
+    for file_name in os.listdir(directory_path):
+        full_path = os.path.join(directory_path, file_name)
+        if os.path.isfile(full_path):  # Make sure it's a file, not a directory
+            wandb.save(full_path)
+
+
 @hydra.main(
     version_base=None,
     config_path=str(hydra_config.parent),
     config_name=str(hydra_config.name),
 )
 def main(args):
-    save_path = os.getcwd()
-    log.info(f"Main directory: {save_path}")
+    save_path = HydraConfig.get().runtime.output_dir
     os.chdir(hydra.utils.get_original_cwd())
 
     global hydra_config
@@ -60,12 +67,23 @@ def main(args):
 
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         import wandb
-        wandb.config = OmegaConf.to_container(
-        args, resolve=True, throw_on_missing=True
-        )
-        wandb.init(dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
+        wandb_cfg = OmegaConf.to_container(args, resolve=True, throw_on_missing=True)
+        config_path_hydra = [
+            path["path"]
+            for path in HydraConfig.get().runtime.config_sources
+            if path["schema"] == "file"
+        ][0]
+        wandb_cfg["HYDRA_CONFIG"] = (
+            Path(config_path_hydra) / HydraConfig.get().job.config_name
+        )
+        os.environ["WANDB_DIR"] = str(Path(save_path))
+        project = os.environ["WANDB_PROJECT"]
+        wandb.init(project=project, dir=save_path, config=wandb_cfg)
+        wandb_save_directory(Path(save_path) / ".hydra")
+    
     save_path = args.save_path if "save_path" in args else save_path
+    log.info(f"Main directory: {save_path}")
 
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
@@ -134,6 +152,7 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
+            save_stats=getattr(args, 'save_stats', []),
             log_time=getattr(args, "log_time", False),
         )
 
@@ -148,6 +167,8 @@ def main(args):
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
             wandb.log({str(k) : v for k, v in man.gen_metrics})
             wandb.log({str(k) : v for k, v in man.metrics.items()})
+            wandb.save(save_path + f"/ue_manager_seed{seed}")
+
     
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
@@ -158,6 +179,8 @@ def get_ue_metrics(args):
     ue_metrics = [
         PredictionRejectionArea(),
         PredictionRejectionArea(max_rejection=0.5),
+        IsotonicPCC(),
+        ECE(normalize=True),
     ]
     if getattr(args, "use_claim_ue", False):
         ue_metrics += [
@@ -173,6 +196,7 @@ def get_stat_calculator_names(config):
     output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
     output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
     hf_cache = getattr(config, "hf_cache", None)
+    deberta_batch_size = getattr(config, "deberta_batch_size", 10)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
         config.model, "supports_logprobs", False
     )
@@ -186,6 +210,7 @@ def get_stat_calculator_names(config):
             output_attentions=output_attentions, 
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
+            deberta_batch_size=deberta_batch_size,
         )
 
     for stat_calculator in config.stat_calculators:
@@ -218,21 +243,25 @@ def get_generation_metrics(args):
     log.info("Initializing generation metrics...")
 
     generation_metrics = getattr(args, "generation_metrics", None)
+    ignore_regex = getattr(args, "source_ignore_regex", None)
     if not generation_metrics:
         result = [
             RougeMetric("rouge1"),
             RougeMetric("rouge2"),
             RougeMetric("rougeL"),
             BLEUMetric(),
-            BertScoreMetric("rh"),
+            BertScoreMetric(),
             SbertMetric(),
             AccuracyMetric(
                 target_ignore_regex=getattr(args, "target_ignore_regex", None),
                 output_ignore_regex=getattr(args, "output_ignore_regex", None),
                 normalize=getattr(args, "normalize", False),
             ),
-            AlignScore(target_is_claims=False if args.task == "ats" else True),
         ]
+        if args.task == "ats":
+            result += [AlignScore(target_is_claims=False, source_ignore_regex=ignore_regex, source_as_target=True)]
+        else:
+            result += [AlignScore(target_is_claims=True)]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
             if getattr(args, "use_claim_ue", False):
                 result += [
@@ -243,7 +272,6 @@ def get_generation_metrics(args):
                     )
                 ]
         if args.task == "nmt":
-            ignore_regex = getattr(args, "source_ignore_regex", None)
             result += [Comet(source_ignore_regex=ignore_regex)]
     else:
         result = []
@@ -310,6 +338,8 @@ def get_blackbox_model(args):
             "Blackbox model provider cannot be empty or None. Please specify a valid provider."
         )
 
+    supports_logprobs = getattr(args.model, "supports_logprobs", False)
+
     if provider == "openai":
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key is None:
@@ -317,7 +347,7 @@ def get_blackbox_model(args):
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
             model_path=args.model.path,
-            supports_logprobs=args.model.supports_logprobs,
+            supports_logprobs=supports_logprobs,
         )
     elif provider == "huggingface":
         hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
@@ -343,6 +373,7 @@ def get_whitebox_model(args, cache_kwargs={}):
             getattr(args, "generation_params", {}),
             device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
+            instruct=getattr(args, "instruct", False),
             **cache_kwargs,
         )
 
@@ -357,16 +388,23 @@ def get_whitebox_model(args, cache_kwargs={}):
     load_tok_args.update(args.model.load_tokenizer_args)
     tokenizer = load_module.load_tokenizer(**load_tok_args)
 
-    generation_params = GenerationParameters(**getattr(args, "generation_params", {}))
+    generation_params = GenerationParametersFactory.from_params(
+        yaml_config=getattr(args, "generation_params", {}),
+        native_config=base_model.generation_config.to_dict()
+    )
 
     model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params
+        base_model,
+        tokenizer,
+        args.model.path,
+        args.model.type,
+        generation_params,
+        instruct=getattr(args, "instruct", False)
     )
 
     return model
 
 def get_vllm_model(args):
-    
     path_to_load_script = get_abs_path_from_hydra_config(
             args.model.path_to_load_script
         )
@@ -375,16 +413,17 @@ def get_vllm_model(args):
     load_model_args = {'model_path': args.model.path, 
                        'max_new_tokens': args.max_new_tokens, 
                        'logprobs': args.model.logprobs}
-    
+
     load_model_args.update(args.model.load_model_args)
     base_model, sampling_params = load_module.load_model(**load_model_args)
     generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
-    
+
     model = WhiteboxModelvLLM(model=base_model, 
                               sampling_params=sampling_params,
                               generation_parameters=generation_parameters,
-                              device=args.model.device)
-    
+                              device=args.model.device,
+                              instruct= getattr(args.model, "instruct", False))
+
     return model
 
 

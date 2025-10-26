@@ -1,3 +1,4 @@
+import re
 import numpy as np
 from .alignscore_utils import AlignScorer
 
@@ -18,6 +19,8 @@ class AlignScore(GenerationMetric):
         ckpt_path="https://huggingface.co/yzha/AlignScore/resolve/main/AlignScore-large.ckpt",
         batch_size=16,
         target_is_claims=True,
+        source_ignore_regex=None,
+        source_as_target=False,
     ):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,9 +33,24 @@ class AlignScore(GenerationMetric):
             ckpt_path=ckpt_path,
             evaluation_mode="nli_sp",
         )
+        self.source_as_target = source_as_target
+        self.source_ignore_regex = (
+            re.compile(source_ignore_regex) if source_ignore_regex else None
+        )
 
     def __str__(self):
         return "AlignScore"
+
+    def _filter_text(self, text: str, ignore_regex: re.Pattern) -> str:
+        if ignore_regex is not None:
+            processed_text = ignore_regex.search(text)
+            if processed_text:
+                return processed_text.group(1)
+            else:
+                raise ValueError(
+                    f"Source text {text} does not match the ignore regex {ignore_regex}"
+                )
+        return text
 
     def __call__(
         self,
@@ -52,7 +70,15 @@ class AlignScore(GenerationMetric):
         """
         greedy_texts = stats["greedy_texts"]
 
-        filtered_targets = [x if len(x.strip()) else "(empty)" for x in target_texts]
+        if self.source_as_target:
+            filtered_targets = [
+                self._filter_text(src, self.source_ignore_regex)
+                for src in stats["input_texts"]
+            ]
+        else:
+            filtered_targets = [
+                x if len(x.strip()) else "(empty)" for x in target_texts
+            ]
         filtered_outputs = [x if len(x.strip()) else "(empty)" for x in greedy_texts]
 
         if self.target_is_claims:

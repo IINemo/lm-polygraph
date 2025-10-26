@@ -1,5 +1,6 @@
 from typing import List, Optional
 from omegaconf import OmegaConf
+from pathlib import Path
 
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.factory_stat_calculator import (
@@ -14,6 +15,7 @@ def register_default_stat_calculators(
     blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
+    deberta_batch_size: int = 10,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -47,24 +49,44 @@ def register_default_stat_calculators(
         else "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
     )
 
+    # Shared NLI model config
+    nli_model_cfg = {
+        "deberta_path": deberta_model_path,
+        "hf_cache": hf_cache,
+        "batch_size": deberta_batch_size,
+        "device": None,
+    }
+
     _register(InitialStateCalculator)
+    _register(RawInputCalculator)
     _register(
         SemanticMatrixCalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_SemanticMatrixCalculator",
-        {
-            "nli_model": {
-                "deberta_path": deberta_model_path,
-                "hf_cache": hf_cache,
-                "batch_size": 10,
-                "device": None,
-            }
-        },
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        GreedySemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedySemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        ConcatGreedySemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_ConcatGreedySemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
     )
     _register(SemanticClassesCalculator)
 
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
+        if blackbox_supports_logprobs:
+            # For blackbox models that support logprobs (like OpenAI models)
+            _register(EntropyCalculator)
+            _register(
+                GreedyAlternativesNLICalculator,
+                "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
+                {"nli_model": nli_model_cfg},
+            )
 
     elif model_type == "Whitebox":
         _register(
@@ -84,9 +106,18 @@ def register_default_stat_calculators(
         _register(EnsembleTokenLevelDataCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
+        _register(AttentionElicitingPromptCalculator)
         _register(
             CrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": deberta_batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
+            GreedyCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyCrossEncoderSimilarityMatrixCalculator",
             {
                 "batch_size": 10,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
@@ -95,31 +126,26 @@ def register_default_stat_calculators(
         _register(
             GreedyAlternativesNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "hf_cache": hf_cache,
-                    "batch_size": 10,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             GreedyAlternativesFactPrefNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "hf_cache": hf_cache,
-                    "batch_size": 10,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
+        )
+        _register(
+            SemanticClassesClaimToSamplesCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SemanticClassesClaimToSamplesCalculator",
+            {"nli_model": nli_model_cfg},
         )
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
+            {
+                "openai_model": "gpt-4o",
+                "cache_path": str(Path.home() / ".cache"),
+                "language": language,
+            },
         )
         _register(AttentionForwardPassCalculator)
 
@@ -145,36 +171,28 @@ def register_default_stat_calculators(
             CrossEncoderSimilarityMatrixVisualCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixVisualCalculator",
             {
-                "batch_size": 10,
+                "batch_size": deberta_batch_size,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
         _register(
             GreedyAlternativesNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": 10,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             GreedyAlternativesFactPrefNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
-            {
-                "nli_model": {
-                    "deberta_path": deberta_model_path,
-                    "batch_size": 10,
-                    "device": None,
-                }
-            },
+            {"nli_model": nli_model_cfg},
         )
         _register(
             ClaimsExtractor,
             "lm_polygraph.defaults.stat_calculator_builders.default_ClaimsExtractor",
-            {"openai_model": "gpt-4o", "cache_path": "~/.cache", "language": language},
+            {
+                "openai_model": "gpt-4o",
+                "cache_path": str(Path.home() / ".cache"),
+                "language": language,
+            },
         )
         _register(AttentionForwardPassCalculatorVisual)
 

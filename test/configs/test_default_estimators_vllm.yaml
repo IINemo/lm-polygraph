@@ -59,3 +59,10 @@ estimators:
   - name: KernelLanguageEntropy
   - name: RenyiNeg
   - name: FisherRao
+  - name: CocoaMSP
+  - name: CocoaPPL
+  - name: CocoaMTE
+  - name: SemanticDensity
+  - name: SemanticDensity
+    cfg:
+      concat_input: False

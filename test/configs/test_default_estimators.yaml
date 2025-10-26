@@ -2,6 +2,7 @@ estimators:
   - name: MaximumSequenceProbability
   - name: Perplexity
   - name: MeanTokenEntropy
+  - name: SelfCertainty
   - name: MeanPointwiseMutualInformation
   - name: MeanConditionalPointwiseMutualInformation 
   - name: ClaimConditionedProbability
@@ -76,5 +77,20 @@ estimators:
       spacy_path: "en_core_web_sm"
   - name: AttentionScore
     cfg:
-      layer: 16
       gen_only: False
+  - name: RAUQ
+    cfg:
+      instruct: '${instruct}'
+      use_entropy: False
+  - name: RAUQ
+    cfg:
+      instruct: '${instruct}'
+      use_entropy: True
+  - name: CSL
+  - name: CocoaMSP
+  - name: CocoaPPL
+  - name: CocoaMTE
+  - name: SemanticDensity
+  - name: SemanticDensity
+    cfg:
+      concat_input: False

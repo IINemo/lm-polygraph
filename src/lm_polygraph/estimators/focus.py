@@ -43,10 +43,12 @@ def calcu_idf(
     os.makedirs(os.path.dirname(path), exist_ok=True)
     dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
     data = [d for d in dataset["train"]]
-    random.seed(idf_seed)
-    random.shuffle(data)
+    rng = random.Random(idf_seed)
+    rng.shuffle(data)
+
     if (idf_dataset_size > 0) and (idf_dataset_size < len(data)):
-        data = random.sample(data, idf_dataset_size)
+        data = rng.sample(data, idf_dataset_size)
+
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
     document_frequency = defaultdict(int)
     offset = 1 if "facebook" in tokenizer_path else 0
@@ -55,6 +57,7 @@ def calcu_idf(
         unique_tokens = set(tokenized_doc)
         for token in unique_tokens:
             document_frequency[token] += 1
+
     total_documents = len(data)
     pickle.dump(
         np.array(
@@ -187,7 +190,7 @@ def token_level_focus_scores(
         Tuple[List, List]: List of token-level uncertainty scores and keyword masks.
     """
 
-    attention_weights = stats["attention_all"]
+    attention_weights = [np.max(weights, axis=0) for weights in stats["attention_all"]]
     greedy_log_probs = stats["greedy_log_probs"]
     greedy_tokens = stats["greedy_tokens"]
     greedy_texts = stats["greedy_texts"]

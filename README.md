@@ -1,10 +1,24 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md)
-![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
-![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)
-<a href="https://arxiv.org/pdf/2406.15627" target="_blank"><img src=https://img.shields.io/badge/arXiv-b5212f.svg></a>
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow)](https://huggingface.co/LM-Polygraph)
+<h1>
+  <img
+    src="https://cdn-avatars.huggingface.co/v1/production/uploads/605a2d14768f56df182c99e2/RuSZrCSSKAMekMDFUSmZA.png"
+    alt="LM-Polygraph logo"
+    width="110"
+    align="left"
+  />
+  <br />
+  LM-Polygraph: Uncertainty Estimation for LLMs
+</h1>
 
-# LM-Polygraph: Uncertainty estimation for LLMs
+<br clear="all"/>
+
+<p align="left">
+  <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
+  <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python 3.11"/>
+  <a href="https://huggingface.co/LM-Polygraph"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/></a>
+  <a href="https://aclanthology.org/2023.emnlp-demo.41/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
+  <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods"><img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/></a>
+  <a href="https://sites.google.com/view/acl2025-uncertainty-for-llms/"><img src="https://img.shields.io/badge/ACL-2025-red?logo=googlescholar&logoColor=white" alt="Tutorial ACL 2025"/></a>
+</p>
 
 [Installation](#installation) | [Basic usage](#basic_usage) | [Overview](#overview_of_methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application) | [Documentation](https://lm-polygraph.readthedocs.io/)
 
@@ -15,136 +29,86 @@ The framework also introduces an extendable benchmark for consistent evaluation 
 ## Installation
 
 ### From GitHub
-To install latest from main brach, clone the repo and conduct installation using pip, it is recommended to use virtual environment. Code example is presented below:
+The latest stable version is available in the main branch, it is recommended to use a virtual environment:
 
 ```shell
-git clone https://github.com/IINemo/lm-polygraph.git
-python3 -m venv env # Substitute this with your virtual environment creation command
+python -m venv env # Substitute this with your virtual environment creation command
 source env/bin/activate
-cd lm-polygraph
-pip install .
+pip install git+https://github.com/IINemo/lm-polygraph.git
 ```
 
-Installation from GitHub is recommended if you want to explore notebooks with examples or use default benchmarking configurations, as they are included in the repository but not in the PyPI package. However code from the main branch may be unstable, so it is recommended to checkout to the latest stable release before installation:
+You can also use tags:
 
 ```shell
-git clone https://github.com/IINemo/lm-polygraph.git
-git checkout tags/v0.3.0
-python3 -m venv env # Substitute this with your virtual environment creation command
-source env/bin/activate
-cd lm-polygraph
-pip install .
+pip install git+https://github.com/IINemo/lm-polygraph.git@v0.5.0
 ```
 
 ### From PyPI
-To install the latest stable version from PyPI, run:
+The latest tagged version is also available via PyPI:
 
 ```shell
-python3 -m venv env # Substitute this with your virtual environment creation command
-source env/bin/activate
 pip install lm-polygraph
 ```
 
-To install a specific version, run:
-
-```shell
-python3 -m venv env # Substitute this with your virtual environment creation command
-source env/bin/activate
-pip install lm-polygraph==0.3.0
-```
-
 ## <a name="basic_usage"></a>Basic usage
-1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation. For example, with bigscience/bloomz-560m:
-
+1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation:
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from lm_polygraph.utils.model import WhiteboxModel
 
-model_path = "bigscience/bloomz-560m"
+model_path = "Qwen/Qwen2.5-0.5B-Instruct"
 base_model = AutoModelForCausalLM.from_pretrained(model_path, device_map="cuda:0")
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
 model = WhiteboxModel(base_model, tokenizer, model_path=model_path)
 ```
 
-Alternatively, you can use ```WhiteboxModel.from_pretrained``` method to let LM-Polygraph download the model and tokenizer for you. However, this approach is deprecated and will be removed in the next major release.
-
-```python
-from lm_polygraph.utils.model import WhiteboxModel
-
-model = WhiteboxModel.from_pretrained(
-    "bigscience/bloomz-3b",
-    device_map="cuda:0",
-)
-```
-
-2. Specify UE method:
-
+2. Specify the UE method:
 ```python
 from lm_polygraph.estimators import *
 
-ue_method = MeanPointwiseMutualInformation()
+ue_method = MeanTokenEntropy()
 ```
 
 3. Get predictions and their uncertainty scores:
-
 ```python
 from lm_polygraph.utils.manager import estimate_uncertainty
 
 input_text = "Who is George Bush?"
 ue = estimate_uncertainty(model, ue_method, input_text=input_text)
 print(ue)
-# UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')
+# UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='Qwen/Qwen2.5-0.5B-Instruct')
 ```
 
-## Using Custom OpenAI-Compatible Endpoints for BlackBox Model Evaluation
+4. More examples: [basic_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb)
+5. See also a low-level example for efficient integration into your code: [low_level_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_example.ipynb)
 
-To use LM-Polygraph with a custom OpenAI-compatible endpoint (like Azure OpenAI or self-hosted models), configure the following environment variables:
+## Using with LLMs deployed as a service
 
-```shell
-export OPENAI_BASE_URL="http://your-endpoint/v1"  # Your custom API endpoint
-export OPENAI_API_KEY="your-api-key"              # Your API key
-export OPENAI_API_TYPE="open_ai"                  # Use "open_ai" for OpenAI-compatible endpoints
-```
-
-This allows seamless integration with any OpenAI-compatible API service while maintaining the same interface and functionality.
-
-## Greybox Models Support
-
-LM-Polygraph supports "greybox" models - a middle ground between whitebox and blackbox models. Greybox models (like OpenAI models via API) provide access to token-level probabilities through logprobs while not requiring full model access. To use greybox capabilities with OpenAI models:
+LM-Polygraph can work with any OpenAI-compatible API services:
 
 ```python
 from lm_polygraph import BlackboxModel
 from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
 
-# Create a model with greybox capabilities
 model = BlackboxModel.from_openai(
     openai_api_key='YOUR_API_KEY',
-    model_path='gpt-3.5-turbo',
-    supports_logprobs=True  # Enable greybox capabilities
+    model_path='gpt-4o',
+    supports_logprobs=True  # Enable for deployments 
 )
 
-# Use information-based estimators normally only available to whitebox models
-ue_method = Perplexity()  # or MaximumSequenceProbability(), MeanTokenEntropy(), etc.
+ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.
+estimate_uncertainty(model, ue_method, input_text='What has a head and a tail but no body?')
 ```
 
-With greybox support, you can use several information-based uncertainty estimators that would otherwise require full model access. Currently, the following estimators work in greybox mode in addition to standard blackbox methods:
+UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs that do not provide logits.
 
-- **MaximumSequenceProbability**
-- **Perplexity**
-- **MeanTokenEntropy**
-- **ClaimConditionedProbability**
+## More examples:
 
-This significantly enhances uncertainty estimation options for API-based models.
-
-### Other examples:
-
-* [example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb): simple examples of scoring individual queries;
-* [claim_level_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/claim_level_example.ipynb): an example of scoring individual claims;
-* [qa_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/qa_example.ipynb): an example of scoring the `bigscience/bloomz-3b` model on the `TriviaQA` dataset;
-* [mt_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/mt_example.ipynb): an of scoring the `facebook/wmt19-en-de` model on the `WMT14 En-De` dataset;
-* [ats_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/ats_example.ipynb): an example of scoring the `facebook/bart-large-cnn` model on the `XSUM` summarization dataset;
-* [colab](https://colab.research.google.com/drive/1JS-NG0oqAVQhnpYY-DsoYWhz35reGRVJ?usp=sharing): demo web application in Colab (`bloomz-560m`, `gpt-3.5-turbo`, and `gpt-4` fit the default memory limit; other models require Colab-pro).
+* [basic_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb): simple examples of scoring individual queries
+* [low_level_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_example.ipynb): low-level integration into inference and claim-level UE
+* [low_level_vllm_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_vllm_example.ipynb): low-level example using vLLM for faster inference
+* [basic_visual_llm_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_visual_llm_example.ipynb): examples for visual LLMs
 
 ## <a name="overview_of_methods"></a>Overview of methods
 
@@ -181,6 +145,8 @@ This significantly enhances uncertainty estimation options for API-based models.
 | Rényi divergence [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                                                                                        | White-box   | Information-based   | Low     | Low    |         No          | sequence      |
 | Fisher-Rao distance [(Darrin et al., 2023)](https://aclanthology.org/2023.emnlp-main.357/)                                                                                     | White-box   | Information-based   | Low     | Low    |         No          | sequence      |
 | Attention Score [(Sriramanan et al., 2024)](https://proceedings.neurips.cc/paper_files/paper/2024/hash/3c1e1fdf305195cd620c118aaa9717ad-Abstract-Conference.html)              | White-box   | Information-based   | Medium     | Low    |         No          | sequence/claim       |
+| Contextualized Sequence Likelihood (CSL) [(Lin et al., 2024)](https://aclanthology.org/2024.emnlp-main.578/)              | White-box   | Information-based   | Medium     | Low    |         No          | sequence       |
+| Recurrent Attention-based Uncertainty Quantification (RAUQ) [(Vazhentsev et al., 2025)](https://arxiv.org/abs/2505.20045)              | White-box   | Information-based   | Low     | Low    |         No          | sequence       |
 | Focus [(Zhang et al., 2023)](https://aclanthology.org/2023.emnlp-main.58/)                                                                                                     | White-box   | Information-based   | Medium     | Low    |         No          | sequence/claim |
 | Semantic entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                                                                                            | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
 | Claim-Conditioned Probability [(Fadeeva et al., 2024)](https://arxiv.org/abs/2403.04696)                                                                                       | White-box   | Meaning diversity   | Low     | Low    |         No          | sequence/claim |
@@ -188,6 +154,8 @@ This significantly enhances uncertainty estimation options for API-based models.
 | TokenSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                               | White-box   | Meaning diversity   | High    | Low    |         No          | sequence/claim |
 | SentenceSAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                            | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
 | SAR [(Duan et al., 2023)](https://arxiv.org/abs/2307.01379)                                                                                                                    | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
+| SemanticDensity [(Qiu et al., 2024)](https://arxiv.org/abs/2405.13845)                                                                                                         | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
+| CoCoA [(Vashurin et al., 2025)](https://arxiv.org/abs/2502.04964)                                                                                                              | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
 | EigenScore [(Chen et al., 2024)](https://openreview.net/forum?id=Zj12nzlQbz)                                                                                                   | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
 | Sentence-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)                                                                           | White-box   | Ensembling          | High    | High   |         Yes         | sequence      |
 | Token-level ensemble-based measures [(Malinin and Gales, 2020)](https://arxiv.org/abs/2002.07650)                                                                              | White-box   | Ensembling          | High    | High   |         Yes         | sequence      |
@@ -231,29 +199,75 @@ CUDA_VISIBLE_DEVICES=0 polygraph_eval \
     subsample_eval_dataset=100
 ```
 
+You can also use a pre-built docker container for benchmarking, example:
+```
+docker run --gpus '"device=0"' --rm \
+  -w /app \
+  inemo/lm_polygraph \
+  bash -c "polygraph_eval \
+    --config-dir=./examples/configs/ \
+    --config-name=polygraph_eval_coqa.yaml \
+    model.path=meta-llama/Llama-3.1-8B \
+    subsample_eval_dataset=100"
+```
+
+The benchmark datasets in the correct format could be found in the [HF repo](https://huggingface.co/LM-Polygraph). The scripts for dataset preparation could be found in the `dataset_builders` directory.
+
 Use [`visualization_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/vizualization_tables.ipynb) or [`result_tables.ipynb`](https://github.com/IINemo/lm-polygraph/blob/main/notebooks/result_tables.ipynb) to generate the summarizing tables for an experiment.
 
 A detailed description of the benchmark is in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/usage.html#benchmarks).
 
-## <a name="demo_web_application"></a>Demo web application
+## <a name="demo_web_application"></a>(Obsolete) Demo web application
 
+Currently unsupported.
 
 <img width="850" alt="gui7" src="https://github.com/IINemo/lm-polygraph/assets/21058413/51aa12f7-f996-4257-b1bc-afbec6db4da7">
 
-
-### Start with Docker
-
-```sh
-docker build -t lm-polygraph .
-docker run --rm -it docker.io/library/lm-polygraph
-# If you want to use GPU: docker run --gpus all --rm -it docker.io/library/lm-polygraph
-```
-The server should be available on `http://localhost:3001`
-
-A more detailed description of the demo is available in the [documentation](https://lm-polygraph.readthedocs.io/en/latest/web_demo.html).
-
 ## Cite
-EMNLP-2023 paper:
+
+**TACL-2025 paper:**
+```
+@article{shelmanovvashurin2025,
+    author = {Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and Rvanova, Lyudmila and Vasilev, Daniil and Tsvigun, Akim and Petrakov, Sergey and Xing, Rui and Sadallah, Abdelrahman and Grishchenkov, Kirill and Panchenko, Alexander and Baldwin, Timothy and Nakov, Preslav and Panov, Maxim and Shelmanov, Artem},
+    title = {Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph},
+    journal = {Transactions of the Association for Computational Linguistics},
+    volume = {13},
+    pages = {220-248},
+    year = {2025},
+    month = {03},
+    issn = {2307-387X},
+    doi = {10.1162/tacl_a_00737},
+    url = {https://doi.org/10.1162/tacl\_a\_00737},
+    eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00737/2511955/tacl\_a\_00737.pdf},
+}
+```
+
+**ACL-2025 Tutorial:**
+```
+@inproceedings{shelmanov-etal-2025-uncertainty,
+    title = "Uncertainty Quantification for Large Language Models",
+    author = "Shelmanov, Artem  and
+      Panov, Maxim  and
+      Vashurin, Roman  and
+      Vazhentsev, Artem  and
+      Fadeeva, Ekaterina  and
+      Baldwin, Timothy",
+    editor = "Arase, Yuki  and
+      Jurgens, David  and
+      Xia, Fei",
+    booktitle = "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 5: Tutorial Abstracts)",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.acl-tutorials.3/",
+    doi = "10.18653/v1/2025.acl-tutorials.3",
+    pages = "3--4",
+    ISBN = "979-8-89176-255-8"
+}
+```
+
+**EMNLP-2023 paper:**
 ```
 @inproceedings{fadeeva-etal-2023-lm,
     title = "{LM}-Polygraph: Uncertainty Estimation for Language Models",
@@ -280,31 +294,6 @@ EMNLP-2023 paper:
     doi = "10.18653/v1/2023.emnlp-demo.41",
     pages = "446--461",
     abstract = "Recent advancements in the capabilities of large language models (LLMs) have paved the way for a myriad of groundbreaking applications in various fields. However, a significant challenge arises as these models often {``}hallucinate{''}, i.e., fabricate facts without providing users an apparent means to discern the veracity of their statements. Uncertainty estimation (UE) methods are one path to safer, more responsible, and more effective use of LLMs. However, to date, research on UE methods for LLMs has been focused primarily on theoretical rather than engineering contributions. In this work, we tackle this issue by introducing LM-Polygraph, a framework with implementations of a battery of state-of-the-art UE methods for LLMs in text generation tasks, with unified program interfaces in Python. Additionally, it introduces an extendable benchmark for consistent evaluation of UE techniques by researchers, and a demo web application that enriches the standard chat dialog with confidence scores, empowering end-users to discern unreliable responses. LM-Polygraph is compatible with the most recent LLMs, including BLOOMz, LLaMA-2, ChatGPT, and GPT-4, and is designed to support future releases of similarly-styled LMs.",
-}
-```
-
-Submitted:
-```
-@article{vashurin2024benchmarking,
-  title={Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph},
-  author={
-    Vashurin, Roman and
-    Fadeeva, Ekaterina and
-    Vazhentsev, Artem and
-    Rvanova, Lyudmila and
-    Tsvigun, Akim and
-    Vasilev, Daniil and
-    Xing, Rui and
-    Sadallah, Abdelrahman Boda and
-    Grishchenkov, Kirill and
-    Petrakov, Sergey and
-    Panchenko, Alexander and
-    Baldwin, Timothy and
-    Nakov, Preslav and
-    Panov, Maxim and
-    Shelmanov, Artem},
-  journal={arXiv preprint arXiv:2406.15627},
-  year={2024}
 }
 ```
 

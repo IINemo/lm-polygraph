@@ -13,6 +13,7 @@ def prepare_trivia_qa(
     description,
     few_shot_prompt,
     instruct,
+    few_shot_prompt_end,
 ):
     import numpy as np
 
@@ -41,9 +42,7 @@ def prepare_trivia_qa(
                     )
                     + "\n\n"
                 )
-            formatted_few_shot_prompt += (
-                "Now answer the following question in the same format:\n\n"
-            )
+            formatted_few_shot_prompt += f"{few_shot_prompt_end}:\n\n"
         else:
             formatted_few_shot_prompt = ""
             for inst in few_shot_data:
@@ -71,14 +70,20 @@ def prepare_trivia_qa(
     return x, y
 
 
-def generate_triviaqa_instruct_config(description, few_shot_prompt, subset):
+def generate_triviaqa_instruct_config(
+    description,
+    few_shot_prompt,
+    subset,
+    end_answer="",
+    few_shot_prompt_end="Now answer the following question in the same format:",
+):
     return {
         "name": ["trivia_qa", "rc.nocontext"],
         "train_split": "train",
         "test_split": "validation",
         "prepare_func": partial(
             prepare_trivia_qa,
-            prompt="Question: {question}\n",
+            prompt="Question: {question}\n" + end_answer,
             n_shot=5,
             few_shot_dataset_func=partial(
                 datasets.load_dataset,
@@ -89,6 +94,7 @@ def generate_triviaqa_instruct_config(description, few_shot_prompt, subset):
             description=description,
             few_shot_prompt=few_shot_prompt,
             instruct=True,
+            few_shot_prompt_end=few_shot_prompt_end,
         ),
         "dataset": "triviaqa",
         "subset": subset,
@@ -151,5 +157,12 @@ CONFIG = {
         description="Provide your {topk} best guesses for the following question. Give ONLY the guesses, no other words or explanation. For example:\n\nG1: <first most likely guess, as short as possible; not a complete sentence, just the guess!>\n...\nG{topk}: <{topk}-th most likely guess, as short as possible; not a complete sentence, just the guess!>",
         few_shot_prompt="Question: {question}\nG1: {answer}\n...\nG{topk}: <other guess>",
         subset="verb_2s_topk",
+    ),
+    "triviaqa_simple_instruct": generate_triviaqa_instruct_config(
+        description="Answer the following question as briefly as possible.",
+        few_shot_prompt="Question: {question}\nAnswer: {answer}",
+        subset="simple_instruct",
+        end_answer="Answer: ",
+        few_shot_prompt_end="Now answer the following question:",
     ),
 }

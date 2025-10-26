@@ -1,17 +1,25 @@
 import numpy as np
 
 from typing import Dict
+from transformers import AutoConfig
 
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.estimators.attention_score import unpad_attentions
 
 
 class AttentionScoreClaim(Estimator):
-    def __init__(self, layer: int = 16):
+    def __init__(
+        self,
+        model_name: str = None,
+    ):
         super().__init__(
             ["forwardpass_attention_weights", "greedy_tokens", "claims"], "claim"
         )
-        self.layer = layer
+        if model_name is not None:
+            config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+            self.layer = config.num_hidden_layers // 2  # middle layer
+        else:
+            raise ValueError("model_name must be provided to initialize self.layer")
 
     def __str__(self):
         return f"AttentionScoreClaim (layer={self.layer})"

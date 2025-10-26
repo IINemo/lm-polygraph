@@ -18,6 +18,7 @@ eval_split: test
 text_column: input
 load_from_disk: false
 label_column: output
+instruct: false
 prompt: ""
 
 ignore_exceptions: false
@@ -32,4 +33,4 @@ subsample_eval_dataset: 10
 batch_size: 2
 seed: null
 device: null
-max_new_tokens: 256
+max_new_tokens: 20

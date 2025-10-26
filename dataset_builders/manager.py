@@ -93,7 +93,6 @@ def main():
         print(
             "WARNING: --publish and --save-to-disk are not specified, so dataset will not be stored anywhere"
         )
-
     dataset = build_dataset(args.dataset)
     if args.save_to_disk:
         dataset.save_to_disk(pathlib.Path("result") / args.dataset)
