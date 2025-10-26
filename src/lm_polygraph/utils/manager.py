@@ -350,23 +350,17 @@ class UEManager:
             ):
                 self.stats["images"] += self.model.get_images(images)
                 batch_stats["images"] = self.model.get_images(images)
+            
             batch_stats["model"] = self.model
 
-            # Calculate statistics
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
 
-            # Get estimations
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
             )
 
-            # Process batch
             batch_callback(
-                batch_i,
-                target_texts,
-                batch_stats,
-                batch_estimations,
-                bad_estimators,
+                batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
             )
             torch.cuda.empty_cache()
             gc.collect()

@@ -43,11 +43,10 @@ def register_default_stat_calculators(
         )
         all_stat_calculators.append(sc)
 
-    deberta_model_path = (
-        "microsoft/deberta-large-mnli"
-        if language == "en"
-        else "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
-    )
+    if language == "en":
+        deberta_model_path = "microsoft/deberta-large-mnli"
+    else:
+        deberta_model_path = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
 
     # Shared NLI model config
     nli_model_cfg = {
@@ -104,6 +103,7 @@ def register_default_stat_calculators(
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
+        _register(PromptCalculator)
         _register(SamplingPromptCalculator)
         _register(ClaimPromptCalculator)
         _register(AttentionElicitingPromptCalculator)
@@ -148,7 +148,6 @@ def register_default_stat_calculators(
             },
         )
         _register(AttentionForwardPassCalculator)
-
     elif model_type == "VisualLM":
         _register(
             GreedyProbsVisualCalculator,

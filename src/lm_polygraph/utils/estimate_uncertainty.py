@@ -40,7 +40,7 @@ def estimate_uncertainty(
     model: Model,
     estimator: Estimator,
     input_text: str,
-    image: Optional[Union[str, Path, Image.Image]] = None,
+    input_image: Optional[Union[str, Path, Image.Image]] = None,
 ) -> UncertaintyOutput:
     """
     Estimated uncertainty of the model generation using the provided esitmator.
@@ -87,12 +87,13 @@ def estimate_uncertainty(
         model_type = "VisualLM"
     else:
         model_type = "Blackbox"
-
     man = UEManager(
-        Dataset([input_text], [""], batch_size=1, images=[image]),
+        Dataset([input_text], [""], batch_size=1, images=[input_image] if input_image is not None else None),
         model,
         [estimator],
-        available_stat_calculators=register_default_stat_calculators(model_type),
+        available_stat_calculators=register_default_stat_calculators(
+            model_type
+        ),  # TODO:
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],
         ue_metrics=[],

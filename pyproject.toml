@@ -41,7 +41,6 @@ script-files = [
   "scripts/polygraph_eval",
   "scripts/polygraph_eval_ood",
   "scripts/polygraph_normalize",
-  "scripts/polygraph_eval_vis",
 ]
 
 [tool.setuptools.dynamic]
