@@ -1,41 +1,23 @@
-<table align="left">
-  <tr>
-    <td valign="middle">
-      <img src="https://cdn-avatars.huggingface.co/v1/production/uploads/605a2d14768f56df182c99e2/uHMVA4vBitbtP7l1K2wIg.png"
-           alt="LM-Polygraph logo"
-           width="110"
-           style="margin-right: 0px;">
-    </td>
-    <td valign="middle">
-      <h1 style="margin: 0; line-height: 1.1;">
-        LM-Polygraph: Uncertainty estimation for LLMs
-      </h1>
-    </td>
-  </tr>
-</table>
+<h1>
+  <img
+    src="https://cdn-avatars.huggingface.co/v1/production/uploads/605a2d14768f56df182c99e2/RuSZrCSSKAMekMDFUSmZA.png"
+    alt="LM-Polygraph logo"
+    width="110"
+    align="left"
+  />
+  <br />
+  LM-Polygraph: Uncertainty Estimation for LLMs
+</h1>
 
 <br clear="all"/>
 
 <p align="left">
-  <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md">
-    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/>
-  </a>
+  <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
   <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python 3.11"/>
-  <a href="https://huggingface.co/LM-Polygraph">
-    <img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/>
-  </a>
-  <a href="https://2023.emnlp.org/" target="_blank" rel="noopener noreferrer">
-  <img
-    src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white"
-    alt="EMNLP 2023"
-  />
-  </a>
-  <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods" target="_blank">
-    <img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/>
-  </a>
-  <a href="https://sites.google.com/view/acl2025-uncertainty-for-llms/">
-    <img src="https://img.shields.io/badge/ACL-2025-red?logo=googlescholar&logoColor=white" alt="Tutorial ACL 2025"/>
-  </a>
+  <a href="https://huggingface.co/LM-Polygraph"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/></a>
+  <a href="https://2023.emnlp.org/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
+  <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods"><img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/></a>
+  <a href="https://sites.google.com/view/acl2025-uncertainty-for-llms/"><img src="https://img.shields.io/badge/ACL-2025-red?logo=googlescholar&logoColor=white" alt="Tutorial ACL 2025"/></a>
 </p>
 
 [Installation](#installation) | [Basic usage](#basic_usage) | [Overview](#overview_of_methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application) | [Documentation](https://lm-polygraph.readthedocs.io/)
