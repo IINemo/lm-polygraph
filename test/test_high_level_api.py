@@ -34,7 +34,7 @@ def test_CausalLMWithUncertainty():
     inputs = tokenizer(chat_prompts, return_tensors="pt").to(device)
 
     output = llm_with_uncertainty.generate(
-        **inputs, max_new_tokens=200, temperature=0.7, do_sample=True
+        **inputs, max_new_tokens=30, temperature=0.7, do_sample=True
     )
 
     print("LLM output:")
