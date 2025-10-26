@@ -1,10 +1,42 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md)
-![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow)](https://huggingface.co/LM-Polygraph)
-<a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods" target="_blank"><img src=https://img.shields.io/badge/TACL-2025-blue.svg></a>
-<a href="https://arxiv.org/pdf/2406.15627" target="_blank"><img src=https://img.shields.io/badge/arXiv-b5212f.svg></a>
+<table align="left">
+  <tr>
+    <td valign="middle">
+      <img src="https://cdn-avatars.huggingface.co/v1/production/uploads/605a2d14768f56df182c99e2/uHMVA4vBitbtP7l1K2wIg.png"
+           alt="LM-Polygraph logo"
+           width="110"
+           style="margin-right: 0px;">
+    </td>
+    <td valign="middle">
+      <h1 style="margin: 0; line-height: 1.1;">
+        LM-Polygraph: Uncertainty estimation for LLMs
+      </h1>
+    </td>
+  </tr>
+</table>
 
-# LM-Polygraph: Uncertainty estimation for LLMs
+<br clear="all"/>
+
+<p align="left">
+  <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/>
+  </a>
+  <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python 3.11"/>
+  <a href="https://huggingface.co/LM-Polygraph">
+    <img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/>
+  </a>
+  <a href="https://2023.emnlp.org/" target="_blank" rel="noopener noreferrer">
+  <img
+    src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white"
+    alt="EMNLP 2023"
+  />
+  </a>
+  <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods" target="_blank">
+    <img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/>
+  </a>
+  <a href="https://sites.google.com/view/acl2025-uncertainty-for-llms/">
+    <img src="https://img.shields.io/badge/ACL-2025-red?logo=googlescholar&logoColor=white" alt="Tutorial ACL 2025"/>
+  </a>
+</p>
 
 [Installation](#installation) | [Basic usage](#basic_usage) | [Overview](#overview_of_methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application) | [Documentation](https://lm-polygraph.readthedocs.io/)
 
@@ -211,7 +243,7 @@ Currently unsupported.
 
 ## Cite
 
-**TACL-2025:**
+**TACL-2025 paper:**
 ```
 @article{shelmanovvashurin2025,
     author = {Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and Rvanova, Lyudmila and Vasilev, Daniil and Tsvigun, Akim and Petrakov, Sergey and Xing, Rui and Sadallah, Abdelrahman and Grishchenkov, Kirill and Panchenko, Alexander and Baldwin, Timothy and Nakov, Preslav and Panov, Maxim and Shelmanov, Artem},
@@ -225,6 +257,31 @@ Currently unsupported.
     doi = {10.1162/tacl_a_00737},
     url = {https://doi.org/10.1162/tacl\_a\_00737},
     eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00737/2511955/tacl\_a\_00737.pdf},
+}
+```
+
+**ACL-2025 Tutorial:**
+```
+@inproceedings{shelmanov-etal-2025-uncertainty,
+    title = "Uncertainty Quantification for Large Language Models",
+    author = "Shelmanov, Artem  and
+      Panov, Maxim  and
+      Vashurin, Roman  and
+      Vazhentsev, Artem  and
+      Fadeeva, Ekaterina  and
+      Baldwin, Timothy",
+    editor = "Arase, Yuki  and
+      Jurgens, David  and
+      Xia, Fei",
+    booktitle = "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 5: Tutorial Abstracts)",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.acl-tutorials.3/",
+    doi = "10.18653/v1/2025.acl-tutorials.3",
+    pages = "3--4",
+    ISBN = "979-8-89176-255-8"
 }
 ```
 
