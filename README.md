@@ -15,7 +15,7 @@
   <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
   <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python 3.11"/>
   <a href="https://huggingface.co/LM-Polygraph"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/></a>
-  <a href="https://2023.emnlp.org/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
+  <a href="https://aclanthology.org/2023.emnlp-demo.41/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
   <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods"><img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/></a>
   <a href="https://sites.google.com/view/acl2025-uncertainty-for-llms/"><img src="https://img.shields.io/badge/ACL-2025-red?logo=googlescholar&logoColor=white" alt="Tutorial ACL 2025"/></a>
 </p>
