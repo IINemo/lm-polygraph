@@ -1,4 +1,3 @@
-
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from lm_polygraph.estimators import MeanTokenEntropy
@@ -20,22 +19,22 @@ def test_CausalLMWithUncertainty():
     tokenizer.pad_token = tokenizer.eos_token
     llm = llm.to(device)
 
-    stat_calculators = [InferCausalLMCalculator(tokenize=False),
-                        EntropyCalculator()]
+    stat_calculators = [InferCausalLMCalculator(tokenize=False), EntropyCalculator()]
     estimator = MeanTokenEntropy()
-    llm_with_uncertainty = CausalLMWithUncertainty(llm, tokenizer, stat_calculators, estimator)
+    llm_with_uncertainty = CausalLMWithUncertainty(
+        llm, tokenizer, stat_calculators, estimator
+    )
 
     prompts = ["Write a short story about a robot learning to paint.\n"]
 
     chats = [[{"role": "user", "content": prompt}] for prompt in prompts]
-    chat_prompts = tokenizer.apply_chat_template(chats, add_generation_prompt=True, tokenize=False)
+    chat_prompts = tokenizer.apply_chat_template(
+        chats, add_generation_prompt=True, tokenize=False
+    )
     inputs = tokenizer(chat_prompts, return_tensors="pt").to(device)
 
     output = llm_with_uncertainty.generate(
-        **inputs,  
-        max_new_tokens=200,
-        temperature=0.7,
-        do_sample=True
+        **inputs, max_new_tokens=200, temperature=0.7, do_sample=True
     )
 
     print("LLM output:")
