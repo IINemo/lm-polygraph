@@ -13,13 +13,11 @@ class GenerateDecoderOnlyOutputWithUncertainty(GenerateDecoderOnlyOutput):
 
 
 class CausalLMWithUncertainty:
-    def __init__(self, llm, tokenizer, stat_calculators, estimator, args_generate=None):
+    def __init__(self, llm, tokenizer, stat_calculators, estimator):
         self.llm = llm
         self.tokenizer = tokenizer
         self.stat_calculators = stat_calculators
         self.estimator = estimator
-
-        self.args_generate = args_generate
 
     def generate(self, input_ids, attention_mask=None, **kwargs):
         max_new_tokens = kwargs.pop("max_new_tokens", None)
