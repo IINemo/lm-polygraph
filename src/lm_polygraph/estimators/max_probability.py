@@ -10,7 +10,7 @@ class MaximumSequenceProbability(Estimator):
     Estimates the sequence-level uncertainty of a language model by calculating the
     log-probability of the generation with minus sign.
     It is calculated as the sum of log-probabilities in each token.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     """
 
     def __init__(self):

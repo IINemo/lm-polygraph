@@ -9,7 +9,7 @@ class SemanticEntropy(Estimator):
     """
     Estimates the sequence-level uncertainty of a language model following the method of
     "Semantic entropy" as provided in the paper https://arxiv.org/abs/2302.09664.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
 
     This method calculates the generation entropy estimations merged by semantic classes using Monte-Carlo.
     The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator

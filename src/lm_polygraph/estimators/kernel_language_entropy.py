@@ -55,7 +55,7 @@ class KernelLanguageEntropy(Estimator):
     Estimates the sequence-level uncertainty of a language model following the method of
     "Kernel Language Entropy" as provided in the paper https://arxiv.org/pdf/2405.20003
     Works with both whitebox and blackbox models (initialized using
-    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+    lm_polygraph.model_adapters.blackbox_model.BlackboxModel/WhiteboxModel).
 
     This method calculates KLE(Kheat) = VNE(Kheat), where VNE is von Neumann entropy and
     Kheat is a heat kernel of a semantic graph over language model's outputs.

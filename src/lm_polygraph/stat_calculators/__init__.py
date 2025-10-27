@@ -36,8 +36,8 @@ from .claim_level_prompts import (
 from .entropy import EntropyCalculator
 from .sample import (
     SamplingGenerationCalculator,
-    BlackboxSamplingGenerationCalculator,
 )
+from .sample_blackbox import BlackboxSamplingGenerationCalculator
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,
     GreedyAlternativesFactPrefNLICalculator,
@@ -53,7 +53,10 @@ from .greedy_semantic_matrix import (
     GreedySemanticMatrixCalculator,
     ConcatGreedySemanticMatrixCalculator,
 )
-from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
+from .cross_encoder_similarity import (
+    SequenceCrossEncoderSimilarityMatrixCalculator,
+    TokenCrossEncoderSimilarityMatrixCalculator,
+)
 from .greedy_cross_encoder_similarity import (
     GreedyCrossEncoderSimilarityMatrixCalculator,
 )

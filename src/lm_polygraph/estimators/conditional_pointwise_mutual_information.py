@@ -10,7 +10,7 @@ class MeanConditionalPointwiseMutualInformation(Estimator):
     Estimates the sequence-level uncertainty of a language model following the method of
     Conditional Pointwise Mutual Information (CPMI) as provided in the paper https://arxiv.org/abs/2210.13210.
     The sequence-level estimation is calculated as average token-level CPMI estimations.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     """
 
     def __init__(self, tau: float = 0.0656, lambd: float = 3.599):
@@ -62,7 +62,7 @@ class ConditionalPointwiseMutualInformation(Estimator):
     """
     Estimates the token-level uncertainty of a language model following the method of
     Conditional Pointwise Mutual Information (CPMI) as provided in the paper https://arxiv.org/abs/2210.13210.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     """
 
     def __init__(self, tau: float = 0.0656, lambd: float = 3.599):

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from omegaconf import OmegaConf
 from pathlib import Path
 
@@ -12,14 +12,23 @@ def register_default_stat_calculators(
     model_type: str,
     language: str = "en",
     hf_cache: Optional[str] = None,
-    blackbox_supports_logprobs: bool = False,
     output_attentions: bool = True,
     output_hidden_states: bool = True,
     deberta_batch_size: int = 10,
+    model: Optional[Any] = None,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
     estimate_uncertainty() function with default configurations.
+
+    Args:
+        model_type: Type of the model ("Blackbox", "Whitebox", or "VisualLM").
+        language: Dataset language code.
+        hf_cache: Optional Hugging Face cache location.
+        output_attentions: Whether whitebox models should output attentions.
+        output_hidden_states: Whether whitebox models should output hidden states.
+        deberta_batch_size: Batch size for NLI-based calculators.
+        model: Optional model instance used to derive provider-specific behavior (e.g., logprob support).
     """
 
     all_stat_calculators = []
@@ -74,19 +83,34 @@ def register_default_stat_calculators(
         {"nli_model": nli_model_cfg},
     )
     _register(SemanticClassesCalculator)
+    _register(
+        SequenceCrossEncoderSimilarityMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_SequenceCrossEncoderSimilarityMatrixCalculator",
+        {
+            "batch_size": deberta_batch_size,
+            "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+        },
+    )
+    _register(
+        GreedyCrossEncoderSimilarityMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyCrossEncoderSimilarityMatrixCalculator",
+        {
+            "batch_size": 10,
+            "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+        },
+    )
+    _register(
+        GreedyAlternativesNLICalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
+        {"nli_model": nli_model_cfg},
+    )
 
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)
-        if blackbox_supports_logprobs:
+        if model.supports_logprobs:
             # For blackbox models that support logprobs (like OpenAI models)
             _register(EntropyCalculator)
-            _register(
-                GreedyAlternativesNLICalculator,
-                "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-                {"nli_model": nli_model_cfg},
-            )
-
     elif model_type == "Whitebox":
         _register(
             GreedyProbsCalculator,
@@ -108,27 +132,6 @@ def register_default_stat_calculators(
         _register(ClaimPromptCalculator)
         _register(AttentionElicitingPromptCalculator)
         _register(
-            CrossEncoderSimilarityMatrixCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixCalculator",
-            {
-                "batch_size": deberta_batch_size,
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
-            },
-        )
-        _register(
-            GreedyCrossEncoderSimilarityMatrixCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyCrossEncoderSimilarityMatrixCalculator",
-            {
-                "batch_size": 10,
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
-            },
-        )
-        _register(
-            GreedyAlternativesNLICalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-            {"nli_model": nli_model_cfg},
-        )
-        _register(
             GreedyAlternativesFactPrefNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
             {"nli_model": nli_model_cfg},
@@ -148,6 +151,14 @@ def register_default_stat_calculators(
             },
         )
         _register(AttentionForwardPassCalculator)
+        _register(
+            TokenCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_TokenCrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": deberta_batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
     elif model_type == "VisualLM":
         _register(
             GreedyProbsVisualCalculator,
@@ -167,19 +178,6 @@ def register_default_stat_calculators(
         _register(SamplingPromptVisualCalculator)
         _register(ClaimPromptVisualCalculator)
         _register(
-            CrossEncoderSimilarityMatrixVisualCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSimilarityMatrixVisualCalculator",
-            {
-                "batch_size": deberta_batch_size,
-                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
-            },
-        )
-        _register(
-            GreedyAlternativesNLICalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
-            {"nli_model": nli_model_cfg},
-        )
-        _register(
             GreedyAlternativesFactPrefNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesFactPrefNLICalculator",
             {"nli_model": nli_model_cfg},
@@ -191,6 +189,14 @@ def register_default_stat_calculators(
                 "openai_model": "gpt-4o",
                 "cache_path": str(Path.home() / ".cache"),
                 "language": language,
+            },
+        )
+        _register(
+            TokenCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_TokenCrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": deberta_batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
             },
         )
 

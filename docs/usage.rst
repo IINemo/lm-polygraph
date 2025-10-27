@@ -62,7 +62,7 @@ Uncertainty for single input
     .. code-block:: python
 
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        from lm_polygraph.utils.model import WhiteboxModel
+        from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
         model_path = "bigscience/bloomz-560m"
         base_model = AutoModelForCausalLM.from_pretrained(model_path, device_map="cuda:0")
@@ -74,7 +74,7 @@ Uncertainty for single input
 
     .. code-block:: python
 
-        from lm_polygraph.utils.model import WhiteboxModel
+        from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
         model = WhiteboxModel.from_pretrained(
             "bigscience/bloomz-3b",

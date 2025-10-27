@@ -54,7 +54,7 @@ pip install lm-polygraph
 1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation:
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 
 model_path = "Qwen/Qwen2.5-0.5B-Instruct"
 base_model = AutoModelForCausalLM.from_pretrained(model_path, device_map="cuda:0")
@@ -91,10 +91,9 @@ LM-Polygraph can work with any OpenAI-compatible API services:
 from lm_polygraph import BlackboxModel
 from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
 
-model = BlackboxModel.from_openai(
-    openai_api_key='YOUR_API_KEY',
+model = BlackboxModel(
     model_path='gpt-4o',
-    supports_logprobs=True  # Enable for deployments 
+    api_provider_name='openai'
 )
 
 ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.

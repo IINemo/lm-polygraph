@@ -1,34 +1,21 @@
+import os
 import torch
 import pytest
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
-from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
+from lm_polygraph.model_adapters.blackbox_model import BlackboxModel
 
 INPUT = "When was Julius Caesar born?"
 
 
 @pytest.fixture(scope="module")
 def model():
-    model_path = "bigscience/bloomz-560m"
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        pytest.skip("OPENAI_API_KEY environment variable not set")
 
-    if torch.cuda.is_available():
-        device = "cuda"
-    elif torch.mps.is_available():
-        device = "mps"
-    else:
-        device = "cpu"
-
-    base_model = AutoModelForCausalLM.from_pretrained(
-        model_path,
-        trust_remote_code=True,
-        device_map=device,
-    )
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-
-    return WhiteboxModel(base_model, tokenizer)
+    return BlackboxModel('gpt-4.1-nano')
 
 
 def test_maximum_sequence_probability(model):
@@ -45,36 +32,6 @@ def test_perplexity(model):
 
 def test_mean_token_entropy(model):
     estimator = MeanTokenEntropy()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_mean_pointwise_mutual_information(model):
-    estimator = MeanPointwiseMutualInformation()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_mean_conditional_pointwise_mutual_information(model):
-    estimator = MeanConditionalPointwiseMutualInformation()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_claim_conditioned_probability(model):
-    estimator = ClaimConditionedProbability()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_ptrue(model):
-    estimator = PTrue()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_ptrue_sampling(model):
-    estimator = PTrueSampling()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
@@ -181,73 +138,8 @@ def test_semantic_entropy(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_sar(model):
-    estimator = SAR()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_token_sar(model):
-    estimator = TokenSAR()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
 def test_sentence_sar(model):
     estimator = SentenceSAR()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_renyi_neg(model):
-    estimator = RenyiNeg()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_fisher_rao(model):
-    estimator = FisherRao()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_focus(model):
-    model_name = model.model.config._name_or_path
-    estimator = Focus(
-        model_name=model_name,
-        path="../token_idf/{model_name}/token_idf.pkl",
-        gamma=0.9,
-        p=0.01,
-        idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test",
-        trust_remote_code=True,
-        idf_seed=42,
-        idf_dataset_size=5,
-        spacy_path="en_core_web_sm",
-    )
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_kernel_language_entropy(model):
-    estimator = KernelLanguageEntropy()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_luq(model):
-    estimator = LUQ()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_eigenscore(model):
-    estimator = EigenScore()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_attentionscore(model):
-    estimator = AttentionScore()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 
@@ -266,18 +158,6 @@ def test_cocoappl(model):
 
 def test_cocoamte(model):
     estimator = CocoaMTE()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_rauq(model):
-    estimator = RAUQ()
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-
-
-def test_csl(model):
-    estimator = CSL()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
 

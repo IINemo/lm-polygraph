@@ -13,7 +13,7 @@ class EigValLaplacian(Estimator):
     Estimates the sequence-level uncertainty of a language model following the method of
     "Sum of Eigenvalues of the Graph Laplacian" as provided in the paper https://arxiv.org/abs/2305.19187.
     Works with both whitebox and blackbox models (initialized using
-    lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
+    lm_polygraph.model_adapters.blackbox_model.BlackboxModel/WhiteboxModel).
 
     A continuous analogue to the number of semantic sets (higher values means greater uncertainty).
     """

@@ -1,7 +1,8 @@
 from typing import List, Union
 from dataclasses import dataclass
 
-from lm_polygraph.utils.model import Model, WhiteboxModel
+from lm_polygraph.utils.model import Model
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.utils.manager import UEManager
@@ -66,9 +67,9 @@ def estimate_uncertainty(
     ```python
     >>> from lm_polygraph import BlackboxModel
     >>> from lm_polygraph.estimators import EigValLaplacian
-    >>> model = BlackboxModel.from_openai(
-    ...     'YOUR_OPENAI_TOKEN',
-    ...     'gpt-3.5-turbo'
+    >>> model = BlackboxModel(
+    ...     model_path='gpt-3.5-turbo',
+    ...     api_provider_name='openai'
     ... )
     >>> estimator = EigValLaplacian()
     >>> estimate_uncertainty(model, estimator, input_text='When did Albert Einstein die?')
@@ -87,7 +88,8 @@ def estimate_uncertainty(
         model,
         [estimator],
         available_stat_calculators=register_default_stat_calculators(
-            model_type
+            model_type,
+            model=model,
         ),  # TODO:
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],

@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, List, Tuple
 
 from lm_polygraph.stat_calculators.stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.model_adapters.whitebox_model import WhiteboxModel
 from lm_polygraph.utils.deberta import Deberta
 from lm_polygraph.stat_calculators.greedy_alternatives_nli import eval_nli_model
 

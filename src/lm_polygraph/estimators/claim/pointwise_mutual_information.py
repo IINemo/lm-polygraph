@@ -9,7 +9,7 @@ class PointwiseMutualInformationClaim(Estimator):
     """
     Estimates the claim-level uncertainty of a language model using Pointwise Mutual Information.
     The sequence-level estimation is calculated as product of token-level PMI estimations.
-    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    Works only with whitebox models (initialized using lm_polygraph.model_adapters.whitebox_model.WhiteboxModel).
     """
 
     def __init__(self):
