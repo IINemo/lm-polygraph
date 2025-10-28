@@ -8,7 +8,7 @@ defaults:
   - model: ugrip_llama_instruct_vllm
   - estimators: ugrip_benchmark_estimators
   - stat_calculators: default_calculators
-  - generation_metrics: null
+  - generation_metrics: ugrip_benchmark_generation_metrics_acc
 
   - _self_
 
