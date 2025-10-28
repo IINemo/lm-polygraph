@@ -5,10 +5,10 @@ CONFIG_TYPE="answer" # CHANGE THIS to "reasoning" for the other run
 
 MODEL="ugrip_llama_instruct_vllm"
 DATASET="UGRIP-LM-Polygraph/gsm8k-reasoning"
-SAMPLE_SIZE=2
+SAMPLE_SIZE=100
 BATCH_SIZE=20   
 # SOFIA: NOTE I DONT THINK THIS GPU MEMORY UTILIZATION THING WORKED WHEN I TESTED IT
-GPU_MEM_UTIL=0.60 
+# GPU_MEM_UTIL=0.60 
 
 # Config file name based on config type
 if [ "$CONFIG_TYPE" == "answer" ]; then
@@ -46,25 +46,19 @@ source .venv/bin/activate
     echo "========================================="
     echo ""
 
-    HYDRA_CONFIG=`pwd`/examples/configs/$CONFIG_FILE_NAME \
-      uv run --python 3.11 scripts/polygraph_eval  model=$MODEL \
-      dataset=$DATASET   subsample_eval_dataset=$SAMPLE_SIZE   \ 
-      model.load_model_args.gpu_memory_utilization=$GPU_MEM_UTIL  batch_size=$BATCH_SIZE 
+    START_TIME=$SECONDS
 
-    # Set HYDRA_CONFIG environment variable (used by polygraph_eval if needed)
-    export HYDRA_CONFIG=`pwd`/examples/configs/$CONFIG_FILE_NAME
+    HYDRA_CONFIG=`pwd`/examples/configs/$CONFIG_FILE_NAME uv run --python 3.11 scripts/polygraph_eval  model=$MODEL dataset=$DATASET   subsample_eval_dataset=$SAMPLE_SIZE batch_size=$BATCH_SIZE 
 
+      # I removed this because i don't think it helped with anything
+      # model.load_model_args.gpu_memory_utilization=$GPU_MEM_UTIL \
     # Run the evaluation script
-    uv run --python 3.11 scripts/polygraph_eval \
-      model=$MODEL \
-      dataset=$DATASET \
-      subsample_eval_dataset=$SAMPLE_SIZE \
-      model.load_model_args.gpu_memory_utilization=$GPU_MEM_UTIL \
-      batch_size=$BATCH_SIZE \
-      --config-name $CONFIG_FILE_NAME # Pass config name explicitly
+
+    ELAPSED_TIME=$(($SECONDS - $START_TIME))
 
     echo ""
     echo "--- Finished LM-Polygraph Run ---"
+    echo "Time Elapsed: $(($ELAPSED_TIME / 3600)) hrs, $((($ELAPSED_TIME / 60) % 60)) min, $(($ELAPSED_TIME % 60)) sec"
     echo "========================================================"
 
 } 2>&1 | tee "$LOG_FILE"
