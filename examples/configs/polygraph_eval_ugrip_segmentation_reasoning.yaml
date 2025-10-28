@@ -6,7 +6,7 @@ task: qa
 
 defaults:
   - model: ugrip_llama_instruct_vllm
-  - estimators: ugrip_benchmark_estimators
+  - estimators: ugrip_benchmark_estimators_lite
   - stat_calculators: default_calculators
   - generation_metrics: ugrip_benchmark_generation_metrics_acc
 
