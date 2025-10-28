@@ -51,7 +51,7 @@ def check_result(dataset, exec_result, reference, method=None):
     )
 
     if method is None:
-        assert len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 2
+        assert len(man.estimations[("sequence", "MaximumSequenceProbability")]) == 4
 
     key = dataset
     if method:
@@ -69,7 +69,7 @@ def check_result(dataset, exec_result, reference, method=None):
 def run_eval(dataset):
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
-                subsample_eval_dataset=2 \
+                subsample_eval_dataset=4 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
                 save_path={pwd()} \
@@ -120,7 +120,7 @@ def test_xsum(reference):
 def run_instruct_eval(dataset, method):
     command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/instruct/polygraph_eval_{dataset}_{method}.yaml \
                 polygraph_eval \
-                subsample_eval_dataset=2 \
+                subsample_eval_dataset=4 \
                 model=stablelm-1.6b-chat \
                 model.load_model_args.device_map={get_device()} \
                 save_path={pwd()}"
