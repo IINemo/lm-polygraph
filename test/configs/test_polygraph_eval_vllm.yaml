@@ -25,7 +25,7 @@ ignore_exceptions: false
 generation_metrics:
   - name: RougeMetric
     args: ["rouge1"]
-
+  
 stat_calculators:
   - auto
 
