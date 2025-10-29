@@ -12,7 +12,7 @@ INPUT = "When was Julius Caesar born?"
 
 @pytest.fixture(scope="module")
 def model():
-    model_path = "facebook/opt-350m"
+    model_path = "bigscience/bloomz-560m"
 
     if torch.cuda.is_available():
         device = "cuda"
