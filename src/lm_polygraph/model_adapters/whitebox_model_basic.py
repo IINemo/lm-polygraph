@@ -13,7 +13,7 @@ class WhiteboxModelBasic(Model):
         model: AutoModelForCausalLM,
         tokenizer: AutoTokenizer,
         tokenizer_args: Dict,
-        generation_parameters=None,
+        generation_parameters: Dict = {},
         model_type="",
     ):
         self.model = model
