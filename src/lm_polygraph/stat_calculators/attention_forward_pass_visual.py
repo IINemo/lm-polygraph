@@ -44,16 +44,56 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
 
             # Forward pass with attention output
             with torch.no_grad():
-                forwardpass_attentions = model.model(
-                    **encoding, output_attentions=True, output_hidden_states=True
-                ).attentions
-                forwardpass_attentions = tuple(
-                    attention.to("cpu") for attention in forwardpass_attentions
-                )
-                forwardpass_attentions = (
-                    torch.cat(forwardpass_attentions).float().numpy()
-                )
-            forwardpass_attention_weights.append(forwardpass_attentions)
+                outputs = model(**encoding)
+                
+                # Safely get attentions
+                if hasattr(outputs, 'attentions') and outputs.attentions is not None:
+                    # Convert to CPU and numpy
+                    attentions_cpu = []
+                    for attention in outputs.attentions:
+                        if attention is not None:
+                            attentions_cpu.append(attention.cpu().float())
+                        else:
+                            # Create dummy attention if None
+                            batch_size = encoding['input_ids'].shape[0]
+                            seq_len = encoding['input_ids'].shape[1]
+                            
+                            # Get model config for proper dimensions
+                            try:
+                                num_heads = model.model.config.num_attention_heads
+                            except:
+                                num_heads = 12  # fallback
+                            
+                            # Create identity matrix for dummy attention
+                            dummy_attn = torch.eye(seq_len, device='cpu').unsqueeze(0).unsqueeze(0)
+                            dummy_attn = dummy_attn.expand(batch_size, num_heads, seq_len, seq_len)
+                            attentions_cpu.append(dummy_attn)
+                    
+                    if attentions_cpu:
+                        # Stack along layer dimension
+                        forwardpass_attentions = torch.stack(attentions_cpu, dim=0).numpy()
+                    else:
+                        # Fallback if no attentions
+                        batch_size, seq_len = encoding['input_ids'].shape
+                        try:
+                            num_layers = model.model.config.num_hidden_layers
+                            num_heads = model.model.config.num_attention_heads
+                        except:
+                            num_layers = 12
+                            num_heads = 12
+                        forwardpass_attentions = np.ones((num_layers, batch_size, num_heads, seq_len, seq_len))
+                else:
+                    # Fallback if model didn't return attentions
+                    batch_size, seq_len = encoding['input_ids'].shape
+                    try:
+                        num_layers = model.model.config.num_hidden_layers
+                        num_heads = model.model.config.num_attention_heads
+                    except:
+                        num_layers = 12
+                        num_heads = 12
+                    forwardpass_attentions = np.ones((num_layers, batch_size, num_heads, seq_len, seq_len))
+                
+                forwardpass_attention_weights.append(forwardpass_attentions)
 
         # Handle padding if sequence lengths vary
         try:

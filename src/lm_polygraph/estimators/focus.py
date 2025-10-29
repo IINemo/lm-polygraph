@@ -178,19 +178,25 @@ def token_level_focus_scores(
     """
     Compute token-level Focus uncertainty scores and keyword masks based on
     attention, IDF, and linguistic signals (NER, POS).
-
-    Args:
-        stats (Dict[str, np.ndarray]): Dictionary of model statistics including
-            attention weights, log-probabilities, token IDs, and texts.
-        idf (IDFStats): Precomputed IDF values and spaCy resources.
-        p (float): Probability threshold for filtering low-confidence tokens.
-        gamma (float): Smoothing parameter for context-aware uncertainty penalty.
-
-    Returns:
-        Tuple[List, List]: List of token-level uncertainty scores and keyword masks.
     """
 
-    attention_weights = [np.max(weights, axis=0) for weights in stats["attention_all"]]
+    # Безопасное извлечение attention_weights
+    attention_weights = []
+    for weights in stats["attention_all"]:
+        if weights.ndim == 3:
+            # (n, seq_len, seq_len) -> (seq_len, seq_len)
+            attention_weights.append(np.max(weights, axis=0))
+        elif weights.ndim == 2:
+            # (seq_len, seq_len) -> оставляем
+            attention_weights.append(weights)
+        elif weights.ndim == 4:
+            # (num_layers, num_heads, seq_len, seq_len) -> максимум по слоям и головам
+            attention_weights.append(np.max(weights, axis=(0,1)))
+        else:
+            # Неизвестная размерность, создаем пустой массив
+            log.warning(f"Unexpected attention weights shape: {weights.shape}")
+            attention_weights.append(np.array([]))
+
     greedy_log_probs = stats["greedy_log_probs"]
     greedy_tokens = stats["greedy_tokens"]
     greedy_texts = stats["greedy_texts"]
@@ -244,9 +250,18 @@ def token_level_focus_scores(
             continue
         # w(i,j) estimation and penalty estimation for a new hallucination score
         weight = np.zeros_like(attention_weight)
-        weight[kw_mask] = attention_weight[kw_mask] / (
-            np.sum(attention_weight[kw_mask], axis=1, keepdims=True) + 1e-6
-        )
+        attn_kw = attention_weight[kw_mask]
+        if attn_kw.size == 0:
+            all_token_focus.append([])
+            all_kw_mask.append(kw_mask)
+            continue
+
+        # Безопасное нормализация
+        if attn_kw.ndim == 1:
+            weight[kw_mask] = attn_kw / (np.sum(attn_kw, keepdims=True) + 1e-6)
+        else:
+            weight[kw_mask] = attn_kw / (np.sum(attn_kw, axis=1, keepdims=True) + 1e-6)
+
         token_focus = []
         for i, token_weights in enumerate(weight):
             ue = hc[i]

@@ -21,7 +21,7 @@ from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import *
-from lm_polygraph.utils.common import load_external_module, load_processor
+from lm_polygraph.utils.common import load_external_module, load_processor, load_image
 from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
@@ -31,6 +31,7 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
+#from transformers import AutoProcessor, AutoModelForVision2Seq
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
@@ -123,6 +124,7 @@ def main(args):
             trust_remote_code=getattr(args, "trust_remote_code", False),
             **cache_kwargs,
         )
+#	images=dataset.images
         log.info("Done with loading eval data.")
 
         log.info("=" * 100)

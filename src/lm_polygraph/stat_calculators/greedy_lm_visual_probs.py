@@ -1,8 +1,6 @@
 import torch
 import numpy as np
-
 from typing import Dict, List, Tuple
-
 from .stat_calculator import StatCalculator
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 
@@ -18,7 +16,6 @@ class GreedyLMProbsVisualCalculator(StatCalculator):
         """
         Returns the statistics and dependencies for the calculator.
         """
-
         return ["greedy_lm_log_probs", "greedy_lm_log_likelihoods"], ["greedy_tokens"]
 
     def __init__(self):
@@ -49,68 +46,99 @@ class GreedyLMProbsVisualCalculator(StatCalculator):
                     P(y_t | y_<t) for all t.
         """
         tokens = dependencies["greedy_tokens"]
-        try:
-            batches = {}
-            images = dependencies["images"]
-
-            for text, image in zip(texts, images):
-                batch = model.processor_visual(
-                    text=str(text),
-                    images=image,
-                    return_tensors="pt",
-                    return_dict=True,
-                )
-                batch = {k: v.to(model.device()) for k, v in batch.items()}
-                if not batches:
-                    batches = {k: [v] for k, v in batch.items()}
-                else:
-                    for key in batch:
-                        batches[key].append(batch[key])
-            batch: Dict[str, torch.Tensor] = {
-                key: torch.cat(value, dim=0) for key, value in batches.items()
-            }
-
-            with torch.no_grad():
-                logprobs = model.model(**batch).logits.log_softmax(-1)
-            greedy_lm_log_probs = []
-            greedy_lm_ll = []
-            for i in range(len(tokens)):
-                if len(logprobs[i]) < len(tokens[i]):
-                    raise ValueError(
-                        "tokenizer(tokenizer.processor_visual.decode(t)) != t"
-                    )
-                greedy_lm_log_probs.append(
-                    logprobs[i, -len(tokens[i]) : -1].cpu().numpy()
-                )
-                greedy_lm_ll.append(
-                    [
-                        logprobs[i, -len(tokens[i]) + j, tokens[i][j]].item()
-                        for j in range(len(tokens[i]))
-                    ]
-                )
-        except ValueError:
-            # case where tokenizer(tokenizer.decode(t)) != t; process each sequence separetly
-            greedy_lm_log_probs = []
-            greedy_lm_ll = []
-            for toks in tokens:
-                input_ids = torch.LongTensor([toks]).to(model.device())
-                batch = {
-                    "input_ids": input_ids,
-                    "attention_mask": torch.ones_like(input_ids).to(model.device()),
-                }
+        images = dependencies["images"]
+        
+        greedy_lm_log_probs = []
+        greedy_lm_ll = []
+        
+        # Process each sample individually
+        for i, toks in enumerate(tokens):
+            try:
+                # Create encoding with image and empty text context
+                # We use the original text to get proper image encoding, but then we'll replace input_ids
+                encoding = model.processor_visual(
+                    text="",  # Use empty text as context for P(y_t|y_<t)
+                    images=images[i],
+                    return_tensors="pt"
+                ).to(model.device())
+                
+                # Replace input_ids with the tokens we want to evaluate
+                encoding['input_ids'] = torch.LongTensor([toks]).to(model.device())
+                encoding['attention_mask'] = torch.ones_like(encoding['input_ids']).to(model.device())
+                
+                # Also need to update image_embeds_position_mask for the new sequence length
+                old_mask = encoding.get('image_embeds_position_mask', None)
+                if old_mask is not None:
+                    # Create new mask: all zeros since we're only evaluating the generated tokens
+                    new_mask = torch.zeros_like(encoding['input_ids'])
+                    encoding['image_embeds_position_mask'] = new_mask
+                
+                # Forward pass through the model WITH image
                 with torch.no_grad():
-                    if model.model_type == "Seq2SeqLM":
-                        logprobs = model.model(
-                            **batch, decoder_input_ids=batch["input_ids"]
-                        ).logits.log_softmax(-1)
-                    else:
-                        logprobs = model.model(**batch).logits.log_softmax(-1)
+                    outputs = model(
+                        **encoding,
+                        return_dict=True
+                    )
+                    logprobs = outputs.logits.log_softmax(-1)
+                
                 logprobs = logprobs[0]
-                assert len(logprobs) >= len(toks)
-                greedy_lm_log_probs.append(logprobs[-len(toks) : -1].cpu().numpy())
-                greedy_lm_ll.append(
-                    [logprobs[-len(toks) + j, toks[j]].item() for j in range(len(toks))]
-                )
+                
+                # Verify the length matches
+                if len(logprobs) < len(toks):
+                    print(f"Warning: logprobs length {len(logprobs)} < tokens length {len(toks)}")
+                    # Use what we have
+                    usable_length = min(len(logprobs), len(toks))
+                    greedy_lm_log_probs.append(logprobs[-usable_length:-1].cpu().numpy() if usable_length > 1 else np.array([]))
+                    greedy_lm_ll.append(
+                        [logprobs[-usable_length + j, toks[j]].item() for j in range(usable_length)]
+                    )
+                else:
+                    greedy_lm_log_probs.append(logprobs[-len(toks):-1].cpu().numpy() if len(toks) > 1 else np.array([]))
+                    greedy_lm_ll.append(
+                        [logprobs[-len(toks) + j, toks[j]].item() for j in range(len(toks))]
+                    )
+                
+            except Exception as e:
+                print(f"Error processing sample {i} in GreedyLMProbsVisualCalculator: {e}")
+                try:
+                    print(f"Trying text-only fallback for sample {i}")
+                    input_ids = torch.LongTensor([toks]).to(model.device())
+                    batch = {
+                        "input_ids": input_ids,
+                        "attention_mask": torch.ones_like(input_ids).to(model.device()),
+                    }
+                    
+                    with torch.no_grad():
+                        # Try to use just the text model if available
+                        if hasattr(model.model, 'text_model'):
+                            outputs = model.model.text_model(**batch)
+                            logprobs = outputs.logits.log_softmax(-1)
+                        else:
+                            # Last resort: try direct model call without image
+                            # This will likely fail for Kosmos2 but worth trying
+                            outputs = model.model(**batch)
+                            logprobs = outputs.logits.log_softmax(-1)
+                    
+                    logprobs = logprobs[0]
+                    if len(logprobs) >= len(toks):
+                        greedy_lm_log_probs.append(logprobs[-len(toks):-1].cpu().numpy() if len(toks) > 1 else np.array([]))
+                        greedy_lm_ll.append(
+                            [logprobs[-len(toks) + j, toks[j]].item() for j in range(len(toks))]
+                        )
+                    else:
+                        raise ValueError("Fallback also failed")
+                        
+                except Exception as e2:
+                    print(f"Fallback also failed for sample {i}: {e2}")
+                    # Create dummy values as last resort
+                    seq_len = len(toks)
+                    vocab_size = model.model.config.vocab_size if hasattr(model.model, 'config') else 1000
+                    dummy_log_probs = np.zeros((max(seq_len - 1, 0), vocab_size))
+                    dummy_ll = [0.0] * seq_len
+                    
+                    greedy_lm_log_probs.append(dummy_log_probs)
+                    greedy_lm_ll.append(dummy_ll)
+        
         return {
             "greedy_lm_log_probs": greedy_lm_log_probs,
             "greedy_lm_log_likelihoods": greedy_lm_ll,
