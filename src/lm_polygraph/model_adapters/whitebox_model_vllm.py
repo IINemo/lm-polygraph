@@ -24,9 +24,10 @@ class WhiteboxModelvLLM(Model):
         self.generation_parameters = generation_parameters
         self.instruct = instruct
 
-        self.sampling_params.stop = list(
-            getattr(self.generation_parameters, "stop_strings", None)
-        )
+        stop_strings = getattr(self.generation_parameters, "stop_strings", None)
+        if stop_strings is None:
+            stop_strings = []
+        self.sampling_params.stop = list(stop_strings)
 
         for param in [
             "presence_penalty",
@@ -47,9 +48,6 @@ class WhiteboxModelvLLM(Model):
     def generate(self, *args, **kwargs):
         sampling_params = self.sampling_params
         sampling_params.n = kwargs.get("num_return_sequences", 1)
-        sampling_params.stop = list(
-            getattr(self.generation_parameters, "generate_until", [])
-        )
         texts = self.tokenizer.batch_decode(
             kwargs["input_ids"], skip_special_tokens=True
         )
@@ -70,7 +68,6 @@ class WhiteboxModelvLLM(Model):
             output = self.model.chat(*args, chats, sampling_params)
         else:
             output = self.model.generate(*args, texts, sampling_params)
-
         return self.post_processing(output)
 
     def device(self):

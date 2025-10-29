@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import eigh
 
 from typing import Dict
 
@@ -44,7 +45,7 @@ class EigenScore(Estimator):
                 self.J_d = np.eye(dim) - 1 / dim * np.ones((dim, dim))
             covariance = sentence_embeddings @ self.J_d @ sentence_embeddings.T
             reg_covariance = covariance + self.alpha * np.eye(covariance.shape[0])
-            eigenvalues, _ = np.linalg.eig(reg_covariance)
+            eigenvalues = eigh(reg_covariance, eigvals_only=True)
             ue.append(
                 np.mean(np.log([val if val > 0 else 1e-10 for val in eigenvalues]))
             )
