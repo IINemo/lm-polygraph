@@ -348,9 +348,9 @@ class UEManager:
             if images is not None and not (
                 isinstance(images, list) and all(img is None for img in images)
             ):
-                self.stats["images"] += self.model.get_images(images)
-                batch_stats["images"] = self.model.get_images(images)
-            
+                self.stats["images"] += Dataset.get_images(images)
+                batch_stats["images"] = Dataset.get_images(images)
+
             batch_stats["model"] = self.model
 
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)

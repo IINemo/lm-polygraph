@@ -1,11 +1,17 @@
 import os
 import pandas as pd
 import numpy as np
+import logging
+import requests
+import io
 
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List, Union, Optional
+from PIL import Image
+
+log = logging.getLogger("lm_polygraph")
 
 
 class Dataset:
@@ -240,3 +246,24 @@ class Dataset:
         ):
             return Dataset.from_csv(path_or_path_and_files, *args, **kwargs)
         return Dataset.from_datasets(path_or_path_and_files, *args, **kwargs)
+
+    @staticmethod
+    def get_images(images: List[Union[Image.Image, str, bytes]]):
+        imgs: List[Image.Image] = []
+        for image_input in images:
+            try:
+                if isinstance(image_input, Image.Image):
+                    imgs.append(image_input.convert("RGB"))
+                elif isinstance(image_input, str) and image_input.startswith("http"):
+                    response = requests.get(image_input, stream=True, timeout=10)
+                    response.raise_for_status()
+                    imgs.append(Image.open(io.BytesIO(response.content)).convert("RGB"))
+                elif isinstance(image_input, str):
+                    imgs.append(Image.open(image_input).convert("RGB"))
+                elif isinstance(image_input, (bytes, bytearray)):
+                    imgs.append(Image.open(io.BytesIO(image_input)).convert("RGB"))
+                else:
+                    log.warning(f"Unsupported image input format: {type(image_input)}")
+            except Exception as e:
+                log.warning(f"Failed to load image '{image_input}': {e}")
+        return imgs

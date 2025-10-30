@@ -67,7 +67,7 @@ class AttentionScore(Estimator):
         )
         greedy_tokens = stats["greedy_tokens"]
         ue = []
-        
+
         for k, attention_weight in enumerate(forwardpass_attention_weights):
             ue_i = 0
             # Handle different attention weight shapes
@@ -75,13 +75,15 @@ class AttentionScore(Estimator):
                 # Standard shape: (layers, heads, seq_len, seq_len)
                 layer_attention = attention_weight[self.layer]
                 num_heads = layer_attention.shape[0]
-                
+
                 for head_idx in range(num_heads):
                     attn = layer_attention[head_idx]
                     if attn.ndim != 2:
-                        print(f"Warning: Skipping non-2D attention matrix with shape {attn.shape}")
+                        print(
+                            f"Warning: Skipping non-2D attention matrix with shape {attn.shape}"
+                        )
                         continue
-                        
+
                     if self.gen_only:
                         attn = attn[
                             -len(greedy_tokens[k]) : -1, -len(greedy_tokens[k]) : -1
@@ -94,21 +96,23 @@ class AttentionScore(Estimator):
                         ue_i += np.sum(np.log(diag_vals + 1e-12))
                     else:
                         print(f"Warning: Invalid attention matrix shape {attn.shape}")
-                
+
                 ue_i /= num_heads
-                
+
             elif attention_weight.ndim == 5:
                 # Visual model shape: (layers, batch=1, heads, seq_len, seq_len)
                 # Take the first (and only) batch element
                 layer_attention = attention_weight[self.layer, 0, :, :, :]
                 num_heads = layer_attention.shape[0]
-                
+
                 for head_idx in range(num_heads):
                     attn = layer_attention[head_idx]
                     if attn.ndim != 2:
-                        print(f"Warning: Skipping non-2D attention matrix with shape {attn.shape}")
+                        print(
+                            f"Warning: Skipping non-2D attention matrix with shape {attn.shape}"
+                        )
                         continue
-                        
+
                     if self.gen_only:
                         attn = attn[
                             -len(greedy_tokens[k]) : -1, -len(greedy_tokens[k]) : -1
@@ -119,11 +123,13 @@ class AttentionScore(Estimator):
                         ue_i += np.sum(np.log(diag_vals + 1e-12))
                     else:
                         print(f"Warning: Invalid attention matrix shape {attn.shape}")
-                
+
                 ue_i /= num_heads
             else:
-                print(f"Warning: Unexpected attention weight shape {attention_weight.shape}")
+                print(
+                    f"Warning: Unexpected attention weight shape {attention_weight.shape}"
+                )
                 ue_i = 0  # Default value for invalid shapes
-                
+
             ue.append(ue_i)
         return -np.array(ue)

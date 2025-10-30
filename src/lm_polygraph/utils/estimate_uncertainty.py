@@ -88,7 +88,12 @@ def estimate_uncertainty(
     else:
         model_type = "Blackbox"
     man = UEManager(
-        Dataset([input_text], [""], batch_size=1, images=[input_image] if input_image is not None else None),
+        Dataset(
+            [input_text],
+            [""],
+            batch_size=1,
+            images=[input_image] if input_image is not None else None,
+        ),
         model,
         [estimator],
         available_stat_calculators=register_default_stat_calculators(

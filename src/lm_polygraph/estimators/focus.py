@@ -191,7 +191,7 @@ def token_level_focus_scores(
             attention_weights.append(weights)
         elif weights.ndim == 4:
             # (num_layers, num_heads, seq_len, seq_len) -> максимум по слоям и головам
-            attention_weights.append(np.max(weights, axis=(0,1)))
+            attention_weights.append(np.max(weights, axis=(0, 1)))
         else:
             # Неизвестная размерность, создаем пустой массив
             log.warning(f"Unexpected attention weights shape: {weights.shape}")
