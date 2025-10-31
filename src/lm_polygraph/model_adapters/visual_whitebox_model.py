@@ -66,7 +66,7 @@ class VisualWhiteboxModel(Model):
     def device(self) -> torch.device:
         try:
             return next(self.model.parameters()).device
-        except StopIteration as e:
+        except StopIteration:
             return torch.device("cpu")
 
     def _validate_args(self, args: Dict) -> Dict:
@@ -156,12 +156,7 @@ class VisualWhiteboxModel(Model):
                 current_seq_len = input_len + step + 1
                 layer_attentions = []
                 for layer in range(num_layers):
-                    attn_shape = (
-                        batch_size,
-                        num_heads,
-                        current_seq_len,
-                        current_seq_len,
-                    )
+                    # Removed unused variable 'attn_shape'
                     dummy_attn = (
                         torch.eye(current_seq_len, device=self.device())
                         .unsqueeze(0)
@@ -189,7 +184,7 @@ class VisualWhiteboxModel(Model):
 
             return result
 
-        except Exception:
+        except Exception as e:  # Fixed: Added 'as e' to capture the exception
             log.error(f"model.generate failed: {e}")
             return self._create_robust_fallback(tensor_inputs)
 
@@ -245,7 +240,7 @@ class VisualWhiteboxModel(Model):
             # Attentions
             layer_attentions = []
             for layer in range(num_layers):
-                # attn_shape = (batch_size, num_heads, current_seq_len, current_seq_len)
+                # Removed unused variable 'attn_shape'
                 dummy_attn = (
                     torch.eye(current_seq_len, device=device).unsqueeze(0).unsqueeze(0)
                 )
@@ -325,7 +320,7 @@ class VisualWhiteboxModel(Model):
 
                 dummy_attentions = []
                 for layer in range(num_layers):
-                    attn_shape = (batch_size, num_heads, seq_length, seq_length)
+                    # Removed unused variable 'attn_shape'
                     dummy_attn = (
                         torch.eye(seq_length, device=self.device())
                         .unsqueeze(0)
@@ -357,7 +352,7 @@ class VisualWhiteboxModel(Model):
 
             return outputs
 
-        except Exception:
+        except Exception as e:  # Fixed: Added 'as e' to capture the exception
             log.error(f"Model call failed: {e}")
             result = SimpleNamespace()
 
@@ -379,7 +374,7 @@ class VisualWhiteboxModel(Model):
 
             dummy_attentions = []
             for layer in range(num_layers):
-                attn_shape = (batch_size, num_heads, seq_length, seq_length)
+                # Removed unused variable 'attn_shape'
                 dummy_attn = (
                     torch.eye(seq_length, device=self.device())
                     .unsqueeze(0)
