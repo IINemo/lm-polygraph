@@ -59,7 +59,7 @@ class VisualWhiteboxModel(Model):
         def __call__(self, input_ids=None, scores=None):
             try:
                 self.scores.append(scores.log_softmax(-1))
-            except Exception as e:
+            except Exception:
                 self.scores.append(scores)
             return scores
 
@@ -114,7 +114,7 @@ class VisualWhiteboxModel(Model):
 
         try:
             args["generation_config"].return_dict_in_generate = True
-        except Exception as e:
+        except Exception:
             pass
 
         # Build tensor-only input snapshot
@@ -189,7 +189,7 @@ class VisualWhiteboxModel(Model):
 
             return result
 
-        except Exception as e:
+        except Exception:
             log.error(f"model.generate failed: {e}")
             return self._create_robust_fallback(tensor_inputs)
 
@@ -222,7 +222,7 @@ class VisualWhiteboxModel(Model):
                     outputs = self.model(input_ids=current_ids)
                     next_token_logits = outputs.logits[:, -1, :]
                     next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
-                except Exception as e:
+                except Exception:
                     next_token = current_ids[:, -1:] + 1
                     next_token = next_token % vocab_size
 
@@ -357,7 +357,7 @@ class VisualWhiteboxModel(Model):
 
             return outputs
 
-        except Exception as e:
+        except Exception:
             log.error(f"Model call failed: {e}")
             result = SimpleNamespace()
 
