@@ -195,22 +195,32 @@ def get_stat_calculator_names(config):
     language = getattr(config, "language", "en")
     output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
     output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
-    hf_cache = getattr(config, "hf_cache", None)
-    deberta_batch_size = getattr(config, "deberta_batch_size", 10)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
         config.model, "supports_logprobs", False
     )
+
+    sim_cfg = getattr(config, "similarity_model", {})
+
+    nli_cfg = getattr(sim_cfg, "nli", {})
+    nli_deberta_path = nli_cfg.get("deberta_path", None)
+    nli_batch_size = nli_cfg.get("batch_size", None)
+
+    cross_encoder_cfg = getattr(sim_cfg, "cross_encoder", {})
+    cross_encoder_name = cross_encoder_cfg.get("cross_encoder_name", None)
+    cross_encoder_batch_size = cross_encoder_cfg.get("batch_size", None)
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
         all_stat_calculators += register_default_stat_calculators(
             model_type,
             language,
-            hf_cache,
             output_attentions=output_attentions, 
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
-            deberta_batch_size=deberta_batch_size,
+            nli_deberta_path=nli_deberta_path,
+            nli_batch_size=nli_batch_size,
+            cross_encoder_name=cross_encoder_name,
+            cross_encoder_batch_size=cross_encoder_batch_size,
         )
 
     for stat_calculator in config.stat_calculators:
@@ -325,7 +335,6 @@ def get_model(args):
         return get_vllm_model(args)
     else:
         cache_kwargs = {
-            "cache_dir": getattr(args, "hf_cache", None),
             "token": getattr(args, "hf_token", None),
         }
         return get_whitebox_model(args, cache_kwargs)

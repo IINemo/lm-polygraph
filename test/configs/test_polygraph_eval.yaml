@@ -4,6 +4,7 @@ hydra:
 
 defaults:
   - model: bloomz-560m
+  - similarity_model: default_en
   - _self_
 
 cache_path: ./workdir/output

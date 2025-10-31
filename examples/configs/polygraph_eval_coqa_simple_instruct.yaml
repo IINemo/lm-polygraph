@@ -6,6 +6,7 @@ defaults:
   - model: bloomz-560m
   - estimators: default_estimators
   - stat_calculators: default_calculators
+  - similarity_model: default_en
   - base_processing_coqa
   - _self_
 

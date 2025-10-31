@@ -6,7 +6,7 @@ defaults:
   - model: gpt-4o-mini-greybox
   - test_default_greybox_estimators
   - test_default_calculators
-  
+  - similarity_model: default_en
   - _self_
 
 cache_path: ./workdir/output
@@ -44,7 +44,6 @@ ens_type:
 ignore_exceptions: false
 
 batch_size: 1
-deberta_batch_size: 1
 
 seed:
     - 1
