@@ -1,1 +1,18 @@
+  # - name: RougeMetric
+  #   args: ["rouge1"]
+  # - name: RougeMetric
+  #   args: ["rouge2"]
+  # - name: RougeMetric
+  #   args: ["rougeL"]
+  # - name: BLEUMetric
+  # - name: BertScoreMetric
+  #   args: ["rh"]
+  # - name: SbertMetric
   - name: AccuracyMetric
+    kwargs:
+      target_ignore_regex: null        # or regex pattern
+      output_ignore_regex: null        # or regex pattern
+      normalize: false
+  # - name: AlignScore
+  #   kwargs:
+  #     target_is_claims: true           # set to false if task == "ats"

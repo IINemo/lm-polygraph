@@ -19,7 +19,7 @@ class MaximumSequenceProbability(Estimator):
     def __str__(self):
         return "MaximumSequenceProbability"
 
-    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+    def __call__(self, stats: Dict[str, np.ndarray], cumulative=False) -> np.ndarray:
         """
         Estimates the minus log-probability of each sample in input statistics.
 
@@ -31,6 +31,8 @@ class MaximumSequenceProbability(Estimator):
                 Higher values indicate more uncertain samples.
         """
         log_likelihoods = stats["greedy_log_likelihoods"]
+        if cumulative:
+            return [-np.cumsum(log_likelihood) for log_likelihood in log_likelihoods]
         return np.array([-np.sum(log_likelihood) for log_likelihood in log_likelihoods])
 
 

@@ -136,6 +136,9 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
+        percentages: List[int] = [100],  # <-- NEW PARAMETER
+        tokens: List[int] = [100],  # <-- NEW PARAMETER
+        # truncation_mode: str = 'percentages',  # <-- NEW PARAMETER
     ):
         """
         Parameters:
@@ -156,6 +159,9 @@ class UEManager:
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
+
+        # self.percentages = percentages
+        # self.truncation_mode = truncation_mode
 
         self.model: Model = model
         self.data: Dataset = data
@@ -180,6 +186,9 @@ class UEManager:
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
+
+        self.percentages = percentages
+        self.tokens = tokens
 
         self.init()
 
@@ -293,32 +302,82 @@ class UEManager:
         bad_estimators = []
 
         for estimator in estimators:
-            try:
-                if self.log_time:
-                    start_time = time.time()
-                    log.info(f"Estimating {estimator}...")
-                e = estimator(batch_stats)
-                if self.log_time:
-                    log.info(
-                        f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
-                    )
-                if not isinstance(e, list):
-                    e = e.tolist()
-                if estimator.level == "claim":
-                    e = flatten_results(e, estimator)
-                self.estimations[estimator.level, str(estimator)] += e
-                batch_estimations[estimator.level, str(estimator)] += e
-            except Exception as e:
-                if self.ignore_exceptions:
-                    bad_estimators.append(estimator)
-                    lineno = e.__traceback__.tb_lineno
-                    log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
-                    sys.stderr.write("\n\n")
-                    sys.stderr.write(log_msg)
-                    sys.stderr.write(traceback.format_exc())
-                    continue
-                else:
-                    raise e
+            if str(estimator) in ["MaximumSequenceProbability", "Perplexity", "MeanTokenEntropy"]:
+
+                try:
+                    if self.log_time:
+                        start_time = time.time()
+                        log.info(f"Estimating {estimator}...")
+                    e = estimator(batch_stats, True)
+                    if self.log_time:
+                        log.info(
+                            f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                        )
+
+                    for pct in self.percentages:
+                        e_pct = [ arr[max(1, int(len(arr) * pct / 100)-1)] for arr in e ]
+
+                        if not isinstance(e_pct, list):
+                            e_pct = e_pct.tolist()
+                        if estimator.level == "claim":
+                            e_pct = flatten_results(e_pct, estimator)
+                        key = (estimator.level, f"{estimator}_{pct}pct")
+                        self.estimations[key] += e_pct
+                        batch_estimations[key] += e_pct
+                    print(f"Results for {estimator}: {e}")
+                    
+                    for tkn in self.tokens:
+                        e_tkn = [ arr[min(tkn-1, len(arr)-1)] for arr in e ]
+
+                        if not isinstance(e_tkn, list):
+                            e_tkn = e_tkn.tolist()
+                        if estimator.level == "claim":
+                            e_tkn = flatten_results(e_tkn, estimator)
+                        key = (estimator.level, f"{estimator}_{tkn}tkn")
+                        self.estimations[key] += e_tkn
+                        batch_estimations[key] += e_tkn
+                    print(f"Results for {estimator}: {e}")
+
+
+                except Exception as e:
+                    if self.ignore_exceptions:
+                        bad_estimators.append(estimator)
+                        lineno = e.__traceback__.tb_lineno
+                        log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
+                        sys.stderr.write("\n\n")
+                        sys.stderr.write(log_msg)
+                        sys.stderr.write(traceback.format_exc())
+                        continue
+                    else:
+                        raise e
+            else:
+                try:
+                    if self.log_time:
+                        start_time = time.time()
+                        log.info(f"Estimating {estimator}...")
+                    e = estimator(batch_stats)
+                    if self.log_time:
+                        log.info(
+                            f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                        )
+                    if not isinstance(e, list):
+                        e = e.tolist()
+                    if estimator.level == "claim":
+                        e = flatten_results(e, estimator)
+                    self.estimations[estimator.level, str(estimator)] += e
+                    batch_estimations[estimator.level, str(estimator)] += e
+                    print(f"Results for {estimator}: {e}")
+                except Exception as e:
+                    if self.ignore_exceptions:
+                        bad_estimators.append(estimator)
+                        lineno = e.__traceback__.tb_lineno
+                        log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
+                        sys.stderr.write("\n\n")
+                        sys.stderr.write(log_msg)
+                        sys.stderr.write(traceback.format_exc())
+                        continue
+                    else:
+                        raise e
 
         return batch_estimations, bad_estimators
 
@@ -395,7 +454,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
+            for key in ["greedy_texts", "greedy_tokens", "greedy_log_likelihoods"]:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:
