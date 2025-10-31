@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import io
 import logging
 from dataclasses import asdict
 from types import SimpleNamespace
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
-import requests
 import torch
 from PIL import Image
 from transformers import (
@@ -61,14 +59,14 @@ class VisualWhiteboxModel(Model):
         def __call__(self, input_ids=None, scores=None):
             try:
                 self.scores.append(scores.log_softmax(-1))
-            except Exception:
+            except Exception as e:
                 self.scores.append(scores)
             return scores
 
     def device(self) -> torch.device:
         try:
             return next(self.model.parameters()).device
-        except StopIteration:
+        except StopIteration as e:
             return torch.device("cpu")
 
     def _validate_args(self, args: Dict) -> Dict:
@@ -116,7 +114,7 @@ class VisualWhiteboxModel(Model):
 
         try:
             args["generation_config"].return_dict_in_generate = True
-        except Exception:
+        except Exception as e:
             pass
 
         # Build tensor-only input snapshot
@@ -224,7 +222,7 @@ class VisualWhiteboxModel(Model):
                     outputs = self.model(input_ids=current_ids)
                     next_token_logits = outputs.logits[:, -1, :]
                     next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
-                except Exception:
+                except Exception as e:
                     next_token = current_ids[:, -1:] + 1
                     next_token = next_token % vocab_size
 
@@ -247,7 +245,7 @@ class VisualWhiteboxModel(Model):
             # Attentions
             layer_attentions = []
             for layer in range(num_layers):
-                attn_shape = (batch_size, num_heads, current_seq_len, current_seq_len)
+                # attn_shape = (batch_size, num_heads, current_seq_len, current_seq_len)
                 dummy_attn = (
                     torch.eye(current_seq_len, device=device).unsqueeze(0).unsqueeze(0)
                 )

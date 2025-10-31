@@ -61,7 +61,7 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                             # Get model config for proper dimensions
                             try:
                                 num_heads = model.model.config.num_attention_heads
-                            except:
+                            except Exception as e:
                                 num_heads = 12  # fallback
 
                             # Create identity matrix for dummy attention
@@ -86,7 +86,7 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                         try:
                             num_layers = model.model.config.num_hidden_layers
                             num_heads = model.model.config.num_attention_heads
-                        except:
+                        except Exception as e:
                             num_layers = 12
                             num_heads = 12
                         forwardpass_attentions = np.ones(
@@ -98,7 +98,7 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                     try:
                         num_layers = model.model.config.num_hidden_layers
                         num_heads = model.model.config.num_attention_heads
-                    except:
+                    except Exception as e:
                         num_layers = 12
                         num_heads = 12
                     forwardpass_attentions = np.ones(
@@ -110,7 +110,7 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
         # Handle padding if sequence lengths vary
         try:
             forwardpass_attention_weights = np.array(forwardpass_attention_weights)
-        except Exception:
+        except Exception as e:
             # in this case we have various len of input_ids+greedy_tokens in batch, so pad before concat
             max_seq_length = np.max(
                 [el.shape[-1] for el in forwardpass_attention_weights]
