@@ -87,8 +87,9 @@ class SamplingGenerationVisualCalculator(StatCalculator):
                 - 'sample_embeddings' (List[List[List[float]]]): embeddings from the middle layer for the last token of the sampling generation.
         """
         batches = {}
+        images = dependencies["images"]
 
-        for text, image in zip(texts, model.images):
+        for text, image in zip(texts, images):
             batch = model.processor_visual(
                 text=str(text),
                 images=image,

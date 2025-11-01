@@ -1,6 +1,8 @@
 from typing import Tuple
 import logging
 import importlib.util
+from PIL import Image
+from transformers import AutoProcessor
 
 log = logging.getLogger("lm_polygraph")
 
@@ -55,3 +57,11 @@ def flatten_results(results, result_generator_class):
     # Flatten the list of lists into a single list
     # The expected shape is [num_inputs, num_token_level_results_per_input]
     return [result for sample_results in results for result in sample_results]
+
+
+def load_processor(model_path, **kwargs):
+    return AutoProcessor.from_pretrained(model_path, **kwargs)
+
+
+def load_image(image_path):
+    return Image.open(image_path).convert("RGB")

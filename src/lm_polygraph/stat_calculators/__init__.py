@@ -60,3 +60,4 @@ from .greedy_cross_encoder_similarity import (
 from .extract_claims import ClaimsExtractor
 from .infer_causal_lm_calculator import InferCausalLMCalculator
 from .semantic_classes import SemanticClassesCalculator
+from .attention_forward_pass_visual import AttentionForwardPassCalculatorVisual

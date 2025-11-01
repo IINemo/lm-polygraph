@@ -88,8 +88,9 @@ class BasePromptVisualCalculator(StatCalculator):
             return {self.method: np.array([])}
 
         batches = {}
+        images = dependencies["images"]
 
-        for text, image in zip(texts, model.images):
+        for text, image in zip(texts, images):
             batch = model.processor_visual(
                 text=str(text),
                 images=image,

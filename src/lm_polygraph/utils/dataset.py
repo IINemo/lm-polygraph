@@ -1,19 +1,27 @@
 import os
 import pandas as pd
 import numpy as np
+import logging
+import requests
+import io
 
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List, Union, Optional
+from PIL import Image
+
+log = logging.getLogger("lm_polygraph")
 
 
 class Dataset:
     """
-    Seq2seq dataset for calculating quality of uncertainty estimation method.
+    Seq2seq or vision-language dataset for calculating quality of uncertainty estimation method.
     """
 
-    def __init__(self, x: List[str], y: List[str], batch_size: int):
+    def __init__(
+        self, x: List[str], y: List[str], batch_size: int, images: Optional[str] = None
+    ):
         """
         Parameters:
             x (List[str]): a list of input texts.
@@ -22,19 +30,24 @@ class Dataset:
         """
         self.x = x
         self.y = y
+        self.images = images
         self.batch_size = batch_size
 
-    def __iter__(self) -> Iterable[Tuple[List[str], List[str]]]:
+    def __iter__(self) -> Iterable[Tuple[List[str], List[str], Optional[List]]]:
         """
         Returns:
             Iterable[Tuple[List[str], List[str]]]: iterates over batches in dataset,
                 returns list of input texts and list of corresponding output texts.
         """
         for i in range(0, len(self.x), self.batch_size):
-            yield (
-                self.x[i : i + self.batch_size],
-                self.y[i : i + self.batch_size],
+            batch_x = self.x[i : i + self.batch_size]
+            batch_y = self.y[i : i + self.batch_size]
+            batch_images = (
+                self.images[i : i + self.batch_size]
+                if self.images is not None
+                else None
             )
+            yield (batch_x, batch_y, batch_images)
 
     def __len__(self) -> int:
         """
@@ -52,6 +65,8 @@ class Dataset:
         """
         self.x = [self.x[i] for i in indices]
         self.y = [self.y[i] for i in indices]
+        if self.images is not None:
+            self.images = [self.images[i] for i in indices]
         return self
 
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):
@@ -74,13 +89,25 @@ class Dataset:
             test_size=test_size,
             random_state=seed,
         )
+        if self.images is not None:
+            images_train, images_test = train_test_split(
+                np.array(self.images), test_size=test_size, random_state=seed
+            )
+        else:
+            images_train = images_test = None
 
         if split == "train":
-            self.x = X_train.tolist()
-            self.y = y_train.tolist()
+            self.x, self.y, self.images = (
+                X_train.tolist(),
+                y_train.tolist(),
+                images_train.tolist() if images_train is not None else None,
+            )
         else:
-            self.x = X_test.tolist()
-            self.y = y_test.tolist()
+            self.x, self.y, self.images = (
+                X_test.tolist(),
+                y_test.tolist(),
+                images_test.tolist() if images_test is not None else None,
+            )
 
         return (
             X_train.tolist(),
@@ -158,6 +185,7 @@ class Dataset:
         x_column: str,
         y_column: str,
         batch_size: int,
+        im_column: Optional[str] = None,
         prompt: str = "",
         description: str = "",
         mmlu_max_subject_size: int = 100,
@@ -200,7 +228,9 @@ class Dataset:
             else:
                 y = ["" for _ in range(len(x))]
 
-        return Dataset(x, y, batch_size)
+        images = dataset[im_column] if im_column else None
+
+        return Dataset(x, y, batch_size, images=images)
 
     @staticmethod
     def load(path_or_path_and_files: Union[str, List[str]], *args, **kwargs):
@@ -216,3 +246,24 @@ class Dataset:
         ):
             return Dataset.from_csv(path_or_path_and_files, *args, **kwargs)
         return Dataset.from_datasets(path_or_path_and_files, *args, **kwargs)
+
+    @staticmethod
+    def get_images(images: List[Union[Image.Image, str, bytes]]):
+        imgs: List[Image.Image] = []
+        for image_input in images:
+            try:
+                if isinstance(image_input, Image.Image):
+                    imgs.append(image_input.convert("RGB"))
+                elif isinstance(image_input, str) and image_input.startswith("http"):
+                    response = requests.get(image_input, stream=True, timeout=10)
+                    response.raise_for_status()
+                    imgs.append(Image.open(io.BytesIO(response.content)).convert("RGB"))
+                elif isinstance(image_input, str):
+                    imgs.append(Image.open(image_input).convert("RGB"))
+                elif isinstance(image_input, (bytes, bytearray)):
+                    imgs.append(Image.open(io.BytesIO(image_input)).convert("RGB"))
+                else:
+                    log.warning(f"Unsupported image input format: {type(image_input)}")
+            except Exception as e:
+                log.warning(f"Failed to load image '{image_input}': {e}")
+        return imgs

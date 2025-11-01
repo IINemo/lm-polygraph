@@ -16,11 +16,12 @@ from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
 from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
 from lm_polygraph.model_adapters import WhiteboxModelvLLM
+from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 from lm_polygraph.utils.processor import Logger
 from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import *
-from lm_polygraph.utils.common import load_external_module
+from lm_polygraph.utils.common import load_external_module, load_processor, load_image
 from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
@@ -30,6 +31,7 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
+#from transformers import AutoProcessor, AutoModelForVision2Seq
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
@@ -115,12 +117,14 @@ def main(args):
             n_shot=getattr(args, "n_shot", 5),
             few_shot_split=getattr(args, "few_shot_split", "train"),
             few_shot_prompt=getattr(args, "few_shot_prompt", None),
+            im_column=getattr(args, "im_column", None),
             instruct=getattr(args, "instruct", None),
             split=args.eval_split,
             load_from_disk=args.load_from_disk,
             trust_remote_code=getattr(args, "trust_remote_code", False),
             **cache_kwargs,
         )
+#	images=dataset.images
         log.info("Done with loading eval data.")
 
         log.info("=" * 100)
@@ -191,7 +195,12 @@ def get_ue_metrics(args):
 
 
 def get_stat_calculator_names(config):
-    model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
+    model_type_raw = getattr(config.model, "type", "Whitebox")
+    model_type = (
+        "Blackbox" if model_type_raw == "Blackbox"
+        else "VisualLM" if model_type_raw == "VisualLM"
+        else "Whitebox"
+    )
     language = getattr(config, "language", "en")
     output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
     output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
@@ -321,6 +330,12 @@ def get_generation_metrics(args):
 def get_model(args):
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         return get_blackbox_model(args)
+    elif getattr(args.model, "type", "Whitebox") == "VisualLM":
+        cache_kwargs = {
+            "cache_dir": getattr(args, "hf_cache", None),
+            "token": getattr(args, "hf_token", None),
+        }
+        return get_visual_model(args, cache_kwargs)
     elif getattr(args.model, "type", "Whitebox") == "vLLMCausalLM":
         return get_vllm_model(args)
     else:
@@ -403,6 +418,52 @@ def get_whitebox_model(args, cache_kwargs={}):
     )
 
     return model
+
+
+def get_visual_model(args, cache_kwargs={}):
+    if not "path_to_load_script" in args.model or not args.model.path_to_load_script:
+        log.warning(
+            "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
+        )
+        log.info(f"Loading model with cache_kwargs: {cache_kwargs}")
+        return VisualWhiteboxModel.from_pretrained(
+            args.model.path,
+            getattr(args, "generation_params", {}),
+            device_map=args.model.load_model_args.device_map,
+            add_bos_token=getattr(args.model, "add_bos_token", True),
+            **cache_kwargs
+        )
+
+    path_to_load_script = get_abs_path_from_hydra_config(
+            args.model.path_to_load_script
+        )
+    load_module = load_external_module(path_to_load_script)
+
+    load_model_args = {'model_path': args.model.path}
+    load_model_args.update(args.model.load_model_args)
+    base_model = load_module.load_model(**load_model_args)
+
+    load_tok_args = {'model_path': args.model.path}
+    load_tok_args.update(args.model.load_tokenizer_args)
+    tokenizer = load_module.load_tokenizer(**load_tok_args)
+
+    load_proc_args = {'model_path': args.model.path}
+    load_proc_args.update(getattr(args.model, "load_processor_args", {}))
+    processor = load_processor(**load_proc_args)
+
+    generation_params = GenerationParametersFactory.from_params(
+        yaml_config=getattr(args, "generation_params", {}),
+        native_config=base_model.generation_config.to_dict()
+    )
+
+    model = VisualWhiteboxModel(base_model,
+                          processor,
+                          args.model.path,
+                          args.model.type,
+                          generation_params)
+
+    return model
+
 
 def get_vllm_model(args):
     path_to_load_script = get_abs_path_from_hydra_config(
