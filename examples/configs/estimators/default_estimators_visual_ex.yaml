@@ -1,0 +1,8 @@
+- name: MaximumSequenceProbability
+- name: PTrueSampling
+- name: NumSemSets
+- name: SemanticEntropy
+- name: AttentionScore
+  cfg:
+    layer: 16
+    gen_only: False
