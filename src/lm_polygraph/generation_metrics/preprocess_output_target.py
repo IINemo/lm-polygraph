@@ -4,7 +4,6 @@ from copy import deepcopy
 from typing import List, Dict
 from .generation_metric import GenerationMetric
 
-
 class PreprocessOutputTarget(GenerationMetric):
     """
     Preprocesses output and target texts before passing them to the base metric.
@@ -44,8 +43,12 @@ class PreprocessOutputTarget(GenerationMetric):
         stats_copy = {k: v for k, v in stats.items() if k in self.stats_dependencies}
         stats_copy = deepcopy(stats_copy)
 
-        stats_copy["greedy_texts"] = [
-            self.process_output_fn(str(output)) for output in stats_copy["greedy_texts"]
+        process_key = "greedy_texts" # Default
+        if "greedy_texts_full" in self.base_metric.stats_dependencies:
+            process_key = "greedy_texts_full"
+
+        stats_copy[process_key] = [
+            self.process_output_fn(str(output)) for output in stats_copy[process_key]
         ]
 
         return self.base_metric(stats_copy, processed_target_texts)

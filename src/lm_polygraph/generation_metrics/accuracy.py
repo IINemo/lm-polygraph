@@ -18,7 +18,7 @@ class AccuracyMetric(GenerationMetric):
     def __init__(
         self, target_ignore_regex=None, output_ignore_regex=None, normalize=False
     ):
-        super().__init__(["greedy_texts"], "sequence")
+        super().__init__(["greedy_texts", "greedy_texts_full"], "sequence")
         self.target_ignore_regex = (
             re.compile(target_ignore_regex) if target_ignore_regex else None
         )
@@ -66,14 +66,13 @@ class AccuracyMetric(GenerationMetric):
         Returns:
             np.ndarray: list of accuracies: 1 if generated text is equal to ground-truth and 0 otherwise.
         """
-        greedy_texts = stats["greedy_texts"]
+        greedy_texts = stats.get("greedy_texts_full", stats["greedy_texts"])
 
         result = []
 
         for hyp, ref in zip(greedy_texts, target_texts):
             ref = self._filter_text(ref, self.target_ignore_regex)
             hyp = self._filter_text(hyp, self.output_ignore_regex)
-
             if self.normalize:
                 ref = self._normalize_text(ref)
                 hyp = self._normalize_text(hyp)

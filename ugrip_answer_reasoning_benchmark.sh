@@ -1,23 +1,19 @@
 #!/bin/bash
 
-# Change this to either "answer" or "reasoning"
-CONFIG_TYPE="answer" # CHANGE THIS to "reasoning" for the other run
+# Change this to "answer" or "reasoning" or "both"
+CONFIG_TYPE="both" 
 
 MODEL="ugrip_llama_instruct_vllm"
 DATASET="UGRIP-LM-Polygraph/gsm8k-reasoning"
-SAMPLE_SIZE=100
+SAMPLE_SIZE=1000
 BATCH_SIZE=20   
 # SOFIA: NOTE I DONT THINK THIS GPU MEMORY UTILIZATION THING WORKED WHEN I TESTED IT
 # GPU_MEM_UTIL=0.60 
 
-# Config file name based on config type
-if [ "$CONFIG_TYPE" == "answer" ]; then
-  CONFIG_FILE_NAME="polygraph_eval_ugrip_segmentation_answer.yaml"
-elif [ "$CONFIG_TYPE" == "reasoning" ]; then
-  CONFIG_FILE_NAME="polygraph_eval_ugrip_segmentation_reasoning.yaml"
-else
-  echo "Error: CONFIG_TYPE must be 'answer' or 'reasoning'"
+if [ "$CONFIG_TYPE" != "answer" ] && [ "$CONFIG_TYPE" != "reasoning" ] && [ "$CONFIG_TYPE" != "both" ]; then 
+  echo "Error: CONFIG_TYPE must be 'answer', 'reasoning', or 'both'"
   exit 1
+
 fi
 
 # output path
@@ -32,34 +28,69 @@ source .venv/bin/activate
 
 # Group commands, redirect stderr to stdout, and pipe to tee
 {
-    echo "========================================="
-    echo "LM-Polygraph Answer/Reasoning Testing"
-    echo "Host: $(hostname)"
-    echo "Run Type: $CONFIG_TYPE"
-    echo "Config File: $CONFIG_FILE_NAME"
-    echo "Model: $MODEL"
-    echo "Dataset: $DATASET"
-    echo "Sample Size: $SAMPLE_SIZE"
-    echo "Batch Size: $BATCH_SIZE"
-    echo "GPU Memory Util: $GPU_MEM_UTIL"
-    echo "Output will be mirrored to: $LOG_FILE"
-    echo "========================================="
-    echo ""
+  echo "========================================="
+  echo "LM-Polygraph Answer/Reasoning Testing"
+  echo "Host: $(hostname)"
+  echo "Run Type: $CONFIG_TYPE"
+  echo "Model: $MODEL"
+  echo "Dataset: $DATASET"
+  echo "Sample Size: $SAMPLE_SIZE"
+  echo "Batch Size: $BATCH_SIZE"
+  echo "Output will be mirrored to: $LOG_FILE"
+  echo "========================================="
+  echo ""
 
-    START_TIME=$SECONDS
+  TOTAL_START_TIME=$SECONDS
 
-    HYDRA_CONFIG=`pwd`/examples/configs/$CONFIG_FILE_NAME uv run --python 3.11 scripts/polygraph_eval  model=$MODEL dataset=$DATASET   subsample_eval_dataset=$SAMPLE_SIZE batch_size=$BATCH_SIZE 
+  # --- Run Reasoning ---
+  if [ "$CONFIG_TYPE" == "reasoning" ] || [ "$CONFIG_TYPE" == "both" ]; then
+    echo "--- STARTING REASONING ANALYSIS ---"
+    TASK_START_TIME=$SECONDS
+    
+    # Set the correct HYDRA_CONFIG for this block
+    export HYDRA_CONFIG=`pwd`/examples/configs/polygraph_eval_ugrip_segmentation_reasoning.yaml
+    
+    uv run --python 3.11 scripts/polygraph_eval \
+      model=$MODEL \
+      dataset=$DATASET \
+      subsample_eval_dataset=$SAMPLE_SIZE \
+      batch_size=$BATCH_SIZE \
+      --config-name polygraph_eval_ugrip_segmentation_reasoning.yaml # Explicitly pass config name
 
-      # I removed this because i don't think it helped with anything
-      # model.load_model_args.gpu_memory_utilization=$GPU_MEM_UTIL \
-    # Run the evaluation script
+    ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
+    echo "--- FINISHED REASONING ANALYSIS ---"
+    echo "Time Elapsed: $(($ELAPSED_TIME / 60)) min, $(($ELAPSED_TIME % 60)) sec"
+    echo "-----------------------------------------"
+  fi
 
-    ELAPSED_TIME=$(($SECONDS - $START_TIME))
+  # --- Run Answer ---
+  if [ "$CONFIG_TYPE" == "answer" ] || [ "$CONFIG_TYPE" == "both" ]; then
+    echo "--- STARTING ANSWER ANALYSIS ---"
+    TASK_START_TIME=$SECONDS
 
-    echo ""
-    echo "--- Finished LM-Polygraph Run ---"
-    echo "Time Elapsed: $(($ELAPSED_TIME / 3600)) hrs, $((($ELAPSED_TIME / 60) % 60)) min, $(($ELAPSED_TIME % 60)) sec"
-    echo "========================================================"
+    # Set the correct HYDRA_CONFIG for this block
+    export HYDRA_CONFIG=`pwd`/examples/configs/polygraph_eval_ugrip_segmentation_answer.yaml
+
+    uv run --python 3.11 scripts/polygraph_eval \
+      model=$MODEL \
+      dataset=$DATASET \
+      subsample_eval_dataset=$SAMPLE_SIZE \
+      batch_size=$BATCH_SIZE \
+      --config-name polygraph_eval_ugrip_segmentation_answer.yaml # Explicitly pass config name
+
+    ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
+    echo "--- FINISHED ANSWER ANALYSIS ---"
+    echo "Time Elapsed: $(($ELAPSED_TIME / 60)) min, $(($ELAPSED_TIME % 60)) sec"
+    echo "-----------------------------------------"
+  fi
+
+  # --- Final Summary ---
+  TOTAL_ELAPSED_TIME=$(($SECONDS - $TOTAL_START_TIME))
+  echo ""
+  echo "========================================================"
+  echo "All requested tasks finished."
+  echo "Total Time Elapsed: $(($TOTAL_ELAPSED_TIME / 3600)) hrs, $((($TOTAL_ELAPSED_TIME / 60) % 60)) min, $(($TOTAL_ELAPSED_TIME % 60)) sec"
+  echo "========================================================"
 
 } 2>&1 | tee "$LOG_FILE"
 
