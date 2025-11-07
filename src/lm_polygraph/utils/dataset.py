@@ -211,9 +211,18 @@ class Dataset:
                 Default: None.
         """
         dataset_name, dataset = Dataset.load_hf_dataset(dataset_path, split, **kwargs)
+        log.info(f"Loaded HF dataset '{dataset_name}' split '{split}': {len(dataset)} samples")
 
-        if size is not None and size < len(dataset):
-            dataset = dataset.select(range(size))
+        if size is not None:
+            log.info(f"Size parameter provided: {size}, dataset length: {len(dataset)}")
+            if size < len(dataset):
+                log.info(f"Selecting first {size} samples from dataset")
+                dataset = dataset.select(range(size))
+                log.info(f"After selection: {len(dataset)} samples")
+            else:
+                log.info(f"Size {size} >= dataset length {len(dataset)}, using full dataset")
+        else:
+            log.info("No size parameter provided, using full dataset")
 
         if "allenai/c4" in dataset_name.lower():
             x, y = [], []
@@ -222,13 +231,19 @@ class Dataset:
                     x.append(inst[x_column])
                     y.append(inst[y_column])
         else:
-            x = dataset[x_column]
+            # Convert to lists to ensure we only have the selected samples
+            # This is important because dataset[x_column] on a lazy dataset might access all rows
+            log.info(f"Converting dataset to lists (current length: {len(dataset)})")
+            x = list(dataset[x_column])
             if y_column is not None:
-                y = dataset[y_column]
+                y = list(dataset[y_column])
             else:
                 y = ["" for _ in range(len(x))]
+            log.info(f"Extracted {len(x)} samples from dataset")
 
         images = dataset[im_column] if im_column else None
+        if images is not None:
+            images = list(images)
 
         return Dataset(x, y, batch_size, images=images)
 

@@ -421,7 +421,6 @@ class UEManager:
                     self.stats[key] += list(batch_stats[key])
 
         self._process(iterable_data, fn_on_batch_callback)
-
         self.eval_ue()
 
         for processor in self.processors:

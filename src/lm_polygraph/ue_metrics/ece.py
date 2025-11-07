@@ -42,6 +42,9 @@ class ECE(UEMetric):
 
         if self.normalize:
             confidences = self.normalize_scores(confidences)
+            # Also normalize target to 0-1 for fair comparison across metrics
+            # This fixes the scale mismatch issue (e.g., BLEU 0-100 vs ROUGE 0-1)
+            target = self.normalize_scores(target)
 
         bin_edges = np.linspace(0.0, 1.0, self.n_bins + 1)
         ece, N = 0.0, len(confidences)

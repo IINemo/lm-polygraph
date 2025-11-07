@@ -3,6 +3,14 @@
 import hydra
 import os
 import transformers
+
+# Set HF_HOME environment variable if not already set
+# This ensures the cache location is consistent
+if "HF_HOME" not in os.environ:
+    # Default to the new cache location
+    default_hf_home = "/common/users/yl2310/.cache/huggingface"
+    if os.path.isdir(default_hf_home) or not os.path.exists(default_hf_home):
+        os.environ["HF_HOME"] = default_hf_home
 from pathlib import Path
 from omegaconf import OmegaConf
 from hydra.core.hydra_config import HydraConfig
@@ -90,9 +98,15 @@ def main(args):
     if args.seed is None or len(args.seed) == 0:
         args.seed = [1]
 
+    # Set cache directory for datasets
     cache_kwargs = {}
     if os.environ.get("HF_DATASETS_OFFLINE", "").strip() == "1":
         cache_kwargs = {"cache_dir": args.cache_path}
+    else:
+        # Use HF_HOME environment variable for dataset cache if not explicitly set
+        default_cache = os.environ.get("HF_HOME", None)
+        if default_cache:
+            cache_kwargs = {"cache_dir": os.path.join(default_cache, "datasets")}
 
     for seed in args.seed:
         log.info("=" * 100)
@@ -106,6 +120,20 @@ def main(args):
         log.info("Done with loading model.")
 
         log.info(f"Loading dataset {args.dataset}...")
+        # Use subsample_eval_dataset as size parameter if set (more efficient than loading all then subsampling)
+        # Note: This uses first N samples, not random. For random subsampling, set size=None and use subsample() below
+        dataset_size = None
+        subsample_eval_dataset = getattr(args, "subsample_eval_dataset", -1)
+        log.info(f"subsample_eval_dataset from config: {subsample_eval_dataset}")
+        if subsample_eval_dataset != -1:
+            dataset_size = subsample_eval_dataset
+            log.info(f"Limiting dataset to {dataset_size} samples at load time (first N samples)")
+        else:
+            log.info("No subsampling requested at load time")
+        
+        size_param = dataset_size or getattr(args, "size", None)
+        log.info(f"Passing size={size_param} to Dataset.load()")
+        
         dataset = Dataset.load(
             args.dataset,
             args.text_column,
@@ -120,12 +148,14 @@ def main(args):
             im_column=getattr(args, "im_column", None),
             instruct=getattr(args, "instruct", None),
             split=args.eval_split,
+            size=size_param,
             load_from_disk=args.load_from_disk,
             trust_remote_code=getattr(args, "trust_remote_code", False),
             **cache_kwargs,
         )
 #	images=dataset.images
         log.info("Done with loading eval data.")
+        log.info(f"Dataset size after loading: {len(dataset.x)} samples")
 
         log.info("=" * 100)
         log.info("Initializing UE estimators...")
@@ -133,8 +163,16 @@ def main(args):
         estimators += get_ue_methods(args, model)
         log.info("Done loading UE estimators")
 
-        if args.subsample_eval_dataset != -1:
+        # Only subsample if size wasn't already applied at load time
+        # This allows for random subsampling with seed if needed
+        if getattr(args, "subsample_eval_dataset", -1) != -1 and dataset_size is None:
+            log.info(f"Subsampling dataset to {args.subsample_eval_dataset} samples (seed={seed})")
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
+            log.info(f"Dataset size after subsampling: {len(dataset.x)} samples")
+        elif dataset_size is not None:
+            log.info(f"Dataset already limited to {len(dataset.x)} samples at load time")
+        else:
+            log.info("No subsampling requested (subsample_eval_dataset = -1)")
 
         generation_metrics = get_generation_metrics(args)
 
@@ -169,8 +207,54 @@ def main(args):
             man.save(save_path + f"/ue_manager_seed{seed}")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
-            wandb.log({str(k) : v for k, v in man.gen_metrics})
-            wandb.log({str(k) : v for k, v in man.metrics.items()})
+            import numpy as np
+            # Skip logging individual generation metrics and estimators
+            # We'll only log them organized by (estimator, gen_metric) pairs below
+            
+            # Log generation metric values organized by (estimator, generation_metric)
+            # This shows the actual generation metric values for each estimator pair
+            # Get all unique (estimator, gen_metric) pairs from correlation metrics
+            pairs_seen = set()
+            for (e_level, e_name, gen_name, ue_name), value in man.metrics.items():
+                pair_key = (e_level, e_name, gen_name)
+                if pair_key not in pairs_seen:
+                    pairs_seen.add(pair_key)
+                    # Get the generation metric values for this pair
+                    gen_metric_key = (e_level, gen_name)
+                    if gen_metric_key in man.gen_metrics:
+                        gen_values = np.array(man.gen_metrics[gen_metric_key])
+                        gen_values_finite = gen_values[np.isfinite(gen_values)]
+                        finite_indices = np.where(np.isfinite(gen_values))[0]
+                        
+                        if len(gen_values_finite) > 0:
+                            # Log generation metric values as time series for this (estimator, gen_metric) pair
+                            # Use the same key format as correlation metrics but without the UE metric suffix
+                            plot_key = f"{e_name}/{gen_name}"
+                            # Log each value with its step to create a time series
+                            for idx, value in zip(finite_indices, gen_values_finite):
+                                wandb.log({plot_key: float(value)}, step=int(idx))
+                            # Also log summary stats for this pair
+                            wandb.log({
+                                f"{plot_key}/mean": float(np.mean(gen_values_finite))
+                            })
+            
+            # Log correlation metrics organized by (estimator, generation_metric)
+            # Group metrics by (estimator, gen_metric) to create separate plots
+            from collections import defaultdict
+            metrics_by_pair = defaultdict(dict)
+            
+            for (e_level, e_name, gen_name, ue_name), value in man.metrics.items():
+                if np.isfinite(value):
+                    pair_key = f"{e_name}/{gen_name}"
+                    metrics_by_pair[pair_key][ue_name] = float(value)
+            
+            # Log each (estimator, gen_metric) pair as a separate plot
+            # This creates one chart per pair showing all UE metrics
+            for pair_key, ue_metrics in metrics_by_pair.items():
+                # Log all UE metrics for this pair together
+                # wandb will create a bar chart or table showing all metrics
+                wandb.log({f"{pair_key}/{ue_name}": val for ue_name, val in ue_metrics.items()})
+            
             wandb.save(save_path + f"/ue_manager_seed{seed}")
 
     
@@ -204,7 +288,9 @@ def get_stat_calculator_names(config):
     language = getattr(config, "language", "en")
     output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
     output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
-    hf_cache = getattr(config, "hf_cache", None)
+    # Use HF_HOME environment variable as fallback if hf_cache is not provided
+    default_cache = os.environ.get("HF_HOME", None)
+    hf_cache = getattr(config, "hf_cache", None) or default_cache
     deberta_batch_size = getattr(config, "deberta_batch_size", 10)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
         config.model, "supports_logprobs", False
@@ -328,11 +414,18 @@ def get_generation_metrics(args):
 
 
 def get_model(args):
+    # Use HF_HOME environment variable as fallback if hf_cache is not provided
+    default_cache = os.environ.get("HF_HOME", None)
+    if default_cache:
+        default_cache = os.path.join(default_cache, "hub")
+    
+    hf_cache = getattr(args, "hf_cache", None) or default_cache
+    
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
         return get_blackbox_model(args)
     elif getattr(args.model, "type", "Whitebox") == "VisualLM":
         cache_kwargs = {
-            "cache_dir": getattr(args, "hf_cache", None),
+            "cache_dir": hf_cache,
             "token": getattr(args, "hf_token", None),
         }
         return get_visual_model(args, cache_kwargs)
@@ -340,7 +433,7 @@ def get_model(args):
         return get_vllm_model(args)
     else:
         cache_kwargs = {
-            "cache_dir": getattr(args, "hf_cache", None),
+            "cache_dir": hf_cache,
             "token": getattr(args, "hf_token", None),
         }
         return get_whitebox_model(args, cache_kwargs)
