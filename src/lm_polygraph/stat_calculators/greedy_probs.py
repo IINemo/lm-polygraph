@@ -31,6 +31,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens",
             "greedy_tokens_alternatives",
             "greedy_texts",
+            "greedy_texts_full", # UGRIP: To account for reasoning-only analysis
             "greedy_log_likelihoods",
             "embeddings",
             "attention_all",
@@ -155,6 +156,7 @@ class GreedyProbsCalculator(StatCalculator):
 
         cut_logits = []
         cut_sequences = []
+        full_texts = [] # UGRIP: New list with full greedy texts
         cut_texts = []
         cut_alternatives = []
         all_slice_start_indices = []
@@ -173,6 +175,15 @@ class GreedyProbsCalculator(StatCalculator):
                 full_gen_seq = sequences[i].cpu()
             else:
                 full_gen_seq = sequences[i, 1:].cpu()
+
+            # UGRIP: Code to save full text
+            full_text_length = len(full_gen_seq)
+            for j in range(len(full_gen_seq)):
+                if full_gen_seq[j] == model.tokenizer.eos_token_id:
+                    full_text_length = j
+                    break 
+            full_texts.append(model.tokenizer.decode(full_gen_seq[:full_text_length]))
+            # END UGRIP
 
             slice_start_idx = 0
             slice_end_idx = len(full_gen_seq)
@@ -285,6 +296,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens": cut_sequences,
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
+            "greedy_texts_full": full_texts, # UGRIP: full text
             "greedy_log_likelihoods": ll,
         }
         result_dict.update(embeddings_dict)
