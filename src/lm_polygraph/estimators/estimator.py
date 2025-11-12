@@ -48,3 +48,11 @@ class Estimator(ABC):
                 samples should be concatenated). Higher values should indicate more uncertain samples.
         """
         raise Exception("Not implemented")
+    
+    @property
+    def returns_cumulative(self) -> bool:
+        """
+        Override to True if __call__ returns a vector of scores per sample
+        (i.e., one score per token) instead of a single scalar score.
+        """
+        return False

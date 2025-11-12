@@ -136,9 +136,8 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
-        percentages: List[int] = [100],  # <-- NEW PARAMETER
-        tokens: List[int] = [100],  # <-- NEW PARAMETER
-        # truncation_mode: str = 'percentages',  # <-- NEW PARAMETER
+        percentages: List[int] = [100],
+        tokens: List[int] = [100],
     ):
         """
         Parameters:
@@ -159,9 +158,6 @@ class UEManager:
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
-
-        # self.percentages = percentages
-        # self.truncation_mode = truncation_mode
 
         self.model: Model = model
         self.data: Dataset = data
@@ -287,97 +283,84 @@ class UEManager:
                     raise e
 
         return batch_stats
+    
+    def _store_estimation(self, e_list, estimator, estimator_key_name, batch_estimations):
+            """
+            Helper to correctly flatten, convert, and store estimation results.
+            """
+            if not isinstance(e_list, list):
+                try:
+                    # Convert numpy arrays to lists
+                    e_list = e_list.tolist()
+                except AttributeError:
+                    # Was already a plain list or other non-convertible type
+                    pass
+            
+            if estimator.level == "claim":
+                e_list = flatten_results(e_list, estimator)
+                
+            key = (estimator.level, estimator_key_name)
+            self.estimations[key] += e_list
+            batch_estimations[key] += e_list
+
+    def _process_cumulative_estimation(self, e_cumulative, estimator, batch_estimations):
+            """
+            Handles a cumulative (vector-per-sequence) estimation, fanning
+            it out based on self.percentages and self.tokens.
+            """
+            
+            for pct in self.percentages:
+                e_pct = [arr[max(1, int(len(arr) * pct / 100) - 1)] for arr in e_cumulative]
+                key_name = f"{estimator}_{pct}pct"
+                self._store_estimation(e_pct, estimator, key_name, batch_estimations)
+            
+            for tkn in self.tokens:
+                e_tkn = [arr[min(tkn - 1, len(arr) - 1)] for arr in e_cumulative]
+                key_name = f"{estimator}_{tkn}tkn"
+                self._store_estimation(e_tkn, estimator, key_name, batch_estimations)
+                
+            print(f"Results for {estimator} (cumulative): {e_cumulative}")
 
     def estimate(
         self, batch_stats: dict, estimators: list
     ) -> Dict[Tuple[str, str], List[float]]:
         """
-        Runs stat calculators and handles errors if any occur. Returns updated batch stats
-
-        Parameters:
-            batch_stats (dict): contains current batch statistics to be updated
-            estimators (list): list of estimators to run
+        Runs stat calculators and handles errors if any occur. Returns updated batch stats.
+        (Refactored version)
         """
         batch_estimations = defaultdict(list)
         bad_estimators = []
 
         for estimator in estimators:
-            if str(estimator) in ["MaximumSequenceProbability", "Perplexity", "MeanTokenEntropy"]:
+            try:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Estimating {estimator}...")
+                
+                e = estimator(batch_stats) 
 
-                try:
-                    if self.log_time:
-                        start_time = time.time()
-                        log.info(f"Estimating {estimator}...")
-                    e = estimator(batch_stats, True)
-                    if self.log_time:
-                        log.info(
-                            f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
-                        )
-
-                    for pct in self.percentages:
-                        e_pct = [ arr[max(1, int(len(arr) * pct / 100)-1)] for arr in e ]
-
-                        if not isinstance(e_pct, list):
-                            e_pct = e_pct.tolist()
-                        if estimator.level == "claim":
-                            e_pct = flatten_results(e_pct, estimator)
-                        key = (estimator.level, f"{estimator}_{pct}pct")
-                        self.estimations[key] += e_pct
-                        batch_estimations[key] += e_pct
+                if estimator.returns_cumulative:
+                    self._process_cumulative_estimation(e, estimator, batch_estimations)
+                else:
+                    self._store_estimation(e, estimator, str(estimator), batch_estimations)
                     print(f"Results for {estimator}: {e}")
-                    
-                    for tkn in self.tokens:
-                        e_tkn = [ arr[min(tkn-1, len(arr)-1)] for arr in e ]
-
-                        if not isinstance(e_tkn, list):
-                            e_tkn = e_tkn.tolist()
-                        if estimator.level == "claim":
-                            e_tkn = flatten_results(e_tkn, estimator)
-                        key = (estimator.level, f"{estimator}_{tkn}tkn")
-                        self.estimations[key] += e_tkn
-                        batch_estimations[key] += e_tkn
-                    print(f"Results for {estimator}: {e}")
-
-
-                except Exception as e:
-                    if self.ignore_exceptions:
-                        bad_estimators.append(estimator)
-                        lineno = e.__traceback__.tb_lineno
-                        log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
-                        sys.stderr.write("\n\n")
-                        sys.stderr.write(log_msg)
-                        sys.stderr.write(traceback.format_exc())
-                        continue
-                    else:
-                        raise e
-            else:
-                try:
-                    if self.log_time:
-                        start_time = time.time()
-                        log.info(f"Estimating {estimator}...")
-                    e = estimator(batch_stats)
-                    if self.log_time:
-                        log.info(
-                            f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
-                        )
-                    if not isinstance(e, list):
-                        e = e.tolist()
-                    if estimator.level == "claim":
-                        e = flatten_results(e, estimator)
-                    self.estimations[estimator.level, str(estimator)] += e
-                    batch_estimations[estimator.level, str(estimator)] += e
-                    print(f"Results for {estimator}: {e}")
-                except Exception as e:
-                    if self.ignore_exceptions:
-                        bad_estimators.append(estimator)
-                        lineno = e.__traceback__.tb_lineno
-                        log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
-                        sys.stderr.write("\n\n")
-                        sys.stderr.write(log_msg)
-                        sys.stderr.write(traceback.format_exc())
-                        continue
-                    else:
-                        raise e
+                
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                    )
+            
+            except Exception as e:
+                if self.ignore_exceptions:
+                    bad_estimators.append(estimator)
+                    lineno = e.__traceback__.tb_lineno
+                    log_msg = f"Caught exception while estimating uncertainty: {e} in estimator {estimator}, line {lineno}. Estimator will be removed.\n"
+                    sys.stderr.write("\n\n")
+                    sys.stderr.write(log_msg)
+                    sys.stderr.write(traceback.format_exc())
+                    continue
+                else:
+                    raise e
 
         return batch_estimations, bad_estimators
 
