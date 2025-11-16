@@ -1,7 +1,7 @@
 from lm_polygraph.model_adapters import WhiteboxModelBasic
 from transformers.generation.utils import GenerateDecoderOnlyOutput
 from dataclasses import dataclass, asdict
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict, Any
 import torch
 
 
@@ -10,14 +10,16 @@ class GenerateDecoderOnlyOutputWithUncertainty(GenerateDecoderOnlyOutput):
     """Extends GenerateDecoderOnlyOutput to include uncertainty scores"""
 
     uncertainty_score: Optional[Union[float, List[float], torch.Tensor]] = None
+    deps: Optional[Dict[str, Any]] = None
 
 
 class CausalLMWithUncertainty:
-    def __init__(self, llm, tokenizer, stat_calculators, estimator):
+    def __init__(self, llm, tokenizer, stat_calculators, estimator, keep_deps=None):
         self.llm = llm
         self.tokenizer = tokenizer
         self.stat_calculators = stat_calculators
         self.estimator = estimator
+        self.keep_deps = keep_deps
 
     def generate(self, input_ids, attention_mask=None, **kwargs):
         max_new_tokens = kwargs.pop("max_new_tokens", None)
@@ -56,6 +58,7 @@ class CausalLMWithUncertainty:
         out_with_uncertainty = GenerateDecoderOnlyOutputWithUncertainty(
             **asdict(raw_out),
             uncertainty_score=uncertainty_score,
+            deps={k: v for k, v in deps.items() if k in self.keep_deps} if self.keep_deps is not None else None
         )
         return out_with_uncertainty
 
