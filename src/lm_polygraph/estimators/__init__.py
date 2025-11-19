@@ -11,11 +11,12 @@ from .claim.frequency_scoring import FrequencyScoringClaim
 from .claim.token_sar import TokenSARClaim
 from .max_probability import (
     MaximumSequenceProbability,
+    CumulativeMaxSequenceProbability,
     MaximumTokenProbability,
 )
 from .attention_score import AttentionScore
 from .claim_conditioned_probability import ClaimConditionedProbability
-from .token_entropy import MeanTokenEntropy, TokenEntropy
+from .token_entropy import MeanTokenEntropy, CumulativeMeanTokenEntropy, TokenEntropy
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,
     PointwiseMutualInformation,
@@ -35,7 +36,7 @@ from .eig_val_laplacian import EigValLaplacian
 from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy
 from .semantic_entropy_token import SemanticEntropyToken
-from .perplexity import Perplexity
+from .perplexity import Perplexity, CumulativePerplexity
 from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq

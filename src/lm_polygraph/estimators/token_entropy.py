@@ -31,7 +31,47 @@ class MeanTokenEntropy(Estimator):
         """
         entropy = stats["entropy"]
         return np.array([np.mean(e) for e in entropy])
+    
+class CumulativeMeanTokenEntropy(Estimator):
+    """
+    Estimates the cumulative average token-level entropy at each token step.
+    It is calculated as the cumulative sum of token entropies divided by
+    the number of tokens in the prefix. This shows how the average
+    entropy evolves as the sequence is generated.
+    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    """
 
+    def __init__(self):
+        super().__init__(["entropy"], "sequence")
+
+    def __str__(self):
+        return "CumulativeMeanTokenEntropy"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the cumulative average token entropy at each token step
+        for each sample.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which includes:
+                * H(p(y_i | y_<i, x)) in 'entropy'
+        Returns:
+            np.ndarray: An object array (shape (N,)) where each element is
+                        a 1D numpy array representing the cumulative
+                        average entropy at each token step.
+        """
+        entropy = stats["entropy"]
+        
+        cumulative_entropy = [
+            np.cumsum(e) / np.arange(1, len(e) + 1) if len(e) > 0 else np.array([])
+            for e in entropy
+        ]
+        
+        return np.array(cumulative_entropy, dtype=object)
+
+    @property
+    def returns_cumulative(self) -> bool:
+        return True
 
 class TokenEntropy(Estimator):
     """
