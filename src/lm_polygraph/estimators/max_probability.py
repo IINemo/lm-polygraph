@@ -32,7 +32,47 @@ class MaximumSequenceProbability(Estimator):
         """
         log_likelihoods = stats["greedy_log_likelihoods"]
         return np.array([-np.sum(log_likelihood) for log_likelihood in log_likelihoods])
+    
+class CumulativeMaxSequenceProbability(Estimator):
+    """
+    Estimates the cumulative sequence-level uncertainty of a language model
+    at each token step.
+    It is calculated as the cumulative sum of log-probabilities in each token,
+    with a minus sign. This shows how uncertainty builds up as the
+    sequence is generated.
+    Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
+    """
 
+    def __init__(self):
+        super().__init__(["greedy_log_likelihoods"], "sequence")
+
+    def __str__(self):
+        return "CumulativeMaxSequenceProbability"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the cumulative minus log-probability at each token step
+        for each sample in input statistics.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
+                * log p(y_i | y_<i, x) in 'greedy_log_likelihoods'
+        Returns:
+            np.ndarray: An object array where each element is a 1D numpy array
+                        representing the cumulative minus log-probability
+                        at each token step (i.e., for each prefix).
+                        Higher values indicate more uncertain samples.
+        """
+        log_likelihoods = stats["greedy_log_likelihoods"]
+        
+        return np.array(
+            [-np.cumsum(log_likelihood) for log_likelihood in log_likelihoods],
+            dtype=object
+        )
+    
+    @property
+    def returns_cumulative(self) -> bool:
+        return True
 
 class MaximumTokenProbability(Estimator):
     """

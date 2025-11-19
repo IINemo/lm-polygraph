@@ -136,6 +136,8 @@ class UEManager:
         verbose: bool = True,
         max_new_tokens: int = 100,
         log_time: bool = False,
+        percentages: List[int] = [100],
+        tokens: List[int] = [100],
     ):
         """
         Parameters:
@@ -180,6 +182,9 @@ class UEManager:
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
+
+        self.percentages = percentages
+        self.tokens = tokens
 
         self.init()
 
@@ -278,16 +283,50 @@ class UEManager:
                     raise e
 
         return batch_stats
+    
+    def _store_estimation(self, e_list, estimator, estimator_key_name, batch_estimations):
+            """
+            Helper to correctly flatten, convert, and store estimation results.
+            """
+            if not isinstance(e_list, list):
+                try:
+                    # Convert numpy arrays to lists
+                    e_list = e_list.tolist()
+                except AttributeError:
+                    # Was already a plain list or other non-convertible type
+                    pass
+            
+            if estimator.level == "claim":
+                e_list = flatten_results(e_list, estimator)
+                
+            key = (estimator.level, estimator_key_name)
+            self.estimations[key] += e_list
+            batch_estimations[key] += e_list
+
+    def _process_cumulative_estimation(self, e_cumulative, estimator, batch_estimations):
+            """
+            Handles a cumulative (vector-per-sequence) estimation, fanning
+            it out based on self.percentages and self.tokens.
+            """
+            
+            for pct in self.percentages:
+                e_pct = [arr[max(1, int(len(arr) * pct / 100) - 1)] for arr in e_cumulative]
+                key_name = f"{estimator}_{pct}pct"
+                self._store_estimation(e_pct, estimator, key_name, batch_estimations)
+            
+            for tkn in self.tokens:
+                e_tkn = [arr[min(tkn - 1, len(arr) - 1)] for arr in e_cumulative]
+                key_name = f"{estimator}_{tkn}tkn"
+                self._store_estimation(e_tkn, estimator, key_name, batch_estimations)
+                
+            print(f"Results for {estimator} (cumulative): {e_cumulative}")
 
     def estimate(
         self, batch_stats: dict, estimators: list
     ) -> Dict[Tuple[str, str], List[float]]:
         """
-        Runs stat calculators and handles errors if any occur. Returns updated batch stats
-
-        Parameters:
-            batch_stats (dict): contains current batch statistics to be updated
-            estimators (list): list of estimators to run
+        Runs stat calculators and handles errors if any occur. Returns updated batch stats.
+        (Refactored version)
         """
         batch_estimations = defaultdict(list)
         bad_estimators = []
@@ -297,17 +336,20 @@ class UEManager:
                 if self.log_time:
                     start_time = time.time()
                     log.info(f"Estimating {estimator}...")
-                e = estimator(batch_stats)
+                
+                e = estimator(batch_stats) 
+
+                if estimator.returns_cumulative:
+                    self._process_cumulative_estimation(e, estimator, batch_estimations)
+                else:
+                    self._store_estimation(e, estimator, str(estimator), batch_estimations)
+                    print(f"Results for {estimator}: {e}")
+                
                 if self.log_time:
                     log.info(
                         f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
                     )
-                if not isinstance(e, list):
-                    e = e.tolist()
-                if estimator.level == "claim":
-                    e = flatten_results(e, estimator)
-                self.estimations[estimator.level, str(estimator)] += e
-                batch_estimations[estimator.level, str(estimator)] += e
+            
             except Exception as e:
                 if self.ignore_exceptions:
                     bad_estimators.append(estimator)
@@ -395,7 +437,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
+            for key in ["greedy_texts", "greedy_tokens", "greedy_log_likelihoods"]:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:

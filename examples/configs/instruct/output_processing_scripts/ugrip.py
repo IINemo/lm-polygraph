@@ -2,7 +2,7 @@ import re
 import string 
 
 GEMMA_OUTPUT_IGNORE_REGEX = re.compile(r"<end_of_turn>")
-REASONING_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*### Answer:[\w]*")
+REASONING_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*### Answer:\s*")
 PARENTHESEIS_OUTPUT_IGNORE_REGEX = re.compile(r"\)")
 INTEGER_EXTRACTION_REGEX = re.compile(r"\d+")
 
