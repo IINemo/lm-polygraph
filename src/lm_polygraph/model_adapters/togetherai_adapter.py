@@ -1,6 +1,7 @@
 """Together.ai API Provider Adapter."""
 
 import logging
+import os
 
 import openai
 
@@ -167,4 +168,9 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
         return validated_params
 
     def _create_client(self, model):
-        return openai.OpenAI(base_url="https://api.together.xyz/v1")
+        client = openai.OpenAI(
+            base_url="https://api.together.xyz/v1",
+            api_key=os.environ.get("TOGETHER_API_KEY"),
+        )
+
+        return client
