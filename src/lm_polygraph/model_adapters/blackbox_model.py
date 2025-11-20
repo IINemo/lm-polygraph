@@ -35,6 +35,7 @@ class BlackboxModel(Model):
         model_path: str = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
         api_provider_name: str = "openai",
+        tokenizer: object = None,
     ):
         """
         Parameters:
@@ -47,6 +48,7 @@ class BlackboxModel(Model):
 
         # Initialize the adapter for this provider
         self.adapter = get_adapter(self.api_provider_name)
+        self.tokenizer = tokenizer
 
     @property
     def supports_logprobs(self) -> bool:
@@ -132,9 +134,3 @@ class BlackboxModel(Model):
         Not implemented for blackbox models.
         """
         raise Exception("Cannot call blackbox model directly, use generate or generate_texts methods.")
-
-    def tokenizer(self, *args, **kwargs):
-        """
-        Not implemented for blackbox models.
-        """
-        raise Exception("Cannot access tokenizer of blackbox model")
