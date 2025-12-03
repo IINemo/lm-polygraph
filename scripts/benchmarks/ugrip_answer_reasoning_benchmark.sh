@@ -1,11 +1,21 @@
 #!/bin/bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Navigate up two levels to get to the project root (lm-polygraph/)
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
+# Change the working dir to the project root
+cd "$PROJECT_ROOT" || { echo "Error: Could not change to project root"; exit 1; }
+
+echo "Working from Project Root: $(pwd)"
+
 # "answer" or "reasoning" or "both"
-CONFIG_TYPE="both"
+CONFIG_TYPE="both" 
 
 MODEL="ugrip_llama_instruct_vllm"
 DATASET="UGRIP-LM-Polygraph/gsm8k-reasoning"
-SAMPLE_SIZE=1000
+SAMPLE_SIZE=1000 # e.g. 1000
 BATCH_SIZE=20   
 # SOFIA: NOTE I DONT THINK THIS GPU MEMORY UTILIZATION THING WORKED WHEN I TESTED IT
 # GPU_MEM_UTIL=0.60 
@@ -13,6 +23,8 @@ BATCH_SIZE=20
 # Config file name based on config type
 if [ "$CONFIG_TYPE" != "answer" ] && [ "$CONFIG_TYPE" != "reasoning" ] && [ "$CONFIG_TYPE" != "both" ]; then 
   echo "Error: CONFIG_TYPE must be 'answer', 'reasoning', or 'both'"
+  exit 1 
+fi
 
 # output path
 LOG_DIR="ugrip_logs/${CONFIG_TYPE}_$(date +%Y%m%d)"
@@ -46,7 +58,7 @@ source .venv/bin/activate
     TASK_START_TIME=$SECONDS
     
     # Set the correct HYDRA_CONFIG for this block
-    export HYDRA_CONFIG=`pwd`/examples/configs/polygraph_eval_ugrip_segmentation_reasoning.yaml
+    export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip_segmentation_reasoning.yaml
     
     uv run --python 3.11 scripts/polygraph_eval \
       model=$MODEL \
@@ -67,7 +79,7 @@ source .venv/bin/activate
     TASK_START_TIME=$SECONDS
 
     # Set the correct HYDRA_CONFIG for this block
-    export HYDRA_CONFIG=`pwd`/examples/configs/polygraph_eval_ugrip_segmentation_answer.yaml
+    export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip_segmentation_answer.yaml
 
     uv run --python 3.11 scripts/polygraph_eval \
       model=$MODEL \

@@ -158,7 +158,6 @@ class GreedyProbsCalculator(StatCalculator):
         cut_sequences = []
         full_texts = [] # UGRIP: New list with full greedy texts
         cut_texts = []
-        full_texts = [] # UGRIP: New list with full greedy texts
         cut_alternatives = []
         all_slice_start_indices = []
 

@@ -205,7 +205,7 @@ class UEManager:
 
         greedy = ["greedy_texts"]
         if not isinstance(self.model, BlackboxModel):
-            greedy += ["greedy_tokens"]
+            greedy += ["greedy_tokens", "greedy_texts_full"]
 
         stats = (
             [s for e in self.estimators for s in e.stats_dependencies]
@@ -437,7 +437,7 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens", "greedy_log_likelihoods"]:
+            for key in ["greedy_texts", "greedy_tokens", "greedy_log_likelihoods", "greedy_texts_full"]:
                 if key in batch_stats.keys():
                     self.stats[key] += batch_stats[key]
             for processor in self.processors:

@@ -1,3 +1,7 @@
-- name: CumulativeMaximumSequenceProbability
-- name: CumulativePerplexity
-- name: CumulativeMeanTokenEntropy
+# These may not have been properly updated yet??
+# - name: CumulativeMaximumSequenceProbability
+# - name: CumulativePerplexity
+# - name: CumulativeMeanTokenEntropy
+
+
+- name: MaximumSequenceProbability
