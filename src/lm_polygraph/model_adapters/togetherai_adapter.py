@@ -58,7 +58,8 @@ class TogetherAIChatCompletionMixin:
             parsed_responses.append(
                 [self.parse_response(resp) for resp in response.choices]
             )
-
+            
+            return parsed_responses
 
 @register_adapter("together_ai")
 class TogetherAIAdapter(TogetherAIChatCompletionMixin, APIProviderAdapter):
@@ -128,7 +129,7 @@ class TogetherAIAdapter(TogetherAIChatCompletionMixin, APIProviderAdapter):
             if hasattr(response, "logprobs") and response.logprobs:
                 logprobs_data = response.logprobs
 
-                if "content" in logprobs_data:
+                if hasattr(logprobs_data, "content"):
                     # for some models, together.ai  returns logprobs nested under 'content'
                     content_logprobs = logprobs_data.content
 
