@@ -5,7 +5,7 @@ import os
 from typing import Any, List
 
 from together import Together
-from numpy import np
+import numpy as np
 
 from .api_provider_adapter import (
     APIProviderAdapter,
