@@ -222,8 +222,7 @@ class TogetherAIAdapter(TogetherAIChatCompletionMixin, APIProviderAdapter):
         return validated_params
 
     def _create_client(self, model):
-        client = openai.OpenAI(
-            base_url="https://api.together.xyz/v1",
+        client = Together(
             api_key=os.environ.get("TOGETHER_API_KEY"),
         )
 
