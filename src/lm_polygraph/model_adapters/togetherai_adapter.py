@@ -92,17 +92,35 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
             if hasattr(response, "logprobs") and response.logprobs:
                 logprobs_data = response.logprobs
 
-                if hasattr(logprobs_data, "tokens"):
-                    tokens = logprobs_data.tokens
-                if hasattr(logprobs_data, "token_logprobs"):
-                    logprobs = logprobs_data.token_logprobs
-                if hasattr(logprobs_data, "top_logprobs"):
-                    top_logprobs = [
-                        list(tl_dict.values()) for tl_dict in logprobs_data.top_logprobs
-                    ]
-                    alternative_tokens = [
-                        list(tl_dict.keys()) for tl_dict in logprobs_data.top_logprobs
-                    ]
+                if "content" in logprobs_data:
+                    # for some models, together.ai  returns logprobs nested under 'content'
+                    content_logprobs = logprobs_data.content
+
+                    logprobs = []
+                    tokens = []
+                    top_logprobs = []
+                    alternative_tokens = []
+                    for item in content_logprobs:
+                        if "token" in item:
+                            tokens.append(item["token"])
+                        if "logprob" in item:
+                            logprobs.append(item["logprob"])
+                        if "top_logprobs" in item:
+                            tl_dict = item["top_logprobs"]
+                            alternative_tokens.append([tl_item['token'] for tl_item in tl_dict])
+                            top_logprobs.append([tl_item['logprob'] for tl_item in tl_dict])
+                else:
+                    if hasattr(logprobs_data, "token_ids"):
+                        tokens = logprobs_data.token_ids
+                    if hasattr(logprobs_data, "token_logprobs"):
+                        logprobs = logprobs_data.token_logprobs
+                    if hasattr(logprobs_data, "top_logprobs"):
+                        top_logprobs = [
+                            list(tl_dict.values()) for tl_dict in logprobs_data.top_logprobs
+                        ]
+                        alternative_tokens = [
+                            list(tl_dict.keys()) for tl_dict in logprobs_data.top_logprobs
+                        ]
 
             return StandardizedResponse(
                 text=text,
