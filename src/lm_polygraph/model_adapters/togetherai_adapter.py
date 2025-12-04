@@ -2,21 +2,66 @@
 
 import logging
 import os
+from typing import Any, List
 
-import openai
+from together import Together
 
 from .api_provider_adapter import (
     APIProviderAdapter,
     StandardizedResponse,
     register_adapter,
 )
-from .openai_adapter import OpenAIChatCompletionMixin
 
 log = logging.getLogger("lm_polygraph")
 
 
+class TogetherAIChatCompletionMixin:
+    """Reusable chat completion inference flow for TogetherAI-compatible providers."""
+
+    def _create_client(self, model):
+        raise NotImplementedError
+
+    def generate_texts(
+        self,
+        model,
+        input_texts: List[Any],
+        args: dict,
+    ) -> List[Any]:
+        together_api = self._create_client(model)
+
+        return_logprobs = args.pop("output_scores", False)
+        logprobs_args = {}
+
+        if return_logprobs:
+            logprobs_args["logprobs"] = args.pop("top_logprobs", 5)
+
+        parsed_responses = []
+        for prompt in input_texts:
+            messages = model.prepare_input(prompt)
+
+            retries = 0
+            while True:
+                try:
+                    response = together_api.chat.completions.create(
+                        model=model.model_path,
+                        messages=messages,
+                        **args,
+                        **logprobs_args,
+                    )
+                    break
+                except Exception as e:
+                    if retries > 4:
+                        raise Exception from e
+                    retries += 1
+                    continue
+
+            parsed_responses.append(
+                [self.parse_response(resp) for resp in response.choices]
+            )
+
+
 @register_adapter("together_ai")
-class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
+class TogetherAIAdapter(TogetherAIChatCompletionMixin, APIProviderAdapter):
     """
     Adapter for Together.ai API.
 
@@ -56,15 +101,6 @@ class TogetherAIAdapter(OpenAIChatCompletionMixin, APIProviderAdapter):
             if key in adapted_params:
                 adapted_params[replace_key] = adapted_params[key]
                 adapted_params.pop(key)
-
-        # Handle logprobs parameter conversion for together.ai
-        if "logprobs" in adapted_params and adapted_params["logprobs"] is True:
-            # Convert OpenAI-style logprobs=True to together.ai logprobs=5
-            top_logprobs = adapted_params.pop("top_logprobs", 5)
-            adapted_params["logprobs"] = top_logprobs
-        elif "top_logprobs" in adapted_params:
-            # Remove standalone top_logprobs as together.ai uses logprobs=N
-            adapted_params.pop("top_logprobs", None)
 
         return adapted_params
 
