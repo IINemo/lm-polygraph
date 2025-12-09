@@ -58,6 +58,7 @@ def load_simple_estimators(name: str, config):
         RAUQ,
         CSL,
         SemanticDensity,
+        BoostedProbSequence,
     ]
 
     try:

@@ -42,6 +42,7 @@ from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq
 from .ppl_md import PPLMDSeq
+from .boostedprob_score import BoostedProb, BoostedProbSequence
 from .ensemble_token_measures import (
     EPTtu,
     EPTdu,
