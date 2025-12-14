@@ -15,6 +15,7 @@ from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
 
+
 @dataclass
 class UncertaintyOutput:
     uncertainty: Union[float, List[float]]
@@ -23,6 +24,7 @@ class UncertaintyOutput:
     generation_tokens: List[int]
     model_path: str
     estimator: str
+
 
 def estimate_uncertainty(
     model: Model,
@@ -44,10 +46,11 @@ def estimate_uncertainty(
         from lm_polygraph.stat_calculators.greedy_probs import GreedyProbsCalculator
         from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
 
-        class_labels = (
-            getattr(estimator, "class_labels", None)
-            or ["positive", "negative", "neutral"]
-        )
+        class_labels = getattr(estimator, "class_labels", None) or [
+            "positive",
+            "negative",
+            "neutral",
+        ]
         few_shot_examples = getattr(estimator, "few_shot_examples", None)
         prompt_formatting = getattr(estimator, "prompt_formatting", None)
 
@@ -79,7 +82,12 @@ def estimate_uncertainty(
                 builder="lm_polygraph.stat_calculators.greedy_probs",
                 cfg={},
                 dependencies=["input_texts"],
-                stats=["greedy_texts", "greedy_tokens", "greedy_log_probs", "greedy_probs"],
+                stats=[
+                    "greedy_texts",
+                    "greedy_tokens",
+                    "greedy_log_probs",
+                    "greedy_probs",
+                ],
             ),
         ]
 
@@ -92,9 +100,8 @@ def estimate_uncertainty(
         ),
         model,
         [estimator],
-        available_stat_calculators=available_stat_calculators or register_default_stat_calculators(
-            model_type
-        ),
+        available_stat_calculators=available_stat_calculators
+        or register_default_stat_calculators(model_type),
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],
         ue_metrics=[],

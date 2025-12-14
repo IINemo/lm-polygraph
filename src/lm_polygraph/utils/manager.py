@@ -223,8 +223,7 @@ class UEManager:
             s
             for s in stats
             if not (
-                str(s).startswith("blackbox_")
-                and s[len("blackbox_") :] in have_stats
+                str(s).startswith("blackbox_") and s[len("blackbox_") :] in have_stats
             )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
         ]  # below in calculate() we copy X in blackbox_X
 

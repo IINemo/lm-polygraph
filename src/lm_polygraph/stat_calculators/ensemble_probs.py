@@ -112,7 +112,9 @@ class EnsembleProbsCalculator(StatCalculator):
                 label_logprobs = []
                 for label in self.class_labels:
                     label_ids = tokenizer.encode(label, add_special_tokens=False)
-                    label_logprobs.append(self._label_logprob(prompt_ids, label_ids, model))
+                    label_logprobs.append(
+                        self._label_logprob(prompt_ids, label_ids, model)
+                    )
 
                 label_probs = torch.softmax(
                     torch.tensor(label_logprobs, dtype=torch.float32), dim=-1

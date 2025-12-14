@@ -305,7 +305,7 @@ def test_bayespe_zero_shot():
     n_samples = 5
     n_classes = 3
     n_instructions = 4
-    
+
     probs = np.random.rand(n_samples, n_classes, n_instructions)
     probs /= probs.sum(axis=1, keepdims=True)
 

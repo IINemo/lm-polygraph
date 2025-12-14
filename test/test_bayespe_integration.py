@@ -23,4 +23,3 @@ def test_bayespe_zero_shot_end_to_end():
     assert isinstance(ue.uncertainty, float)
     assert ue.input_text == "I really enjoyed this movie!"
     assert ue.estimator.startswith("BayesPEZeroShot")
-

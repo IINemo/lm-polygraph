@@ -89,11 +89,16 @@ def register_default_stat_calculators(
 
     elif model_type == "Whitebox":
         from lm_polygraph.stat_calculators.ensemble_probs import EnsembleProbsCalculator
+
         _register(
             EnsembleProbsCalculator,
             "lm_polygraph.stat_calculators.ensemble_probs",
             {
-                "instructions": ["Classify the sentiment of the text.", "Is the text positive or negative?", "What is the emotional tone of the text?"],
+                "instructions": [
+                    "Classify the sentiment of the text.",
+                    "Is the text positive or negative?",
+                    "What is the emotional tone of the text?",
+                ],
                 "class_labels": ["positive", "negative", "neutral"],
                 "few_shot_examples": None,
             },
