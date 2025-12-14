@@ -139,8 +139,7 @@ class GreedyProbsCalculator(StatCalculator):
             if model.model_type == "vLLMCausalLM":
                 logits = logits.transpose(1, 0)
             sequences = out.sequences
-            if self.output_attentions:
-                attentions = out.attentions
+            attentions = out.attentions if self.output_attentions else None
             if self.output_hidden_states:
                 embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
                     out, batch, model.model_type
@@ -192,7 +191,12 @@ class GreedyProbsCalculator(StatCalculator):
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
-        if self.output_attentions and (model.model_type != "vLLMCausalLM"):
+        attn_available = (
+            self.output_attentions
+            and attentions is not None
+            and all(a is not None for a in attentions)
+        )
+        if attn_available and (model.model_type != "vLLMCausalLM"):
             prompt_len = batch["input_ids"].shape[1]
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
@@ -265,3 +269,6 @@ class GreedyProbsCalculator(StatCalculator):
             result_dict.update({"attention_all": attention_all})
             result_dict.update({"tokenizer": model.tokenizer})
         return result_dict
+
+def load_stat_calculator(config, environment):
+    return GreedyProbsCalculator()

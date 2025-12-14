@@ -14,14 +14,12 @@ from transformers import (
     AlbertModel,
     AlbertForMaskedLM,
     RobertaForMaskedLM,
-    AdamW,
-    get_linear_schedule_with_warmup
+    get_linear_schedule_with_warmup,
 )
 from torch.optim import AdamW
 import nltk
 import torch
 import torch.nn as nn
-from torch.optim import AdamW
 from sklearn.metrics import f1_score
 from dataclasses import dataclass
 from nltk.tokenize import sent_tokenize

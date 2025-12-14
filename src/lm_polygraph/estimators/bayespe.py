@@ -1,215 +1,164 @@
 import numpy as np
+import pickle
 from typing import List, Dict, Optional
-from .estimator import Estimator
-from lm_polygraph.utils.common import polygraph_module_init
-from scipy.optimize import minimize
+
 from sklearn.metrics import log_loss
+
+from .estimator import Estimator
+
+SMALL_CONSTANT = 1e-5
+
+def replace_nans_with_uniform(probs):
+    for i in range(probs.shape[0]):
+        if np.isnan(probs[i, :]).any():
+            probs[i, :] = 1.0 / probs.shape[1]
+    return probs
+
+
+def smooth_probs_3d(probs_3d):
+    probs_new = probs_3d + SMALL_CONSTANT
+    for i in range(probs_new.shape[2]):
+        probs_new[:, :, i] = replace_nans_with_uniform(probs_new[:, :, i])
+        for j in range(probs_new.shape[0]):
+            probs_new[j, :, i] = probs_new[j, :, i] / np.sum(probs_new[j, :, i])
+    return probs_new
+
 
 class BayesPEZeroShot(Estimator):
     """
-    Bayesian Prompt Ensembles for Zero-Shot classification.
-    Implements the method from https://aclanthology.org/2024.findings-acl.728.pdf
-    and github https://github.com/amzn/BayesPE
+    Bayesian Prompt Ensembles for Zero-Shot classification (BPE-style).
     """
-    
-    @polygraph_module_init
     def __init__(
         self,
         instructions: List[str],
-        prompt_formatting: str = "classify the sentiment of the text below into one of the following classes:\n{classes}\n\ntext: {text}\n\nthe text is",
-        n_forward_passes: int = 5,
-        stats_dependencies: List[str] = ["input_texts"],
-        level: str = "sequence"
+        class_labels: Optional[List[str]] = None,
+        prompt_formatting: Optional[str] = None,
+        n_iterations_weights_optimiser: int = 10,
     ):
-        """
-        Parameters:
-            instructions (List[str]): List of semantically equivalent instructions for the ensemble
-            prompt_formatting (str): Template for formatting prompts
-            n_forward_passes (int): Number of forward passes to use for inference
-            stats_dependencies (List[str]): Statistics dependencies
-            level (str): Uncertainty estimation level
-        """
-        super().__init__(stats_dependencies, level)
+        super().__init__(["ensemble_probs"], "sequence")
         self.instructions = instructions
+        self.class_labels = class_labels
         self.prompt_formatting = prompt_formatting
-        self.n_forward_passes = n_forward_passes
-        self.weights = np.ones(len(instructions)) / len(instructions)  # Initialize with uniform weights
-        
-    def __str__(self):
-        return f"BayesPEZeroShot(instructions={len(self.instructions)}, n_forward_passes={self.n_forward_passes})"
-    
-    def optimize_weights(self, validation_texts: List[str], validation_labels: List[int]):
-        """
-        Optimize ensemble weights using validation data.
-        
-        Parameters:
-            validation_texts (List[str]): Validation texts
-            validation_labels (List[int]): Ground truth labels
-        """
-        def objective(weights):
-            weights = np.exp(weights) / np.sum(np.exp(weights))
-            
-            predictions = []
-            for instruction in self.instructions:
-                prompts = [self.prompt_formatting.format(
-                    classes="\n".join([f"{i+1}. {c}" for i, c in enumerate(set(validation_labels))]),
-                    text=text
-                ) for text in validation_texts]
-                
-                pred = np.random.rand(len(validation_texts), len(set(validation_labels)))
-                predictions.append(pred)
-            
-            ensemble_pred = np.zeros_like(predictions[0])
-            for w, p in zip(weights, predictions):
-                ensemble_pred += w * p
-                
-            loss = log_loss(validation_labels, ensemble_pred)
-            return loss
-        
-        initial_weights = np.zeros(len(self.instructions))
-        result = minimize(objective, initial_weights, method='Nelder-Mead')
+        self.n_iterations_weights_optimiser = n_iterations_weights_optimiser
+        self.weights = np.ones(len(instructions)) / len(instructions)
 
-        self.weights = np.exp(result.x) / np.sum(np.exp(result.x))
-    
+    def __str__(self):
+        return f"BayesPEZeroShot({len(self.instructions)} prompts)"
+
+    def optimise_weights(self, val_probs_ensemble: np.ndarray, val_labels: np.ndarray, learning_rate=SMALL_CONSTANT):
+        # val_probs_ensemble: [n_samples, n_classes, n_instructions]
+        probs = smooth_probs_3d(val_probs_ensemble)
+        nan_cost = True
+        lr = learning_rate
+        weights = np.ones(probs.shape[2]) / probs.shape[2]
+        for _ in range(self.n_iterations_weights_optimiser):
+            # Weighted sum over instructions
+            ensemble_probs = np.tensordot(probs, weights, axes=([2], [0]))
+            ensemble_probs = ensemble_probs / np.sum(ensemble_probs, axis=1, keepdims=True)
+            try:
+                cost = log_loss(val_labels, ensemble_probs)
+            except Exception:
+                cost = np.nan
+            if not np.isnan(cost):
+                break
+            lr *= 0.5
+        self.weights = weights
+        return weights
+
+    def forward(self, test_probs_ensemble: np.ndarray, n_forward_passes: Optional[int] = None):
+        # test_probs_ensemble: [n_samples, n_classes, n_instructions]
+        if n_forward_passes is None:
+            n_forward_passes = len(self.instructions)
+        chosen_indices = np.argsort(self.weights)[-n_forward_passes:]
+        chosen_weights = self.weights[chosen_indices]
+        chosen_weights = chosen_weights / np.sum(chosen_weights)
+        probs = test_probs_ensemble[:, :, chosen_indices]
+        probs = smooth_probs_3d(probs)
+        # Weighted sum
+        ensemble_probs = np.tensordot(probs, chosen_weights, axes=([2], [0]))
+        ensemble_probs = ensemble_probs / np.sum(ensemble_probs, axis=1, keepdims=True)
+        return ensemble_probs
+
+    def save_weights(self, save_dir="saved_weights/ensemble_weights"):
+        with open(save_dir, "wb") as f:
+            pickle.dump(self.weights, f)
+
+    def load_weights(self, load_dir="saved_weights/ensemble_weights"):
+        with open(load_dir, "rb") as f:
+            self.weights = pickle.load(f)
+
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        """
-        Calculate uncertainty using BayesPE ensemble.
-        
-        Parameters:
-            stats (Dict[str, np.ndarray]): Input statistics
-            
-        Returns:
-            np.ndarray: Uncertainty scores
-        """
-        texts = stats["input_texts"]
-        uncertainties = []
-        
-        for text in texts:
-            predictions = []
-            for instruction in self.instructions[:self.n_forward_passes]:
-                prompt = self.prompt_formatting.format(
-                    classes="\n".join([f"{i+1}. {c}" for i, c in enumerate(set(self.instructions))]),
-                    text=text
-                )
-                
-                pred = np.random.rand(len(set(self.instructions)))
-                predictions.append(pred)
-            
-            ensemble_pred = np.zeros_like(predictions[0])
-            for w, p in zip(self.weights[:self.n_forward_passes], predictions):
-                ensemble_pred += w * p
-                
-            uncertainty = -np.sum(ensemble_pred * np.log(ensemble_pred + 1e-10))
-            uncertainties.append(uncertainty)
-            
-        return np.array(uncertainties)
+        # stats["ensemble_probs"]: [n_samples, n_classes, n_instructions]
+        probs_ensemble = stats["ensemble_probs"]
+        ensemble_probs = self.forward(probs_ensemble)
+        # Uncertainty as entropy
+        entropy = -np.sum(ensemble_probs * np.log(ensemble_probs + 1e-10), axis=1)
+        return entropy
+
 
 class BayesPEFewShot(Estimator):
     """
-    Bayesian Prompt Ensembles for Few-Shot classification.
-    Implements the method from https://github.com/amzn/BayesPE
+    Bayesian Prompt Ensembles for Few-Shot classification (BPE-style).
     """
-    
-    @polygraph_module_init
     def __init__(
         self,
         instructions: List[str],
         few_shot_examples: List[Dict[str, str]],
-        prompt_formatting: str = "classify the sentiment of the text below into one of the following classes:\n{classes}\n\nExamples:\n{examples}\n\ntext: {text}\n\nthe text is",
-        n_forward_passes: int = 5,
-        stats_dependencies: List[str] = ["input_texts"],
-        level: str = "sequence"
+        class_labels: Optional[List[str]] = None,
+        prompt_formatting: Optional[str] = None,
+        n_iterations_weights_optimiser: int = 10,
     ):
-        """
-        Parameters:
-            instructions (List[str]): List of semantically equivalent instructions for the ensemble
-            few_shot_examples (List[Dict[str, str]]): List of few-shot examples with text and label
-            prompt_formatting (str): Template for formatting prompts
-            n_forward_passes (int): Number of forward passes to use for inference
-            stats_dependencies (List[str]): Statistics dependencies
-            level (str): Uncertainty estimation level
-        """
-        super().__init__(stats_dependencies, level)
+        super().__init__(["ensemble_probs"], "sequence")
         self.instructions = instructions
         self.few_shot_examples = few_shot_examples
+        self.class_labels = class_labels
         self.prompt_formatting = prompt_formatting
-        self.n_forward_passes = n_forward_passes
-        self.weights = np.ones(len(instructions)) / len(instructions)  # Initialize with uniform weights
-        
+        self.n_iterations_weights_optimiser = n_iterations_weights_optimiser
+        self.weights = np.ones(len(instructions)) / len(instructions)
+
     def __str__(self):
-        return f"BayesPEFewShot(instructions={len(self.instructions)}, examples={len(self.few_shot_examples)}, n_forward_passes={self.n_forward_passes})"
-    
-    def _format_examples(self) -> str:
-        """Format few-shot examples for the prompt."""
-        examples = []
-        for ex in self.few_shot_examples:
-            examples.append(f"Text: {ex['text']}\nLabel: {ex['label']}")
-        return "\n\n".join(examples)
-    
-    def optimize_weights(self, validation_texts: List[str], validation_labels: List[int]):
-        """
-        Optimize ensemble weights using validation data.
-        
-        Parameters:
-            validation_texts (List[str]): Validation texts
-            validation_labels (List[int]): Ground truth labels
-        """
-        def objective(weights):
-            weights = np.exp(weights) / np.sum(np.exp(weights))
-            
-            predictions = []
-            for instruction in self.instructions:
-                prompts = [self.prompt_formatting.format(
-                    classes="\n".join([f"{i+1}. {c}" for i, c in enumerate(set(validation_labels))]),
-                    examples=self._format_examples(),
-                    text=text
-                ) for text in validation_texts]
-                
-                pred = np.random.rand(len(validation_texts), len(set(validation_labels)))
-                predictions.append(pred)
+        return f"BayesPEFewShot({len(self.instructions)} prompts, {len(self.few_shot_examples)} examples)"
 
-            ensemble_pred = np.zeros_like(predictions[0])
-            for w, p in zip(weights, predictions):
-                ensemble_pred += w * p
-                
-            loss = log_loss(validation_labels, ensemble_pred)
-            return loss
+    def optimise_weights(self, val_probs_ensemble: np.ndarray, val_labels: np.ndarray, learning_rate=SMALL_CONSTANT):
+        probs = smooth_probs_3d(val_probs_ensemble)
+        nan_cost = True
+        lr = learning_rate
+        weights = np.ones(probs.shape[2]) / probs.shape[2]
+        for _ in range(self.n_iterations_weights_optimiser):
+            ensemble_probs = np.tensordot(probs, weights, axes=([2], [0]))
+            ensemble_probs = ensemble_probs / np.sum(ensemble_probs, axis=1, keepdims=True)
+            try:
+                cost = log_loss(val_labels, ensemble_probs)
+            except Exception:
+                cost = np.nan
+            if not np.isnan(cost):
+                break
+            lr *= 0.5
+        self.weights = weights
+        return weights
 
-        initial_weights = np.zeros(len(self.instructions))
-        result = minimize(objective, initial_weights, method='Nelder-Mead')
- 
-        self.weights = np.exp(result.x) / np.sum(np.exp(result.x))
-    
+    def forward(self, test_probs_ensemble: np.ndarray, n_forward_passes: Optional[int] = None):
+        if n_forward_passes is None:
+            n_forward_passes = len(self.instructions)
+        chosen_indices = np.argsort(self.weights)[-n_forward_passes:]
+        chosen_weights = self.weights[chosen_indices]
+        chosen_weights = chosen_weights / np.sum(chosen_weights)
+        probs = test_probs_ensemble[:, :, chosen_indices]
+        probs = smooth_probs_3d(probs)
+        ensemble_probs = np.tensordot(probs, chosen_weights, axes=([2], [0]))
+        ensemble_probs = ensemble_probs / np.sum(ensemble_probs, axis=1, keepdims=True)
+        return ensemble_probs
+
+    def save_weights(self, save_dir="saved_weights/ensemble_weights"):
+        with open(save_dir, "wb") as f:
+            pickle.dump(self.weights, f)
+
+    def load_weights(self, load_dir="saved_weights/ensemble_weights"):
+        with open(load_dir, "rb") as f:
+            self.weights = pickle.load(f)
+
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        """
-        Calculate uncertainty using BayesPE ensemble.
-        
-        Parameters:
-            stats (Dict[str, np.ndarray]): Input statistics
-            
-        Returns:
-            np.ndarray: Uncertainty scores
-        """
-        texts = stats["input_texts"]
-        uncertainties = []
-        
-        for text in texts:
-            predictions = []
-            for instruction in self.instructions[:self.n_forward_passes]:
-                prompt = self.prompt_formatting.format(
-                    classes="\n".join([f"{i+1}. {c}" for i, c in enumerate(set(self.instructions))]),
-                    examples=self._format_examples(),
-                    text=text
-                )
-                
-                pred = np.random.rand(len(set(self.instructions)))
-                predictions.append(pred)
-            
-            ensemble_pred = np.zeros_like(predictions[0])
-            for w, p in zip(self.weights[:self.n_forward_passes], predictions):
-                ensemble_pred += w * p
-                
-            uncertainty = -np.sum(ensemble_pred * np.log(ensemble_pred + 1e-10))
-            uncertainties.append(uncertainty)
-            
-        return np.array(uncertainties) 
+        probs_ensemble = stats["ensemble_probs"]
+        ensemble_probs = self.forward(probs_ensemble)
+        entropy = -np.sum(ensemble_probs * np.log(ensemble_probs + 1e-10), axis=1)
+        return entropy

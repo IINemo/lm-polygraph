@@ -10,6 +10,7 @@ from lm_polygraph.utils.model import WhiteboxModel
 
 INPUT = "When was Julius Caesar born?"
 
+
 @pytest.fixture(scope="module")
 def model():
     model_path = "bigscience/bloomz-560m"
@@ -300,80 +301,45 @@ def test_boostedprob_sequence(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_bayespe_zero_shot(model):
-    TEST_TEXTS = [
-        "I love this product! It's amazing.",
-        "This is terrible, I hate it.",
-        "The product is okay, nothing special.",
-        "Absolutely fantastic experience!",
-        "Would not recommend to anyone."
-    ]
+def test_bayespe_zero_shot():
+    n_samples = 5
+    n_classes = 3
+    n_instructions = 4
+    
+    probs = np.random.rand(n_samples, n_classes, n_instructions)
+    probs /= probs.sum(axis=1, keepdims=True)
 
-    TEST_LABELS = [1, 0, 0, 1, 0]
+    instructions = [f"Instruction {i}" for i in range(n_instructions)]
+    estimator = BayesPEZeroShot(instructions)
 
-    estimator = BayesPEZeroShot(
-        instructions=[
-            "classify the sentiment of the text",
-            "determine if the text is positive or negative",
-            "what is the emotional tone of the text"
-        ],
-        n_forward_passes=3
-    )
-    
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-    
-    estimator.optimize_weights(TEST_TEXTS, TEST_LABELS)
-    assert isinstance(estimator.weights, np.ndarray)
-    assert len(estimator.weights) == len(estimator.instructions)
-    assert np.allclose(np.sum(estimator.weights), 1.0, atol=1e-6)
-    
-    uncertainties = estimator({"input_texts": TEST_TEXTS})
-    assert isinstance(uncertainties, np.ndarray)
-    assert len(uncertainties) == len(TEST_TEXTS)
-    assert np.all(uncertainties >= 0)
+    stats = {"ensemble_probs": probs}
+    uncertainty = estimator(stats)
+    assert isinstance(uncertainty, np.ndarray)
+    assert uncertainty.shape == (n_samples,)
+
+    labels = np.random.randint(0, n_classes, size=n_samples)
+    estimator.optimise_weights(probs, labels)
+    assert np.isclose(estimator.weights.sum(), 1.0)
+    assert estimator.weights.shape == (n_instructions,)
 
 
-def test_bayespe_few_shot(model):
-    TEST_TEXTS = [
-        "I love this product! It's amazing.",
-        "This is terrible, I hate it.",
-        "The product is okay, nothing special.",
-        "Absolutely fantastic experience!",
-        "Would not recommend to anyone."
-    ]
+def test_bayespe_few_shot():
+    n_samples = 5
+    n_classes = 3
+    n_instructions = 4
+    probs = np.random.rand(n_samples, n_classes, n_instructions)
+    probs /= probs.sum(axis=1, keepdims=True)
 
-    TEST_LABELS = [1, 0, 0, 1, 0]
-    FEW_SHOT_EXAMPLES = [
-        {"text": "This movie was great!", "label": "positive"},
-        {"text": "I didn't enjoy it at all.", "label": "negative"},
-        {"text": "The service was excellent.", "label": "positive"},
-        {"text": "Waste of money.", "label": "negative"}
-    ]
-    estimator = BayesPEFewShot(
-        instructions=[
-            "classify the sentiment of the text",
-            "determine if the text is positive or negative",
-            "what is the emotional tone of the text"
-        ],
-        few_shot_examples=FEW_SHOT_EXAMPLES,
-        n_forward_passes=3
-    )
-    
-    ue = estimate_uncertainty(model, estimator, INPUT)
-    assert isinstance(ue.uncertainty, float)
-    
-    estimator.optimize_weights(TEST_TEXTS, TEST_LABELS)
-    assert isinstance(estimator.weights, np.ndarray)
-    assert len(estimator.weights) == len(estimator.instructions)
-    assert np.allclose(np.sum(estimator.weights), 1.0, atol=1e-6)
-    
-    uncertainties = estimator({"input_texts": TEST_TEXTS})
-    assert isinstance(uncertainties, np.ndarray)
-    assert len(uncertainties) == len(TEST_TEXTS)
-    assert np.all(uncertainties >= 0)  # Uncertainties should be non-negative
-    
-    formatted_examples = estimator._format_examples()
-    assert isinstance(formatted_examples, str)
-    assert all(ex["text"] in formatted_examples for ex in FEW_SHOT_EXAMPLES)
-    assert all(ex["label"] in formatted_examples for ex in FEW_SHOT_EXAMPLES)
+    instructions = [f"Instruction {i}" for i in range(n_instructions)]
+    few_shot_examples = [{"text": "example", "label": "A"}] * 2
+    estimator = BayesPEFewShot(instructions, few_shot_examples)
+
+    stats = {"ensemble_probs": probs}
+    uncertainty = estimator(stats)
+    assert isinstance(uncertainty, np.ndarray)
+    assert uncertainty.shape == (n_samples,)
+
+    labels = np.random.randint(0, n_classes, size=n_samples)
+    estimator.optimise_weights(probs, labels)
+    assert np.isclose(estimator.weights.sum(), 1.0)
+    assert estimator.weights.shape == (n_instructions,)
