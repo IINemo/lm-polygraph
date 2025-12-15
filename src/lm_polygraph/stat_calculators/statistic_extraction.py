@@ -54,7 +54,16 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     if datasets_name == "train_"
                     else background_train_dataset_max_new_tokens
                 )
-                for inp_texts, target_texts in tqdm(dataset):
+                for batch_i, batch in enumerate(dataset):
+                    if len(batch) == 3:
+                        inp_texts, target_texts, images = batch
+                    elif len(batch) == 2:
+                        inp_texts, target_texts = batch
+                        images = None
+                    else:
+                        raise ValueError(
+                            f"Expected batch with 2 or 3 elements, got {len(batch)}"
+                        )
                     batch_stats: Dict[str, np.ndarray] = {}
                     for key, val in [
                         ("input_texts", inp_texts),

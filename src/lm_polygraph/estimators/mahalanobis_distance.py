@@ -70,6 +70,13 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
     # step 2: the Mahalanobis distance is computed using the formula: sqrt(diff @ sigmainv @ diff),
     #  where diff is reshaped to match the dimensions of sigmainv.
 
+    # Check for dtype mismatch and cast if necessary
+    # (expect float32; float16 causes error)
+    expected_dtype = torch.float32
+    if diff.dtype != expected_dtype:
+        diff = diff.to(expected_dtype)
+    if sigma_inv.dtype != expected_dtype:
+        sigma_inv = sigma_inv.to(expected_dtype)
     dists = torch.sqrt(torch.einsum("bcd,da,bsa->bcs", diff, sigma_inv, diff))
     device = dists.device
 
