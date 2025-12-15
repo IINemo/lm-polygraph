@@ -77,6 +77,8 @@ def process_layers(estimators: List) -> List[int]:
             layers.extend(estimator.layers)
 
     return set(layers)
+
+
 def load_processor(model_path, **kwargs):
     return AutoProcessor.from_pretrained(model_path, **kwargs)
 
