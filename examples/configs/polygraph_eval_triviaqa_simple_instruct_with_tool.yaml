@@ -1,17 +1,22 @@
+# Example configuration with Wikipedia BM25 retriever tool calling
+# This config demonstrates how to use tool calling with the evaluation pipeline
+# Uses Wikipedia BM25 search (Robertson & Zaragoza, 2009) via pyserini
+
 # Hydra configuration: defines output directory structure
-# Output will be saved to: ${cache_path}/${task}/${model.path}/${dataset}/${date}/${time}
 hydra:
   run:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 # Default configurations to include (merged with this file)
 defaults:
-  - model: llama3-1-8b-instruct              # Model configuration (device, loading args, etc.)
+  - model: llama3-1-8b-instruct         # Model configuration (device, loading args, etc.) - instruction-tuned model with chat template
   - estimators: default_estimators # Uncertainty estimation methods to evaluate
   - stat_calculators: default_calculators # Statistics calculators (e.g., DeBERTa for NLI)
-  - base_processing_coqa           # Dataset-specific processing functions
+  - base_processing_triviaqa           # Dataset-specific processing functions
   - _self_                         # Include this config file
-# Add this section to override the default estimators
+
+
+# Estimators
 estimators:
   - name: MaximumSequenceProbability
   - name: Perplexity
@@ -24,20 +29,17 @@ save_path: '${hydra:run.dir}'       # Where to save results (uses Hydra's run di
 
 # Task configuration
 task: qa                            # Task type: "qa" (question answering), "ats" (summarization), "nmt" (translation)
-instruct: true                     # Whether model is instruction-tuned (affects prompt formatting)
+instruct: true                     # Whether model is instruction-tuned (Llama-3.1-Tulu-3-8B is instruction-tuned with chat template)
 
 # Dataset configuration
-dataset: ['LM-polygraph/coqa', 'simple_instruct']  # Hugging Face dataset: [repo_name, config_name]
+dataset: ['LM-polygraph/triviaqa', 'simple_instruct']  # Hugging Face dataset: [repo_name, config_name]
 text_column: input                  # Column name containing input/prompt texts
 label_column: output                # Column name containing target/reference texts
 train_split: train                  # Training split name (for few-shot examples)
 eval_split: test                    # Evaluation split name
-n_shot: 0                           # Number of few-shot examples (0 = zero-shot)
-few_shot_split: train               # Split to use for selecting few-shot examples
-few_shot_prompt: null               # Custom few-shot prompt template (null = default)
 trust_remote_code: false            # Trust remote code when loading dataset from HF
-size: null                          # Max dataset size (null = use all)
-
+size: 10000                          # Max dataset size (null = use all)
+multiref: true
 # Text generation configuration
 max_new_tokens: 20                  # Maximum tokens to generate per input
 load_from_disk: false               # Load dataset from local disk (false = download from HF)
@@ -45,9 +47,21 @@ generation_params:                   # Additional generation parameters
   stop_strings:                     # Stop generation when these strings are encountered
     - "\n"
 
+# Tool calling configuration
+tool:
+  mandatory: true                  # Whether tool usage is mandatory (false = optional, LLM decides)
+  tool_name: wiki_bm25_retriever   # Name of tool to use (required if mandatory=true and multiple tools)
+  wiki_bm25_retriever:
+    # Wikipedia BM25 retriever - searches Wikipedia using BM25 algorithm (Robertson & Zaragoza, 2009)
+    top_k: 1                        # Number of top Wikipedia passages to retrieve
+    name: wiki_bm25_retriever       # Tool name
+    index_name: wikipedia-dpr-100w   # Pyserini index name (default: wikipedia-dpr-100w, uses BM25 k1=0.9, b=0.4 tuned for QA)
+    cache_dir: /common/users/yl2310/.cache/pyserini  # Cache directory for pyserini indices
+    description: "A retrieval tool that searches Wikipedia using BM25 algorithm (Robertson & Zaragoza, 2009). Use this tool to find relevant information from Wikipedia articles."
+
 # Evaluation configuration
 subsample_eval_dataset: 100           # Number of samples to evaluate (-1 = use all)
-batch_size: 4                          # Batch size for processing (single GPU: 4-16 for small models, 1-4 for large models)
+batch_size: 4                          # Batch size for processing (single GPU: 1-4 for tool calling, 4-16 without tools)
 
 # Metrics configuration
 generation_metrics: null            # Custom generation metrics (null = use task defaults)
@@ -62,3 +76,4 @@ report_to_wandb: true              # Set to true to log results to wandb (defaul
 # Reproducibility
 seed:                               # Random seeds for reproducibility (runs once per seed)
     - 1
+

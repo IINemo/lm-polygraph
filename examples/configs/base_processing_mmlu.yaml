@@ -1,0 +1,15 @@
+process_output_fn:
+  path: instruct/output_processing_scripts/mmlu.py
+  fn_name: normalize_mmlu
+process_target_fn:
+  path: instruct/output_processing_scripts/mmlu.py
+  fn_name: normalize_mmlu
+
+
+
+
+
+
+
+
+

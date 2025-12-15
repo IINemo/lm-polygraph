@@ -6,10 +6,10 @@ hydra:
 
 # Default configurations to include (merged with this file)
 defaults:
-  - model: llama3-1-8b-instruct              # Model configuration (device, loading args, etc.)
+  - model: biomistral-7b              # Model configuration (device, loading args, etc.)
   - estimators: default_estimators # Uncertainty estimation methods to evaluate
   - stat_calculators: default_calculators # Statistics calculators (e.g., DeBERTa for NLI)
-  - base_processing_coqa           # Dataset-specific processing functions
+  - base_processing_medqa           # Dataset-specific processing functions
   - _self_                         # Include this config file
 # Add this section to override the default estimators
 estimators:
@@ -27,9 +27,11 @@ task: qa                            # Task type: "qa" (question answering), "ats
 instruct: true                     # Whether model is instruction-tuned (affects prompt formatting)
 
 # Dataset configuration
-dataset: ['LM-polygraph/coqa', 'simple_instruct']  # Hugging Face dataset: [repo_name, config_name]
-text_column: input                  # Column name containing input/prompt texts
-label_column: output                # Column name containing target/reference texts
+# Direct loading from HuggingFace - the dataset loader will automatically format
+# question + options as input and use answer_idx as target
+dataset: GBaker/MedQA-USMLE-4-options
+text_column: question  # Used to detect MedQA format, actual input will be formatted question + options
+label_column: answer_idx  # The correct answer (A, B, C, or D) - this is what we compare against
 train_split: train                  # Training split name (for few-shot examples)
 eval_split: test                    # Evaluation split name
 n_shot: 0                           # Number of few-shot examples (0 = zero-shot)
@@ -39,18 +41,26 @@ trust_remote_code: false            # Trust remote code when loading dataset fro
 size: null                          # Max dataset size (null = use all)
 
 # Text generation configuration
-max_new_tokens: 20                  # Maximum tokens to generate per input
+max_new_tokens: 3                   # Maximum tokens to generate per input (just need A, B, C, or D)
 load_from_disk: false               # Load dataset from local disk (false = download from HF)
 generation_params:                   # Additional generation parameters
   stop_strings:                     # Stop generation when these strings are encountered
     - "\n"
 
+# Optional: Custom prompt template for formatting question and options
+# If not provided, default format will be used
+prompt: "Q:{question}\nA. {option_a}\nB. {option_b}\nC. {option_c}\nD. {option_d}\nAnswer:"
+
+# Optional: Description to prepend to each question
+description: "The following are multiple choice questions (with answers) about medical knowledge."
+
 # Evaluation configuration
-subsample_eval_dataset: 100           # Number of samples to evaluate (-1 = use all)
-batch_size: 4                          # Batch size for processing (single GPU: 4-16 for small models, 1-4 for large models)
+subsample_eval_dataset: -1           # Number of samples to evaluate (-1 = use all)
+batch_size: 8                          # Batch size for processing (single GPU: 4-16 for small models, 1-4 for large models)
 
 # Metrics configuration
-generation_metrics: null            # Custom generation metrics (null = use task defaults)
+generation_metrics:                  # Use Accuracy metric to compare LLM output with answer_idx
+  - name: AccuracyMetric
 
 # Error handling
 ignore_exceptions: false            # Continue on errors (false = stop on first error)
@@ -62,3 +72,12 @@ report_to_wandb: true              # Set to true to log results to wandb (defaul
 # Reproducibility
 seed:                               # Random seeds for reproducibility (runs once per seed)
     - 1
+
+
+
+
+
+
+
+
+

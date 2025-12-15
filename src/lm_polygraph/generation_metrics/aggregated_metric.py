@@ -29,7 +29,9 @@ class AggregatedMetric(GenerationMetric):
 
         Parameters:
             stats (Dict[str, np.ndarray]): calculated stats
-            target_texts (List[str]): ground-truth texts
+            target_texts (List[str] or List[List[str]]): ground-truth texts
+                When multiref is true, this is List[List[str]] where each inner list
+                contains multiple reference answers for one sample.
         Returns:
             np.ndarray: list of aggregated metric values for each sample in input.
         """
@@ -37,6 +39,11 @@ class AggregatedMetric(GenerationMetric):
         for i, (targets, greedy_text) in enumerate(
             zip(target_texts, stats["greedy_texts"])
         ):
+            # Ensure targets is a list (handle case where it might be a string or other type)
+            if not isinstance(targets, list):
+                # If targets is not a list, wrap it in a list
+                targets = [targets]
+            
             # truncate stats to only process one sample at a time
             truncated_stats = {
                 k: [v[i]]
@@ -46,6 +53,17 @@ class AggregatedMetric(GenerationMetric):
 
             sample_metric_values = []
             for target in targets:
+                # Ensure target is a string (handle nested lists or other types)
+                if isinstance(target, list):
+                    # If target is a list, take the first element (shouldn't happen, but be defensive)
+                    if len(target) > 0:
+                        target = target[0] if isinstance(target[0], str) else str(target[0])
+                    else:
+                        target = ""
+                elif not isinstance(target, str):
+                    # Convert to string if it's not already
+                    target = str(target)
+                
                 value = self.base_metric(truncated_stats, [target])
                 sample_metric_values.append(value)
 

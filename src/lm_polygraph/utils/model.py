@@ -3,6 +3,7 @@ import openai
 import time
 import logging
 import json
+import sys
 
 from dataclasses import asdict
 from typing import List, Dict, Optional, Union
@@ -23,6 +24,8 @@ from lm_polygraph.utils.generation_parameters import (
 )
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
+from lm_polygraph.utils.tools import ToolManager
+from lm_polygraph.utils.tool_calling import execute_tool_calling_workflow
 
 log = logging.getLogger("lm_polygraph")
 
@@ -102,6 +105,9 @@ class BlackboxModel(Model):
         hf_api_token: str = None,
         generation_parameters: GenerationParameters = GenerationParameters(),
         supports_logprobs: bool = False,
+        tool_manager: Optional[ToolManager] = None,
+        tool_mandatory: bool = False,
+        tool_name: Optional[str] = None,
     ):
         """
         Parameters:
@@ -111,11 +117,18 @@ class BlackboxModel(Model):
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
             supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
+            tool_manager (Optional[ToolManager]): Tool manager with available tools. Default: None.
+            tool_mandatory (bool): Whether tool usage is mandatory. Default: False.
+            tool_name (Optional[str]): Name of the tool to use (required if mandatory). Default: None.
         """
         super().__init__(model_path, "Blackbox")
         self.generation_parameters = generation_parameters
         self.openai_api_key = openai_api_key
         self.supports_logprobs = supports_logprobs
+        self.tool_manager = tool_manager
+        self.tool_mandatory = tool_mandatory
+        self.tool_name = tool_name
+        self._tool_usage_info = []  # Track tool usage for logging
 
         if openai_api_key is not None:
             self.openai_api = openai.OpenAI(api_key=openai_api_key)
@@ -174,14 +187,21 @@ class BlackboxModel(Model):
         Parameters:
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             hf_model_id (Optional[str]): model path in huggingface.
+            **kwargs: Additional arguments including tool_manager, tool_mandatory, tool_name.
         """
         generation_parameters = kwargs.pop(
             "generation_parameters", GenerationParameters()
         )
+        tool_manager = kwargs.pop("tool_manager", None)
+        tool_mandatory = kwargs.pop("tool_mandatory", False)
+        tool_name = kwargs.pop("tool_name", None)
         return BlackboxModel(
             hf_api_token=hf_api_token,
             model_path=hf_model_id,
             generation_parameters=generation_parameters,
+            tool_manager=tool_manager,
+            tool_mandatory=tool_mandatory,
+            tool_name=tool_name,
         )
 
     @staticmethod
@@ -195,15 +215,22 @@ class BlackboxModel(Model):
             openai_api_key (Optional[str]): OpenAI API key. Default: None.
             model_path (Optional[str]): model name in OpenAI.
             supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
+            **kwargs: Additional arguments including tool_manager, tool_mandatory, tool_name.
         """
         generation_parameters = kwargs.pop(
             "generation_parameters", GenerationParameters()
         )
+        tool_manager = kwargs.pop("tool_manager", None)
+        tool_mandatory = kwargs.pop("tool_mandatory", False)
+        tool_name = kwargs.pop("tool_name", None)
         return BlackboxModel(
             openai_api_key=openai_api_key,
             model_path=model_path,
             supports_logprobs=supports_logprobs,
             generation_parameters=generation_parameters,
+            tool_manager=tool_manager,
+            tool_mandatory=tool_mandatory,
+            tool_name=tool_name,
         )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
@@ -215,6 +242,57 @@ class BlackboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
+        # Check if tool calling is enabled (backward compatible - only if tools are configured)
+        # Use get() first to check, then pop() only if needed to avoid modifying args unnecessarily
+        use_tools = args.get("use_tools", None)
+        if use_tools is None:
+            # Default: use tools only if tool_manager is set and has tools
+            # When tool_manager is None (no tools configured), this will be False
+            use_tools = self.tool_manager is not None and self.tool_manager.has_tools()
+        else:
+            # Remove use_tools from args if it was explicitly provided
+            args.pop("use_tools")
+        
+        # Only use tool calling workflow if tools are configured and enabled
+        if use_tools and self.tool_manager is not None and self.tool_manager.has_tools():
+            # Use tool calling workflow
+            results = []
+            tool_names_used = []
+            tools_used = []
+            max_new_tokens = args.get("max_new_tokens", self.generation_parameters.max_new_tokens)
+            for question in input_texts:
+                result, tool_name_used, tool_was_used = execute_tool_calling_workflow(
+                    model=self,
+                    question=question,
+                    tool_manager=self.tool_manager,
+                    mandatory=self.tool_mandatory,
+                    tool_name=self.tool_name,
+                    max_new_tokens=max_new_tokens,
+                    **{k: v for k, v in args.items() if k != "max_new_tokens"}
+                )
+                results.append(result)
+                tool_names_used.append(tool_name_used)
+                tools_used.append(tool_was_used)
+            
+            # Store tool usage info for logging
+            if not hasattr(self, '_tool_usage_info'):
+                self._tool_usage_info = []
+            self._tool_usage_info.append({
+                'tool_names': tool_names_used,
+                'tools_used': tools_used,
+                'input_texts': input_texts
+            })
+            
+            # Log tool usage
+            for i, (tool_name, tool_used) in enumerate(zip(tool_names_used, tools_used)):
+                if tool_used and tool_name:
+                    log.info(f"Tool used for input {i}: {tool_name}")
+                elif not tool_used:
+                    log.info(f"No tool used for input {i}")
+            
+            return results
+        
+        # Normal generation path (backward compatible - no tools)
         # Apply default parameters first, then override with provided args
         default_params = asdict(self.generation_parameters)
         default_params.update(args)
@@ -404,6 +482,9 @@ class WhiteboxModel(Model):
         model_type: str = "CausalLM",
         generation_parameters: GenerationParameters = GenerationParameters(),
         instruct: bool = False,
+        tool_manager: Optional[ToolManager] = None,
+        tool_mandatory: bool = False,
+        tool_name: Optional[str] = None,
     ):
         """
         Parameters:
@@ -412,12 +493,19 @@ class WhiteboxModel(Model):
             model_path (Optional[str]): Unique model path in HuggingFace.
             model_type (str): Additional model specifications.
             parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            tool_manager (Optional[ToolManager]): Tool manager with available tools. Default: None.
+            tool_mandatory (bool): Whether tool usage is mandatory. Default: False.
+            tool_name (Optional[str]): Name of the tool to use (required if mandatory). Default: None.
         """
         super().__init__(model_path, model_type)
         self.model = model
         self.tokenizer = tokenizer
         self.generation_parameters = generation_parameters
         self.instruct = instruct
+        self.tool_manager = tool_manager
+        self.tool_mandatory = tool_mandatory
+        self.tool_name = tool_name
+        self._tool_usage_info = []  # Track tool usage for logging
 
     def _validate_args(self, args):
         """
@@ -464,7 +552,9 @@ class WhiteboxModel(Model):
         Returns:
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
+        print(f"[DEBUG generate] Called with args keys: {list(args.keys())}", file=sys.stderr, flush=True)
         default_params = asdict(self.generation_parameters)
+        print(f"[DEBUG generate] Default params keys: {list(default_params.keys())}", file=sys.stderr, flush=True)
 
         # add ScoresProcessor to collect original scores
         processor = self._ScoresProcessor()
@@ -484,11 +574,18 @@ class WhiteboxModel(Model):
             args["tokenizer"] = self.tokenizer
 
         args = self._validate_args(args)
+        print(f"[DEBUG generate] About to call self.model.generate() with max_new_tokens={args.get('max_new_tokens', 'not set')}", file=sys.stderr, flush=True)
+        print(f"[DEBUG generate] Input shape: {args.get('input_ids', 'N/A').shape if hasattr(args.get('input_ids', None), 'shape') else 'N/A'}", file=sys.stderr, flush=True)
+        import time
+        gen_start = time.time()
         generation = self.model.generate(**args)
+        gen_elapsed = time.time() - gen_start
+        print(f"[DEBUG generate] Model.generate() completed in {gen_elapsed:.2f} seconds", file=sys.stderr, flush=True)
 
         # override generation.scores with original scores from model
         generation.generation_scores = generation.scores
         generation.scores = processor.scores
+        print(f"[DEBUG generate] Returning generation output", file=sys.stderr, flush=True)
 
         return generation
 
@@ -501,15 +598,109 @@ class WhiteboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
+        import sys
+        # DEBUG: Log tool_manager status at the start
+        print(f"[DEBUG WhiteboxModel.generate_texts] ENTRY: input_texts count={len(input_texts)}, "
+              f"tool_manager={self.tool_manager is not None}, "
+              f"has_tools={self.tool_manager.has_tools() if self.tool_manager else False}, "
+              f"tool_mandatory={self.tool_mandatory}, tool_name={self.tool_name}", 
+              file=sys.stderr, flush=True)
+        
+        # Check if tool calling is enabled (backward compatible - only if tools are configured)
+        # Use get() first to check, then pop() only if needed to avoid modifying args unnecessarily
+        use_tools = args.get("use_tools", None)
+        print(f"[DEBUG WhiteboxModel.generate_texts] use_tools from args: {use_tools}", file=sys.stderr, flush=True)
+        
+        if use_tools is None:
+            # Default: use tools only if tool_manager is set and has tools
+            # When tool_manager is None (no tools configured), this will be False
+            use_tools = self.tool_manager is not None and self.tool_manager.has_tools()
+            print(f"[DEBUG WhiteboxModel.generate_texts] use_tools computed from tool_manager: {use_tools}", file=sys.stderr, flush=True)
+        else:
+            # Remove use_tools from args if it was explicitly provided
+            args.pop("use_tools")
+            print(f"[DEBUG WhiteboxModel.generate_texts] use_tools was explicitly set to: {use_tools}", file=sys.stderr, flush=True)
+        
+        # Only use tool calling workflow if tools are configured and enabled
+        if use_tools and self.tool_manager is not None and self.tool_manager.has_tools():
+            print(f"[DEBUG WhiteboxModel.generate_texts] ===== USING TOOL CALLING WORKFLOW =====", file=sys.stderr, flush=True)
+            print(f"[DEBUG WhiteboxModel.generate_texts] tool_manager.tools: {[t.get_name() for t in self.tool_manager.tools]}", file=sys.stderr, flush=True)
+            
+            # Use tool calling workflow
+            results = []
+            tool_names_used = []
+            tools_used = []
+            max_new_tokens = args.get("max_new_tokens", self.generation_parameters.max_new_tokens)
+            for question in input_texts:
+                result, tool_name_used, tool_was_used = execute_tool_calling_workflow(
+                    model=self,
+                    question=question,
+                    tool_manager=self.tool_manager,
+                    mandatory=self.tool_mandatory,
+                    tool_name=self.tool_name,
+                    max_new_tokens=max_new_tokens,
+                    **{k: v for k, v in args.items() if k != "max_new_tokens"}
+                )
+                results.append(result)
+                tool_names_used.append(tool_name_used)
+                tools_used.append(tool_was_used)
+            
+            # Store tool usage info for logging
+            if not hasattr(self, '_tool_usage_info'):
+                self._tool_usage_info = []
+            self._tool_usage_info.append({
+                'tool_names': tool_names_used,
+                'tools_used': tools_used,
+                'input_texts': input_texts
+            })
+            
+            # Log tool usage
+            for i, (tool_name, tool_used) in enumerate(zip(tool_names_used, tools_used)):
+                if tool_used and tool_name:
+                    log.info(f"Tool used for input {i}: {tool_name}")
+                elif not tool_used:
+                    log.info(f"No tool used for input {i}")
+            
+            return results
+        else:
+            print(f"[DEBUG WhiteboxModel.generate_texts] ===== SKIPPING TOOL CALLING =====", file=sys.stderr, flush=True)
+            print(f"[DEBUG WhiteboxModel.generate_texts] Reason: use_tools={use_tools}, "
+                  f"tool_manager={self.tool_manager is not None}, "
+                  f"has_tools={self.tool_manager.has_tools() if self.tool_manager else False}", 
+                  file=sys.stderr, flush=True)
+            print(f"[DEBUG WhiteboxModel.generate_texts] Continuing with normal generation path for {len(input_texts)} inputs", file=sys.stderr, flush=True)
+        
+        # Normal generation path (backward compatible - no tools)
         # Apply default parameters first, then override with provided args
+        print(f"[DEBUG generate_texts] Step 1: Getting default params", file=sys.stderr, flush=True)
         default_params = asdict(self.generation_parameters)
+        print(f"[DEBUG generate_texts] Step 2: Updating with args, args keys: {list(args.keys())}", file=sys.stderr, flush=True)
         default_params.update(args)
+        print(f"[DEBUG generate_texts] Step 3: Validating args", file=sys.stderr, flush=True)
         args = self._validate_args(default_params)
+        print(f"[DEBUG generate_texts] Step 4: Setting return_dict_in_generate=True", file=sys.stderr, flush=True)
 
         args["return_dict_in_generate"] = True
+        print(f"[DEBUG generate_texts] Step 5: Tokenizing {len(input_texts)} inputs", file=sys.stderr, flush=True)
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
+        print(f"[DEBUG generate_texts] Step 6: Moving batch to device {self.device()}", file=sys.stderr, flush=True)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
-        sequences = self.generate(**batch, **args).sequences.cpu()
+        print(f"[DEBUG generate_texts] Step 7: Calling model.generate() with batch shape {batch['input_ids'].shape}", file=sys.stderr, flush=True)
+        print(f"[DEBUG generate_texts] Generation args: max_new_tokens={args.get('max_new_tokens', 'not set')}, other keys: {[k for k in args.keys() if k not in ['input_ids', 'attention_mask', 'return_dict_in_generate']]}", file=sys.stderr, flush=True)
+        print(f"[DEBUG generate_texts] About to call self.generate() - this may take a while...", file=sys.stderr, flush=True)
+        try:
+            import time
+            start_time = time.time()
+            generation_output = self.generate(**batch, **args)
+            elapsed_time = time.time() - start_time
+            print(f"[DEBUG generate_texts] Step 8: Generation completed in {elapsed_time:.2f} seconds, getting sequences", file=sys.stderr, flush=True)
+            sequences = generation_output.sequences.cpu()
+            print(f"[DEBUG generate_texts] Step 9: Sequences shape: {sequences.shape}", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"[DEBUG generate_texts] ERROR in generation: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            raise
         input_len = batch["input_ids"].shape[1]
         texts = []
 
@@ -517,12 +708,20 @@ class WhiteboxModel(Model):
         if self.tokenizer.chat_template is not None:
             decode_args["skip_special_tokens"] = True
 
-        for seq in sequences:
+        print(f"[DEBUG generate_texts] Generated {len(sequences)} sequences, decoding...", file=sys.stderr, flush=True)
+        for i, seq in enumerate(sequences):
             if self.model_type == "CausalLM":
-                texts.append(self.tokenizer.decode(seq[input_len:], **decode_args))
+                decoded = self.tokenizer.decode(seq[input_len:], **decode_args)
+                texts.append(decoded)
+                if i == 0:
+                    print(f"[DEBUG generate_texts] First decoded text (first 200 chars): {decoded[:200]}", file=sys.stderr, flush=True)
             else:
-                texts.append(self.tokenizer.decode(seq[1:], **decode_args))
+                decoded = self.tokenizer.decode(seq[1:], **decode_args)
+                texts.append(decoded)
+                if i == 0:
+                    print(f"[DEBUG generate_texts] First decoded text (first 200 chars): {decoded[:200]}", file=sys.stderr, flush=True)
 
+        print(f"[DEBUG generate_texts] Returning {len(texts)} decoded texts", file=sys.stderr, flush=True)
         return texts
 
     def __call__(self, **args):
@@ -545,6 +744,10 @@ class WhiteboxModel(Model):
         model_path: str,
         generation_params: Optional[Dict] = {},
         add_bos_token: bool = True,
+        instruct: bool = False,
+        tool_manager: Optional[ToolManager] = None,
+        tool_mandatory: bool = False,
+        tool_name: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -555,6 +758,10 @@ class WhiteboxModel(Model):
             generation_params (Dict): generation arguments for
                 lm_polygraph.utils.generation_parametersGenerationParameters
             add_bos_token (bool): tokenizer argument. Default: True.
+            instruct (bool): Whether the model is instruction-tuned. Default: False.
+            tool_manager (Optional[ToolManager]): Tool manager with available tools. Default: None.
+            tool_mandatory (bool): Whether tool usage is mandatory. Default: False.
+            tool_name (Optional[str]): Name of the tool to use (required if mandatory). Default: None.
         """
         log.warning(
             "WhiteboxModel#from_pretrained is deprecated and will be removed in the next release. Please instantiate WhiteboxModel directly by passing an already loaded model, tokenizer and model path."
@@ -616,7 +823,11 @@ class WhiteboxModel(Model):
         )
 
         instance = WhiteboxModel(
-            model, tokenizer, model_path, model_type, generation_params
+            model, tokenizer, model_path, model_type, generation_params,
+            instruct=instruct,
+            tool_manager=tool_manager,
+            tool_mandatory=tool_mandatory,
+            tool_name=tool_name,
         )
 
         return instance
@@ -635,17 +846,28 @@ class WhiteboxModel(Model):
         # Apply chat template if tokenizer has it
         add_start_symbol = True
         if self.instruct:
-            formatted_texts = []
-            for chat in texts:
-                if isinstance(chat, str):
-                    chat = [{"role": "user", "content": chat}]
-                formatted_chat = self.tokenizer.apply_chat_template(
-                    chat, add_generation_prompt=True, tokenize=False
-                )
-                formatted_texts.append(formatted_chat)
-            texts = formatted_texts
-
-            add_start_symbol = False
+            # Check if tokenizer has a chat template
+            if hasattr(self.tokenizer, 'chat_template') and self.tokenizer.chat_template is not None:
+                formatted_texts = []
+                for chat in texts:
+                    if isinstance(chat, str):
+                        chat = [{"role": "user", "content": chat}]
+                    try:
+                        formatted_chat = self.tokenizer.apply_chat_template(
+                            chat, add_generation_prompt=True, tokenize=False
+                        )
+                        formatted_texts.append(formatted_chat)
+                    except (ValueError, TypeError) as e:
+                        # If chat template fails (e.g., doesn't support tools), fall back to plain text
+                        log.warning(f"Chat template application failed: {e}. Falling back to plain text formatting.")
+                        formatted_texts.append(chat[0]["content"] if isinstance(chat, list) and len(chat) > 0 else str(chat))
+                texts = formatted_texts
+                add_start_symbol = False
+            else:
+                # No chat template available, but instruct=True was set
+                # This can happen with base models - log a warning and proceed with plain text
+                log.warning("instruct=True but tokenizer has no chat_template. Using plain text formatting.")
+                add_start_symbol = True
         return self.tokenizer(
             texts,
             padding=True,

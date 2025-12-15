@@ -16,6 +16,7 @@ def register_default_stat_calculators(
     output_attentions: bool = True,
     output_hidden_states: bool = True,
     deberta_batch_size: int = 10,
+    include_greedy_probs: bool = True,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -88,14 +89,15 @@ def register_default_stat_calculators(
             )
 
     elif model_type == "Whitebox":
-        _register(
-            GreedyProbsCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsCalculator",
-            {
-                "output_attentions": output_attentions,
-                "output_hidden_states": output_hidden_states,
-            },
-        )
+        if include_greedy_probs:
+            _register(
+                GreedyProbsCalculator,
+                "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsCalculator",
+                {
+                    "output_attentions": output_attentions,
+                    "output_hidden_states": output_hidden_states,
+                },
+            )
         _register(EntropyCalculator)
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)
@@ -149,14 +151,15 @@ def register_default_stat_calculators(
         )
         _register(AttentionForwardPassCalculator)
     elif model_type == "VisualLM":
-        _register(
-            GreedyProbsVisualCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsVisualCalculator",
-            {
-                "output_attentions": output_attentions,
-                "output_hidden_states": output_hidden_states,
-            },
-        )
+        if include_greedy_probs:
+            _register(
+                GreedyProbsVisualCalculator,
+                "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsVisualCalculator",
+                {
+                    "output_attentions": output_attentions,
+                    "output_hidden_states": output_hidden_states,
+                },
+            )
         _register(EntropyCalculator)
         _register(GreedyLMProbsVisualCalculator)
         _register(PromptVisualCalculator)

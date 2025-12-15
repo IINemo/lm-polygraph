@@ -2,6 +2,8 @@
 
 import hydra
 import os
+import sys
+import argparse
 import transformers
 
 # Set HF_HOME environment variable if not already set
@@ -14,11 +16,31 @@ if "HF_HOME" not in os.environ:
 from pathlib import Path
 from omegaconf import OmegaConf
 from hydra.core.hydra_config import HydraConfig
+import yaml
 
 import logging
+import warnings
 
 log = logging.getLogger("lm_polygraph")
 logging.getLogger("httpx").setLevel(logging.WARNING)
+
+# Configure logging level - ensure INFO messages are shown
+# Hydra might override this, but we set it explicitly here
+if not logging.root.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+# Ensure the lm_polygraph logger also uses INFO level
+logging.getLogger("lm_polygraph").setLevel(logging.INFO)
+
+# Suppress transformers warnings about pad_token_id being set to eos_token_id
+# This warning appears when generation_config.pad_token_id is None during generation
+warnings.filterwarnings(
+    "ignore",
+    message=".*Setting `pad_token_id` to `eos_token_id`.*",
+    category=UserWarning,
+)
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -39,9 +61,52 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
+from lm_polygraph.utils.tools import ToolManager, WikipediaBM25RetrieverTool
 #from transformers import AutoProcessor, AutoModelForVision2Seq
 
-hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
+# Parse --config_file argument before Hydra processes arguments
+def parse_config_file_arg():
+    """Parse --config_file argument from command line before Hydra."""
+    # Check sys.argv directly for --config_file
+    config_file_arg = None
+    # Handle both --config_file value and --config_file=value formats
+    for i, arg in enumerate(sys.argv):
+        if arg == "--config_file":
+            if i + 1 < len(sys.argv):
+                config_file_arg = sys.argv[i + 1]
+                # Remove --config_file and its value from sys.argv so Hydra doesn't see it
+                sys.argv.pop(i)
+                sys.argv.pop(i)  # Now the value is at position i
+            break
+        elif arg.startswith("--config_file="):
+            config_file_arg = arg.split("=", 1)[1]
+            # Remove this argument from sys.argv
+            sys.argv.pop(i)
+            break
+    return config_file_arg
+
+# Get config file path from argument or environment variable
+config_file_arg = parse_config_file_arg()
+if config_file_arg:
+    config_file_path = Path(config_file_arg).resolve()
+    if not config_file_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_file_path}")
+    hydra_config_dir = str(config_file_path.parent)
+    hydra_config_name = config_file_path.stem  # filename without extension
+    # Set HYDRA_CONFIG for backward compatibility
+    os.environ["HYDRA_CONFIG"] = str(config_file_path)
+else:
+    # Fallback to environment variable for backward compatibility
+    hydra_config_env = os.environ.get("HYDRA_CONFIG", "")
+    if hydra_config_env:
+        config_file_path = Path(hydra_config_env)
+        hydra_config_dir = str(config_file_path.parent)
+        hydra_config_name = config_file_path.stem
+    else:
+        # Default fallback
+        hydra_config_dir = "."
+        hydra_config_name = "config"
+        config_file_path = Path(".")
 
 
 def get_hydra_config_path():
@@ -62,18 +127,90 @@ def wandb_save_directory(directory_path):
             wandb.save(full_path)
 
 
+def load_api_keys_from_config():
+    """Load API keys from .api_keys.yaml file if it exists.
+    
+    Returns:
+        dict: Dictionary containing API keys (wandb_api_key, hf_token, openai_api_key, etc.)
+    """
+    try:
+        # Try to get original cwd from hydra context
+        original_cwd = hydra.utils.get_original_cwd()
+    except (AttributeError, RuntimeError):
+        # Fallback: try to get from environment or use current working directory
+        # Hydra sets HYDRA_MAIN_MODULE which contains the original cwd info
+        # For now, use a simple approach: check project root
+        original_cwd = os.getcwd()
+        # If we're in a hydra output directory, try to find the project root
+        # by looking for .api_keys.yaml in parent directories
+        current = Path(original_cwd)
+        for parent in [current] + list(current.parents):
+            if (parent / ".api_keys.yaml").exists():
+                original_cwd = str(parent)
+                break
+    
+    api_keys_path = Path(original_cwd) / ".api_keys.yaml"
+    if api_keys_path.exists():
+        try:
+            with open(api_keys_path, "r") as f:
+                config = yaml.safe_load(f)
+                if config:
+                    # Filter out None, "null", empty string values, and placeholder values
+                    filtered = {}
+                    for k, v in config.items():
+                        if v is None or v == "null" or v == "":
+                            continue
+                        # Skip placeholder values like "your-api-key-here"
+                        if isinstance(v, str) and ("your-" in v.lower() and "-here" in v.lower()):
+                            continue
+                        filtered[k] = v
+                    return filtered
+        except Exception as e:
+            log.debug(f"Could not load API keys config from {api_keys_path}: {e}")
+    return {}
+
+
 @hydra.main(
     version_base=None,
-    config_path=str(hydra_config.parent),
-    config_name=str(hydra_config.name),
+    config_path=hydra_config_dir,
+    config_name=hydra_config_name,
 )
 def main(args):
     save_path = HydraConfig.get().runtime.output_dir
     os.chdir(hydra.utils.get_original_cwd())
 
-    global hydra_config
-    if hydra_config == Path("."):
-        hydra_config = get_hydra_config_path()
+    global config_file_path
+    if config_file_path == Path(".") or not config_file_path or str(config_file_path) == ".":
+        config_file_path = get_hydra_config_path()
+        if config_file_path is None:
+            # If we can't get it from Hydra, try to reconstruct from HydraConfig
+            config_path_hydra = [
+                path["path"]
+                for path in HydraConfig.get().runtime.config_sources
+                if path["schema"] == "file"
+            ]
+            if config_path_hydra:
+                config_file_path = Path(config_path_hydra[0]) / HydraConfig.get().job.config_name
+
+    # Load API keys from .api_keys.yaml file if it exists
+    # This should be done early so all models can use the keys
+    api_keys = load_api_keys_from_config()
+    
+    # Set wandb API key if provided
+    wandb_api_key = api_keys.get("wandb_api_key")
+    if wandb_api_key:
+        os.environ["WANDB_API_KEY"] = wandb_api_key
+    
+    # Set HF token if provided (for gated models)
+    hf_token = api_keys.get("hf_token") or api_keys.get("huggingface_token")
+    if hf_token:
+        os.environ["HF_TOKEN"] = hf_token
+        os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
+    
+    # Set OpenAI API key if provided
+    openai_api_key = api_keys.get("openai_api_key")
+    if openai_api_key:
+        os.environ["OPENAI_API_KEY"] = openai_api_key
 
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         import wandb
@@ -84,12 +221,20 @@ def main(args):
             for path in HydraConfig.get().runtime.config_sources
             if path["schema"] == "file"
         ][0]
+        config_name = HydraConfig.get().job.config_name
         wandb_cfg["HYDRA_CONFIG"] = (
-            Path(config_path_hydra) / HydraConfig.get().job.config_name
+            Path(config_path_hydra) / config_name
         )
         os.environ["WANDB_DIR"] = str(Path(save_path))
-        project = os.environ["WANDB_PROJECT"]
-        wandb.init(project=project, dir=save_path, config=wandb_cfg)
+        project = os.environ.get("WANDB_PROJECT", "my-polygraph-project")
+        # Set wandb to suppress step ordering warnings and reduce verbosity
+        # We log time series data after evaluation completes, which may cause out-of-order steps
+        os.environ["WANDB_SILENT"] = "true"
+        # Initialize wandb with settings to reduce verbosity
+        wandb_settings = wandb.Settings(console="off", _disable_stats=True)
+        # Use config filename as tag for easier searching in wandb
+        wandb_tags = [config_name] if config_name else []
+        wandb.init(project=project, dir=save_path, config=wandb_cfg, settings=wandb_settings, tags=wandb_tags)
         wandb_save_directory(Path(save_path) / ".hydra")
     
     save_path = args.save_path if "save_path" in args else save_path
@@ -153,6 +298,43 @@ def main(args):
             trust_remote_code=getattr(args, "trust_remote_code", False),
             **cache_kwargs,
         )
+        skip_first = getattr(args, "skip_first", 0) or 0
+        if skip_first > 0:
+            log.info(f"Skipping the first {skip_first} samples (debug)")
+            dataset.x = dataset.x[skip_first:]
+            dataset.y = dataset.y[skip_first:]
+            if dataset.images is not None:
+                dataset.images = dataset.images[skip_first:]
+
+        max_prompt_tokens = getattr(args, "max_prompt_tokens", None)
+        if max_prompt_tokens is not None and max_prompt_tokens > 0:
+            log.info(f"Dropping samples longer than {max_prompt_tokens} tokens")
+            tokenizer = getattr(model, "tokenizer", None)
+            kept_x, kept_y = [], []
+            kept_images = [] if dataset.images is not None else None
+            for idx, (text, target) in enumerate(zip(dataset.x, dataset.y)):
+                if tokenizer is None:
+                    token_count = len(text.split())
+                else:
+                    token_count = len(
+                        tokenizer(
+                            text,
+                            add_special_tokens=False,
+                            truncation=False,
+                        )["input_ids"]
+                    )
+                if token_count <= max_prompt_tokens:
+                    kept_x.append(text)
+                    kept_y.append(target)
+                    if kept_images is not None:
+                        kept_images.append(dataset.images[idx])
+            dropped = len(dataset.x) - len(kept_x)
+            if dropped > 0:
+                log.info(f"Dropped {dropped} samples due to length > {max_prompt_tokens}")
+                dataset.x = kept_x
+                dataset.y = kept_y
+                if kept_images is not None:
+                    dataset.images = kept_images
 #	images=dataset.images
         log.info("Done with loading eval data.")
         log.info(f"Dataset size after loading: {len(dataset.x)} samples")
@@ -211,6 +393,47 @@ def main(args):
             # Skip logging individual generation metrics and estimators
             # We'll only log them organized by (estimator, gen_metric) pairs below
             
+            # Log tool usage information if available
+            if hasattr(model, '_tool_usage_info') and model._tool_usage_info:
+                tool_usage_stats = {
+                    'total_batches_with_tools': len(model._tool_usage_info),
+                    'total_samples': sum(len(batch['input_texts']) for batch in model._tool_usage_info),
+                    'total_tool_uses': sum(sum(batch['tools_used']) for batch in model._tool_usage_info),
+                }
+                
+                # Count tool usage by tool name
+                tool_name_counts = {}
+                for batch_info in model._tool_usage_info:
+                    for tool_name in batch_info['tool_names']:
+                        if tool_name is not None:
+                            tool_name_counts[tool_name] = tool_name_counts.get(tool_name, 0) + 1
+                
+                # Log tool usage statistics
+                log.info("=" * 50 + " TOOL USAGE STATISTICS " + "=" * 50)
+                log.info(f"Total batches with tool calling: {tool_usage_stats['total_batches_with_tools']}")
+                log.info(f"Total samples processed: {tool_usage_stats['total_samples']}")
+                log.info(f"Total tool uses: {tool_usage_stats['total_tool_uses']}")
+                if tool_name_counts:
+                    log.info("Tool usage by tool name:")
+                    for tool_name, count in tool_name_counts.items():
+                        log.info(f"  - {tool_name}: {count} uses")
+                log.info("=" * 100)
+                
+                # Log to wandb
+                wandb.log({
+                    "tool_usage/total_batches": tool_usage_stats['total_batches_with_tools'],
+                    "tool_usage/total_samples": tool_usage_stats['total_samples'],
+                    "tool_usage/total_tool_uses": tool_usage_stats['total_tool_uses'],
+                    "tool_usage/tool_usage_rate": tool_usage_stats['total_tool_uses'] / tool_usage_stats['total_samples'] if tool_usage_stats['total_samples'] > 0 else 0.0,
+                })
+                
+                # Log per-tool statistics
+                for tool_name, count in tool_name_counts.items():
+                    wandb.log({
+                        f"tool_usage/tool_{tool_name}/count": count,
+                        f"tool_usage/tool_{tool_name}/rate": count / tool_usage_stats['total_samples'] if tool_usage_stats['total_samples'] > 0 else 0.0,
+                    })
+            
             # Log generation metric values organized by (estimator, generation_metric)
             # This shows the actual generation metric values for each estimator pair
             # Get all unique (estimator, gen_metric) pairs from correlation metrics
@@ -230,12 +453,22 @@ def main(args):
                             # Log generation metric values as time series for this (estimator, gen_metric) pair
                             # Use the same key format as correlation metrics but without the UE metric suffix
                             plot_key = f"{e_name}/{gen_name}"
-                            # Log each value with its step to create a time series
-                            for idx, value in zip(finite_indices, gen_values_finite):
-                                wandb.log({plot_key: float(value)}, step=int(idx))
-                            # Also log summary stats for this pair
+                            # Log time series data as a wandb table to avoid step ordering warnings
+                            # Create table with columns and rows
+                            table_data = [
+                                [int(idx), float(val)]
+                                for idx, val in zip(finite_indices, gen_values_finite)
+                            ]
+                            wandb_table = wandb.Table(columns=["sample_idx", plot_key], data=table_data)
+                            # Log table once instead of individual points with steps
+                            wandb.log({f"{plot_key}_table": wandb_table})
+                            # Also log summary stats for this pair (without steps to avoid warnings)
                             wandb.log({
-                                f"{plot_key}/mean": float(np.mean(gen_values_finite))
+                                f"{plot_key}/mean": float(np.mean(gen_values_finite)),
+                                f"{plot_key}/std": float(np.std(gen_values_finite)),
+                                f"{plot_key}/min": float(np.min(gen_values_finite)),
+                                f"{plot_key}/max": float(np.max(gen_values_finite)),
+                                f"{plot_key}/count": len(gen_values_finite),
                             })
             
             # Log correlation metrics organized by (estimator, generation_metric)
@@ -295,6 +528,7 @@ def get_stat_calculator_names(config):
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
         config.model, "supports_logprobs", False
     )
+    disable_greedy_probs = getattr(config, "disable_greedy_probs", False)
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
@@ -306,6 +540,7 @@ def get_stat_calculator_names(config):
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
             deberta_batch_size=deberta_batch_size,
+            include_greedy_probs=not disable_greedy_probs,
         )
 
     for stat_calculator in config.stat_calculators:
@@ -447,59 +682,171 @@ def get_blackbox_model(args):
         )
 
     supports_logprobs = getattr(args.model, "supports_logprobs", False)
+    
+    # Load tools
+    tool_manager = load_tools(args)
+    tool_mandatory = False
+    tool_name = None
+    if tool_manager and hasattr(args, "tool"):
+        tool_config = args.tool
+        tool_mandatory = getattr(tool_config, "mandatory", False)
+        if tool_mandatory and tool_manager.has_tools():
+            # If mandatory and only one tool, use it
+            if len(tool_manager.tools) == 1:
+                tool_name = tool_manager.tools[0].get_name()
+                log.info(f"Mandatory tool mode: Using single available tool '{tool_name}'")
+            else:
+                # Get tool name from config
+                tool_name = getattr(tool_config, "tool_name", None)
+                if tool_name is None:
+                    raise ValueError("tool_name must be specified when mandatory=True and multiple tools are available")
+                log.info(f"Mandatory tool mode: Using specified tool '{tool_name}'")
+        elif tool_manager.has_tools():
+            # Optional mode - log available tools
+            tool_name = getattr(tool_config, "tool_name", None)
+            if tool_name:
+                log.info(f"Optional tool mode: Tool name '{tool_name}' specified (will be used if LLM chooses to use tools)")
+            else:
+                log.info(f"Optional tool mode: LLM will choose from available tools: {[tool.get_name() for tool in tool_manager.tools]}")
 
     if provider == "openai":
+        # Try to get OpenAI API key from environment or API keys config
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key is None:
-            raise ValueError("OpenAI API key is not set in the environment variables.")
+            # Try loading from API keys config as fallback
+            api_keys = load_api_keys_from_config()
+            openai_api_key = api_keys.get("openai_api_key")
+        
+        if openai_api_key is None:
+            raise ValueError(
+                "OpenAI API key is not set. Please set it in .api_keys.yaml file, "
+                "or set OPENAI_API_KEY environment variable."
+            )
         return BlackboxModel.from_openai(
             openai_api_key=openai_api_key,
             model_path=args.model.path,
             supports_logprobs=supports_logprobs,
+            tool_manager=tool_manager,
+            tool_mandatory=tool_mandatory,
+            tool_name=tool_name,
         )
     elif provider == "huggingface":
-        hf_api_key = os.environ.get("HUGGINGFACE_API_KEY")
+        # Try to get HF token from environment or API keys config
+        hf_api_key = (os.environ.get("HUGGINGFACE_API_KEY") or 
+                     os.environ.get("HF_TOKEN") or 
+                     os.environ.get("HUGGINGFACE_HUB_TOKEN"))
+        if hf_api_key is None:
+            # Try loading from API keys config as fallback
+            api_keys = load_api_keys_from_config()
+            hf_api_key = api_keys.get("hf_token") or api_keys.get("huggingface_token") or api_keys.get("huggingface_api_key")
+        
         if hf_api_key is None:
             raise ValueError(
-                "HuggingFace API key is not set in the environment variables."
+                "HuggingFace API key/token is not set. Please set it in .api_keys.yaml file, "
+                "or set HF_TOKEN/HUGGINGFACE_HUB_TOKEN environment variable, or use 'huggingface-cli login'."
             )
         return BlackboxModel.from_huggingface(
-            hf_api_token=hf_api_key, hf_model_id=args.model.path
+            hf_api_token=hf_api_key,
+            hf_model_id=args.model.path,
+            tool_manager=tool_manager,
+            tool_mandatory=tool_mandatory,
+            tool_name=tool_name,
         )
     else:
         raise ValueError(f"Unsupported black-box model provider: {provider}")
 
 
 def get_whitebox_model(args, cache_kwargs={}):
+    # Load tools
+    tool_manager = load_tools(args)
+    tool_mandatory = False
+    tool_name = None
+    if tool_manager and hasattr(args, "tool"):
+        tool_config = args.tool
+        tool_mandatory = getattr(tool_config, "mandatory", False)
+        if tool_mandatory and tool_manager.has_tools():
+            # If mandatory and only one tool, use it
+            if len(tool_manager.tools) == 1:
+                tool_name = tool_manager.tools[0].get_name()
+                log.info(f"Mandatory tool mode: Using single available tool '{tool_name}'")
+            else:
+                # Get tool name from config
+                tool_name = getattr(tool_config, "tool_name", None)
+                if tool_name is None:
+                    raise ValueError("tool_name must be specified when mandatory=True and multiple tools are available")
+                log.info(f"Mandatory tool mode: Using specified tool '{tool_name}'")
+        elif tool_manager.has_tools():
+            # Optional mode - log available tools
+            tool_name = getattr(tool_config, "tool_name", None)
+            if tool_name:
+                log.info(f"Optional tool mode: Tool name '{tool_name}' specified (will be used if LLM chooses to use tools)")
+            else:
+                log.info(f"Optional tool mode: LLM will choose from available tools: {[tool.get_name() for tool in tool_manager.tools]}")
+    
     if not "path_to_load_script" in args.model or not args.model.path_to_load_script:
         log.warning(
             "Loading model by directly passing the path to the model is deprecated and will be removed in the next release. Please use loading script instead."
         )
         log.info(f"Loading model with cache_kwargs: {cache_kwargs}")
-        return WhiteboxModel.from_pretrained(
+        model = WhiteboxModel.from_pretrained(
             args.model.path,
             getattr(args, "generation_params", {}),
             device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
             instruct=getattr(args, "instruct", False),
+            tool_manager=tool_manager,
+            tool_mandatory=tool_mandatory,
+            tool_name=tool_name,
             **cache_kwargs,
         )
+        return model
 
     path_to_load_script = get_abs_path_from_hydra_config(args.model.path_to_load_script)
     load_module = load_external_module(path_to_load_script)
 
+    # Get HF token from config, environment variable, or API keys file
+    # If None, transformers will automatically use huggingface_hub login cache
+    hf_token = getattr(args.model, "token", None)
+    if hf_token is None:
+        hf_token = (os.environ.get("HF_TOKEN") or 
+                   os.environ.get("HUGGINGFACE_HUB_TOKEN"))
+        if hf_token is None:
+            # Try loading from API keys config as fallback
+            api_keys = load_api_keys_from_config()
+            hf_token = api_keys.get("hf_token") or api_keys.get("huggingface_token")
+
     load_model_args = {"model_path": args.model.path}
     load_model_args.update(args.model.load_model_args)
+    # Only pass token if explicitly provided (not None)
+    # If None, transformers will use huggingface_hub login cache automatically
+    if hf_token is not None:
+        load_model_args["token"] = hf_token
     base_model = load_module.load_model(**load_model_args)
 
     load_tok_args = {"model_path": args.model.path}
     load_tok_args.update(args.model.load_tokenizer_args)
+    # Only pass token if explicitly provided (not None)
+    # If None, transformers will use huggingface_hub login cache automatically
+    if hf_token is not None:
+        load_tok_args["token"] = hf_token
     tokenizer = load_module.load_tokenizer(**load_tok_args)
+    
+    # Set pad_token_id in model's generation_config to suppress warnings
+    # This prevents the "Setting pad_token_id to eos_token_id" warning
+    if tokenizer.pad_token_id is not None:
+        if hasattr(base_model, 'generation_config'):
+            base_model.generation_config.pad_token_id = tokenizer.pad_token_id
+        if hasattr(base_model.config, 'pad_token_id'):
+            base_model.config.pad_token_id = tokenizer.pad_token_id
 
     generation_params = GenerationParametersFactory.from_params(
         yaml_config=getattr(args, "generation_params", {}),
         native_config=base_model.generation_config.to_dict()
     )
+
+    log.info(f"Creating WhiteboxModel with tool_manager={tool_manager is not None}, "
+            f"has_tools={tool_manager.has_tools() if tool_manager else False}, "
+            f"tool_mandatory={tool_mandatory}, tool_name={tool_name}")
 
     model = WhiteboxModel(
         base_model,
@@ -507,8 +854,14 @@ def get_whitebox_model(args, cache_kwargs={}):
         args.model.path,
         args.model.type,
         generation_params,
-        instruct=getattr(args, "instruct", False)
+        instruct=getattr(args, "instruct", False),
+        tool_manager=tool_manager,
+        tool_mandatory=tool_mandatory,
+        tool_name=tool_name,
     )
+    
+    log.info(f"WhiteboxModel created. Model has tool_manager={model.tool_manager is not None}, "
+            f"has_tools={model.tool_manager.has_tools() if model.tool_manager else False}")
 
     return model
 
@@ -532,13 +885,40 @@ def get_visual_model(args, cache_kwargs={}):
         )
     load_module = load_external_module(path_to_load_script)
 
+    # Get HF token from config, environment variable, or API keys file
+    # If None, transformers will automatically use huggingface_hub login cache
+    hf_token = getattr(args.model, "token", None)
+    if hf_token is None:
+        hf_token = (os.environ.get("HF_TOKEN") or 
+                   os.environ.get("HUGGINGFACE_HUB_TOKEN"))
+        if hf_token is None:
+            # Try loading from API keys config as fallback
+            api_keys = load_api_keys_from_config()
+            hf_token = api_keys.get("hf_token") or api_keys.get("huggingface_token")
+
     load_model_args = {'model_path': args.model.path}
     load_model_args.update(args.model.load_model_args)
+    # Only pass token if explicitly provided (not None)
+    # If None, transformers will use huggingface_hub login cache automatically
+    if hf_token is not None:
+        load_model_args["token"] = hf_token
     base_model = load_module.load_model(**load_model_args)
 
     load_tok_args = {'model_path': args.model.path}
     load_tok_args.update(args.model.load_tokenizer_args)
+    # Only pass token if explicitly provided (not None)
+    # If None, transformers will use huggingface_hub login cache automatically
+    if hf_token is not None:
+        load_tok_args["token"] = hf_token
     tokenizer = load_module.load_tokenizer(**load_tok_args)
+    
+    # Set pad_token_id in model's generation_config to suppress warnings
+    # This prevents the "Setting pad_token_id to eos_token_id" warning
+    if tokenizer.pad_token_id is not None:
+        if hasattr(base_model, 'generation_config'):
+            base_model.generation_config.pad_token_id = tokenizer.pad_token_id
+        if hasattr(base_model.config, 'pad_token_id'):
+            base_model.config.pad_token_id = tokenizer.pad_token_id
 
     load_proc_args = {'model_path': args.model.path}
     load_proc_args.update(getattr(args.model, "load_processor_args", {}))
@@ -584,9 +964,91 @@ def get_vllm_model(args):
 def get_abs_path_from_hydra_config(path: str) -> Path:
     path = Path(path)
     if not os.path.isabs(path):
-        path = hydra_config.parent / path
+        # Use config_file_path if available, otherwise get from HydraConfig
+        if 'config_file_path' in globals() and config_file_path and config_file_path != Path("."):
+            base_path = config_file_path.parent
+        else:
+            # Fallback: try to get from HydraConfig at runtime
+            try:
+                config_path_hydra = [
+                    path_info["path"]
+                    for path_info in HydraConfig.get().runtime.config_sources
+                    if path_info["schema"] == "file"
+                ]
+                if config_path_hydra:
+                    base_path = Path(config_path_hydra[0])
+                else:
+                    base_path = Path(os.getcwd())
+            except:
+                base_path = Path(os.getcwd())
+        path = base_path / path
 
     return path
+
+
+def load_tools(args):
+    """
+    Load tools from configuration.
+    
+    Parameters:
+        args: Configuration arguments.
+    
+    Returns:
+        ToolManager: Tool manager with loaded tools, or None if no tools configured.
+    """
+    if not hasattr(args, "tool") or args.tool is None:
+        return None
+    
+    tool_config = args.tool
+    tool_manager = ToolManager()
+    
+    # Load Wikipedia BM25 retriever if specified
+    if hasattr(tool_config, "wiki_bm25_retriever") and tool_config.wiki_bm25_retriever is not None:
+        wiki_bm25_config = tool_config.wiki_bm25_retriever
+        try:
+            top_k = getattr(wiki_bm25_config, "top_k", 5)
+            name = getattr(wiki_bm25_config, "name", "wiki_bm25_retriever")
+            description = getattr(
+                wiki_bm25_config,
+                "description",
+                "A retrieval tool that searches Wikipedia using BM25 algorithm (Robertson & Zaragoza, 2009). Use this tool to find relevant information from Wikipedia articles."
+            )
+            index_name = getattr(wiki_bm25_config, "index_name", "wikipedia-dpr-100w")
+            # Set cache directory - default to /common/users/yl2310/.cache/pyserini
+            # Pyserini will create indexes/ subdirectory inside this path
+            cache_dir = getattr(wiki_bm25_config, "cache_dir", "/common/users/yl2310/.cache/pyserini")
+            
+            tool = WikipediaBM25RetrieverTool(
+                name=name,
+                description=description,
+                top_k=top_k,
+                index_name=index_name,
+                cache_dir=cache_dir,
+            )
+            tool_manager.add_tool(tool)
+            log.info(f"Added Wikipedia BM25 retriever tool '{name}' with index '{index_name}' (cache: {cache_dir})")
+        except Exception as e:
+            log.error(f"Failed to initialize Wikipedia BM25 retriever: {e}")
+            import traceback
+            log.debug(f"Traceback: {traceback.format_exc()}")
+    
+    if tool_manager and tool_manager.has_tools():
+        # Log tool configuration
+        tool_config = args.tool
+        tool_mandatory = getattr(tool_config, "mandatory", False)
+        tool_name = getattr(tool_config, "tool_name", None)
+        
+        log.info("=" * 50 + " TOOL CONFIGURATION " + "=" * 50)
+        log.info(f"Tool calling enabled: Yes")
+        log.info(f"Tool mode: {'Mandatory' if tool_mandatory else 'Optional'}")
+        if tool_name:
+            log.info(f"Tool name (if mandatory): {tool_name}")
+        log.info(f"Available tools: {[tool.get_name() for tool in tool_manager.tools]}")
+        log.info("=" * 100)
+        
+        return tool_manager
+    
+    return None
 
 
 if __name__ == "__main__":

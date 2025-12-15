@@ -3,15 +3,21 @@ hydra:
     dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
-  - model: bloomz-560m
+  - model: llama3-1-8b-instruct
   - estimators: default_estimators
   - stat_calculators: default_calculators
   - base_processing_triviaqa
   - _self_
 
+estimators:
+  - name: MaximumSequenceProbability
+  - name: Perplexity
+  - name: MeanTokenEntropy
+  - name: SemanticEntropy
+
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-instruct: false
+instruct: true
 task: qa
 
 dataset: ['LM-Polygraph/triviaqa', 'continuation']
@@ -28,13 +34,17 @@ generation_params:
   stop_strings:
     - "\n"
 
-subsample_eval_dataset: -1
+subsample_eval_dataset: 100           # Number of samples to evaluate (-1 = use all)
+batch_size: 4                          # Batch size for processing (single GPU: 1-4 for tool calling, 4-16 without tools)
 
 generation_metrics: null
 
 ignore_exceptions: false
 
-batch_size: 2
+# Weights & Biases (wandb) integration
+report_to_wandb: true              # Set to true to log results to wandb (default project: "my-polygraph-project", or set WANDB_PROJECT env var)
+# Wandb API key should be set in .wandb_config.yaml file in the project root, or use wandb login
+
 
 seed:
     - 1

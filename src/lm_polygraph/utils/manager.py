@@ -1,3 +1,4 @@
+import os
 import time
 import traceback
 import numpy as np
@@ -6,7 +7,7 @@ import sys
 import gc
 
 from collections import defaultdict
-from typing import List, Set, Dict, Tuple
+from typing import List, Set, Dict, Tuple, Any
 from tqdm import tqdm
 
 from lm_polygraph.utils.dataset import Dataset
@@ -35,6 +36,57 @@ from lm_polygraph.utils.common import flatten_results
 import logging
 
 log = logging.getLogger("lm_polygraph")
+DEBUG_MEMORY = os.environ.get("POLYGRAPH_DEBUG_MEMORY", "0") not in ("0", "", "false", "False")
+
+
+def _ensure_cpu_tensor(value: Any) -> Any:
+    """
+    Recursively convert PyTorch tensors to CPU and detach them.
+    This helps prevent GPU memory leaks by ensuring all tensors are moved to CPU.
+    
+    Parameters:
+        value: Any value that might contain tensors (tensor, list, dict, etc.)
+    
+    Returns:
+        Value with all tensors moved to CPU and detached
+    """
+    if isinstance(value, torch.Tensor):
+        # Move to CPU, detach from computation graph, and convert to numpy if possible
+        cpu_val = value.detach().cpu()
+        # Don't convert to numpy automatically - let callers decide
+        return cpu_val
+    elif isinstance(value, dict):
+        return {k: _ensure_cpu_tensor(v) for k, v in value.items()}
+    elif isinstance(value, (list, tuple)):
+        converted = [_ensure_cpu_tensor(item) for item in value]
+        return type(value)(converted)
+    elif isinstance(value, np.ndarray):
+        # Already on CPU (numpy arrays are always on CPU)
+        return value
+    else:
+        # Primitive type or other non-tensor value
+        return value
+
+
+def _cleanup_gpu_memory():
+    """Force cleanup of GPU memory by clearing cache and running garbage collection."""
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+
+
+def _log_gpu_memory(stage: str, batch_idx: int = None):
+    """Log current GPU memory usage when debug flag is enabled."""
+    if not DEBUG_MEMORY or not torch.cuda.is_available():
+        return
+    allocated = torch.cuda.memory_allocated() / (1024**3)
+    reserved = torch.cuda.memory_reserved() / (1024**3)
+    max_alloc = torch.cuda.max_memory_allocated() / (1024**3)
+    prefix = f"[GPU][{stage}]"
+    if batch_idx is not None:
+        prefix += f"[batch={batch_idx}]"
+    log.info(f"{prefix} allocated={allocated:.2f}GB reserved={reserved:.2f}GB max={max_alloc:.2f}GB")
 
 
 def _check_unique_names(xs):
@@ -265,6 +317,8 @@ class UEManager:
                 for stat, stat_value in new_stats.items():
                     if stat in batch_stats.keys():
                         continue
+                    # Ensure all tensors are moved to CPU to prevent GPU memory leaks
+                    stat_value = _ensure_cpu_tensor(stat_value)
                     batch_stats[stat] = stat_value
                     if (f"blackbox_{stat}" in self.stat_calculators_dict.keys()) and (
                         f"blackbox_{stat}" in self.stats_names
@@ -328,6 +382,7 @@ class UEManager:
 
     def _process(self, iterable_data, batch_callback):
         for batch_i, batch in enumerate(iterable_data):
+            _log_gpu_memory("start_batch", batch_i)
             if len(batch) == 3:
                 inp_texts, target_texts, images = batch
             elif len(batch) == 2:
@@ -353,17 +408,59 @@ class UEManager:
 
             batch_stats["model"] = self.model
 
+            _log_gpu_memory("before_calculate", batch_i)
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
+            _log_gpu_memory("after_calculate", batch_i)
+            
+            # Ensure all batch_stats tensors are on CPU after calculation
+            # This prevents GPU memory from accumulating across batches
+            for key, value in batch_stats.items():
+                if key != "model":  # Don't process the model reference
+                    batch_stats[key] = _ensure_cpu_tensor(value)
 
+            _log_gpu_memory("before_estimate", batch_i)
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators
             )
+            _log_gpu_memory("after_estimate", batch_i)
+            
+            # Cleanup GPU memory after calculations (before callback)
+            _cleanup_gpu_memory()
+            _log_gpu_memory("after_pre_callback_cleanup", batch_i)
 
             batch_callback(
                 batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
             )
-            torch.cuda.empty_cache()
-            gc.collect()
+            _log_gpu_memory("after_batch_callback", batch_i)
+            
+            # Explicitly cleanup GPU memory after each batch to prevent accumulation
+            # Ensure all stats being saved are on CPU (not holding GPU references)
+            if self.save_stats:
+                for key in self.save_stats:
+                    if key in batch_stats:
+                        batch_stats[key] = _ensure_cpu_tensor(batch_stats[key])
+            
+            # Delete large intermediate variables that might hold GPU references
+            # Note: batch_stats is still used above for save_stats, so we clean it after
+            if 'images' in locals():
+                del images
+            if 'inp_texts' in locals():
+                del inp_texts
+            if 'target_texts' in locals():
+                del target_texts
+            
+            # Clear batch_stats after use (but keep the dictionary structure for next iteration)
+            batch_stats.clear()
+            
+            # Force GPU memory cleanup
+            _cleanup_gpu_memory()
+            _log_gpu_memory("after_batch_cleanup", batch_i)
+            
+            # Log memory usage every 50 batches for debugging
+            if batch_i % 50 == 0 and torch.cuda.is_available():
+                allocated = torch.cuda.memory_allocated() / (1024**3)  # GB
+                reserved = torch.cuda.memory_reserved() / (1024**3)  # GB
+                log.info(f"Batch {batch_i}: GPU memory - Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
 
         return self.estimations
 
@@ -418,7 +515,17 @@ class UEManager:
 
             for key in self.save_stats:
                 if key in batch_stats.keys():
-                    self.stats[key] += list(batch_stats[key])
+                    # Ensure values are on CPU/numpy before storing to prevent GPU memory leaks
+                    value = batch_stats[key]
+                    value = _ensure_cpu_tensor(value)
+                    # Convert to list if it's a tensor or numpy array
+                    if isinstance(value, torch.Tensor):
+                        value = value.tolist()
+                    elif isinstance(value, np.ndarray):
+                        value = value.tolist()
+                    elif not isinstance(value, list):
+                        value = list(value)
+                    self.stats[key] += value
 
         self._process(iterable_data, fn_on_batch_callback)
         self.eval_ue()

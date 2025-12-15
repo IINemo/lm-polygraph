@@ -177,3 +177,7 @@ cython_debug/
 
 # Agent instructions
 **/AGENTS.md
+
+# API Keys and Tokens configuration (contains sensitive information)
+.api_keys.yaml
+.wandb_config.yaml

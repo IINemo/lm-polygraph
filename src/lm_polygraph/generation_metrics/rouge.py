@@ -52,9 +52,24 @@ class RougeMetric(GenerationMetric):
         Returns:
             np.ndarray: list of Rouge Scores for each sample in input.
         """
+        # Ensure all targets and hypotheses are strings (handle lists defensively)
+        def ensure_string(text):
+            if isinstance(text, list):
+                # If it's a list, take the first element
+                if len(text) > 0:
+                    text = text[0] if isinstance(text[0], str) else str(text[0])
+                else:
+                    text = ""
+            elif not isinstance(text, str):
+                text = str(text)
+            return text
+        
+        processed_greedy_texts = [ensure_string(hyp) for hyp in stats["greedy_texts"]]
+        processed_target_texts = [ensure_string(ref) for ref in target_texts]
+        
         return np.array(
             [
                 self._score_single(hyp, ref)
-                for hyp, ref in zip(stats["greedy_texts"], target_texts)
+                for hyp, ref in zip(processed_greedy_texts, processed_target_texts)
             ]
         )

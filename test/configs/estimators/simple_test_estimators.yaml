@@ -1,0 +1,5 @@
+# Simple estimators for testing tool calling functionality
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+

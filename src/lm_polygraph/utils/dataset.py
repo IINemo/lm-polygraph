@@ -230,6 +230,52 @@ class Dataset:
                 if len(inst[x_column]) <= 1024:
                     x.append(inst[x_column])
                     y.append(inst[y_column])
+        elif "medqa" in dataset_name.lower() or (isinstance(dataset_path, str) and "medqa" in dataset_path.lower()):
+            # Special handling for MedQA-USMLE-4-options format
+            # Format: question + options as input, answer_idx as target
+            log.info("Detected MedQA dataset format, formatting question and options")
+            x, y = [], []
+            for inst in dataset:
+                # Format the question and options
+                question = inst.get("question", "")
+                options = inst.get("options", {})
+                option_a = options.get("A", "")
+                option_b = options.get("B", "")
+                option_c = options.get("C", "")
+                option_d = options.get("D", "")
+                
+                # Format the prompt
+                if prompt:
+                    formatted_input = prompt.format(
+                        question=question.strip(),
+                        option_a=option_a,
+                        option_b=option_b,
+                        option_c=option_c,
+                        option_d=option_d,
+                        text=question.strip(),  # For backward compatibility
+                    )
+                else:
+                    # Default format if no prompt provided
+                    formatted_input = (
+                        f"Q: {question.strip()}\n"
+                        f"A. {option_a}\n"
+                        f"B. {option_b}\n"
+                        f"C. {option_c}\n"
+                        f"D. {option_d}\n"
+                    )
+                
+                if description:
+                    formatted_input = description + "\n\n" + formatted_input
+                
+                x.append(formatted_input)
+                
+                # Use answer_idx as target (A, B, C, or D)
+                if y_column:
+                    y.append(inst.get(y_column, inst.get("answer_idx", "")))
+                else:
+                    y.append(inst.get("answer_idx", ""))
+            
+            log.info(f"Formatted {len(x)} MedQA samples")
         else:
             # Convert to lists to ensure we only have the selected samples
             # This is important because dataset[x_column] on a lazy dataset might access all rows

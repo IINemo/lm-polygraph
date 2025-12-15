@@ -1,40 +1,64 @@
+# Hydra configuration: defines output directory structure
+# Output will be saved to: ${cache_path}/${task}/${model.path}/${dataset}/${date}/${time}
 hydra:
   run:
     dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
+# Default configurations to include (merged with this file)
 defaults:
-  - model: bloomz-560m
-  - estimators: default_estimators
-  - stat_calculators: default_calculators
-  - base_processing_coqa
-  - _self_
+  - model: llama3.1-tulu-3-8b              # Model configuration (device, loading args, etc.)
+  - estimators: default_estimators # Uncertainty estimation methods to evaluate
+  - stat_calculators: default_calculators # Statistics calculators (e.g., DeBERTa for NLI)
+  - base_processing_coqa           # Dataset-specific processing functions
+  - _self_                         # Include this config file
+# Add this section to override the default estimators
+estimators:
+  - name: MaximumSequenceProbability
+  - name: Perplexity
+  - name: MeanTokenEntropy
+  - name: SemanticEntropy
 
-cache_path: ./workdir/output
-save_path: '${hydra:run.dir}'
+# Paths and directories
+cache_path: ./workdir/output        # Base directory for experiment outputs
+save_path: '${hydra:run.dir}'       # Where to save results (uses Hydra's run directory)
 
-task: qa
-instruct: false
+# Task configuration
+task: qa                            # Task type: "qa" (question answering), "ats" (summarization), "nmt" (translation)
+instruct: true                     # Whether model is instruction-tuned (affects prompt formatting)
 
-dataset: ['LM-polygraph/coqa', 'continuation']
-text_column: input
-label_column: output
-train_split: train
-eval_split: test
-n_shot: 0
-few_shot_split: train
-few_shot_prompt: null
-trust_remote_code: false
-size: null
+# Dataset configuration
+dataset: ['LM-polygraph/coqa', 'continuation']  # Hugging Face dataset: [repo_name, config_name]
+text_column: input                  # Column name containing input/prompt texts
+label_column: output                # Column name containing target/reference texts
+train_split: train                  # Training split name (for few-shot examples)
+eval_split: test                    # Evaluation split name
+n_shot: 0                           # Number of few-shot examples (0 = zero-shot)
+few_shot_split: train               # Split to use for selecting few-shot examples
+few_shot_prompt: null               # Custom few-shot prompt template (null = default)
+trust_remote_code: false            # Trust remote code when loading dataset from HF
+size: null                          # Max dataset size (null = use all)
 
-max_new_tokens: 20
-load_from_disk: false
-generation_params:
-  stop_strings:
+# Text generation configuration
+max_new_tokens: 20                  # Maximum tokens to generate per input
+load_from_disk: false               # Load dataset from local disk (false = download from HF)
+generation_params:                   # Additional generation parameters
+  stop_strings:                     # Stop generation when these strings are encountered
     - "\n"
-subsample_eval_dataset: -1
-batch_size: 1
 
-generation_metrics: null
-ignore_exceptions: false
-seed:
+# Evaluation configuration
+subsample_eval_dataset: 100           # Number of samples to evaluate (-1 = use all)
+batch_size: 4                          # Batch size for processing (single GPU: 4-16 for small models, 1-4 for large models)
+
+# Metrics configuration
+generation_metrics: null            # Custom generation metrics (null = use task defaults)
+
+# Error handling
+ignore_exceptions: false            # Continue on errors (false = stop on first error)
+
+# Weights & Biases (wandb) integration
+report_to_wandb: true              # Set to true to log results to wandb (default project: "my-polygraph-project", or set WANDB_PROJECT env var)
+# Wandb API key should be set in .wandb_config.yaml file in the project root, or use wandb login
+
+# Reproducibility
+seed:                               # Random seeds for reproducibility (runs once per seed)
     - 1

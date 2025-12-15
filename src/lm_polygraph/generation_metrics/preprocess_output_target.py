@@ -1,8 +1,11 @@
 import numpy as np
+import logging
 
 from copy import deepcopy
 from typing import List, Dict
 from .generation_metric import GenerationMetric
+
+log = logging.getLogger(__name__)
 
 
 class PreprocessOutputTarget(GenerationMetric):
@@ -30,13 +33,42 @@ class PreprocessOutputTarget(GenerationMetric):
 
         Parameters:
             stats (Dict[str, np.ndarray]): calculated stats
-            target_texts (List[str]): ground-truth texts
+            target_texts (List[str]): ground-truth texts (or List[List[str]] for multiref, but handled by AggregatedMetric)
             target_tokens (List[List[int]]): corresponding token splits for each target text
         Returns:
             np.ndarray: list of base metric values for each sample in input.
         """
+        # Handle case where target might be a list (can happen with multiref if data structure is unexpected)
+        # Note: PreprocessOutputTarget should always return strings, not lists.
+        # AggregatedMetric handles multiple references, so this should process individual targets.
+        def process_target(target):
+            # If target is a list, extract the first string element (for multiref, AggregatedMetric handles iteration)
+            if isinstance(target, list):
+                if len(target) == 0:
+                    return ""  # Empty list -> empty string
+                # Get first element
+                first_elem = target[0]
+                # Recursively process if it's still a list (nested lists)
+                if isinstance(first_elem, list):
+                    return process_target(first_elem)
+                elif isinstance(first_elem, str):
+                    return self.process_target_fn(first_elem)
+                else:
+                    # Convert to string and process
+                    return self.process_target_fn(str(first_elem))
+            elif isinstance(target, str):
+                return self.process_target_fn(target)
+            else:
+                # Fallback: convert to string and process
+                return self.process_target_fn(str(target))
+        
         processed_target_texts = [
-            self.process_target_fn(target) for target in target_texts
+            process_target(target) for target in target_texts
+        ]
+        
+        # Ensure all processed targets are strings (defensive check)
+        processed_target_texts = [
+            str(t) if not isinstance(t, str) else t for t in processed_target_texts
         ]
 
         # Select and copy only the stats that are needed for the base metric

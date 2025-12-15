@@ -27,7 +27,9 @@ generation_params:
 
 subsample_eval_dataset: -1
 
-generation_metrics: null
+# Use Accuracy metric to compare LLM output with answer (A, B, C, or D)
+generation_metrics:
+  - name: AccuracyMetric
 
 ignore_exceptions: false
 

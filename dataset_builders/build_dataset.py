@@ -12,6 +12,7 @@ from builders.truthfulqa import CONFIG as truthfulqa_config
 from builders.samsum import CONFIG as samsum_config
 from builders.xsum import CONFIG as xsum_config
 from builders.gsm8k import CONFIG as gsm8k_config
+from builders.medqa import CONFIG as medqa_config
 
 DATASET_CONFIG = (
     base_config
@@ -26,6 +27,7 @@ DATASET_CONFIG = (
     | samsum_config
     | xsum_config
     | gsm8k_config
+    | medqa_config
 )
 
 

@@ -1,0 +1,72 @@
+# Test configuration for tool calling functionality
+# Uses Llama-3 Tulu model with Wikipedia BM25 retriever tool and small dataset
+
+hydra:
+  run:
+    dir: ${cache_path}/test_tool_calling/${model.path}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: llama3-tulu-8b
+  - _self_
+
+stat_calculators:
+  - auto
+
+estimators:
+  - name: MaximumSequenceProbability
+  - name: Perplexity
+  - name: MeanTokenEntropy
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+
+task: qa
+instruct: true
+
+# Use a small dataset for testing
+dataset: ['LM-polygraph/coqa', 'continuation']
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
+n_shot: 0
+few_shot_split: train
+few_shot_prompt: null
+trust_remote_code: false
+size: null
+
+# Text generation configuration
+max_new_tokens: 50
+load_from_disk: false
+generation_params:
+  temperature: 0.7
+  stop_strings:
+    - "\n"
+
+# Tool calling configuration
+tool:
+  mandatory: false                  # Optional tool usage - LLM decides
+  tool_name: null                   # Not needed for optional usage
+  wiki_bm25_retriever:
+    # Wikipedia BM25 retriever - searches Wikipedia using BM25 algorithm (Robertson & Zaragoza, 2009)
+    top_k: 1                        # Number of top Wikipedia passages to retrieve
+    name: wiki_bm25_retriever       # Tool name
+    index_name: wikipedia-dpr-100w   # Pyserini index name (default: wikipedia-dpr-100w, uses BM25 k1=0.9, b=0.4 tuned for QA)
+    cache_dir: /common/users/yl2310/.cache/pyserini  # Cache directory for pyserini indices
+    description: "A retrieval tool that searches Wikipedia using BM25 algorithm (Robertson & Zaragoza, 2009). Use this tool to find relevant information from Wikipedia articles."
+
+# Evaluation configuration - small size for testing
+subsample_eval_dataset: 5           # Very small for quick testing
+batch_size: 1                       # Process one at a time for tool calling
+generation_metrics: null            # Use default metrics
+
+# Error handling
+ignore_exceptions: false            # Stop on errors to catch issues early
+
+# Weights & Biases (wandb) integration
+report_to_wandb: false
+
+# Reproducibility
+seed:
+    - 1
+

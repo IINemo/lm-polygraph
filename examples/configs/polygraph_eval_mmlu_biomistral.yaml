@@ -6,10 +6,10 @@ hydra:
 
 # Default configurations to include (merged with this file)
 defaults:
-  - model: llama3-1-8b-instruct              # Model configuration (device, loading args, etc.)
+  - model: biomistral-7b              # Model configuration (device, loading args, etc.)
   - estimators: default_estimators # Uncertainty estimation methods to evaluate
-  - stat_calculators: default_calculators # Statistics calculators (e.g., DeBERTa for NLI)
-  - base_processing_coqa           # Dataset-specific processing functions
+  - stat_calculators: auto_only       # Disable training-stat calculator (auto calculators only)
+  - base_processing_mmlu           # Dataset-specific processing functions to extract answer letters
   - _self_                         # Include this config file
 # Add this section to override the default estimators
 estimators:
@@ -27,33 +27,34 @@ task: qa                            # Task type: "qa" (question answering), "ats
 instruct: true                     # Whether model is instruction-tuned (affects prompt formatting)
 
 # Dataset configuration
-dataset: ['LM-polygraph/coqa', 'simple_instruct']  # Hugging Face dataset: [repo_name, config_name]
-text_column: input                  # Column name containing input/prompt texts
-label_column: output                # Column name containing target/reference texts
+# MMLU dataset from HuggingFace - uses pre-built dataset format
+# The dataset provides question + choices as input and answer (A/B/C/D) as output
+dataset: ['LM-Polygraph/mmlu', 'simple_instruct']
+text_column: input                  # Input column name (contains formatted question + choices)
+label_column: output                # Output column name (contains answer: A, B, C, or D)
 train_split: train                  # Training split name (for few-shot examples)
 eval_split: test                    # Evaluation split name
-n_shot: 0                           # Number of few-shot examples (0 = zero-shot)
-few_shot_split: train               # Split to use for selecting few-shot examples
-few_shot_prompt: null               # Custom few-shot prompt template (null = default)
-trust_remote_code: false            # Trust remote code when loading dataset from HF
+load_from_disk: false               # Load dataset from local disk (false = download from HF)
 size: null                          # Max dataset size (null = use all)
+max_prompt_tokens: 1200              # Drop inputs longer than this many tokens
 
 # Text generation configuration
-max_new_tokens: 20                  # Maximum tokens to generate per input
-load_from_disk: false               # Load dataset from local disk (false = download from HF)
+max_new_tokens: 3                   # Maximum tokens to generate per input (just need A, B, C, or D)
 generation_params:                   # Additional generation parameters
   stop_strings:                     # Stop generation when these strings are encountered
     - "\n"
 
 # Evaluation configuration
-subsample_eval_dataset: 100           # Number of samples to evaluate (-1 = use all)
-batch_size: 4                          # Batch size for processing (single GPU: 4-16 for small models, 1-4 for large models)
+subsample_eval_dataset: -1           # Number of samples to evaluate (-1 = use all)
+batch_size: 8                          # Batch size for processing (single GPU: 4-16 for small models, 1-4 for large models)
 
 # Metrics configuration
-generation_metrics: null            # Custom generation metrics (null = use task defaults)
+generation_metrics:                  # Use Accuracy metric to compare LLM output with answer
+  - name: AccuracyMetric
 
 # Error handling
 ignore_exceptions: false            # Continue on errors (false = stop on first error)
+output_attentions: false            # Don't request full attention tensors from stat calculators
 
 # Weights & Biases (wandb) integration
 report_to_wandb: true              # Set to true to log results to wandb (default project: "my-polygraph-project", or set WANDB_PROJECT env var)
@@ -62,3 +63,4 @@ report_to_wandb: true              # Set to true to log results to wandb (defaul
 # Reproducibility
 seed:                               # Random seeds for reproducibility (runs once per seed)
     - 1
+

@@ -1,0 +1,27 @@
+defaults:
+  - default
+
+path: BioMistral/BioMistral-7B
+type: CausalLM
+path_to_load_script: model/default_causal.py
+
+load_model_args:
+  device_map: auto
+  # Reduce max_memory to 70-75% of GPU to leave room for long tool-enhanced prompts
+  # For a 95GB GPU, using 70GB leaves 25GB for activations and long inputs
+  # Adjust based on your GPU size and prompt length:
+  # - 70GB for 95GB GPU (leaves ~25GB buffer)
+  # - 50GB for 80GB GPU (leaves ~30GB buffer)
+  # - 35GB for 48GB GPU (leaves ~13GB buffer)
+  max_memory:
+    0: "70GiB"  # Use 70GB on GPU 0, leaving room for tool-enhanced prompts
+load_tokenizer_args: {}
+
+
+
+
+
+
+
+
+

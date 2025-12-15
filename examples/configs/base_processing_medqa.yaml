@@ -1,0 +1,15 @@
+process_output_fn:
+  path: instruct/output_processing_scripts/medqa.py
+  fn_name: normalize_medqa
+process_target_fn:
+  path: instruct/output_processing_scripts/medqa.py
+  fn_name: normalize_medqa
+
+
+
+
+
+
+
+
+

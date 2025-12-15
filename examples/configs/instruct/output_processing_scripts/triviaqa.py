@@ -7,6 +7,17 @@ CoT_OUTPUT_IGNORE_REGEX = re.compile(r"(?s).*[Gg]uess:|[\n\.\(\,].*")
 
 
 def normalize_em_triviaqa(s: str) -> str:
+    # Handle case where input might be a list (shouldn't happen, but be defensive)
+    if isinstance(s, list):
+        # If it's a list, process the first element (or join if multiple)
+        if len(s) == 0:
+            return ""
+        # For multiref cases, take the first reference
+        s = s[0] if isinstance(s[0], str) else str(s[0])
+    # Ensure s is a string
+    if not isinstance(s, str):
+        s = str(s)
+    
     def remove_articles(text):
         return re.sub(r"\b(a|an|the)\b", " ", text)
 
@@ -14,7 +25,7 @@ def normalize_em_triviaqa(s: str) -> str:
         return " ".join(text.split())
 
     def handle_punc(text):
-        exclude = set(string.punctuation + "".join(["‘", "’", "´", "`"]))
+        exclude = set(string.punctuation + "".join(["'", "'", "´", "`"]))
         return "".join(ch if ch not in exclude else " " for ch in text)
 
     def lower(text):
