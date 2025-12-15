@@ -334,8 +334,16 @@ class UEManager:
         return batch_estimations, bad_estimators
 
     def _process(self, iterable_data, batch_callback):
-        iterable_data = tqdm(self.data) if self.verbose else self.data
-        for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
+        for batch_i, batch in enumerate(iterable_data):
+            if len(batch) == 3:
+                inp_texts, target_texts, images = batch
+            elif len(batch) == 2:
+                inp_texts, target_texts = batch
+                images = None
+            else:
+                raise ValueError(
+                    f"Expected batch with 2 or 3 elements, got {len(batch)}"
+                )
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ("input_texts", inp_texts),
@@ -343,6 +351,13 @@ class UEManager:
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
+
+            if images is not None and not (
+                isinstance(images, list) and all(img is None for img in images)
+            ):
+                self.stats["images"] += Dataset.get_images(images)
+                batch_stats["images"] = Dataset.get_images(images)
+
             batch_stats["model"] = self.model
             batch_stats["layers"] = self.layers
 

@@ -154,7 +154,8 @@ def register_default_stat_calculators(
             GreedyProbsVisualCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsVisualCalculator",
             {
-                "output_attentions": True,
+                "output_attentions": output_attentions,
+                "output_hidden_states": output_hidden_states,
             },
         )
         _register(EntropyCalculator)
@@ -164,7 +165,6 @@ def register_default_stat_calculators(
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
-        _register(PromptVisualCalculator)
         _register(SamplingPromptVisualCalculator)
         _register(ClaimPromptVisualCalculator)
         _register(
@@ -194,6 +194,7 @@ def register_default_stat_calculators(
                 "language": language,
             },
         )
+        _register(AttentionForwardPassCalculatorVisual)
 
     else:
         raise NotImplementedError(f"Unknown model type: {model_type}")

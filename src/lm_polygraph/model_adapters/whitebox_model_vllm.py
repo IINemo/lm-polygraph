@@ -15,16 +15,19 @@ class WhiteboxModelvLLM(Model):
         sampling_params,
         generation_parameters: GenerationParameters = GenerationParameters(),
         device: str = "cuda",
+        instruct: bool = False,
     ):
         self.model = model
         self.tokenizer = self.model.get_tokenizer()
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.sampling_params = sampling_params
         self.generation_parameters = generation_parameters
+        self.instruct = instruct
 
-        self.sampling_params.stop = list(
-            getattr(self.generation_parameters, "stop_strings", None)
-        )
+        stop_strings = getattr(self.generation_parameters, "stop_strings", None)
+        if stop_strings is None:
+            stop_strings = []
+        self.sampling_params.stop = list(stop_strings)
 
         for param in [
             "presence_penalty",
@@ -48,8 +51,23 @@ class WhiteboxModelvLLM(Model):
         texts = self.tokenizer.batch_decode(
             kwargs["input_ids"], skip_special_tokens=True
         )
-        sampling_params.stop = []
-        output = self.model.generate(*args, texts, sampling_params)
+        if self.instruct:
+            chats = []
+            for text in texts:
+                chat = [
+                    {
+                        "role": "system",
+                        "content": "You are a knowledgeable assistant who answers questions concisely and accurately and strictly follows output formatting instructions.",
+                    },
+                    {
+                        "role": "user",
+                        "content": text,
+                    },
+                ]
+                chats.append(chat)
+            output = self.model.chat(*args, chats, sampling_params)
+        else:
+            output = self.model.generate(*args, texts, sampling_params)
         return self.post_processing(output)
 
     def device(self):

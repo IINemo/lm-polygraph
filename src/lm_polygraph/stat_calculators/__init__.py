@@ -65,3 +65,4 @@ from .attention import (
     LookbackRatioCalculator,
     AttentionFeaturesCalculator,
 )
+from .attention_forward_pass_visual import AttentionForwardPassCalculatorVisual

@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+path: microsoft/kosmos-2-patch14-224
+type: VisualLM
+path_to_load_script: model/default_visual.py
+
+load_model_args:
+  device_map: auto
+load_tokenizer_args: {}

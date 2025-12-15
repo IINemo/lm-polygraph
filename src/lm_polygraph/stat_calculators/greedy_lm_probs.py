@@ -65,7 +65,7 @@ class GreedyLMProbsCalculator(StatCalculator):
                 if len(logprobs[i]) < len(tokens[i]):
                     raise ValueError("tokenizer(tokenizer.decode(t)) != t")
                 greedy_lm_log_probs.append(
-                    logprobs[i, -len(tokens[i]) : -1].cpu().numpy()
+                    logprobs[i, -len(tokens[i]) : -1].cpu().float().numpy()
                 )
                 greedy_lm_ll.append(
                     [
@@ -92,7 +92,9 @@ class GreedyLMProbsCalculator(StatCalculator):
                         logprobs = model.model(**batch).logits.log_softmax(-1)
                 logprobs = logprobs[0]
                 assert len(logprobs) >= len(toks)
-                greedy_lm_log_probs.append(logprobs[-len(toks) : -1].cpu().numpy())
+                greedy_lm_log_probs.append(
+                    logprobs[-len(toks) : -1].cpu().float().numpy()
+                )
                 greedy_lm_ll.append(
                     [logprobs[-len(toks) + j, toks[j]].item() for j in range(len(toks))]
                 )

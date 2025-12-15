@@ -1,6 +1,8 @@
 from typing import Tuple, List
 import logging
 import importlib.util
+from PIL import Image
+from transformers import AutoProcessor
 
 log = logging.getLogger("lm_polygraph")
 
@@ -75,3 +77,9 @@ def process_layers(estimators: List) -> List[int]:
             layers.extend(estimator.layers)
 
     return set(layers)
+def load_processor(model_path, **kwargs):
+    return AutoProcessor.from_pretrained(model_path, **kwargs)
+
+
+def load_image(image_path):
+    return Image.open(image_path).convert("RGB")
