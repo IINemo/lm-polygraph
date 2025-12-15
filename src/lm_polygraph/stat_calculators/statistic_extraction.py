@@ -1,7 +1,6 @@
 import gc
 import torch
 import numpy as np
-from tqdm import tqdm
 
 from typing import Dict, List, Tuple
 
@@ -59,7 +58,6 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                         inp_texts, target_texts, images = batch
                     elif len(batch) == 2:
                         inp_texts, target_texts = batch
-                        images = None
                     else:
                         raise ValueError(
                             f"Expected batch with 2 or 3 elements, got {len(batch)}"
