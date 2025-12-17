@@ -5,8 +5,14 @@ from lm_polygraph.estimators import *
 def load_simple_estimators(name: str, config):
     SIMPLE_ESTIMATORS = [
         MaximumSequenceProbability,
+        CumulativeMaxSequenceProbability,
+        SortedCumulativeMaxSequenceProbability,
         Perplexity,
+        CumulativePerplexity,
+        SortedCumulativePerplexity,
         MeanTokenEntropy,
+        CumulativeMeanTokenEntropy,
+        SortedCumulativeMeanTokenEntropy,
         MeanPointwiseMutualInformation,
         MeanConditionalPointwiseMutualInformation,
         ClaimConditionedProbability,

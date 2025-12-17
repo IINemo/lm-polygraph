@@ -1,3 +1,9 @@
-- name: CumulativeMaximumSequenceProbability
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: CumulativeMaxSequenceProbability
 - name: CumulativePerplexity
 - name: CumulativeMeanTokenEntropy
+- name: SortedCumulativeMaxSequenceProbability
+- name: SortedCumulativePerplexity
+- name: SortedCumulativeMeanTokenEntropy
