@@ -236,15 +236,15 @@ class GreedyProbsCalculator(StatCalculator):
                     reverse=True,
                 )
 
-        ll = []
+        lls = []
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
             if len(tokens) == 0:
-                ll.append([])
+                lls.append([])
                 continue
             assert len(tokens) == len(log_probs)
-            ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+            lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
 
@@ -289,6 +289,12 @@ class GreedyProbsCalculator(StatCalculator):
             }
         else:
             raise NotImplementedError
+        
+        # Replace nan and inf into 0 proba
+        lls = [
+            np.nan_to_num(np.asarray(ll, float), nan=0.0, posinf=0.0, neginf=0.0)
+            for ll in lls    
+        ]
 
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
@@ -297,7 +303,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_texts_full": full_texts, # UGRIP: full text
-            "greedy_log_likelihoods": ll,
+            "greedy_log_likelihoods": lls,
         }
         result_dict.update(embeddings_dict)
         if self.output_attentions:

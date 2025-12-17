@@ -7,7 +7,7 @@ task: qa
 defaults:
   - model: ugrip_llama_instruct_vllm
   - estimators: ugrip_benchmark_estimators_lite
-  - stat_calculators: default_calculators
+  - stat_calculators: ugrip_calculators
   - generation_metrics: ugrip_benchmark_generation_metrics_acc
 
   - _self_
@@ -23,8 +23,7 @@ dataset: "UGRIP-LM-Polygraph/gsm8k-reasoning"
 
 text_column: question
 label_column: answer
-# Use max_new_tokens= to override
-max_new_tokens: 500
+max_new_tokens: 1024
 
 process_output_fn:
   path: instruct/output_processing_scripts/ugrip.py
@@ -59,8 +58,8 @@ ignore_exceptions: false
 
 batch_size: 1
 
-percentages: [1, 5, 10, 20, 100]
-tokens: [1, 5, 10, 20, 100]
+percentages: [10, 25, 50]
+tokens: [10, 50, 100, 250]
 
 
 slicing_target: reasoning
