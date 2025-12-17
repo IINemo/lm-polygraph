@@ -57,3 +57,47 @@ class CumulativePerplexity(Estimator):
     @property
     def returns_cumulative(self) -> bool:
         return True
+
+
+class SortedCumulativePerplexity(Estimator):
+    """
+    Estimates the cumulative sequence-level uncertainty at each token step
+    by first sorting the log-likelihoods and then computing the cumulative
+    average negative log-likelihood (log-perplexity) over each prefix.
+
+    This reveals how log-perplexity evolves as the sequence progresses.
+    Works only with white-box models.
+    """
+
+
+    def __init__(self):
+        super().__init__(["greedy_log_likelihoods"], "sequence")
+
+    def __str__(self):
+        return "SortedCumulativePerplexity"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        """
+        Estimates the cumulative average negative log-probability (log-perplexity)
+        by first sorting the log-likelihoods for each sample.
+
+        Parameters:
+            stats (Dict[str, np.ndarray]): input statistics, which includes:
+                * log p(y_i | y_<i, x) in 'greedy_log_likelihoods'
+        Returns:
+            np.ndarray: An object array (shape (N,)) where each element is
+                        a 1D numpy array representing the cumulative
+                        log-perplexity by first sorting the log-likelihoods.
+        """
+        log_likelihoods = [np.sort(log_likelihood) for log_likelihood in stats["greedy_log_likelihoods"]]
+        
+        cumulative_ppl = [
+            -np.cumsum(ll) / np.arange(1, len(ll) + 1) if len(ll) > 0 else np.array([])
+            for ll in log_likelihoods
+        ]
+        
+        return np.array(cumulative_ppl, dtype=object)
+    
+    @property
+    def returns_cumulative(self) -> bool:
+        return True
