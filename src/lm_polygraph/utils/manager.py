@@ -321,6 +321,47 @@ class UEManager:
                 
             print(f"Results for {estimator} (cumulative): {e_cumulative}")
 
+    def _handle_failed_extraction(self, e, batch_stats, estimator_name) -> np.ndarray:
+        """
+        Ensures that if an answer cannot be extracted, uncertainty will be set to np.inf.
+        """
+
+        try:
+            # Get texts
+            current_texts = batch_stats.get('greedy_texts', [])
+
+            # Some estimators are scalar, others are cumulative (e.g CumulativeMaximumSequenceProbability).
+            # First check if the estimator returns a list of lists or just a scalar.
+            is_sequence = False 
+            if len(e) > 0:
+                first_item = e[0]
+                # Check if this item is a list or numpy array
+                if isinstance(first_item, (list, np.ndarray)):
+                    is_sequence = True 
+                
+            if not is_sequence:
+                # scalar estimator
+                if isinstance(e, list):
+                    e = np.array(e)
+                if e.dtype.kind != "f":
+                    e = e.astype(float)
+                
+                # for any failed extractions, force uncertainty of infinity
+                for i, text in enumerate(current_texts):
+                    if text is None or (isinstance(text, str) and not text.strip()):
+                        e[i] = np.inf 
+            else:
+                # Cumulative estimator (or some sort of sequence)
+                for i, text in enumerate(current_texts):
+                    if text is None or not str(text).strip():
+                        e[i] = [np.inf, np.inf]
+                
+        except Exception as err:
+            print(f"WARNING: Validation failed for {estimator_name}: {err}")
+        
+        return e
+
+
     def estimate(
         self, batch_stats: dict, estimators: list
     ) -> Dict[Tuple[str, str], List[float]]:
@@ -338,6 +379,8 @@ class UEManager:
                     log.info(f"Estimating {estimator}...")
                 
                 e = estimator(batch_stats) 
+
+                e = self._handle_failed_extraction(e, batch_stats, str(estimator))
 
                 if estimator.returns_cumulative:
                     self._process_cumulative_estimation(e, estimator, batch_estimations)
