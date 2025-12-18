@@ -107,6 +107,6 @@ class KernelLanguageEntropy(Estimator):
         laplacian = laplacian_matrix(weighted_graph)
         heat_kernels = heat_kernel(laplacian, self.t)
         return [
-            vn_entropy(heat_kernel, self.normalize, self.scale, self.jitter)
+            -vn_entropy(heat_kernel, self.normalize, self.scale, self.jitter)
             for heat_kernel in heat_kernels
         ]
