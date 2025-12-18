@@ -241,7 +241,7 @@ def token_level_focus_scores(
         prob = prob / np.sum(prob, axis=-1, keepdims=True)
         entropy = np.exp2(entropy2(prob))
 
-        ll = loss_fct(torch.log(torch.tensor(prob) + 1e-10), torch.tensor(greedy_token))
+        ll = loss_fct(torch.log(torch.tensor(prob) + 1e-5), torch.tensor(greedy_token))
         hc = ll + entropy
 
         if not kw_mask.sum():
@@ -350,7 +350,6 @@ class Focus(Estimator):
             self.p,
             self.gamma,
         )
-
         focus_ue = []
         for token_focus, kw_mask in zip(all_token_focus, all_kw_mask):
             token_focus_np = np.array(token_focus)
