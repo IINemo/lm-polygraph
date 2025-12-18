@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 from typing import Dict, List
 
@@ -14,6 +15,7 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
 from tqdm import tqdm
+import torch
 from sklearn.decomposition import PCA
 from transformers import AutoConfig
 
@@ -99,6 +101,7 @@ class SATRMD(Estimator):
         self.is_fitted = False
         self.metric_thr = metric_thr
         self.aggregation = aggregation
+        self.broken_layers = []
         self.msp = MaximumSequenceProbability()
         self.ent = EntropyCalculator()
         self.uq_predictor = Ridge()
@@ -200,8 +203,18 @@ class SATRMD(Estimator):
                     train_stats[background_covariance_key] = stats[
                         background_covariance_key
                     ]
-
-                md = self.tmds[layer](train_stats, save_data=False).reshape(-1)
+                try:
+                    md = self.tmds[layer](train_stats, save_data=False).reshape(-1)
+                except Exception as e:
+                    # Catch torch._C._LinAlgError specifically
+                    if isinstance(e, torch._C._LinAlgError):
+                        warnings.warn(
+                            f"LinAlgError for layer {layer}: {e}. Skipping this layer."
+                        )
+                        self.broken_layers.append(layer)
+                        continue  # Just skip processing for this layer, don't modify self.layers in-place during iteration
+                    else:
+                        raise
 
                 if "Relative" in self.base_method:
                     if background_centroid_key not in stats.keys():
@@ -262,6 +275,8 @@ class SATRMD(Estimator):
         eval_mds = []
         greedy_tokens = stats["greedy_tokens"]
         for layer in self.tmds.keys():
+            if layer in self.broken_layers:
+                continue
             md = self.tmds[layer](stats).reshape(-1)
             k = 0
             mean_md = []
