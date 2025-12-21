@@ -13,7 +13,7 @@
 
 <p align="left">
   <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
-  <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python 3.11"/>
+  <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12"/>
   <a href="https://huggingface.co/LM-Polygraph"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/></a>
   <a href="https://aclanthology.org/2023.emnlp-demo.41/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
   <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods"><img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/></a>
@@ -94,7 +94,7 @@ from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
 model = BlackboxModel.from_openai(
     openai_api_key='YOUR_API_KEY',
     model_path='gpt-4o',
-    supports_logprobs=True  # Enable for deployments 
+    supports_logprobs=True  # Enable for deployments
 )
 
 ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.
