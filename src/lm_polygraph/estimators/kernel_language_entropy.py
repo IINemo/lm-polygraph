@@ -8,7 +8,7 @@ from .estimator import Estimator
 
 def laplacian_matrix(weighted_graph: np.ndarray) -> np.ndarray:
     degrees = np.diag(np.sum(weighted_graph, axis=0))
-    return weighted_graph - degrees
+    return degrees - weighted_graph
 
 
 def heat_kernel(laplacian: np.ndarray, t: float) -> np.ndarray:
@@ -107,6 +107,6 @@ class KernelLanguageEntropy(Estimator):
         laplacian = laplacian_matrix(weighted_graph)
         heat_kernels = heat_kernel(laplacian, self.t)
         return [
-            -vn_entropy(heat_kernel, self.normalize, self.scale, self.jitter)
+            vn_entropy(heat_kernel, self.normalize, self.scale, self.jitter)
             for heat_kernel in heat_kernels
         ]
