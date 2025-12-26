@@ -1,5 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
+import torch
 
 def load_model(model_path: str, device_map: str):
     model = AutoModelForCausalLM.from_pretrained(

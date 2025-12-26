@@ -83,7 +83,7 @@ from .focus import Focus
 from .kernel_language_entropy import KernelLanguageEntropy
 from .luq import LUQ
 from .eigenscore import EigenScore
-from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE
+from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE, CocoaRAUQ, CocoaRAUQEntropy
 from .rauq import RAUQ
 from .csl import CSL
 from .semantic_density import SemanticDensity

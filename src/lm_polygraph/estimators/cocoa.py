@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict
 
 from .estimator import Estimator
-
+from .rauq import RAUQ
 
 class CocoaMSP(Estimator):
     def __init__(
@@ -100,3 +100,57 @@ class CocoaMTE(Estimator):
             enriched_entropy.append(enriched_value)
 
         return np.array(enriched_entropy)
+    
+class CocoaRAUQ(Estimator):
+    def __init__(
+        self,
+    ):
+        super().__init__(["greedy_sentence_similarity", "attention_all", "greedy_log_likelihoods"], "sequence")
+        self.rauq = RAUQ()
+
+    def __str__(self):
+        return "CocoaRAUQ"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        batch_rauq = self.rauq(stats)
+        batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
+
+        enriched_rauq = []
+
+        for greedy_rauq, greedy_sentence_similarity in zip(
+            batch_rauq, batch_greedy_sentence_similarity
+        ):
+            #  Compute row-wise average similarity, excluding self-similarity
+            avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
+
+            enriched_value = greedy_rauq * avg_dissimilarity
+            enriched_rauq.append(enriched_value)
+
+        return np.array(enriched_rauq)
+    
+class CocoaRAUQEntropy(Estimator):
+    def __init__(
+        self,
+    ):
+        super().__init__(["greedy_sentence_similarity", "attention_all", "greedy_log_likelihoods", "entropy"], "sequence")
+        self.rauq = RAUQ(use_entropy=True)
+
+    def __str__(self):
+        return "CocoaRAUQEntropy"
+
+    def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        batch_rauq = self.rauq(stats)
+        batch_greedy_sentence_similarity = stats["greedy_sentence_similarity"]
+
+        enriched_rauq = []
+
+        for greedy_rauq, greedy_sentence_similarity in zip(
+            batch_rauq, batch_greedy_sentence_similarity
+        ):
+            #  Compute row-wise average similarity, excluding self-similarity
+            avg_dissimilarity = np.mean(1 - greedy_sentence_similarity)
+
+            enriched_value = greedy_rauq * avg_dissimilarity
+            enriched_rauq.append(enriched_value)
+
+        return np.array(enriched_rauq)
