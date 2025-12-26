@@ -28,7 +28,9 @@ class BoostedProbSequence(Estimator):
             np.ndarray: average boosted model probabilities over each sequence sample.
                 Higher values indicate more uncertain samples.
         """
-        lprob_distributions = stats["greedy_log_probs"]  # nr_samples (nr_tokens x vocab_size)
+        lprob_distributions = stats[
+            "greedy_log_probs"
+        ]  # nr_samples (nr_tokens x vocab_size)
         output_tokens = stats["greedy_tokens"]
         score = [
             calculate_boostedprob(torch.tensor(lprob_distribution), torch.tensor(out))
@@ -36,5 +38,3 @@ class BoostedProbSequence(Estimator):
         ]
 
         return np.array([-np.mean(x.numpy()) for x in score])
-
-

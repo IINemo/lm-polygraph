@@ -1,7 +1,4 @@
-import numpy as np
 import torch
-from typing import Dict
-from .estimator import Estimator
 from boostedprob import calculate_boostedprob
 
 import numpy as np
@@ -18,6 +15,7 @@ class BoostedProbClaim(Estimator):
     - When the token is not dominant: returns the probability of the token itself
     Details can be found in the paper: https://aclanthology.org/2025.emnlp-main.166.pdf
     """
+
     def __init__(self):
         super().__init__(["greedy_log_probs", "claims"], "claim")
 
@@ -40,9 +38,13 @@ class BoostedProbClaim(Estimator):
         lprob_distributions = stats["greedy_log_probs"]
         output_tokens = stats["greedy_tokens"]
         claims = stats["claims"]
-        
-        boostedprobs = [calculate_boostedprob(torch.tensor(lprob_distribution), torch.tensor(output_tokens)) 
-                 for lprob_distribution in lprob_distributions]
+
+        boostedprobs = [
+            calculate_boostedprob(
+                torch.tensor(lprob_distribution), torch.tensor(output_tokens)
+            )
+            for lprob_distribution in lprob_distributions
+        ]
         claim_ue = []
         for sample_boostedprob, sample_claims in zip(boostedprobs, claims):
             claim_ue.append([])
