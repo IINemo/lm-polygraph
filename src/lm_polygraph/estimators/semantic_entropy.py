@@ -22,7 +22,10 @@ class SemanticEntropy(Estimator):
     """
 
     def __init__(
-        self, verbose: bool = False, class_probability_estimation: str = "sum", entropy_estimation: str = "mean",
+        self,
+        verbose: bool = False,
+        class_probability_estimation: str = "sum",
+        entropy_estimation: str = "mean",
     ):
         self.class_probability_estimation = class_probability_estimation
         self.entropy_estimation = entropy_estimation
@@ -67,7 +70,7 @@ class SemanticEntropy(Estimator):
 
         self._class_to_sample = stats["semantic_classes_entail"]["class_to_sample"]
         self._sample_to_class = stats["semantic_classes_entail"]["sample_to_class"]
-        
+
         return self.batched_call(hyps_list, loglikelihoods_list)
 
     def batched_call(
@@ -105,17 +108,21 @@ class SemanticEntropy(Estimator):
             if self.entropy_estimation == "mean":
                 semantic_logits[i] = -np.mean(
                     [
-                        class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
+                        class_lp[self._sample_to_class[i][j]]
+                        * np.exp(log_weights[i][j])
                         for j in range(len(hyps_list[i]))
                     ]
                 )
             elif self.entropy_estimation == "direct":
                 semantic_logits[i] = -np.sum(
                     [
-                        class_lp[self._sample_to_class[i][j]] * np.exp(class_lp[self._sample_to_class[i][j]])
+                        class_lp[self._sample_to_class[i][j]]
+                        * np.exp(class_lp[self._sample_to_class[i][j]])
                         for j in range(len(hyps_list[i]))
                     ]
                 )
             else:
-                raise ValueError(f"Unknown entropy_estimation: {self.entropy_estimation}")
+                raise ValueError(
+                    f"Unknown entropy_estimation: {self.entropy_estimation}"
+                )
         return np.array([semantic_logits[i] for i in range(len(hyps_list))])
