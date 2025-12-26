@@ -10,6 +10,8 @@ from .claim.focus import FocusClaim
 from .claim.frequency_scoring import FrequencyScoringClaim
 from .claim.token_sar import TokenSARClaim
 from .claim.self_certainty import SelfCertaintyClaim
+from .claim.boostedprob_score import BoostedProbClaim
+
 from .max_probability import (
     MaximumSequenceProbability,
     MaximumTokenProbability,
@@ -42,7 +44,7 @@ from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq
 from .ppl_md import PPLMDSeq
-from .boostedprob_score import BoostedProb, BoostedProbSequence
+from .boostedprob_score import BoostedProbSequence
 from .ensemble_token_measures import (
     EPTtu,
     EPTdu,
