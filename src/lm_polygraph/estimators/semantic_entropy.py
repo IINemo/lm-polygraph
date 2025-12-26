@@ -14,12 +14,18 @@ class SemanticEntropy(Estimator):
     This method calculates the generation entropy estimations merged by semantic classes using Monte-Carlo.
     The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator
     'samples_n' parameter.
+
+    The entropy_estimation parameter supports two methods:
+    - "mean": Mean entropy estimation from the original paper (https://arxiv.org/abs/2302.09664).
+    - "direct": Direct entropy estimation from the proper estimator in the SDLG paper
+      (https://arxiv.org/pdf/2406.04306).
     """
 
     def __init__(
-        self, verbose: bool = False, class_probability_estimation: str = "sum"
+        self, verbose: bool = False, class_probability_estimation: str = "sum", entropy_estimation: str = "mean",
     ):
         self.class_probability_estimation = class_probability_estimation
+        self.entropy_estimation = entropy_estimation
         if self.class_probability_estimation == "sum":
             deps = ["sample_log_probs", "sample_texts", "semantic_classes_entail"]
         elif self.class_probability_estimation == "frequency":
@@ -33,10 +39,11 @@ class SemanticEntropy(Estimator):
         self.verbose = verbose
 
     def __str__(self):
+        entropy_estimation = " (Direct)" if self.entropy_estimation == "direct" else ""
         if self.class_probability_estimation == "sum":
-            return "SemanticEntropy"
+            return "SemanticEntropy" + entropy_estimation
         elif self.class_probability_estimation == "frequency":
-            return "SemanticEntropyEmpirical"
+            return "SemanticEntropyEmpirical" + entropy_estimation
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -60,7 +67,7 @@ class SemanticEntropy(Estimator):
 
         self._class_to_sample = stats["semantic_classes_entail"]["class_to_sample"]
         self._sample_to_class = stats["semantic_classes_entail"]["sample_to_class"]
-
+        
         return self.batched_call(hyps_list, loglikelihoods_list)
 
     def batched_call(
@@ -95,10 +102,20 @@ class SemanticEntropy(Estimator):
 
             if log_weights[i] is None:
                 log_weights[i] = [0 for _ in hyps_list[i]]
-            semantic_logits[i] = -np.mean(
-                [
-                    class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
-                    for j in range(len(hyps_list[i]))
-                ]
-            )
+            if self.entropy_estimation == "mean":
+                semantic_logits[i] = -np.mean(
+                    [
+                        class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
+                        for j in range(len(hyps_list[i]))
+                    ]
+                )
+            elif self.entropy_estimation == "direct":
+                semantic_logits[i] = -np.sum(
+                    [
+                        class_lp[self._sample_to_class[i][j]] * np.exp(class_lp[self._sample_to_class[i][j]])
+                        for j in range(len(hyps_list[i]))
+                    ]
+                )
+            else:
+                raise ValueError(f"Unknown entropy_estimation: {self.entropy_estimation}")
         return np.array([semantic_logits[i] for i in range(len(hyps_list))])
