@@ -46,7 +46,7 @@ jobs:
     - name: Check disk usage
       run: df -h
     - name: Remove cachedir
-      run: rm -rf ../.cache
+      run: rm -rf $HOME/.cache
     - name: Check disk usage
       run: df -h
     - name: Test with pytest 1
