@@ -45,8 +45,8 @@ jobs:
         pytest -p no:cacheprovider test/test_lm_polygraph.py
     - name: Check disk usage
       run: df -h
-    - name: Remove workdir
-      run: rm -rf workdir
+    - name: Remove cachedir
+      run: rm -rf ../.cache
     - name: Check disk usage
       run: df -h
     - name: Test with pytest 1
