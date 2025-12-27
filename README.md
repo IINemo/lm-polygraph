@@ -72,7 +72,7 @@ ue_method = MeanTokenEntropy()
 
 3. Get predictions and their uncertainty scores:
 ```python
-from lm_polygraph.utils.manager import estimate_uncertainty
+from lm_polygraph.utils import estimate_uncertainty
 
 input_text = "Who is George Bush?"
 ue = estimate_uncertainty(model, ue_method, input_text=input_text)
@@ -97,11 +97,11 @@ model = BlackboxModel.from_openai(
     supports_logprobs=True  # Enable for deployments 
 )
 
-ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.
+ue_method = Perplexity()  # or MeanTokenEntropy(), EigValLaplacian(), etc.
 estimate_uncertainty(model, ue_method, input_text='What has a head and a tail but no body?')
 ```
 
-UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs that do not provide logits.
+UE methods such as `EigValLaplacian()` support fully blackbox LLMs that do not provide logits.
 
 ## More examples:
 
