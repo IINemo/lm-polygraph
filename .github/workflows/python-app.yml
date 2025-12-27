@@ -23,6 +23,8 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.11"
+    - name: Check disk usage
+      run: df -h
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -43,6 +45,6 @@ jobs:
         pytest test/test_high_level_api.py
     - name: Check disk usage
       run: df -h
-    - name: Test with pytest 1
+    - name: Test with pytest 2
       run: |
         pytest test/test_lm_polygraph.py
