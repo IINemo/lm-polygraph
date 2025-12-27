@@ -30,8 +30,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest hydra-core==1.3.2
         pip install .
-    - name: Uninstall nvidia packages to save up disk space
-      run: pip uninstall nvidia-cudnn-cu12 nvidia-cublas-cu12 nvidia-nccl-cu12 -y
+    # - name: Uninstall nvidia packages to save up disk space
+    #   run: pip uninstall nvidia-cudnn-cu12 nvidia-cublas-cu12 nvidia-nccl-cu12 -y
     - name: Check disk usage
       run: df -h
     - name: Lint
@@ -42,11 +42,13 @@ jobs:
         plugins: "flake8-black"
     - name: Check disk usage
       run: df -h
+    - name: Test with pytest 2
+      run: |
+        pytest test/test_lm_polygraph.py
+    - name: Check disk usage
+      run: df -h
     - name: Test with pytest 1
       run: |
         pytest test/test_high_level_api.py
     - name: Check disk usage
       run: df -h
-    - name: Test with pytest 2
-      run: |
-        pytest test/test_lm_polygraph.py
