@@ -13,8 +13,8 @@ Welcome to LM-Polygraph's documentation!
    usage
    advanced_usage
    components/index
-   web_demo
    modules
+   design
 
 API Reference
 ========================================
