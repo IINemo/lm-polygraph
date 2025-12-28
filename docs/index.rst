@@ -6,6 +6,10 @@
 Welcome to LM-Polygraph's documentation!
 ========================================
 
+LM-Polygraph provides a battery of state-of-the-art of uncertainty estimation (UE) methods for LMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertainty can help to make applications of LLMs safer.
+
+LM-Polygraph is also one of the most popular benchmarks for consistent evaluation UE and hallucination detection methods. It evaluation of UE is used by hundreds of researchers and tech companies.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
