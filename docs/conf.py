@@ -16,25 +16,31 @@ sys.path.insert(0, os.path.abspath("../src"))
 # -- Auto-generate API documentation -----------------------------------------
 # Run sphinx-apidoc automatically when building docs
 
+
 def run_apidoc(_):
     from sphinx.ext.apidoc import main as apidoc_main
-    
+
     docs_dir = Path(__file__).parent
     output_dir = docs_dir / "api"  # Output .rst files to docs/
     source_dir = docs_dir.parent / "src" / "lm_polygraph"
-    
+
     # Only run if source directory exists
     if source_dir.exists():
-        apidoc_main([
-            "--force",  # Overwrite existing files
-            "--module-first",  # Put module documentation before submodule documentation
-            "--separate",  # Create separate pages for each module
-            "-o", str(output_dir),
-            str(source_dir),
-        ])
+        apidoc_main(
+            [
+                "--force",  # Overwrite existing files
+                "--module-first",  # Put module documentation before submodule documentation
+                "--separate",  # Create separate pages for each module
+                "-o",
+                str(output_dir),
+                str(source_dir),
+            ]
+        )
+
 
 def setup(app):
     app.connect("builder-inited", run_apidoc)
+
 
 project = "LM-Polygraph"
 author = "MBZUAI"
