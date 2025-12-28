@@ -1,8 +1,6 @@
 import subprocess
 import pathlib
 
-# import numpy as np
-
 from lm_polygraph.utils.manager import UEManager
 
 # from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators

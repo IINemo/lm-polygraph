@@ -1,7 +1,6 @@
 import gc
 import torch
 import numpy as np
-from tqdm import tqdm
 
 from typing import Dict, List, Tuple
 
@@ -29,7 +28,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
         self.train_dataset = train_dataset
         self.background_train_dataset = background_train_dataset
         self.statistics_extracted = False
-        self.base_calculators = [GreedyProbsCalculator()]
+        self.base_calculators = [GreedyProbsCalculator(output_hidden_states=True)]
 
     def __call__(
         self,
@@ -54,7 +53,15 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     if datasets_name == "train_"
                     else background_train_dataset_max_new_tokens
                 )
-                for inp_texts, target_texts in tqdm(dataset):
+                for batch_i, batch in enumerate(dataset):
+                    if len(batch) == 3:
+                        inp_texts, target_texts, images = batch
+                    elif len(batch) == 2:
+                        inp_texts, target_texts = batch
+                    else:
+                        raise ValueError(
+                            f"Expected batch with 2 or 3 elements, got {len(batch)}"
+                        )
                     batch_stats: Dict[str, np.ndarray] = {}
                     for key, val in [
                         ("input_texts", inp_texts),
@@ -87,7 +94,7 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                     gc.collect()
 
             for stat in train_stats.keys():
-                if any(s is None for s in train_stats[stat]):
+                if any(s is None for s in train_stats[stat]) or ("tokenizer" in stat):
                     continue
                 if isinstance(train_stats[stat][0], list):
                     result_train_stat[stat] = [
@@ -96,4 +103,5 @@ class TrainingStatisticExtractionCalculator(StatCalculator):
                 else:
                     result_train_stat[stat] = np.concatenate(train_stats[stat])
             self.statistics_extracted = True
+
             return result_train_stat

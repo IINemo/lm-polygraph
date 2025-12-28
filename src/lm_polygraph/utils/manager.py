@@ -1,3 +1,4 @@
+import time
 import traceback
 import numpy as np
 import torch
@@ -45,16 +46,16 @@ def _check_unique_names(xs):
 
 
 def _delete_nans(ue, metric):
-    new_ue, new_metric = [], []
-    for i in range(len(metric)):
-        if not np.isnan(metric[i]) and not np.isnan(ue[i]):
-            if not isinstance(ue[i], complex):
-                new_ue.append(ue[i])
-            else:
-                new_ue.append(ue[i].real)
-            new_metric.append(metric[i])
+    metric = np.asarray(metric)
 
-    return np.array(new_ue), np.array(new_metric)
+    # Clipping, because some evaluation metrics cannot work with nan ue scores.
+    clipped_ue = np.nan_to_num(ue, nan=-1e7, neginf=-1e7, posinf=1e7)
+
+    is_nan_metric_mask = np.isnan(metric)
+    clipped_ue = clipped_ue[~is_nan_metric_mask]
+    new_metric = metric[~is_nan_metric_mask]
+
+    return clipped_ue, new_metric
 
 
 def order_calculators(
@@ -134,6 +135,8 @@ class UEManager:
         ignore_exceptions: bool = True,
         verbose: bool = True,
         max_new_tokens: int = 100,
+        log_time: bool = False,
+        save_stats: List[str] = [],
     ):
         """
         Parameters:
@@ -141,18 +144,16 @@ class UEManager:
             model (Model): Model to run benchmark on. Can be either lm_polygraph.WhiteboxModel or
                 lm_polygraph.BlackboxModel
             estimators (List[Estimator]): List of estimators to evaluate at benchmark.
+            builder_env_stat_calc (BuilderEnvironmentStatCalculator): Environment seen by all stat calculators when
+                they are built in polygraph_eval script.
+            available_stat_calculators (List[StatCalculatorContainer]): List of stats calculators to use.
+                Can be initialized automatically with `register_default_stat_calculators`.
             generation_metrics (List[GenerationMetrics]): List of methods to use to calculate ground-truth uncertainty.
             ue_metrics (List[UEMetric]): List of methods to measure correlation between ground-truth uncertainties from
                 `generation_metrics` and uncertainty estimators in `estimators`.
             processors (List[Processor]): List of processors to apply after each batch.
-            train_data (Optional[Dataset]): Dataset to train density-based estimators on. Can be set to None, if
-                no density-based method is used. Default: None.
             ignore_exceptions (bool): If true, exceptions on a new batch will be printed to stderr and
                 the batch will be skipped. Useful to skip CUDA OOM errors on large datasets. Default: True.
-            deberta_batch_size (int): Batch size for DeBERTa model used in some estimators. Default: 10.
-            deberta_device (Optional[str]): The device to run deberta on. If None, will use 'cuda:0' if available,
-                'cpu' otherwise. Default: None.
-            language (str): Language to test in claim-level benchmark, one of 'en', 'zh', 'ar', 'ru'. Default: 'en'.
             verbose (bool): If set, will print useful info during batch processing. Default: True.
             max_new_tokens (int): Maximum new tokens to use in generation. Default: 100.
         """
@@ -179,6 +180,10 @@ class UEManager:
 
         self.stat_calculator_descr = available_stat_calculators
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
+        self.log_time = log_time
+        self.save_stats = list(
+            set(["greedy_texts", "greedy_tokens"]).union(set(save_stats))
+        )
 
         self.init()
 
@@ -247,9 +252,16 @@ class UEManager:
         """
         for stat_calculator in calculators:
             try:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Calculating {stat_calculator}...")
                 new_stats = stat_calculator(
                     batch_stats, inp_texts, self.model, self.max_new_tokens
                 )
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {stat_calculator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 for stat, stat_value in new_stats.items():
                     if stat in batch_stats.keys():
                         continue
@@ -286,7 +298,14 @@ class UEManager:
 
         for estimator in estimators:
             try:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Estimating {estimator}...")
                 e = estimator(batch_stats)
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {estimator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 if not isinstance(e, list):
                     e = e.tolist()
                 if estimator.level == "claim":
@@ -308,8 +327,16 @@ class UEManager:
         return batch_estimations, bad_estimators
 
     def _process(self, iterable_data, batch_callback):
-        iterable_data = tqdm(self.data) if self.verbose else self.data
-        for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
+        for batch_i, batch in enumerate(iterable_data):
+            if len(batch) == 3:
+                inp_texts, target_texts, images = batch
+            elif len(batch) == 2:
+                inp_texts, target_texts = batch
+                images = None
+            else:
+                raise ValueError(
+                    f"Expected batch with 2 or 3 elements, got {len(batch)}"
+                )
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ("input_texts", inp_texts),
@@ -317,6 +344,13 @@ class UEManager:
             ]:
                 self.stats[key] += val
                 batch_stats[key] = val
+
+            if images is not None and not (
+                isinstance(images, list) and all(img is None for img in images)
+            ):
+                self.stats["images"] += Dataset.get_images(images)
+                batch_stats["images"] = Dataset.get_images(images)
+
             batch_stats["model"] = self.model
 
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
@@ -328,7 +362,6 @@ class UEManager:
             batch_callback(
                 batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
             )
-
             torch.cuda.empty_cache()
             gc.collect()
 
@@ -365,7 +398,14 @@ class UEManager:
 
             batch_gen_metrics: Dict[Tuple[str, str], List[float]] = defaultdict(list)
             for generation_metric in self.generation_metrics:
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Calculating {generation_metric}...")
                 m = generation_metric(batch_stats, target_texts=target_texts)
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {generation_metric} in {round(time.time() - start_time, 2)} secs"
+                    )
                 if not isinstance(m, list):
                     m = m.tolist()
                 if generation_metric.level == "claim":
@@ -373,22 +413,34 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
-                if key in batch_stats.keys():
-                    self.stats[key] += batch_stats[key]
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
+            for key in self.save_stats:
+                if key in batch_stats.keys():
+                    self.stats[key] += list(batch_stats[key])
+
         self._process(iterable_data, fn_on_batch_callback)
 
+        self.eval_ue()
+
+        for processor in self.processors:
+            processor.on_eval(self.metrics, self.total_bad_estimators)
+
+        return self.metrics
+
+    def eval_ue(self):
         for (gen_level, gen_name), generation_metric in self.gen_metrics.items():
             for ue_metric in self.ue_metrics:
-                oracle_score_all = ue_metric(
-                    -np.array(generation_metric), np.array(generation_metric)
-                )
-                random_score_all = get_random_scores(
-                    ue_metric, np.array(generation_metric)
-                )
+                log.info(f"Metric: {ue_metric}")
+
+                if "prr" in str(ue_metric):
+                    oracle_score_all = ue_metric(
+                        -np.array(generation_metric), np.array(generation_metric)
+                    )
+                    random_score_all = get_random_scores(
+                        ue_metric, np.array(generation_metric)
+                    )
                 for (e_level, e_name), estimator_values in self.estimations.items():
                     if gen_level != e_level:
                         continue
@@ -397,31 +449,41 @@ class UEManager:
                             f"Got different number of metrics for {e_name} and {gen_name}: "
                             f"{len(estimator_values)} and {len(generation_metric)}"
                         )
-                    # TODO: Report how many nans!
-                    # This is important to know for a user
+
+                    n_nans = np.sum(~np.isfinite(estimator_values))
+                    if n_nans > 0:
+                        log.warning(f"We got {n_nans} nans in {e_name} estimator.")
+
+                    n_nans = np.sum(~np.isfinite(generation_metric))
+                    if n_nans > 0:
+                        log.warning(
+                            f"We got {n_nans} nans in {gen_name} generation metric."
+                        )
+
                     ue, metric = _delete_nans(estimator_values, generation_metric)
                     if len(ue) == 0:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
-                        if len(ue) != len(estimator_values):
-                            oracle_score = ue_metric(-metric, metric)
-                            random_score = get_random_scores(ue_metric, metric)
-                        else:
-                            oracle_score = oracle_score_all
-                            random_score = random_score_all
-
                         ue_metric_val = ue_metric(ue, metric)
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
                             ue_metric_val
                         )
-                        self.metrics[
-                            e_level, e_name, gen_name, str(ue_metric) + "_normalized"
-                        ] = normalize_metric(ue_metric_val, oracle_score, random_score)
 
-        for processor in self.processors:
-            processor.on_eval(self.metrics, self.total_bad_estimators)
-
-        return self.metrics
+                        if "prr" in str(ue_metric):
+                            if len(ue) != len(estimator_values):
+                                oracle_score = ue_metric(-metric, metric)
+                                random_score = get_random_scores(ue_metric, metric)
+                            else:
+                                oracle_score = oracle_score_all
+                                random_score = random_score_all
+                            self.metrics[
+                                e_level,
+                                e_name,
+                                gen_name,
+                                str(ue_metric) + "_normalized",
+                            ] = normalize_metric(
+                                ue_metric_val, oracle_score, random_score
+                            )
 
     def save(self, save_path: str):
         """
@@ -454,7 +516,7 @@ class UEManager:
         Parameters:
             load_path (str): Path to file with saved benchmark results to load.
         """
-        res_dict = torch.load(load_path)
+        res_dict = torch.load(load_path, weights_only=False)
 
         if available_stat_calculators is None:
             result_stat_calculators = dict()

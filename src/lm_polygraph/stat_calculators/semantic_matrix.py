@@ -4,7 +4,7 @@ import itertools
 from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph.utils.model import Model
 import torch.nn as nn
 import torch
 
@@ -26,6 +26,8 @@ class SemanticMatrixCalculator(StatCalculator):
             "semantic_matrix_entail",
             "semantic_matrix_contra",
             "semantic_matrix_classes",
+            "semantic_matrix_entail_logits",
+            "semantic_matrix_contra_logits",
             "entailment_id",
         ], ["sample_texts"]
 
@@ -38,7 +40,7 @@ class SemanticMatrixCalculator(StatCalculator):
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Model,
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
@@ -57,6 +59,10 @@ class SemanticMatrixCalculator(StatCalculator):
                     n_samples x n_samples, with probabilities of 'ENTAILMENT' output of DeBERTa.
                 - 'semantic_matrix_contra' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with probabilities of 'CONTRADICTION' output of DeBERTa.
+                - 'semantic_matrix_entail_logits' (List[np.array]): for each input text: quadratic matrix of size
+                    n_samples x n_samples, with logits of 'ENTAILMENT' output of DeBERTa.
+                - 'semantic_matrix_contra_logits' (List[np.array]): for each input text: quadratic matrix of size
+                    n_samples x n_samples, with logits of 'CONTRADICTION' output of DeBERTa.
                 - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
@@ -83,47 +89,72 @@ class SemanticMatrixCalculator(StatCalculator):
         softmax = nn.Softmax(dim=1)
         tokenizer = deberta.deberta_tokenizer
 
-        E = []
-        C = []
-        P = []
+        E_tensors = []
+        C_tensors = []
+        E_logits_tensors = []
+        C_logits_tensors = []
+        P_tensors = []
 
-        for i, pairs in enumerate(batch_pairs):
-            dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
-            probs = []
-            for first_texts, second_texts in dl:
-                batch = list(zip(first_texts, second_texts))
-                encoded = tokenizer.batch_encode_plus(
-                    batch, padding=True, return_tensors="pt"
-                ).to(device)
-                logits = deberta.deberta(**encoded).logits.detach().to(device)
-                probs.append(softmax(logits).cpu().detach())
-            probs = torch.cat(probs, dim=0)
+        with torch.no_grad():
+            for i, pairs in enumerate(batch_pairs):
+                dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
+                probs = []
+                logits_all = []
+                for first_texts, second_texts in dl:
+                    batch = list(zip(first_texts, second_texts))
+                    encoded = tokenizer.batch_encode_plus(
+                        batch, padding=True, return_tensors="pt"
+                    ).to(device)
+                    logits = deberta.deberta(**encoded).logits
+                    probs.append(softmax(logits))
+                    logits_all.append(logits)
+                probs = torch.cat(probs, dim=0)
+                logits_all = torch.cat(logits_all, dim=0)
 
-            entail_probs = probs[:, ent_id]
-            contra_probs = probs[:, contra_id]
-            class_preds = probs.argmax(-1)
+                del encoded, logits
+                torch.cuda.empty_cache()
 
-            unique_mat_shape = (batch_counts[i], batch_counts[i])
+                entail_probs = probs[:, ent_id]
+                contra_probs = probs[:, contra_id]
+                entail_logits = logits_all[:, ent_id]
+                contra_logits = logits_all[:, contra_id]
+                class_preds = probs.argmax(-1)
 
-            unique_E = entail_probs.view(unique_mat_shape).numpy()
-            unique_C = contra_probs.view(unique_mat_shape).numpy()
-            unique_P = class_preds.view(unique_mat_shape).numpy()
+                mat_shape = (batch_counts[i], batch_counts[i])
+                unique_E = entail_probs.view(mat_shape)
+                unique_C = contra_probs.view(mat_shape)
+                unique_E_logits = entail_logits.view(mat_shape)
+                unique_C_logits = contra_logits.view(mat_shape)
+                unique_P = class_preds.view(mat_shape)
 
-            inv = batch_invs[i]
+                inv = batch_invs[i]
+                inv_tensor = torch.as_tensor(inv, device=device)
 
-            # Recover full matrices from unques by gathering along both axes
-            # using inverse index
-            E.append(unique_E[inv, :][:, inv])
-            C.append(unique_C[inv, :][:, inv])
-            P.append(unique_P[inv, :][:, inv])
+                # Recover full matrices by indexing with inverse indices
+                E_tensors.append(unique_E[inv_tensor, :][:, inv_tensor])
+                C_tensors.append(unique_C[inv_tensor, :][:, inv_tensor])
+                E_logits_tensors.append(unique_E_logits[inv_tensor, :][:, inv_tensor])
+                C_logits_tensors.append(unique_C_logits[inv_tensor, :][:, inv_tensor])
+                P_tensors.append(unique_P[inv_tensor, :][:, inv_tensor])
 
-        E = np.stack(E)
-        C = np.stack(C)
-        P = np.stack(P)
+            E = torch.stack(E_tensors)
+            C = torch.stack(C_tensors)
+            E_logits = torch.stack(E_logits_tensors)
+            C_logits = torch.stack(C_logits_tensors)
+            P = torch.stack(P_tensors)
+
+        # Convert to numpy arrays on CPU at the end of computation
+        E = E.cpu().numpy()
+        C = C.cpu().numpy()
+        E_logits = E_logits.cpu().numpy()
+        C_logits = C_logits.cpu().numpy()
+        P = P.cpu().numpy()
 
         return {
             "semantic_matrix_entail": E,
             "semantic_matrix_contra": C,
+            "semantic_matrix_entail_logits": E_logits,
+            "semantic_matrix_contra_logits": C_logits,
             "semantic_matrix_classes": P,
-            "entailment_id": deberta.deberta.config.label2id["ENTAILMENT"],
+            "entailment_id": ent_id,
         }

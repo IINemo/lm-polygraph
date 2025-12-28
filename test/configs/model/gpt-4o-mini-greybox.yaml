@@ -1,0 +1,7 @@
+defaults:
+  - default
+
+provider: openai
+path: gpt-4o-mini
+type: Blackbox
+supports_logprobs: true

@@ -2,14 +2,23 @@ from .estimator import Estimator
 from .claim.claim_conditioned_probability import ClaimConditionedProbabilityClaim
 from .claim.max_probability import MaximumClaimProbability
 from .claim.p_true import PTrueClaim
+from .claim.attention_score import AttentionScoreClaim
 from .claim.perplexity import PerplexityClaim
 from .claim.token_entropy import MaxTokenEntropyClaim
 from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
+from .claim.focus import FocusClaim
+from .claim.frequency_scoring import FrequencyScoringClaim
+from .claim.token_sar import TokenSARClaim
+from .claim.self_certainty import SelfCertaintyClaim
+from .claim.boostedprob_score import BoostedProbClaim
+
 from .max_probability import (
     MaximumSequenceProbability,
     MaximumTokenProbability,
 )
+from .attention_score import AttentionScore
 from .claim_conditioned_probability import ClaimConditionedProbability
+from .self_certainty import SelfCertainty
 from .token_entropy import MeanTokenEntropy, TokenEntropy
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,
@@ -35,6 +44,7 @@ from .mahalanobis_distance import MahalanobisDistanceSeq
 from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
 from .rde import RDESeq
 from .ppl_md import PPLMDSeq
+from .boostedprob_score import BoostedProbSequence
 from .ensemble_token_measures import (
     EPTtu,
     EPTdu,
@@ -72,3 +82,11 @@ from .linguistic_1s import Linguistic1S
 from .claim.random_baseline import RandomBaselineClaim
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
+from .focus import Focus
+from .kernel_language_entropy import KernelLanguageEntropy
+from .luq import LUQ
+from .eigenscore import EigenScore
+from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE
+from .rauq import RAUQ
+from .csl import CSL
+from .semantic_density import SemanticDensity

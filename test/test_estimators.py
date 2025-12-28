@@ -209,3 +209,92 @@ def test_fisher_rao(model):
     estimator = FisherRao()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_focus(model):
+    model_name = model.model.config._name_or_path
+    estimator = Focus(
+        model_name=model_name,
+        path="../token_idf/{model_name}/token_idf.pkl",
+        gamma=0.9,
+        p=0.01,
+        idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test",
+        trust_remote_code=True,
+        idf_seed=42,
+        idf_dataset_size=5,
+        spacy_path="en_core_web_sm",
+    )
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_kernel_language_entropy(model):
+    estimator = KernelLanguageEntropy()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_luq(model):
+    estimator = LUQ()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_eigenscore(model):
+    estimator = EigenScore()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_attentionscore(model):
+    estimator = AttentionScore()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_cocoamsp(model):
+    estimator = CocoaMSP()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_cocoappl(model):
+    estimator = CocoaPPL()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_cocoamte(model):
+    estimator = CocoaMTE()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_rauq(model):
+    estimator = RAUQ()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_csl(model):
+    estimator = CSL()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_semantic_density_concat(model):
+    estimator = SemanticDensity()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_semantic_density(model):
+    estimator = SemanticDensity(concat_input=False)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_boostedprob_sequence(model):
+    estimator = BoostedProbSequence()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)

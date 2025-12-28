@@ -17,11 +17,12 @@ eval_split: test
 text_column: input
 load_from_disk: false
 label_column: output
+instruct: false
 prompt: ""
 
 generation_params:
   temperature: 0.7
-  generate_until:
+  stop_strings:
     - "\n"
 
 ignore_exceptions: false

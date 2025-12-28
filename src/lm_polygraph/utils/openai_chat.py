@@ -16,7 +16,11 @@ class OpenAIChat:
     def __init__(
         self,
         openai_model: str = "gpt-4o",
+        base_url: str = None,
         cache_path: str = os.path.expanduser("~") + "/.cache",
+        timeout: int = 600,
+        max_tokens: int = None,
+        rewrite_cache: bool = False,
     ):
         """
         Parameters
@@ -33,6 +37,11 @@ class OpenAIChat:
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
 
+        self.base_url = base_url
+        self.timeout = timeout
+        self.max_tokens = max_tokens
+        self.rewrite_cache = rewrite_cache
+
     def ask(self, message: str) -> str:
         cache_settings = dc.DEFAULT_SETTINGS.copy()
         cache_settings["eviction_policy"] = "none"
@@ -40,7 +49,7 @@ class OpenAIChat:
         cache_settings["cull_limit"] = 0
         openai_responses = dc.Cache(self.cache_path, **cache_settings)
 
-        if (self.openai_model, message) in openai_responses:
+        if (self.openai_model, message) in openai_responses and not self.rewrite_cache:
             reply = openai_responses[(self.openai_model, message)]
 
         else:
@@ -73,8 +82,13 @@ class OpenAIChat:
         sleep_time_values = (5, 10, 30, 60, 120)
         for i in range(len(sleep_time_values)):
             try:
-                return openai.OpenAI().chat.completions.create(
-                    model=self.openai_model, messages=messages
+                return openai.OpenAI(
+                    base_url=self.base_url, timeout=self.timeout
+                ).chat.completions.create(
+                    model=self.openai_model,
+                    messages=messages,
+                    temperature=0,  # for deterministic outputs
+                    max_tokens=self.max_tokens,
                 )
             except Exception as e:
                 sleep_time = sleep_time_values[i]
@@ -83,6 +97,11 @@ class OpenAIChat:
                 )
                 time.sleep(sleep_time)
 
-        return openai.OpenAI().chat.completions.create(
-            model=self.openai_model, messages=messages
+        return openai.OpenAI(
+            base_url=self.base_url, timeout=self.timeout
+        ).chat.completions.create(
+            model=self.openai_model,
+            messages=messages,
+            temperature=0,  # for deterministic outputs
+            max_tokens=self.max_tokens,
         )

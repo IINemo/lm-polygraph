@@ -1,9 +1,8 @@
-import requests
 import torch
-import sys
 import openai
 import time
 import logging
+import json
 
 from dataclasses import asdict
 from typing import List, Dict, Optional, Union
@@ -15,12 +14,13 @@ from transformers import (
     AutoConfig,
     LogitsProcessorList,
     BartForConditionalGeneration,
-    StoppingCriteria,
-    StoppingCriteriaList,
-    PreTrainedTokenizer,
 )
+from huggingface_hub import InferenceClient
 
-from lm_polygraph.utils.generation_parameters import GenerationParameters
+from lm_polygraph.utils.generation_parameters import (
+    GenerationParameters,
+    GenerationParametersFactory,
+)
 from lm_polygraph.utils.ensemble_utils.ensemble_generator import EnsembleGenerationMixin
 from lm_polygraph.utils.ensemble_utils.dropout import replace_dropout
 
@@ -100,7 +100,8 @@ class BlackboxModel(Model):
         openai_api_key: str = None,
         model_path: str = None,
         hf_api_token: str = None,
-        parameters: GenerationParameters = GenerationParameters(),
+        generation_parameters: GenerationParameters = GenerationParameters(),
+        supports_logprobs: bool = False,
     ):
         """
         Parameters:
@@ -108,20 +109,62 @@ class BlackboxModel(Model):
             model_path (Optional[str]): Unique model path. Openai model name, if `openai_api_key` is specified,
                 huggingface path, if `hf_api_token` is specified. Default: None.
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
-            parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
         """
         super().__init__(model_path, "Blackbox")
-        self.parameters = parameters
+        self.generation_parameters = generation_parameters
         self.openai_api_key = openai_api_key
+        self.supports_logprobs = supports_logprobs
+
         if openai_api_key is not None:
             self.openai_api = openai.OpenAI(api_key=openai_api_key)
+
         self.hf_api_token = hf_api_token
 
+    def _validate_args(self, args):
+        """
+        Validates and adapts arguments for BlackboxModel generation.
+
+        Parameters:
+            args (dict): The arguments to validate.
+
+        Returns:
+            dict: Validated and adapted arguments.
+        """
+        args_copy = args.copy()
+
+        # BlackboxModel specific validation
+        for delete_key in [
+            "do_sample",
+            "min_length",
+            "top_k",
+            "repetition_penalty",
+            "min_new_tokens",
+            "num_beams",
+            "allow_newlines",
+            "stop_strings",
+        ]:
+            args_copy.pop(delete_key, None)
+
+        # Map HF argument names to OpenAI/HF API argument names
+        key_mapping = {
+            "num_return_sequences": "n",
+            "max_length": "max_tokens",
+            "max_new_tokens": "max_tokens",
+        }
+        for key, replace_key in key_mapping.items():
+            if key in args_copy:
+                args_copy[replace_key] = args_copy[key]
+                args_copy.pop(key)
+
+        return args_copy
+
     def _query(self, payload):
-        API_URL = f"https://api-inference.huggingface.co/models/{self.model_path}"
-        headers = {"Authorization": f"Bearer {self.hf_api_token}"}
-        response = requests.post(API_URL, headers=headers, json=payload)
-        return response.json()
+        client = InferenceClient(model=self.model_path, token=self.hf_api_token)
+        response = client.chat_completion(payload)
+        raw_json = json.dumps(response, indent=2)
+        return raw_json
 
     @staticmethod
     def from_huggingface(hf_api_token: str, hf_model_id: str, **kwargs):
@@ -132,18 +175,36 @@ class BlackboxModel(Model):
             hf_api_token (Optional[str]): Huggingface API token if the blackbox model comes from HF. Default: None.
             hf_model_id (Optional[str]): model path in huggingface.
         """
-        return BlackboxModel(hf_api_token=hf_api_token, model_path=hf_model_id)
+        generation_parameters = kwargs.pop(
+            "generation_parameters", GenerationParameters()
+        )
+        return BlackboxModel(
+            hf_api_token=hf_api_token,
+            model_path=hf_model_id,
+            generation_parameters=generation_parameters,
+        )
 
     @staticmethod
-    def from_openai(openai_api_key: str, model_path: str, **kwargs):
+    def from_openai(
+        openai_api_key: str, model_path: str, supports_logprobs: bool = False, **kwargs
+    ):
         """
         Initializes a blackbox model from OpenAI API.
 
         Parameters:
             openai_api_key (Optional[str]): OpenAI API key. Default: None.
             model_path (Optional[str]): model name in OpenAI.
+            supports_logprobs (bool): Whether the model supports returning log probabilities. Default: False.
         """
-        return BlackboxModel(openai_api_key=openai_api_key, model_path=model_path)
+        generation_parameters = kwargs.pop(
+            "generation_parameters", GenerationParameters()
+        )
+        return BlackboxModel(
+            openai_api_key=openai_api_key,
+            model_path=model_path,
+            supports_logprobs=supports_logprobs,
+            generation_parameters=generation_parameters,
+        )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
@@ -154,31 +215,42 @@ class BlackboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
-        if any(
-            args.get(arg, False)
-            for arg in ["output_scores", "output_attentions", "output_hidden_states"]
+        # Apply default parameters first, then override with provided args
+        default_params = asdict(self.generation_parameters)
+        default_params.update(args)
+        args = self._validate_args(default_params)
+
+        # Check if we're trying to access features that require logprobs support
+        if (
+            any(
+                args.get(arg, False)
+                for arg in [
+                    "output_scores",
+                    "output_attentions",
+                    "output_hidden_states",
+                ]
+            )
+            and not self.supports_logprobs
         ):
             raise Exception("Cannot access logits for blackbox model")
 
-        for delete_key in [
-            "do_sample",
-            "min_length",
-            "top_k",
-            "repetition_penalty",
-            "min_new_tokens",
-        ]:
-            args.pop(delete_key, None)
-        for key, replace_key in [
-            ("num_return_sequences", "n"),
-            ("max_length", "max_tokens"),
-            ("max_new_tokens", "max_tokens"),
-        ]:
-            if key in args.keys():
-                args[replace_key] = args[key]
-                args.pop(key)
         texts = []
 
         if self.openai_api_key is not None:
+            # Save log probabilities if requested
+            self.last_response = None
+            self.logprobs = []
+            self.tokens = []
+
+            # Check if we need to return logprobs
+            return_logprobs = args.pop("output_scores", False)
+            logprobs_args = {}
+
+            if return_logprobs and self.supports_logprobs:
+                logprobs_args["logprobs"] = True
+                # OpenAI supports returning top logprobs, default to 5
+                logprobs_args["top_logprobs"] = args.pop("top_logprobs", 5)
+
             for prompt in input_texts:
                 if isinstance(prompt, str):
                     # If prompt is a string, create a single message with "user" role
@@ -200,6 +272,7 @@ class BlackboxModel(Model):
                             model=self.model_path,
                             messages=messages,
                             **args,
+                            **logprobs_args,
                         )
                         break
                     except Exception as e:
@@ -209,16 +282,35 @@ class BlackboxModel(Model):
                             retries += 1
                             continue
 
-                if args["n"] == 1:
+                if args.get("n", 1) == 1:
                     texts.append(response.choices[0].message.content)
+                    # Store logprobs if available
+                    if return_logprobs and hasattr(response.choices[0], "logprobs"):
+                        self.logprobs.append(response.choices[0].logprobs)
+                        # Extract token information if available
+                        if hasattr(response.choices[0].logprobs, "content"):
+                            tokens = [
+                                item.token
+                                for item in response.choices[0].logprobs.content
+                            ]
+                            self.tokens.append(tokens)
                 else:
                     texts.append([resp.message.content for resp in response.choices])
+                    # For multiple returns, we don't collect logprobs for now
+
+                # Store the last response for later use
+                self.last_response = response
+
         elif (self.hf_api_token is not None) & (self.model_path is not None):
             for prompt in input_texts:
                 start = time.time()
                 while True:
                     current_time = time.time()
-                    output = self._query({"inputs": prompt})
+                    messages = [
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": prompt},
+                    ]
+                    output = self._query(messages)
 
                     if isinstance(output, dict):
                         if (list(output.keys())[0] == "error") & (
@@ -233,7 +325,7 @@ class BlackboxModel(Model):
                         elif (list(output.keys())[0] == "error") & (
                             "estimated_time" not in output.keys()
                         ):
-                            print(f"{output['error']}")
+                            log.error(f"{output['error']}")
                             break
                     elif isinstance(output, list):
                         break
@@ -248,9 +340,34 @@ class BlackboxModel(Model):
 
     def generate(self, **args):
         """
-        Not implemented for blackbox models.
+        For OpenAI models with logprobs support, returns a lightweight wrapper around OpenAI API response.
+        For other blackbox models, raises an exception as this is not implemented.
+
+        Parameters:
+            **args: Arguments to pass to the generate method.
+        Returns:
+            object: A wrapper around the OpenAI API response if logprobs are supported.
+        Raises:
+            Exception: If the model doesn't support logprobs.
         """
-        raise Exception("Cannot access logits of blackbox model")
+        if self.supports_logprobs:
+            # Apply default parameters first, then override with provided args
+            default_params = asdict(self.generation_parameters)
+            default_params.update(args)
+            args = self._validate_args(default_params)
+
+            args["output_scores"] = True
+            sequences = self.generate_texts(**args)
+
+            # Return a simple object with the necessary attributes for compatibility
+            class OpenAIGenerationOutput:
+                def __init__(self, sequences, scores):
+                    self.sequences = sequences
+                    self.scores = scores
+
+            return OpenAIGenerationOutput(sequences, self.logprobs)
+        else:
+            raise Exception("Cannot access logits of blackbox model")
 
     def __call__(self, **args):
         """
@@ -263,22 +380,6 @@ class BlackboxModel(Model):
         Not implemented for blackbox models.
         """
         raise Exception("Cannot access logits of blackbox model")
-
-
-def _validate_args(args):
-    if "presence_penalty" in args.keys() and args["presence_penalty"] != 0.0:
-        sys.stderr.write(
-            "Skipping requested argument presence_penalty={}".format(
-                args["presence_penalty"]
-            )
-        )
-
-    # remove arguments that are not supported by the HF model.generate function
-    keys_to_remove = ["presence_penalty", "generate_until", "allow_newlines"]
-    for key in keys_to_remove:
-        args.pop(key, None)
-
-    return args
 
 
 class WhiteboxModel(Model):
@@ -302,6 +403,7 @@ class WhiteboxModel(Model):
         model_path: str = None,
         model_type: str = "CausalLM",
         generation_parameters: GenerationParameters = GenerationParameters(),
+        instruct: bool = False,
     ):
         """
         Parameters:
@@ -315,6 +417,34 @@ class WhiteboxModel(Model):
         self.model = model
         self.tokenizer = tokenizer
         self.generation_parameters = generation_parameters
+        self.instruct = instruct
+
+    def _validate_args(self, args):
+        """
+        Validates and adapts arguments for WhiteboxModel generation.
+
+        Parameters:
+            args (dict): The arguments to validate.
+
+        Returns:
+            dict: Validated and adapted arguments.
+        """
+        args_copy = args.copy()
+
+        # WhiteboxModel specific validation
+        if "presence_penalty" in args_copy and args_copy["presence_penalty"] != 0.0:
+            log.warning(
+                "Skipping requested argument presence_penalty={}".format(
+                    args_copy["presence_penalty"]
+                )
+            )
+
+        # Remove arguments that are not supported by the HF model.generate function
+        keys_to_remove = ["presence_penalty", "allow_newlines"]
+        for key in keys_to_remove:
+            args_copy.pop(key, None)
+
+        return args_copy
 
     class _ScoresProcessor:
         # Stores original token scores instead of the ones modified with generation parameters
@@ -324,61 +454,6 @@ class WhiteboxModel(Model):
         def __call__(self, input_ids=None, scores=None):
             self.scores.append(scores.log_softmax(-1))
             return scores
-
-    class _MultiTokenEOSCriteria(StoppingCriteria):
-        """Criteria to stop on the specified multi-token sequence.
-        Copied from https://github.com/EleutherAI/lm-evaluation-harness/blob/main/lm_eval/models/utils.py#L208
-        """
-
-        def __init__(
-            self,
-            sequence: str,
-            tokenizer: PreTrainedTokenizer,
-            initial_decoder_input_length: int,
-            batch_size: int,
-        ) -> None:
-            self.initial_decoder_input_length = initial_decoder_input_length
-            self.done_tracker = [False] * batch_size
-            self.sequence = sequence
-            self.sequence_ids = tokenizer.encode(sequence, add_special_tokens=False)
-            # print(sequence, self.sequence_ids)
-            # we look back for 2 more tokens than it takes to encode our stop sequence
-            # because tokenizers suck, and a model might generate `['\n', '\n']` but our `sequence` is `['\n\n']`
-            # and we don't want to mistakenly not stop a generation because our
-            # (string) stop sequence was output in a different tokenization
-
-            # NOTE: there is a minor danger that this will end up looking back 2 tokens into the past, into the inputs to the model,
-            # and stopping generation immediately as a result. With only 2 extra tokens of lookback, this risk is minimized
-            # Additionally, in lookback_ids_batch we should prevent ever looking back into the inputs as described.
-            self.sequence_id_len = len(self.sequence_ids) + 2
-            self.tokenizer = tokenizer
-
-        def __call__(self, input_ids, scores, **kwargs) -> bool:
-            # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
-            lookback_ids_batch = input_ids[:, self.initial_decoder_input_length :]
-
-            lookback_ids_batch = lookback_ids_batch[:, -self.sequence_id_len :]
-
-            lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)
-
-            for i, done in enumerate(self.done_tracker):
-                if not done:
-                    self.done_tracker[i] = self.sequence in lookback_tokens_batch[i]
-            return False not in self.done_tracker
-
-    def get_stopping_criteria(self, input_ids: torch.Tensor):
-        eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
-        stop_sequences = self.generation_parameters.generate_until + [eos]
-        return StoppingCriteriaList(
-            [
-                *[
-                    self._MultiTokenEOSCriteria(
-                        sequence, self.tokenizer, input_ids.shape[1], input_ids.shape[0]
-                    )
-                    for sequence in stop_sequences
-                ],
-            ]
-        )
 
     def generate(self, **args):
         """
@@ -390,9 +465,6 @@ class WhiteboxModel(Model):
             ModelOutput: HuggingFace generation output with scores overriden with original probabilities.
         """
         default_params = asdict(self.generation_parameters)
-
-        if len(self.generation_parameters.generate_until) > 0:
-            args["stopping_criteria"] = self.get_stopping_criteria(args["input_ids"])
 
         # add ScoresProcessor to collect original scores
         processor = self._ScoresProcessor()
@@ -407,8 +479,11 @@ class WhiteboxModel(Model):
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
-        args = _validate_args(args)
 
+        if "stop_strings" in args:
+            args["tokenizer"] = self.tokenizer
+
+        args = self._validate_args(args)
         generation = self.model.generate(**args)
 
         # override generation.scores with original scores from model
@@ -426,7 +501,11 @@ class WhiteboxModel(Model):
         Return:
             List[str]: corresponding model generations. Have the same length as `input_texts`.
         """
-        args = _validate_args(args)
+        # Apply default parameters first, then override with provided args
+        default_params = asdict(self.generation_parameters)
+        default_params.update(args)
+        args = self._validate_args(default_params)
+
         args["return_dict_in_generate"] = True
         batch: Dict[str, torch.Tensor] = self.tokenize(input_texts)
         batch = {k: v.to(self.device()) for k, v in batch.items()}
@@ -484,7 +563,6 @@ class WhiteboxModel(Model):
         config = AutoConfig.from_pretrained(
             model_path, trust_remote_code=True, **kwargs
         )
-        generation_params = GenerationParameters(**generation_params)
 
         if any(["CausalLM" in architecture for architecture in config.architectures]):
             model_type = "CausalLM"
@@ -532,6 +610,11 @@ class WhiteboxModel(Model):
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
+        generation_params = GenerationParametersFactory.from_params(
+            yaml_config=generation_params,
+            native_config=asdict(model.config),
+        )
+
         instance = WhiteboxModel(
             model, tokenizer, model_path, model_type, generation_params
         )
@@ -550,7 +633,8 @@ class WhiteboxModel(Model):
             dict[str, torch.Tensor]: tensors dictionary obtained by tokenizing input texts batch.
         """
         # Apply chat template if tokenizer has it
-        if self.tokenizer.chat_template is not None:
+        add_start_symbol = True
+        if self.instruct:
             formatted_texts = []
             for chat in texts:
                 if isinstance(chat, str):
@@ -561,7 +645,13 @@ class WhiteboxModel(Model):
                 formatted_texts.append(formatted_chat)
             texts = formatted_texts
 
-        return self.tokenizer(texts, padding=True, return_tensors="pt")
+            add_start_symbol = False
+        return self.tokenizer(
+            texts,
+            padding=True,
+            return_tensors="pt",
+            add_special_tokens=add_start_symbol,
+        )
 
 
 def create_ensemble(

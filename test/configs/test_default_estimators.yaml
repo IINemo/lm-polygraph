@@ -2,6 +2,7 @@ estimators:
   - name: MaximumSequenceProbability
   - name: Perplexity
   - name: MeanTokenEntropy
+  - name: SelfCertainty
   - name: MeanPointwiseMutualInformation
   - name: MeanConditionalPointwiseMutualInformation 
   - name: ClaimConditionedProbability
@@ -59,5 +60,37 @@ estimators:
   - name: SAR
   - name: TokenSAR
   - name: SentenceSAR
+  - name: LUQ
+  - name: EigenScore 
   - name: RenyiNeg
   - name: FisherRao
+  - name: Focus
+    cfg:
+      model_name: '${model.path}'
+      path: "${cache_path}/focus/token_idf.pkl"
+      gamma: 0.9
+      p: 0.01
+      idf_dataset: "LM-Polygraph/RedPajama-Data-100-Sample-For-Test"
+      trust_remote_code: True
+      idf_seed: 42
+      idf_dataset_size: 1000
+      spacy_path: "en_core_web_sm"
+  - name: AttentionScore
+    cfg:
+      gen_only: False
+  - name: RAUQ
+    cfg:
+      instruct: '${instruct}'
+      use_entropy: False
+  - name: RAUQ
+    cfg:
+      instruct: '${instruct}'
+      use_entropy: True
+  - name: CSL
+  - name: CocoaMSP
+  - name: CocoaPPL
+  - name: CocoaMTE
+  - name: SemanticDensity
+  - name: SemanticDensity
+    cfg:
+      concat_input: False

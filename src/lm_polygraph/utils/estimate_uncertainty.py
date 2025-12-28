@@ -1,7 +1,10 @@
-from typing import List, Union
+from typing import Optional, List, Union
+from PIL import Image
+from pathlib import Path
 from dataclasses import dataclass
 
 from lm_polygraph.utils.model import Model, WhiteboxModel
+from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 from lm_polygraph.estimators.estimator import Estimator
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.dataset import Dataset
@@ -34,7 +37,10 @@ class UncertaintyOutput:
 
 
 def estimate_uncertainty(
-    model: Model, estimator: Estimator, input_text: str
+    model: Model,
+    estimator: Estimator,
+    input_text: str,
+    input_image: Optional[Union[str, Path, Image.Image]] = None,
 ) -> UncertaintyOutput:
     """
     Estimated uncertainty of the model generation using the provided esitmator.
@@ -74,9 +80,20 @@ def estimate_uncertainty(
     UncertaintyOutput(uncertainty=1.0022274826855433, input_text='When did Albert Einstein die?', generation_text='Albert Einstein died on April 18, 1955.', model_path='gpt-3.5-turbo')
     ```
     """
-    model_type = "Whitebox" if isinstance(model, WhiteboxModel) else "Blackbox"
+    # model_type = "Whitebox" if isinstance(model, WhiteboxModel) else "Blackbox"
+    if isinstance(model, WhiteboxModel):
+        model_type = "Whitebox"
+    elif isinstance(model, VisualWhiteboxModel):
+        model_type = "VisualLM"
+    else:
+        model_type = "Blackbox"
     man = UEManager(
-        Dataset([input_text], [""], batch_size=1),
+        Dataset(
+            [input_text],
+            [""],
+            batch_size=1,
+            images=[input_image] if input_image is not None else None,
+        ),
         model,
         [estimator],
         available_stat_calculators=register_default_stat_calculators(
@@ -88,6 +105,7 @@ def estimate_uncertainty(
         processors=[],
         ignore_exceptions=False,
         verbose=False,
+        max_new_tokens=model.generation_parameters.max_new_tokens,
     )
     man()
     ue = man.estimations[estimator.level, str(estimator)]

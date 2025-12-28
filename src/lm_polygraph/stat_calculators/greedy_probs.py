@@ -1,55 +1,11 @@
 import torch
 import numpy as np
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
-from lm_polygraph.utils.model import WhiteboxModel, BlackboxModel
-
-
-class BlackboxGreedyTextsCalculator(StatCalculator):
-    """
-    Calculates generation texts for Blackbox model (lm_polygraph.BlackboxModel).
-    """
-
-    @staticmethod
-    def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
-
-        return ["greedy_texts"], []
-
-    def __init__(self):
-        super().__init__()
-
-    def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: BlackboxModel,
-        max_new_tokens: int = 100,
-    ) -> Dict[str, np.ndarray]:
-        """
-        Calculates generation texts for Blackbox model on the input batch.
-
-        Parameters:
-            dependencies (Dict[str, np.ndarray]): input statistics, can be empty (not used).
-            texts (List[str]): Input texts batch used for model generation.
-            model (Model): Model used for generation.
-            max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
-        Returns:
-            Dict[str, np.ndarray]: dictionary with List[List[float]] generation texts at 'greedy_texts' key.
-        """
-        with torch.no_grad():
-            sequences = model.generate_texts(
-                input_texts=texts,
-                max_new_tokens=max_new_tokens,
-                n=1,
-            )
-
-        return {"greedy_texts": sequences}
+from lm_polygraph.model_adapters import WhiteboxModel, WhiteboxModelvLLM
 
 
 class GreedyProbsCalculator(StatCalculator):
@@ -67,7 +23,6 @@ class GreedyProbsCalculator(StatCalculator):
         """
         Returns the statistics and dependencies for the calculator.
         """
-
         return [
             "input_texts",
             "input_tokens",
@@ -77,17 +32,67 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_texts",
             "greedy_log_likelihoods",
             "embeddings",
+            "attention_all",
+            "tokenizer",
         ], []
 
-    def __init__(self, n_alternatives: int = 10):
+    def __init__(
+        self,
+        output_attentions: bool = True,
+        output_hidden_states: bool = False,
+        n_alternatives: int = 10,
+    ):
         super().__init__()
+        self.output_attentions = output_attentions
+        self.output_hidden_states = output_hidden_states
         self.n_alternatives = n_alternatives
+
+    def _preprocess_attention(
+        self,
+        attentions: torch.Tensor,
+        current_idx: int,
+        start_idx: int,
+        end_idx: int,
+        prompt_len: int,
+    ) -> torch.Tensor:
+        """
+        Preprocess attention weights before stacking.
+
+        Parameters:
+            attentions (torch.Tensor): Attention weights from a specific layer and head for a current token
+            current_idx (int): Current position in the sequence
+            start_idx (int): Start index of the generated tokens
+            end_idx (int): End index of the generated tokens for current position
+            prompt_len (int): Length of the prompt
+
+        Returns:
+            torch.Tensor: Preprocessed attention weights
+        """
+        # Handle attention tensor processing for models with varying attention sizes (e.g. Gemma)
+        n_attentions = attentions.shape[-1]
+
+        # Handle empty tensor case
+        if attentions.nelement() == 0:
+            return torch.zeros(abs(current_idx), device=attentions.device)
+
+        # Handle cases where attention size is smaller than expected
+        if n_attentions < end_idx:
+            if start_idx < 0:
+                return attentions[start_idx:n_attentions]
+            return attentions[n_attentions - current_idx : n_attentions]
+
+        # Handle cases where attention spans beyond expected range
+        if (n_attentions - current_idx) > end_idx and start_idx < 0:
+            return attentions[prompt_len : prompt_len + current_idx]
+
+        # Default case: return attention slice within expected range
+        return attentions[start_idx:end_idx]
 
     def __call__(
         self,
         dependencies: Dict[str, np.array],
         texts: List[str],
-        model: WhiteboxModel,
+        model: Union[WhiteboxModel, WhiteboxModelvLLM],
         max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
@@ -117,8 +122,8 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_new_tokens=2,
-                output_attentions=False,
-                output_hidden_states=True,
+                output_attentions=self.output_attentions,
+                output_hidden_states=self.output_hidden_states,
                 num_return_sequences=1,
                 suppress_tokens=(
                     []
@@ -131,11 +136,19 @@ class GreedyProbsCalculator(StatCalculator):
                 ),
             )
             logits = torch.stack(out.scores, dim=1)
-
+            if model.model_type == "vLLMCausalLM":
+                logits = logits.transpose(1, 0)
             sequences = out.sequences
-            embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
-                out, batch, model.model_type
-            )
+            if self.output_attentions:
+                attentions = out.attentions
+            if self.output_hidden_states:
+                embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
+                    out, batch, model.model_type
+                )
+                if embeddings_decoder.dtype == torch.bfloat16:
+                    embeddings_decoder = embeddings_decoder.to(
+                        torch.float16
+                    )  # numpy does not support bfloat16
 
         cut_logits = []
         cut_sequences = []
@@ -145,6 +158,8 @@ class GreedyProbsCalculator(StatCalculator):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]
                 seq = sequences[i, idx:].cpu()
+            elif model.model_type == "vLLMCausalLM":
+                seq = sequences[i].cpu()
             else:
                 seq = sequences[i, 1:].cpu()
             length, text_length = len(seq), len(seq)
@@ -176,7 +191,56 @@ class GreedyProbsCalculator(StatCalculator):
             assert len(tokens) == len(log_probs)
             ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
-        if model.model_type == "CausalLM":
+        attention_all = []
+        if self.output_attentions and (model.model_type != "vLLMCausalLM"):
+            prompt_len = batch["input_ids"].shape[1]
+            for i in range(len(texts)):
+                c = len(cut_sequences[i])
+                attn_mask = np.zeros(
+                    shape=(
+                        model.model.config.num_attention_heads
+                        * model.model.config.num_hidden_layers,
+                        c,
+                        c,
+                    )
+                )
+                for j in range(1, c):
+                    # Get attention dimensions
+                    current_attention_len = attentions[j][0].shape[-1]
+
+                    # Default case: use relative indexing from end
+                    start_idx = -j
+                    end_idx = current_attention_len
+
+                    # Special case for models like Gemma that maintain consistent attention lengths
+                    if attentions[0][0].shape[-1] == current_attention_len:
+                        start_idx = prompt_len
+                        end_idx = prompt_len + j
+
+                    stacked_attention = torch.vstack(
+                        [
+                            self._preprocess_attention(
+                                attentions[j][layer][0][head][0],
+                                j,
+                                start_idx,
+                                end_idx,
+                                prompt_len,
+                            )
+                            for layer in range(len(attentions[j]))
+                            for head in range(len(attentions[j][layer][0]))
+                        ]
+                    )
+                    if stacked_attention.dtype == torch.bfloat16:
+                        stacked_attention = stacked_attention.to(
+                            torch.float16
+                        )  # numpy does not support bfloat16
+
+                    attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
+                attention_all.append(attn_mask)
+
+        if not self.output_hidden_states:
+            embeddings_dict = {}
+        elif model.model_type == "CausalLM":
             embeddings_dict = {
                 "embeddings_decoder": embeddings_decoder.cpu().detach().numpy(),
             }
@@ -197,5 +261,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_log_likelihoods": ll,
         }
         result_dict.update(embeddings_dict)
-
+        if self.output_attentions:
+            result_dict.update({"attention_all": attention_all})
+            result_dict.update({"tokenizer": model.tokenizer})
         return result_dict

@@ -1,0 +1,39 @@
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: bloomz-560m
+  - estimators: default_claim_estimators
+  - _self_
+
+cache_path: ./workdir/output
+save_path: '${hydra:run.dir}'
+instruct: true
+task: bio
+
+dataset: ['LM-Polygraph/person_bio', 'en']
+text_column: input
+eval_split: test
+max_new_tokens: 256
+load_from_disk: false
+
+subsample_eval_dataset: -1
+
+model:
+  path: mistralai/Mistral-7B-Instruct-v0.1
+
+use_claim_ue: true
+generation_metrics: [{
+  'name': 'OpenAIFactCheck'
+}]
+
+stat_calculators:
+  - auto
+
+ignore_exceptions: false
+language: en
+batch_size: 1
+
+seed:
+    - 1
