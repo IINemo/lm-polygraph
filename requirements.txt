@@ -29,7 +29,7 @@ openai>=1.52.0
 wget
 sentence-transformers
 bert-score>=0.3.13
-unbabel-comet==2.2.1
+unbabel-comet<3
 nltk>=3.7,<4
 evaluate>=0.4.2
 spacy>=3.4.0,<3.8.0
