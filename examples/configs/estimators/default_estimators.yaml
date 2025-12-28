@@ -103,3 +103,4 @@
 - name: CocoaPPL
 - name: CocoaMTE
 - name: SemanticDensity
+- name: BoostedProbSequence
