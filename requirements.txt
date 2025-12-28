@@ -10,7 +10,7 @@ bs4
 transformers==4.50.0
 nltk>=3.6.5
 sacrebleu>=1.5.0
-sentencepiece>=0.1.97
+sentencepiece>=0.2.1
 hf-lfs>=0.0.3
 pytest>=4.4.1
 pytreebank>=0.2.7
