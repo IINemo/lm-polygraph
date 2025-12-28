@@ -33,6 +33,7 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
         train_features = train_features.cuda()
 
     cov_scaled = torch.cov(train_features.T)
+    cov_scaled = torch.nan_to_num(cov_scaled, nan=0.0, posinf=0.0, neginf=0.0)
 
     # The function then iterates over each jitter_eps value in jitters and adds jitter to the scaled covariance matrix.
     # And the eigenvalues of the updated covariance matrix are computed, and if all eigenvalues are non-negative, the loop breaks.

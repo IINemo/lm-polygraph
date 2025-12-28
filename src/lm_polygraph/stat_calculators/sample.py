@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import warnings
 
 from typing import Dict, List, Tuple, Union
 
@@ -218,10 +219,15 @@ class SamplingGenerationCalculator(StatCalculator):
                 ll.append(logits[i][j][cur_token].item())
                 toks.append(cur_token)
 
-            log_likelihoods[int(i / self.samples_n)].append(ll)
-            log_probs[int(i / self.samples_n)].append(log_prob)
-            tokens[int(i / self.samples_n)].append(toks)
-            texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
+            if len(toks):
+                log_likelihoods[int(i / self.samples_n)].append(ll)
+                log_probs[int(i / self.samples_n)].append(log_prob)
+                tokens[int(i / self.samples_n)].append(toks)
+                texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
+            else:
+                warnings.warn(
+                    f"No tokens were generated for sample {i}. This sample will be skipped in the outputs."
+                )
 
         result_dict = {
             "sample_log_likelihoods": log_likelihoods,
