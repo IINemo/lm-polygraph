@@ -26,7 +26,7 @@ However code from the main branch may be unstable, so it is recommended to check
 .. code-block:: console
     
     $ git clone https://github.com/IINemo/lm-polygraph.git
-    $ git checkout tags/v0.3.0
+    $ git checkout tags/v0.5.0
     $ python3 -m venv env
     $ source env/bin/activate
     (env) $ cd lm-polygraph
@@ -49,7 +49,7 @@ To install a specific version, run:
 
     $ python3 -m venv env
     $ source env/bin/activate
-    $ pip install lm-polygraph==0.3.0
+    $ pip install lm-polygraph==0.5.0
 
 .. _quick_start:
 
