@@ -11,17 +11,14 @@ Welcome to LM-Polygraph's documentation!
    :caption: Contents:
 
    usage
-   advanced_usage
-   components/index
-   modules
    design
+   normalization/index
 
-API Reference
-========================================
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
 
-.. automodule:: lm_polygraph
-   :members:
-   
+   api/modules
 
 Indices and tables
 ==================

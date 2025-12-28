@@ -9,7 +9,7 @@ Installation
 From GitHub
 ^^^^^^^^^^^^^^^^^^
 
-To install latest from main brach, clone the repo and conduct installation using pip, it is recommended to use virtual environment.
+To install latest from main branch, clone the repo and conduct installation using pip, it is recommended to use virtual environment.
 Code example is presented below:
 
 .. code-block:: console
@@ -103,6 +103,11 @@ Uncertainty for single input
         # UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')
 
 More examples for obtaining uncertainty for single generation: ``examples/basic_example.ipynb``
+
+Advanced usage
+--------------
+
+Advanced usage example through Python API is presented in ``examples/low_level_example.ipynb``.
 
 .. _benchmarks:
 
