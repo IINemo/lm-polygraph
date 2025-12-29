@@ -100,20 +100,22 @@ class KernelLanguageEntropy(Estimator):
         """
         semantic_matrix_entail = stats["semantic_matrix_entail"]
         semantic_matrix_contra = stats["semantic_matrix_contra"]
-        
+
         kle = []
-        for matrix_entail, matrix_contra in zip(semantic_matrix_entail, semantic_matrix_contra):
+        for matrix_entail, matrix_contra in zip(
+            semantic_matrix_entail, semantic_matrix_contra
+        ):
             matrix_entail = (matrix_entail + matrix_entail.T) / 2
             matrix_contra = (matrix_contra + matrix_contra.T) / 2
-            
+
             matrix_neutral = (
-                np.ones(matrix_entail.shape)
-                - matrix_entail
-                - matrix_contra
+                np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
             )
             weighted_graph = matrix_entail + 0.5 * matrix_neutral
-                        
+
             laplacian = laplacian_matrix(weighted_graph)
             heat_kernel_score = heat_kernel(laplacian, self.t)
-            kle.append(vn_entropy(heat_kernel_score, self.normalize, self.scale, self.jitter))
+            kle.append(
+                vn_entropy(heat_kernel_score, self.normalize, self.scale, self.jitter)
+            )
         return kle
