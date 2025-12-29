@@ -52,6 +52,7 @@ def load_simple_estimators(name: str, config):
         FocusClaim,
         AttentionScore,
         AttentionScoreClaim,
+        BoostedProbClaim,
         CocoaMSP,
         CocoaPPL,
         CocoaMTE,
@@ -66,6 +67,7 @@ def load_simple_estimators(name: str, config):
         SATRMD,
         LookBackLens,
         TAD,
+        BoostedProbSequence,
     ]
 
     try:

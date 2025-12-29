@@ -8,7 +8,7 @@ from .estimator import Estimator
 
 def laplacian_matrix(weighted_graph: np.ndarray) -> np.ndarray:
     degrees = np.diag(np.sum(weighted_graph, axis=0))
-    return weighted_graph - degrees
+    return degrees - weighted_graph
 
 
 def heat_kernel(laplacian: np.ndarray, t: float) -> np.ndarray:

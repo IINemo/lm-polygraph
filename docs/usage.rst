@@ -9,7 +9,7 @@ Installation
 From GitHub
 ^^^^^^^^^^^^^^^^^^
 
-To install latest from main brach, clone the repo and conduct installation using pip, it is recommended to use virtual environment.
+To install latest from main branch, clone the repo and conduct installation using pip, it is recommended to use virtual environment.
 Code example is presented below:
 
 .. code-block:: console
@@ -26,7 +26,7 @@ However code from the main branch may be unstable, so it is recommended to check
 .. code-block:: console
     
     $ git clone https://github.com/IINemo/lm-polygraph.git
-    $ git checkout tags/v0.3.0
+    $ git checkout tags/v0.5.0
     $ python3 -m venv env
     $ source env/bin/activate
     (env) $ cd lm-polygraph
@@ -49,7 +49,7 @@ To install a specific version, run:
 
     $ python3 -m venv env
     $ source env/bin/activate
-    $ pip install lm-polygraph==0.3.0
+    $ pip install lm-polygraph==0.5.0
 
 .. _quick_start:
 
@@ -103,6 +103,11 @@ Uncertainty for single input
         # UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='bigscience/bloomz-560m')
 
 More examples for obtaining uncertainty for single generation: ``examples/basic_example.ipynb``
+
+Advanced usage
+--------------
+
+Advanced usage example through Python API is presented in ``examples/low_level_example.ipynb``.
 
 .. _benchmarks:
 
