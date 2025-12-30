@@ -41,6 +41,7 @@ def estimate_uncertainty(
     estimator: Estimator,
     input_text: str,
     input_image: Optional[Union[str, Path, Image.Image]] = None,
+    available_stat_calculators=None,
 ) -> UncertaintyOutput:
     """
     Estimated uncertainty of the model generation using the provided esitmator.
@@ -96,9 +97,8 @@ def estimate_uncertainty(
         ),
         model,
         [estimator],
-        available_stat_calculators=register_default_stat_calculators(
-            model_type
-        ),  # TODO:
+        available_stat_calculators=available_stat_calculators
+        or register_default_stat_calculators(model_type),
         builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
         generation_metrics=[],
         ue_metrics=[],
@@ -112,8 +112,6 @@ def estimate_uncertainty(
     texts = man.stats.get("greedy_texts", None)
     tokens = man.stats.get("greedy_tokens", None)
     if tokens is not None and len(tokens) > 0:
-        # Remove last token, which is the end of the sequence token
-        # since we don't include it's uncertainty in the estimator's output
         tokens = tokens[0][:-1]
     return UncertaintyOutput(
         ue[0], input_text, texts[0], tokens, model.model_path, str(estimator)

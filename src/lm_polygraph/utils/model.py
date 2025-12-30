@@ -419,6 +419,10 @@ class WhiteboxModel(Model):
         self.generation_parameters = generation_parameters
         self.instruct = instruct
 
+        # Ensure padding token is available for batch operations.
+        if self.tokenizer.pad_token is None and self.tokenizer.eos_token is not None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
     def _validate_args(self, args):
         """
         Validates and adapts arguments for WhiteboxModel generation.
