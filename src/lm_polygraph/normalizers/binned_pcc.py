@@ -80,7 +80,7 @@ class BinnedPCCNormalizer(BaseUENormalizer):
 
         self.params = {"binned_metric": binned_metric, "bin_edges": bin_edges}
 
-    def transform(self, ues: np.ndarray) -> np.ndarray:
+    def transform(self, ues: list) -> np.ndarray:
         """Transforms the ues data using the fitted BinnedPCCNormalizer."""
         bins = np.array(self.params["bin_edges"])
         calibrated_ues = []
