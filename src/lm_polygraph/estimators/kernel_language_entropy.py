@@ -98,15 +98,24 @@ class KernelLanguageEntropy(Estimator):
         5. Let Kheat = heat kernel of W, i.e. Kheat = expm(-t * L), where t is a hyperparameter.
         6. Finally, KLE(x) = VNE(Kheat), where VNE(A) = -Tr(A log A).
         """
-        semantic_matrix_neutral = (
-            np.ones(stats["semantic_matrix_entail"].shape)
-            - stats["semantic_matrix_entail"]
-            - stats["semantic_matrix_contra"]
-        )
-        weighted_graph = stats["semantic_matrix_entail"] + 0.5 * semantic_matrix_neutral
-        laplacian = laplacian_matrix(weighted_graph)
-        heat_kernels = heat_kernel(laplacian, self.t)
-        return [
-            -vn_entropy(heat_kernel, self.normalize, self.scale, self.jitter)
-            for heat_kernel in heat_kernels
-        ]
+        semantic_matrix_entail = stats["semantic_matrix_entail"]
+        semantic_matrix_contra = stats["semantic_matrix_contra"]
+
+        kle = []
+        for matrix_entail, matrix_contra in zip(
+            semantic_matrix_entail, semantic_matrix_contra
+        ):
+            matrix_entail = (matrix_entail + matrix_entail.T) / 2
+            matrix_contra = (matrix_contra + matrix_contra.T) / 2
+
+            matrix_neutral = (
+                np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
+            )
+            weighted_graph = matrix_entail + 0.5 * matrix_neutral
+
+            laplacian = laplacian_matrix(weighted_graph)
+            heat_kernel_score = heat_kernel(laplacian, self.t)
+            kle.append(
+                vn_entropy(heat_kernel_score, self.normalize, self.scale, self.jitter)
+            )
+        return kle
