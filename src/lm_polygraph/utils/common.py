@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 import logging
 import importlib.util
 from PIL import Image
@@ -57,6 +57,26 @@ def flatten_results(results, result_generator_class):
     # Flatten the list of lists into a single list
     # The expected shape is [num_inputs, num_token_level_results_per_input]
     return [result for sample_results in results for result in sample_results]
+
+
+def process_layers(estimators: List) -> List[int]:
+    """
+    Extracts required layer indices from estimators.
+
+    Args:
+        estimators (List[Estimator]): List of estimators.
+
+    Returns:
+        List[int]: List of layer indices corresponding to each embedding stat.
+    """
+    layers = []
+    for estimator in estimators:
+        if hasattr(estimator, "layer"):
+            layers.append(estimator.layer)
+        elif hasattr(estimator, "layers"):
+            layers.extend(estimator.layers)
+
+    return set(layers)
 
 
 def load_processor(model_path, **kwargs):

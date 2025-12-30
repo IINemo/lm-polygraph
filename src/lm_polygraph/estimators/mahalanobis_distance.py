@@ -93,6 +93,8 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
 
 
 def create_cuda_tensor_from_numpy(array):
+    if isinstance(array, list):
+        array = np.stack(array)
     if not isinstance(array, torch.Tensor):
         array = torch.from_numpy(array)
     if torch.cuda.is_available():
@@ -106,8 +108,12 @@ class MahalanobisDistanceSeq(Estimator):
         embeddings_type: str = "decoder",
         parameters_path: str = None,
         normalize: bool = False,
+        layer: int = -1,
     ):
+
         super().__init__(["embeddings", "train_embeddings"], "sequence")
+        self.layer_name = f"_{layer}" if layer != -1 else ""
+        self.layer = layer
         self.centroid = None
         self.sigma_inv = None
         self.parameters_path = parameters_path
@@ -121,41 +127,49 @@ class MahalanobisDistanceSeq(Estimator):
             self.full_path = f"{self.parameters_path}/md_{self.embeddings_type}"
             os.makedirs(self.full_path, exist_ok=True)
 
-            if os.path.exists(f"{self.full_path}/centroid.pt"):
-                self.centroid = torch.load(f"{self.full_path}/centroid.pt")
-                self.sigma_inv = torch.load(f"{self.full_path}/sigma_inv.pt")
-                self.max = torch.load(f"{self.full_path}/max.pt")
-                self.min = torch.load(f"{self.full_path}/min.pt")
+            if os.path.exists(f"{self.full_path}/centroid{self.layer_name}.pt"):
+                self.centroid = torch.load(
+                    f"{self.full_path}/centroid{self.layer_name}.pt"
+                )
+                self.sigma_inv = torch.load(
+                    f"{self.full_path}/sigma_inv{self.layer_name}.pt"
+                )
+                self.max = torch.load(f"{self.full_path}/max{self.layer_name}.pt")
+                self.min = torch.load(f"{self.full_path}/min{self.layer_name}.pt")
                 self.is_fitted = True
 
     def __str__(self):
-        return f"MahalanobisDistanceSeq_{self.embeddings_type}"
+        return f"MahalanobisDistanceSeq_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         # take the embeddings
         embeddings = create_cuda_tensor_from_numpy(
-            stats[f"embeddings_{self.embeddings_type}"]
+            stats[f"embeddings_{self.embeddings_type}{self.layer_name}"]
         )
 
         # compute centroids if not given
         if not self.is_fitted:
             train_embeddings = create_cuda_tensor_from_numpy(
-                stats[f"train_embeddings_{self.embeddings_type}"]
+                stats[f"train_embeddings_{self.embeddings_type}{self.layer_name}"]
             )
             self.centroid = train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
-                torch.save(self.centroid, f"{self.full_path}/centroid.pt")
+                torch.save(
+                    self.centroid, f"{self.full_path}/centroid{self.layer_name}.pt"
+                )
 
         # compute inverse covariance matrix if not given
         if not self.is_fitted:
             train_embeddings = create_cuda_tensor_from_numpy(
-                stats[f"train_embeddings_{self.embeddings_type}"]
+                stats[f"train_embeddings_{self.embeddings_type}{self.layer_name}"]
             )
             self.sigma_inv, _ = compute_inv_covariance(
                 self.centroid.unsqueeze(0), train_embeddings
             )
             if self.parameters_path is not None:
-                torch.save(self.sigma_inv, f"{self.full_path}/sigma_inv.pt")
+                torch.save(
+                    self.sigma_inv, f"{self.full_path}/sigma_inv{self.layer_name}.pt"
+                )
             self.is_fitted = True
 
         if torch.cuda.is_available():
@@ -175,11 +189,11 @@ class MahalanobisDistanceSeq(Estimator):
         if self.max < dists.max():
             self.max = dists.max()
             if self.parameters_path is not None:
-                torch.save(self.max, f"{self.full_path}/max.pt")
+                torch.save(self.max, f"{self.full_path}/max{self.layer_name}.pt")
         if self.min > dists.min():
             self.min = dists.min()
             if self.parameters_path is not None:
-                torch.save(self.min, f"{self.full_path}/min.pt")
+                torch.save(self.min, f"{self.full_path}/min{self.layer_name}.pt")
 
         # norlmalise if required
         if self.normalize:

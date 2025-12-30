@@ -48,17 +48,17 @@ class AttentionScore(Estimator):
         gen_only: bool = False,
     ):
         super().__init__(["forwardpass_attention_weights", "greedy_tokens"], "sequence")
-        self.layer = layer
+        self.attention_layer = layer
         self.gen_only = gen_only
 
     def __str__(self):
         if self.gen_only:
-            return f"AttentionScore gen-only (layer={self.layer})"
-        return f"AttentionScore (layer={self.layer})"
+            return f"AttentionScore gen-only (layer={self.attention_layer})"
+        return f"AttentionScore (layer={self.attention_layer})"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        if self.layer is None:
-            self.layer = stats["model"].model.config.num_hidden_layers // 2
+        if self.attention_layer is None:
+            self.attention_layer = stats["model"].model.config.num_hidden_layers // 2
 
         forwardpass_attention_weights_original = stats["forwardpass_attention_weights"]
         # check nan and unpad
@@ -73,7 +73,7 @@ class AttentionScore(Estimator):
             # Handle different attention weight shapes
             if attention_weight.ndim == 4:
                 # Standard shape: (layers, heads, seq_len, seq_len)
-                layer_attention = attention_weight[self.layer]
+                layer_attention = attention_weight[self.attention_layer]
                 num_heads = layer_attention.shape[0]
 
                 for head_idx in range(num_heads):
@@ -102,7 +102,7 @@ class AttentionScore(Estimator):
             elif attention_weight.ndim == 5:
                 # Visual model shape: (layers, batch=1, heads, seq_len, seq_len)
                 # Take the first (and only) batch element
-                layer_attention = attention_weight[self.layer, 0, :, :, :]
+                layer_attention = attention_weight[self.attention_layer, 0, :, :, :]
                 num_heads = layer_attention.shape[0]
 
                 for head_idx in range(num_heads):

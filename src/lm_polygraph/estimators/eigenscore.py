@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.linalg import eigh
-
 from typing import Dict
 
 from lm_polygraph.estimators.estimator import Estimator
