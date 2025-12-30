@@ -88,11 +88,17 @@ def register_default_stat_calculators(
             )
 
     elif model_type == "Whitebox":
-        from lm_polygraph.stat_calculators.ensemble_probs import EnsembleProbsCalculator
-
+        _register(
+            GreedyProbsCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsCalculator",
+            {
+                "output_attentions": output_attentions,
+                "output_hidden_states": output_hidden_states,
+            },
+        )
         _register(
             EnsembleProbsCalculator,
-            "lm_polygraph.stat_calculators.ensemble_probs",
+            "lm_polygraph.defaults.stat_calculator_builders.default_EnsembleProbsCalculator",
             {
                 "instructions": [
                     "Classify the sentiment of the text.",
@@ -101,14 +107,6 @@ def register_default_stat_calculators(
                 ],
                 "class_labels": ["positive", "negative", "neutral"],
                 "few_shot_examples": None,
-            },
-        )
-        _register(
-            GreedyProbsCalculator,
-            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyProbsCalculator",
-            {
-                "output_attentions": output_attentions,
-                "output_hidden_states": output_hidden_states,
             },
         )
         _register(EntropyCalculator)

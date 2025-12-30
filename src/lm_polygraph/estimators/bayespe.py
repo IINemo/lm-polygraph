@@ -53,6 +53,100 @@ def smooth_probs_3d(probs_3d: np.ndarray) -> np.ndarray:
     return probs_new
 
 
+def compute_ensemble_probs(
+    model,
+    input_texts: List[str],
+    instructions: List[str],
+    class_labels: List[str],
+    few_shot_examples: Optional[List[Dict[str, str]]] = None,
+    prompt_formatting: Optional[str] = None,
+) -> np.ndarray:
+    """
+    Compute ensemble probabilities for each instruction prompt.
+
+    Args:
+        model: WhiteboxModel instance.
+        input_texts: List of input texts.
+        instructions: List of instruction prompts.
+        class_labels: List of class label strings.
+        few_shot_examples: Optional few-shot examples.
+        prompt_formatting: Optional custom prompt template.
+
+    Returns:
+        3D array [n_samples, n_classes, n_instructions] of probabilities.
+    """
+    n_samples = len(input_texts)
+    n_classes = len(class_labels)
+    n_instructions = len(instructions)
+
+    ensemble_probs = np.zeros((n_samples, n_classes, n_instructions), dtype=np.float32)
+    tokenizer = model.tokenizer
+
+    def format_prompt(instruction: str, input_text: str) -> str:
+        options = ", ".join(class_labels)
+        examples_block = ""
+        if few_shot_examples:
+            formatted_examples = [
+                f"Input: {ex['text']}\nLabel: {ex['label']}" for ex in few_shot_examples
+            ]
+            examples_block = "\n\n".join(formatted_examples)
+
+        if prompt_formatting:
+            return prompt_formatting.format(
+                instruction=instruction,
+                input_text=input_text,
+                options=options,
+                examples=examples_block,
+            )
+
+        prompt_parts = [instruction.strip(), f"Options: {options}"]
+        if examples_block:
+            prompt_parts.append("Examples:")
+            prompt_parts.append(examples_block)
+        prompt_parts.append(f"Input: {input_text}\nLabel:")
+        return "\n".join(prompt_parts)
+
+    def label_logprob(prompt_ids: List[int], label_ids: List[int]) -> float:
+        if len(label_ids) == 0:
+            return float("-inf")
+
+        device = model.device()
+        input_ids = torch.tensor([prompt_ids + label_ids], device=device)
+        attention_mask = torch.ones_like(input_ids)
+
+        labels = torch.full_like(input_ids, -100)
+        labels[0, len(prompt_ids) :] = torch.tensor(label_ids, device=device)
+
+        with torch.no_grad():
+            outputs = model.model(
+                input_ids=input_ids, attention_mask=attention_mask, labels=labels
+            )
+
+        log_prob = -outputs.loss * len(label_ids)
+        return float(log_prob.detach().cpu())
+
+    for i, text in enumerate(input_texts):
+        for j, instruction in enumerate(instructions):
+            prompt = format_prompt(instruction, text)
+            prompt_ids = (
+                tokenizer(prompt, return_tensors="pt", add_special_tokens=True)
+                .input_ids[0]
+                .tolist()
+            )
+
+            label_logprobs = []
+            for label in class_labels:
+                label_ids = tokenizer.encode(label, add_special_tokens=False)
+                label_logprobs.append(label_logprob(prompt_ids, label_ids))
+
+            label_probs = torch.softmax(
+                torch.tensor(label_logprobs, dtype=torch.float32), dim=-1
+            )
+            ensemble_probs[i, :, j] = label_probs.cpu().numpy()
+
+    return ensemble_probs
+
+
 class BayesianLoss(nn.Module):
     """
     BayesPE loss function (Equation 4 in the paper).
@@ -83,15 +177,12 @@ class BayesianLoss(nn.Module):
         Returns:
             BayesPE loss value.
         """
-        # Softmax to get normalized weights
         scales = torch.exp(scales_logits) / (
             torch.sum(torch.exp(scales_logits)) + SMALL_CONSTANT
         )
-        # Negative log-likelihood of ensemble predictions
         likelihood = torch.sum(
             torch.log(torch.matmul(probs_y.double(), scales.double()) + SMALL_CONSTANT)
         )
-        # Entropy regularization (encourages weight diversity)
         entropy = -torch.dot(
             scales.double(), torch.log(scales.double() + SMALL_CONSTANT)
         )
@@ -152,18 +243,14 @@ class EnsembleScaler:
         Returns:
             Tuple of (optimized weights, list of loss values).
         """
-        # Determine device (use GPU if available)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Extract probabilities for ground-truth labels
         probs_y_np = self.extract_probs_y(probs_train, gt_labels)
         probs_y = torch.from_numpy(probs_y_np).to(device)
 
-        # Initialize weight logits
         n_instructions = probs_train.shape[2]
         scales = nn.Parameter(torch.ones(n_instructions, device=device))
 
-        # LBFGS optimizer (as in original BayesPE paper)
         optimizer = optim.LBFGS(
             [scales], lr=lr, max_iter=100, line_search_fn="strong_wolfe"
         )
@@ -216,7 +303,7 @@ class BayesPEZeroShot(Estimator):
             n_iterations_weights_optimiser: Number of LBFGS iterations for weight optimization.
             kl_weight: Weight for entropy regularization in BayesPE loss.
         """
-        super().__init__(["ensemble_probs"], "sequence")
+        super().__init__(["input_texts"], "sequence")
         self.instructions = instructions
         self.class_labels = class_labels
         self.prompt_formatting = prompt_formatting
@@ -231,7 +318,7 @@ class BayesPEZeroShot(Estimator):
         self,
         val_probs_ensemble: np.ndarray,
         val_labels: np.ndarray,
-        learning_rate: float = 0.001,
+        learning_rate: float = 0.00001,
         verbose: bool = False,
     ) -> np.ndarray:
         """
@@ -252,9 +339,21 @@ class BayesPEZeroShot(Estimator):
             n_iterations=self.n_iterations_weights_optimiser,
             verbose=verbose,
         )
-        weights, _ = scaler.train(
-            probs, val_labels, lr=learning_rate, kl_weight=self.kl_weight
-        )
+
+        nan_cost = True
+        lr = learning_rate
+        while nan_cost:
+            weights, costs = scaler.train(
+                probs, val_labels, lr=lr, kl_weight=self.kl_weight
+            )
+            if not np.isnan(costs[-1]):
+                nan_cost = False
+            else:
+                lr = lr * 0.5
+                if lr < 1e-10:
+                    weights = np.ones(len(self.instructions)) / len(self.instructions)
+                    break
+
         self.weights = weights
         return weights
 
@@ -279,7 +378,7 @@ class BayesPEZeroShot(Estimator):
         chosen_weights = chosen_weights / np.sum(chosen_weights)
         probs = test_probs_ensemble[:, :, chosen_indices]
         probs = smooth_probs_3d(probs)
-        # Weighted sum over instructions
+        
         ensemble_probs = np.tensordot(probs, chosen_weights, axes=([2], [0]))
         ensemble_probs = ensemble_probs / np.sum(ensemble_probs, axis=1, keepdims=True)
         return ensemble_probs
@@ -299,15 +398,42 @@ class BayesPEZeroShot(Estimator):
         Compute uncertainty scores from ensemble probabilities.
 
         Args:
-            stats: Dictionary containing "ensemble_probs" key with
-                   3D array [n_samples, n_classes, n_instructions].
+            stats: Dictionary containing either:
+                   - "ensemble_probs": precomputed 3D array [n_samples, n_classes, n_instructions]
+                   - or "model" and "input_texts" to compute ensemble_probs on the fly
 
         Returns:
             1D array of entropy-based uncertainty scores.
         """
-        probs_ensemble = stats["ensemble_probs"]
+        if "ensemble_probs" in stats:
+            probs_ensemble = stats["ensemble_probs"]
+            
+            if probs_ensemble.shape[2] != len(self.instructions):
+                raise ValueError(
+                    f"ensemble_probs has {probs_ensemble.shape[2]} instructions, "
+                    f"but estimator has {len(self.instructions)}. "
+                    f"Pass matching instructions to EnsembleProbsCalculator."
+                )
+        elif "model" in stats and "input_texts" in stats:
+            if self.class_labels is None:
+                raise ValueError(
+                    "class_labels must be provided to compute ensemble_probs"
+                )
+            probs_ensemble = compute_ensemble_probs(
+                model=stats["model"],
+                input_texts=stats["input_texts"],
+                instructions=self.instructions,
+                class_labels=self.class_labels,
+                few_shot_examples=None,
+                prompt_formatting=self.prompt_formatting,
+            )
+        else:
+            raise ValueError(
+                "stats must contain either 'ensemble_probs' or both 'model' and 'input_texts'"
+            )
+
         ensemble_probs = self.forward(probs_ensemble)
-        # Uncertainty as entropy of ensemble distribution
+        
         entropy = -np.sum(ensemble_probs * np.log(ensemble_probs + 1e-10), axis=1)
         return entropy
 
@@ -338,7 +464,7 @@ class BayesPEFewShot(Estimator):
             n_iterations_weights_optimiser: Number of LBFGS iterations.
             kl_weight: Weight for entropy regularization.
         """
-        super().__init__(["ensemble_probs"], "sequence")
+        super().__init__(["input_texts"], "sequence")
         self.instructions = instructions
         self.few_shot_examples = few_shot_examples
         self.class_labels = class_labels
@@ -357,7 +483,7 @@ class BayesPEFewShot(Estimator):
         self,
         val_probs_ensemble: np.ndarray,
         val_labels: np.ndarray,
-        learning_rate: float = 0.001,
+        learning_rate: float = 0.00001,
         verbose: bool = False,
     ) -> np.ndarray:
         """
@@ -377,9 +503,21 @@ class BayesPEFewShot(Estimator):
             n_iterations=self.n_iterations_weights_optimiser,
             verbose=verbose,
         )
-        weights, _ = scaler.train(
-            probs, val_labels, lr=learning_rate, kl_weight=self.kl_weight
-        )
+
+        nan_cost = True
+        lr = learning_rate
+        while nan_cost:
+            weights, costs = scaler.train(
+                probs, val_labels, lr=lr, kl_weight=self.kl_weight
+            )
+            if not np.isnan(costs[-1]):
+                nan_cost = False
+            else:
+                lr = lr * 0.5
+                if lr < 1e-10:
+                    weights = np.ones(len(self.instructions)) / len(self.instructions)
+                    break
+
         self.weights = weights
         return weights
 
@@ -422,12 +560,39 @@ class BayesPEFewShot(Estimator):
         Compute uncertainty scores from ensemble probabilities.
 
         Args:
-            stats: Dictionary containing "ensemble_probs" key.
+            stats: Dictionary containing either:
+                   - "ensemble_probs": precomputed 3D array [n_samples, n_classes, n_instructions]
+                   - or "model" and "input_texts" to compute ensemble_probs on the fly
 
         Returns:
             1D array of entropy-based uncertainty scores.
         """
-        probs_ensemble = stats["ensemble_probs"]
+        if "ensemble_probs" in stats:
+            probs_ensemble = stats["ensemble_probs"]
+            if probs_ensemble.shape[2] != len(self.instructions):
+                raise ValueError(
+                    f"ensemble_probs has {probs_ensemble.shape[2]} instructions, "
+                    f"but estimator has {len(self.instructions)}. "
+                    f"Pass matching instructions to EnsembleProbsCalculator."
+                )
+        elif "model" in stats and "input_texts" in stats:
+            if self.class_labels is None:
+                raise ValueError(
+                    "class_labels must be provided to compute ensemble_probs"
+                )
+            probs_ensemble = compute_ensemble_probs(
+                model=stats["model"],
+                input_texts=stats["input_texts"],
+                instructions=self.instructions,
+                class_labels=self.class_labels,
+                few_shot_examples=self.few_shot_examples,
+                prompt_formatting=self.prompt_formatting,
+            )
+        else:
+            raise ValueError(
+                "stats must contain either 'ensemble_probs' or both 'model' and 'input_texts'"
+            )
+
         ensemble_probs = self.forward(probs_ensemble)
         entropy = -np.sum(ensemble_probs * np.log(ensemble_probs + 1e-10), axis=1)
         return entropy

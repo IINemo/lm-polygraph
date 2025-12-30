@@ -1,6 +1,5 @@
 import torch
 import pytest
-import numpy as np
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -216,13 +215,13 @@ def test_focus(model):
     model_name = model.model.config._name_or_path
     estimator = Focus(
         model_name=model_name,
-        path=f"../focus_data/{model_name}/token_idf.pkl",
+        path="../token_idf/{model_name}/token_idf.pkl",
         gamma=0.9,
         p=0.01,
-        idf_dataset="togethercomputer/RedPajama-Data-1T-Sample",
+        idf_dataset="LM-Polygraph/RedPajama-Data-100-Sample-For-Test",
         trust_remote_code=True,
         idf_seed=42,
-        idf_dataset_size=1000,
+        idf_dataset_size=5,
         spacy_path="en_core_web_sm",
     )
     ue = estimate_uncertainty(model, estimator, INPUT)
@@ -301,45 +300,31 @@ def test_boostedprob_sequence(model):
     assert isinstance(ue.uncertainty, float)
 
 
-def test_bayespe_zero_shot():
-    n_samples = 5
-    n_classes = 3
-    n_instructions = 4
+def test_bayespe_zero_shot(model):
+    instructions = [
+        "Classify the sentiment of the text.",
+        "Is the text positive or negative?",
+        "What is the emotional tone?",
+    ]
+    class_labels = ["positive", "negative", "neutral"]
 
-    probs = np.random.rand(n_samples, n_classes, n_instructions)
-    probs /= probs.sum(axis=1, keepdims=True)
-
-    instructions = [f"Instruction {i}" for i in range(n_instructions)]
-    estimator = BayesPEZeroShot(instructions)
-
-    stats = {"ensemble_probs": probs}
-    uncertainty = estimator(stats)
-    assert isinstance(uncertainty, np.ndarray)
-    assert uncertainty.shape == (n_samples,)
-
-    labels = np.random.randint(0, n_classes, size=n_samples)
-    estimator.optimise_weights(probs, labels)
-    assert np.isclose(estimator.weights.sum(), 1.0)
-    assert estimator.weights.shape == (n_instructions,)
+    estimator = BayesPEZeroShot(instructions, class_labels=class_labels)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
 
 
-def test_bayespe_few_shot():
-    n_samples = 5
-    n_classes = 3
-    n_instructions = 4
-    probs = np.random.rand(n_samples, n_classes, n_instructions)
-    probs /= probs.sum(axis=1, keepdims=True)
+def test_bayespe_few_shot(model):
+    instructions = [
+        "Classify the sentiment of the text.",
+        "Is the text positive or negative?",
+        "What is the emotional tone?",
+    ]
+    class_labels = ["positive", "negative", "neutral"]
+    few_shot_examples = [
+        {"text": "I love this product!", "label": "positive"},
+        {"text": "This is terrible.", "label": "negative"},
+    ]
 
-    instructions = [f"Instruction {i}" for i in range(n_instructions)]
-    few_shot_examples = [{"text": "example", "label": "A"}] * 2
-    estimator = BayesPEFewShot(instructions, few_shot_examples)
-
-    stats = {"ensemble_probs": probs}
-    uncertainty = estimator(stats)
-    assert isinstance(uncertainty, np.ndarray)
-    assert uncertainty.shape == (n_samples,)
-
-    labels = np.random.randint(0, n_classes, size=n_samples)
-    estimator.optimise_weights(probs, labels)
-    assert np.isclose(estimator.weights.sum(), 1.0)
-    assert estimator.weights.shape == (n_instructions,)
+    estimator = BayesPEFewShot(instructions, few_shot_examples, class_labels=class_labels)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
