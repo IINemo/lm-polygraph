@@ -378,7 +378,7 @@ class BayesPEZeroShot(Estimator):
         chosen_weights = chosen_weights / np.sum(chosen_weights)
         probs = test_probs_ensemble[:, :, chosen_indices]
         probs = smooth_probs_3d(probs)
-        
+
         ensemble_probs = np.tensordot(probs, chosen_weights, axes=([2], [0]))
         ensemble_probs = ensemble_probs / np.sum(ensemble_probs, axis=1, keepdims=True)
         return ensemble_probs
@@ -407,7 +407,7 @@ class BayesPEZeroShot(Estimator):
         """
         if "ensemble_probs" in stats:
             probs_ensemble = stats["ensemble_probs"]
-            
+
             if probs_ensemble.shape[2] != len(self.instructions):
                 raise ValueError(
                     f"ensemble_probs has {probs_ensemble.shape[2]} instructions, "
@@ -433,7 +433,7 @@ class BayesPEZeroShot(Estimator):
             )
 
         ensemble_probs = self.forward(probs_ensemble)
-        
+
         entropy = -np.sum(ensemble_probs * np.log(ensemble_probs + 1e-10), axis=1)
         return entropy
 

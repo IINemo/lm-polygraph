@@ -325,6 +325,8 @@ def test_bayespe_few_shot(model):
         {"text": "This is terrible.", "label": "negative"},
     ]
 
-    estimator = BayesPEFewShot(instructions, few_shot_examples, class_labels=class_labels)
+    estimator = BayesPEFewShot(
+        instructions, few_shot_examples, class_labels=class_labels
+    )
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)

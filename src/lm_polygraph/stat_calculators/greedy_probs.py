@@ -269,7 +269,3 @@ class GreedyProbsCalculator(StatCalculator):
             result_dict.update({"attention_all": attention_all})
             result_dict.update({"tokenizer": model.tokenizer})
         return result_dict
-
-
-def load_stat_calculator(config, environment):
-    return GreedyProbsCalculator()
