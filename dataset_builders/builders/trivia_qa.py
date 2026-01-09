@@ -179,6 +179,6 @@ CONFIG = {
         few_shot_prompt="Question: {question}\nAnswer: {answer}",
         subset="simple_instruct",
         end_answer="Answer: ",
-        few_shot_prompt_end="Now answer the following question:/n/n",
+        few_shot_prompt_end="Now answer the following question:\n\n",
     ),
 }
