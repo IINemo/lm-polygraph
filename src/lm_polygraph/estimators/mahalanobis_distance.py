@@ -33,6 +33,7 @@ def compute_inv_covariance(centroids, train_features, jitters=None):
         train_features = train_features.cuda()
 
     cov_scaled = torch.cov(train_features.T)
+    cov_scaled = torch.nan_to_num(cov_scaled, nan=0.0, posinf=0.0, neginf=0.0)
 
     # The function then iterates over each jitter_eps value in jitters and adds jitter to the scaled covariance matrix.
     # And the eigenvalues of the updated covariance matrix are computed, and if all eigenvalues are non-negative, the loop breaks.
@@ -70,6 +71,13 @@ def mahalanobis_distance_with_known_centroids_sigma_inv(
     # step 2: the Mahalanobis distance is computed using the formula: sqrt(diff @ sigmainv @ diff),
     #  where diff is reshaped to match the dimensions of sigmainv.
 
+    # Check for dtype mismatch and cast if necessary
+    # (expect float32; float16 causes error)
+    expected_dtype = torch.float32
+    if diff.dtype != expected_dtype:
+        diff = diff.to(expected_dtype)
+    if sigma_inv.dtype != expected_dtype:
+        sigma_inv = sigma_inv.to(expected_dtype)
     dists = torch.sqrt(torch.einsum("bcd,da,bsa->bcs", diff, sigma_inv, diff))
     device = dists.device
 

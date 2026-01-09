@@ -56,6 +56,9 @@
   cfg:
     similarity_score: "Jaccard_score"
 - name: SemanticEntropy
+- name: SemanticEntropy
+  cfg:
+    entropy_estimation: "direct"
 - name: SAR
 - name: TokenSAR
 - name: SentenceSAR
@@ -100,3 +103,4 @@
 - name: CocoaPPL
 - name: CocoaMTE
 - name: SemanticDensity
+- name: BoostedProbSequence

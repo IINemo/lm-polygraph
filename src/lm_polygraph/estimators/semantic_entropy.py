@@ -14,12 +14,23 @@ class SemanticEntropy(Estimator):
     This method calculates the generation entropy estimations merged by semantic classes using Monte-Carlo.
     The number of samples is controlled by lm_polygraph.stat_calculators.sample.SamplingGenerationCalculator
     'samples_n' parameter.
+
+    The entropy_estimation parameter supports two methods:
+    - "mean": Mean entropy estimation from the original paper (https://arxiv.org/abs/2302.09664).
+    - "direct": Direct entropy estimation from the proper estimator in the SDLG paper
+      (https://arxiv.org/pdf/2406.04306).
     """
 
     def __init__(
-        self, verbose: bool = False, class_probability_estimation: str = "sum"
+        self,
+        verbose: bool = False,
+        class_probability_estimation: str = "sum",
+        entropy_estimation: str = "mean",
+        use_unique_responses: bool = False,
     ):
         self.class_probability_estimation = class_probability_estimation
+        self.entropy_estimation = entropy_estimation
+        self.use_unique_responses = use_unique_responses
         if self.class_probability_estimation == "sum":
             deps = ["sample_log_probs", "sample_texts", "semantic_classes_entail"]
         elif self.class_probability_estimation == "frequency":
@@ -33,10 +44,12 @@ class SemanticEntropy(Estimator):
         self.verbose = verbose
 
     def __str__(self):
+        entropy_estimation = " (Direct)" if self.entropy_estimation == "direct" else ""
         if self.class_probability_estimation == "sum":
-            return "SemanticEntropy"
+            class_probability_estimation = "Unique" if self.use_unique_responses else ""
+            return f"SemanticEntropy{class_probability_estimation}" + entropy_estimation
         elif self.class_probability_estimation == "frequency":
-            return "SemanticEntropyEmpirical"
+            return "SemanticEntropyEmpirical" + entropy_estimation
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -80,6 +93,13 @@ class SemanticEntropy(Estimator):
                     np.array(loglikelihoods_list[i])[np.array(class_idx)]
                     for class_idx in self._class_to_sample[i]
                 ]
+                if self.use_unique_responses:
+                    unique_hyps_ids = self.get_unique_hypos_by_class(i, hyps_list)
+
+                    class_likelihoods = [
+                        likelihoods[ids]
+                        for ids, likelihoods in zip(unique_hyps_ids, class_likelihoods)
+                    ]
                 class_lp = [
                     np.logaddexp.reduce(likelihoods)
                     for likelihoods in class_likelihoods
@@ -95,10 +115,33 @@ class SemanticEntropy(Estimator):
 
             if log_weights[i] is None:
                 log_weights[i] = [0 for _ in hyps_list[i]]
-            semantic_logits[i] = -np.mean(
-                [
-                    class_lp[self._sample_to_class[i][j]] * np.exp(log_weights[i][j])
-                    for j in range(len(hyps_list[i]))
-                ]
-            )
+            if self.entropy_estimation == "mean":
+                semantic_logits[i] = -np.mean(
+                    [
+                        class_lp[self._sample_to_class[i][j]]
+                        * np.exp(log_weights[i][j])
+                        for j in range(len(hyps_list[i]))
+                    ]
+                )
+            elif self.entropy_estimation == "direct":
+                semantic_logits[i] = -np.sum(
+                    [
+                        class_lp[self._sample_to_class[i][j]]
+                        * np.exp(class_lp[self._sample_to_class[i][j]])
+                        for j in range(len(hyps_list[i]))
+                    ]
+                )
+            else:
+                raise ValueError(
+                    f"Unknown entropy_estimation: {self.entropy_estimation}"
+                )
         return np.array([semantic_logits[i] for i in range(len(hyps_list))])
+
+    def get_unique_hypos_by_class(self, batch_i, hyps_list):
+        class_hyps = [
+            np.array(hyps_list[batch_i])[np.array(class_idx)]
+            for class_idx in self._class_to_sample[batch_i]
+        ]
+        unique_hyps_ids = [np.unique(hyps, return_index=True)[1] for hyps in class_hyps]
+
+        return unique_hyps_ids

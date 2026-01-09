@@ -5,8 +5,10 @@ path: facebook/opt-350m
 type: vLLMCausalLM
 path_to_load_script: model/default_vllm.py
 logprobs: 20
+instruct: false
 
 load_model_args:
   gpu_memory_utilization: 0.5
+  tensor_parallel_size: 1
 
 device: cuda

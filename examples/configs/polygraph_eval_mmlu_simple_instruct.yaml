@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: ${cache_path}/${task}/${model}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 defaults:
   - model: bloomz-560m
@@ -23,7 +23,7 @@ max_new_tokens: 3
 load_from_disk: false
 size: 10000
 generation_params:
-  generate_until:
+  stop_strings:
     - "\n"
 
 subsample_eval_dataset: -1

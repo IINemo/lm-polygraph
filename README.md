@@ -1,16 +1,31 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md)
-![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow)](https://huggingface.co/LM-Polygraph)
-<a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods" target="_blank"><img src=https://img.shields.io/badge/TACL-2025-blue.svg></a>
-<a href="https://arxiv.org/pdf/2406.15627" target="_blank"><img src=https://img.shields.io/badge/arXiv-b5212f.svg></a>
+<h1>
+  <img
+    src="https://cdn-avatars.huggingface.co/v1/production/uploads/605a2d14768f56df182c99e2/RuSZrCSSKAMekMDFUSmZA.png"
+    alt="LM-Polygraph logo"
+    width="110"
+    align="left"
+  />
+  <br />
+  LM-Polygraph: Uncertainty Estimation for LLMs
+</h1>
 
-# LM-Polygraph: Uncertainty estimation for LLMs
+<br clear="all"/>
+
+<p align="left">
+  <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
+  <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12"/>
+  <a href="https://huggingface.co/LM-Polygraph"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/></a>
+  <a href="https://aclanthology.org/2023.emnlp-demo.41/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
+  <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods"><img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/></a>
+  <a href="https://sites.google.com/view/acl2025-uncertainty-for-llms/"><img src="https://img.shields.io/badge/ACL-2025-red?logo=googlescholar&logoColor=white" alt="Tutorial ACL 2025"/></a>
+</p>
 
 [Installation](#installation) | [Basic usage](#basic_usage) | [Overview](#overview_of_methods) | [Benchmark](#benchmark) | [Demo application](#demo_web_application) | [Documentation](https://lm-polygraph.readthedocs.io/)
 
-LM-Polygraph provides a battery of state-of-the-art of uncertainty estimation (UE) methods for LMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertainty can help to make applications of LLMs safer.
+LM-Polygraph provides a battery of state-of-the-art uncertainty estimation (UE) methods for LLMs in text generation tasks. High uncertainty can indicate the presence of hallucinations and knowing a score that estimates uncertainty can help to make applications of LLMs safer.
 
-The framework also introduces an extendable benchmark for consistent evaluation of UE techniques by researchers and a demo web application that enriches the standard chat dialog with confidence scores, empowering end-users to discern unreliable responses.
+LM-Polygraph is also one of the most widely used benchmarks for the consistent evaluation of uncertainty estimation and hallucination detection methods. It is adopted by hundreds of researchers and technology companies.
+
 
 ## Installation
 
@@ -58,7 +73,7 @@ ue_method = MeanTokenEntropy()
 
 3. Get predictions and their uncertainty scores:
 ```python
-from lm_polygraph.utils.manager import estimate_uncertainty
+from lm_polygraph.utils import estimate_uncertainty
 
 input_text = "Who is George Bush?"
 ue = estimate_uncertainty(model, ue_method, input_text=input_text)
@@ -80,14 +95,14 @@ from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
 model = BlackboxModel.from_openai(
     openai_api_key='YOUR_API_KEY',
     model_path='gpt-4o',
-    supports_logprobs=True  # Enable for deployments 
+    supports_logprobs=True  # Enable for deployments
 )
 
-ue_method = Perplexity()  # or DetMat(), MeanTokenEntropy(), EigValLaplacian(), etc.
+ue_method = Perplexity()  # or MeanTokenEntropy(), EigValLaplacian(), etc.
 estimate_uncertainty(model, ue_method, input_text='What has a head and a tail but no body?')
 ```
 
-UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs that do not provide logits.
+UE methods such as `EigValLaplacian()` support fully blackbox LLMs that do not provide logits.
 
 ## More examples:
 
@@ -134,6 +149,7 @@ UE methods such as `DetMat()` or `EigValLaplacian()` support fully blackbox LLMs
 | Contextualized Sequence Likelihood (CSL) [(Lin et al., 2024)](https://aclanthology.org/2024.emnlp-main.578/)              | White-box   | Information-based   | Medium     | Low    |         No          | sequence       |
 | Recurrent Attention-based Uncertainty Quantification (RAUQ) [(Vazhentsev et al., 2025)](https://arxiv.org/abs/2505.20045)              | White-box   | Information-based   | Low     | Low    |         No          | sequence       |
 | Focus [(Zhang et al., 2023)](https://aclanthology.org/2023.emnlp-main.58/)                                                                                                     | White-box   | Information-based   | Medium     | Low    |         No          | sequence/claim |
+| BoostedProb [(Dinh et al., 2025)](https://aclanthology.org/2025.emnlp-main.166/)    | White-box   | Information-based   | Low     | Low    |         No          | sequence/claim |
 | Semantic entropy [(Kuhn et al., 2023)](https://openreview.net/forum?id=VD-AYtP0dve)                                                                                            | White-box   | Meaning diversity   | High    | Low    |         No          | sequence      |
 | Claim-Conditioned Probability [(Fadeeva et al., 2024)](https://arxiv.org/abs/2403.04696)                                                                                       | White-box   | Meaning diversity   | Low     | Low    |         No          | sequence/claim |
 | FrequencyScoring [(Mohri et al., 2024)](https://arxiv.org/abs/2402.10978)                                                                                                      | White-box   | Meaning diversity   | High    | Low    |         No          | claim |
@@ -211,7 +227,7 @@ Currently unsupported.
 
 ## Cite
 
-**TACL-2025:**
+**TACL-2025 paper:**
 ```
 @article{shelmanovvashurin2025,
     author = {Vashurin, Roman and Fadeeva, Ekaterina and Vazhentsev, Artem and Rvanova, Lyudmila and Vasilev, Daniil and Tsvigun, Akim and Petrakov, Sergey and Xing, Rui and Sadallah, Abdelrahman and Grishchenkov, Kirill and Panchenko, Alexander and Baldwin, Timothy and Nakov, Preslav and Panov, Maxim and Shelmanov, Artem},
@@ -225,6 +241,31 @@ Currently unsupported.
     doi = {10.1162/tacl_a_00737},
     url = {https://doi.org/10.1162/tacl\_a\_00737},
     eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00737/2511955/tacl\_a\_00737.pdf},
+}
+```
+
+**ACL-2025 Tutorial:**
+```
+@inproceedings{shelmanov-etal-2025-uncertainty,
+    title = "Uncertainty Quantification for Large Language Models",
+    author = "Shelmanov, Artem  and
+      Panov, Maxim  and
+      Vashurin, Roman  and
+      Vazhentsev, Artem  and
+      Fadeeva, Ekaterina  and
+      Baldwin, Timothy",
+    editor = "Arase, Yuki  and
+      Jurgens, David  and
+      Xia, Fei",
+    booktitle = "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 5: Tutorial Abstracts)",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.acl-tutorials.3/",
+    doi = "10.18653/v1/2025.acl-tutorials.3",
+    pages = "3--4",
+    ISBN = "979-8-89176-255-8"
 }
 ```
 

@@ -52,12 +52,14 @@ def load_simple_estimators(name: str, config):
         FocusClaim,
         AttentionScore,
         AttentionScoreClaim,
+        BoostedProbClaim,
         CocoaMSP,
         CocoaPPL,
         CocoaMTE,
         RAUQ,
         CSL,
         SemanticDensity,
+        BoostedProbSequence,
     ]
 
     try:

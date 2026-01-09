@@ -1,4 +1,6 @@
-from typing import List, Union
+from typing import Optional, List, Union
+from PIL import Image
+from pathlib import Path
 from dataclasses import dataclass
 
 from lm_polygraph.utils.model import Model, WhiteboxModel
@@ -35,7 +37,10 @@ class UncertaintyOutput:
 
 
 def estimate_uncertainty(
-    model: Model, estimator: Estimator, input_text: str
+    model: Model,
+    estimator: Estimator,
+    input_text: str,
+    input_image: Optional[Union[str, Path, Image.Image]] = None,
 ) -> UncertaintyOutput:
     """
     Estimated uncertainty of the model generation using the provided esitmator.
@@ -83,7 +88,12 @@ def estimate_uncertainty(
     else:
         model_type = "Blackbox"
     man = UEManager(
-        Dataset([input_text], [""], batch_size=1),
+        Dataset(
+            [input_text],
+            [""],
+            batch_size=1,
+            images=[input_image] if input_image is not None else None,
+        ),
         model,
         [estimator],
         available_stat_calculators=register_default_stat_calculators(
