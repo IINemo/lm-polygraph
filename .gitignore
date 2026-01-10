@@ -1,6 +1,7 @@
 .idea
 src/lm_polygraph/app/node_modules
 **/.DStore
+**/.DS_Store
 workdir/
 
 *.npy

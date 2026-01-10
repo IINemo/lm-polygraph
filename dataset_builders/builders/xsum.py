@@ -1,15 +1,18 @@
 from functools import partial
+from .stripped_formatters import summarization_stripped
+import datasets
 
 
 def prepare_xsum(
     dataset,
     prompt,
 ):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         x.append(prompt.format(text=inst["document"]))
         y.append(inst["summary"])
-    return x, y
+        s.append(summarization_stripped(inst["document"]))
+    return x, y, s
 
 
 CONFIG = {
@@ -19,10 +22,17 @@ CONFIG = {
         "test_split": "test",
         "prepare_func": partial(
             prepare_xsum,
-            prompt="Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):",
+            prompt="Here's the text and it's short one-sentence summary.\n\nText:\n{text}\n\nSummary (one sentence):\n",
         ),
         "dataset": "xsum",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "xsum_simple_instruct": {
         "name": "xsum",
@@ -34,5 +44,12 @@ CONFIG = {
         ),
         "dataset": "xsum",
         "subset": "simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

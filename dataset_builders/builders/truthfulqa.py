@@ -1,4 +1,6 @@
 from functools import partial
+from .stripped_formatters import qa_stripped
+import datasets
 
 
 def prepare_truthfulqa(
@@ -6,11 +8,12 @@ def prepare_truthfulqa(
     prompt,
     few_shot_prompt,
 ):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         x.append(few_shot_prompt + prompt.format(question=inst["question"]))
         y.append([alias for alias in inst["correct_answers"] if len(alias)])
-    return x, y
+        s.append(qa_stripped(inst["question"]))
+    return x, y, s
 
 
 CONFIG = {
@@ -24,6 +27,13 @@ CONFIG = {
         ),
         "dataset": "truthfulqa",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Sequence(datasets.Value("string")),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "truthfulqa_simple_instruct": {
         "name": ["truthful_qa", "generation"],
@@ -35,5 +45,12 @@ CONFIG = {
         ),
         "dataset": "truthfulqa",
         "subset": "simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Sequence(datasets.Value("string")),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

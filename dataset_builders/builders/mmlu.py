@@ -1,5 +1,6 @@
 from .constants import TOP_K, SEED
 from functools import partial
+from .stripped_formatters import mcqa_stripped
 
 
 import datasets
@@ -25,7 +26,7 @@ def prepare_mmlu(
     answers = ["A", "B", "C", "D"]
     subjects = np.array(dataset["subject"])
     few_shot_subjects = np.array(few_shot_dataset["subject"])
-    x, y = [], []
+    x, y, s = [], [], []
     for subject in np.unique(subjects):
         formatted_description = description.format(
             subject=subject.replace("_", " "), topk=TOP_K
@@ -88,7 +89,8 @@ def prepare_mmlu(
                 + formatted_prompt
             )
             y.append(answers[inst[output_column]])
-    return x, y
+            s.append(mcqa_stripped(inst["question"].strip(), inst["choices"]))
+    return x, y, s
 
 
 def generate_mmlu_instruct_config(description, few_shot_prompt, subset, end_answer=""):
@@ -112,6 +114,13 @@ def generate_mmlu_instruct_config(description, few_shot_prompt, subset, end_answ
         ),
         "dataset": "mmlu",
         "subset": subset,
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     }
 
 
@@ -135,6 +144,13 @@ CONFIG = {
         ),
         "dataset": "mmlu",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "mmlu_empirical_baselines": generate_mmlu_instruct_config(
         description="Provide your best guess for the following question about {subject} selecting one of the options. Give ONLY the guess, no other words or explanation.\n\nFor example:\n\nGuess: <most likely guess, only the selected option letter; not a complete sentence, just the guess!>",
