@@ -104,3 +104,28 @@
 - name: CocoaMTE
 - name: SemanticDensity
 - name: BoostedProbSequence
+- name: BayesPEZeroShot
+  cfg:
+    instructions:
+      - "Classify the sentiment of the text."
+      - "Is the text positive or negative?"
+      - "What is the emotional tone of the text?"
+    class_labels:
+      - "positive"
+      - "negative"
+      - "neutral"
+- name: BayesPEFewShot
+  cfg:
+    instructions:
+      - "Classify the sentiment of the text."
+      - "Is the text positive or negative?"
+      - "What is the emotional tone of the text?"
+    class_labels:
+      - "positive"
+      - "negative"
+      - "neutral"
+    few_shot_examples:
+      - text: "I love this product!"
+        label: "positive"
+      - text: "This is terrible."
+        label: "negative"

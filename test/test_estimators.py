@@ -298,3 +298,35 @@ def test_boostedprob_sequence(model):
     estimator = BoostedProbSequence()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_bayespe_zero_shot(model):
+    instructions = [
+        "Classify the sentiment of the text.",
+        "Is the text positive or negative?",
+        "What is the emotional tone?",
+    ]
+    class_labels = ["positive", "negative", "neutral"]
+
+    estimator = BayesPEZeroShot(instructions, class_labels=class_labels)
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_bayespe_few_shot(model):
+    instructions = [
+        "Classify the sentiment of the text.",
+        "Is the text positive or negative?",
+        "What is the emotional tone?",
+    ]
+    class_labels = ["positive", "negative", "neutral"]
+    few_shot_examples = [
+        {"text": "I love this product!", "label": "positive"},
+        {"text": "This is terrible.", "label": "negative"},
+    ]
+
+    estimator = BayesPEFewShot(
+        instructions, few_shot_examples, class_labels=class_labels
+    )
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
