@@ -194,7 +194,7 @@ class Sheeps(Estimator):
         model_name: str = None,
     ):
         self.model_name = model_name
-        self.model_config = AutoConfig.from_pretrained(self.model_name)
+        self.model_config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True)
         if layers is None:
             self.layers = (
                 list(range(self.model_config.num_hidden_layers))

@@ -85,7 +85,7 @@ class SATRMD(Estimator):
         self.base_method = base_method
         self.embeddings_type = embeddings_type
         self.model_name = model_name
-        self.model_config = AutoConfig.from_pretrained(self.model_name)
+        self.model_config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True)
         if layers is None:
             self.layers = (
                 list(range(self.model_config.num_hidden_layers))
