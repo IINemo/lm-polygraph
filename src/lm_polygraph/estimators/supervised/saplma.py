@@ -70,7 +70,9 @@ class SAPLMA(Estimator):
     ):
         self.layer = layer
         self.model_name = model_name
-        self.model_config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True)
+        self.model_config = AutoConfig.from_pretrained(
+            self.model_name, trust_remote_code=True
+        )
         if layer is None:
             self.layer = (
                 self.model_config.num_hidden_layers // 2
