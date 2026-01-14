@@ -36,7 +36,7 @@ class AlignScorer:
         device: int,
         ckpt_path: str,
         evaluation_mode="nli_sp",
-        verbose=True,
+        verbose=False,
     ) -> None:
         try:
             spacy.load("en_core_web_sm")

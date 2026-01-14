@@ -30,7 +30,7 @@ from lm_polygraph.utils.factory_stat_calculator import (
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
-from lm_polygraph.utils.common import flatten_results
+from lm_polygraph.utils.common import flatten_results, process_layers
 
 import logging
 
@@ -179,6 +179,7 @@ class UEManager:
         self.max_new_tokens = max_new_tokens
 
         self.stat_calculator_descr = available_stat_calculators
+        builder_env_stat_calc.generation_metrics = generation_metrics
         self.factory_stat_calc = FactoryStatCalculator(builder_env_stat_calc)
         self.log_time = log_time
         self.save_stats = list(
@@ -218,6 +219,11 @@ class UEManager:
             stat_dependencies_dict,
         )
 
+        # Move all stats starting with 'train_' to the end of the list, preserving order
+        train_stats = [s for s in stats if str(s).startswith("train_")]
+        non_train_stats = [s for s in stats if not str(s).startswith("train_")]
+        stats = non_train_stats + train_stats
+
         self.stats_names = stats
         stats = [
             s
@@ -234,6 +240,7 @@ class UEManager:
         self.stat_calculators = self.factory_stat_calc(
             [self.stat_calculators_dict[c] for c in stats]
         )
+        self.layers = process_layers(self.estimators)
         self.state = "Initialized"
 
         if self.verbose:
@@ -352,6 +359,7 @@ class UEManager:
                 batch_stats["images"] = Dataset.get_images(images)
 
             batch_stats["model"] = self.model
+            batch_stats["layers"] = self.layers
 
             batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
 

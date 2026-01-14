@@ -40,11 +40,11 @@ class RAUQ(Estimator):
 
         # Focus on middle third of layers which typically contain most relevant information
         if self.n_layers is not None:
-            self.layers = list(
+            self.attn_layers = list(
                 range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
             )
         else:
-            self.layers = None
+            self.attn_layers = None
 
     def __str__(self) -> str:
         """Returns a string representation of the estimator."""
@@ -108,7 +108,7 @@ class RAUQ(Estimator):
         """
         if self.n_layers is None:
             self.n_layers = stats["model"].model.config.num_hidden_layers
-            self.layers = list(
+            self.attn_layers = list(
                 range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
             )
         if self.n_heads is None:
@@ -147,7 +147,7 @@ class RAUQ(Estimator):
 
             # Calculate uncertainty scores for each layer
             layer_scores = []
-            for layer in self.layers:
+            for layer in self.attn_layers:
                 # Select most attentive head for current layer
                 head = attentions[idx][layer].mean(-1).argmax()
 
