@@ -30,7 +30,7 @@ class Verbalized1S(Estimator):
             match = re.search(conf_re, answer)
 
             try:
-                ue = 1 - float(match.groups()[0])
+                ue = round(1 - float(match.groups()[0]), 6)
             except AttributeError:
                 ue = np.nan
 

@@ -55,10 +55,13 @@ class Verbalized2S(Estimator):
         ues = []
         conf_re = re.compile(self.confidence_regex)
         for answer in out:
-            match = re.search(conf_re, answer)
+            if type(answer) == str:
+                match = re.search(conf_re, answer)
+            else:
+                match = re.search(conf_re, answer[0].text)
 
             try:
-                ue = 1 - float(match.groups()[0])
+                ue = round(1 - float(match.groups()[0]), 6)
             except AttributeError:
                 ue = np.nan
 

@@ -223,12 +223,12 @@ def get_generation_metrics(args):
     ignore_regex = getattr(args, "source_ignore_regex", None)
     if not generation_metrics:
         result = [
-            RougeMetric("rouge1"),
-            RougeMetric("rouge2"),
+            #RougeMetric("rouge1"),
+            #RougeMetric("rouge2"),
             RougeMetric("rougeL"),
-            BLEUMetric(),
-            BertScoreMetric(),
-            SbertMetric(),
+            #BLEUMetric(),
+            #BertScoreMetric(),
+            #SbertMetric(),
             AccuracyMetric(
                 target_ignore_regex=getattr(args, "target_ignore_regex", None),
                 output_ignore_regex=getattr(args, "output_ignore_regex", None),

@@ -159,18 +159,18 @@ class TogetherAIAdapter(TogetherAIChatCompletionMixin, APIProviderAdapter):
                         alternative_tokens = [
                             list(tl_dict.keys()) for tl_dict in logprobs_data.top_logprobs
                         ]
-            
-            max_num_lp = np.max([len(lp) for lp in top_logprobs])
-            min_num_lp = np.min([len(lp) for lp in top_logprobs])
 
-            if max_num_lp != min_num_lp:
-                # clip all to min length for consistency
-                top_logprobs = [
-                    lp[:min_num_lp] for lp in top_logprobs
-                ]
-                alternative_tokens = [
-                    at[:min_num_lp] for at in alternative_tokens
-                ]
+                max_num_lp = np.max([len(lp) for lp in top_logprobs])
+                min_num_lp = np.min([len(lp) for lp in top_logprobs])
+
+                if max_num_lp != min_num_lp:
+                    # clip all to min length for consistency
+                    top_logprobs = [
+                        lp[:min_num_lp] for lp in top_logprobs
+                    ]
+                    alternative_tokens = [
+                        at[:min_num_lp] for at in alternative_tokens
+                    ]
 
             return StandardizedResponse(
                 text=text,
