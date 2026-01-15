@@ -154,7 +154,7 @@ class CEccentricity(Estimator):
         self.thres = thres
 
     def __str__(self):
-        return f"Eccentricity_{self.similarity_score}_{self.affinity}"
+        return f"CEccentricity_{self.similarity_score}_{self.affinity}"
 
     def C_Eccentricity(self, i, stats):
         answers = stats["sample_texts"][i]
