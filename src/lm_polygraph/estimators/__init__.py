@@ -31,8 +31,8 @@ from .p_true_sampling import PTrueSampling
 from .monte_carlo_sequence_entropy import MonteCarloSequenceEntropy
 from .monte_carlo_normalized_sequence_entropy import MonteCarloNormalizedSequenceEntropy
 from .lexical_similarity import LexicalSimilarity
-from .deg_mat import DegMat
-from .eccentricity import Eccentricity
+from .deg_mat import DegMat, CDegMat
+from .eccentricity import Eccentricity, CEccentricity
 from .eig_val_laplacian import EigValLaplacian
 from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy

@@ -15,7 +15,15 @@
   cfg:
     similarity_score: "NLI_score"
     affinity: "entail"
+- name: CDegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
 - name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: CEccentricity
   cfg:
     similarity_score: "NLI_score"
     affinity: "entail"
