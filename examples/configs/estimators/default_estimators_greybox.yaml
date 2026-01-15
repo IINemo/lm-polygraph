@@ -20,6 +20,45 @@
     similarity_score: "NLI_score"
     affinity: "entail"
 - name: SemanticEntropy
+  cfg:
+    samples: "all"
+    normalize: false
+    estimator: "sample"
+- name: SemanticEntropy
+  cfg:
+    samples: "all"
+    normalize: false
+    estimator: "direct"
+- name: SemanticEntropy
+  cfg:
+    samples: "all"
+    normalize: true 
+    estimator: "sample"
+- name: SemanticEntropy
+  cfg:
+    samples: "all"
+    normalize: true 
+    estimator: "direct"
+- name: SemanticEntropy
+  cfg:
+    samples: "unique"
+    normalize: false
+    estimator: "sample"
+- name: SemanticEntropy
+  cfg:
+    samples: "unique"
+    normalize: false
+    estimator: "direct"
+- name: SemanticEntropy
+  cfg:
+    samples: "unique"
+    normalize: true 
+    estimator: "sample"
+- name: SemanticEntropy
+  cfg:
+    samples: "unique"
+    normalize: true 
+    estimator: "direct"
 - name: SentenceSAR
 - name: CocoaMSP
 - name: CocoaPPL
