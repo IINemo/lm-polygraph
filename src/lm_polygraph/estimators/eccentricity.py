@@ -85,14 +85,12 @@ class Eccentricity(Estimator):
                 eigenvectors[:, keep_mask],
             )
 
-        smallest_eigenvectors = smallest_eigenvectors.T
+        ave_embedding = np.mean(smallest_eigenvectors, 0)
+        deviations = smallest_eigenvectors - ave_embedding
 
-        C_Ecc_s_j = (-1) * np.asarray(
-            [np.linalg.norm(x - x.mean(0), 2) for x in smallest_eigenvectors]
-        )
-        U_Ecc = np.linalg.norm(C_Ecc_s_j, 2)
+        U_Ecc = np.linalg.norm(deviations, ord='fro')
 
-        return U_Ecc, C_Ecc_s_j
+        return U_Ecc
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
@@ -110,5 +108,5 @@ class Eccentricity(Estimator):
         for i, answers in enumerate(stats["sample_texts"]):
             if self.verbose:
                 log.debug(f"generated answers: {answers}")
-            res.append(self.U_Eccentricity(i, stats)[0])
+            res.append(self.U_Eccentricity(i, stats))
         return np.array(res)
