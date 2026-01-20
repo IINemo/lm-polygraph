@@ -4,7 +4,6 @@ from copy import deepcopy
 from typing import List, Dict
 from .generation_metric import GenerationMetric
 
-
 class PreprocessOutputTarget(GenerationMetric):
     """
     Preprocesses output and target texts before passing them to the base metric.

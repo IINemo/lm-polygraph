@@ -73,7 +73,6 @@ class AccuracyMetric(GenerationMetric):
         for hyp, ref in zip(greedy_texts, target_texts):
             ref = self._filter_text(ref, self.target_ignore_regex)
             hyp = self._filter_text(hyp, self.output_ignore_regex)
-
             if self.normalize:
                 ref = self._normalize_text(ref)
                 hyp = self._normalize_text(hyp)
