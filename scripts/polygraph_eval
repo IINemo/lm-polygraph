@@ -150,12 +150,7 @@ def main(args):
         finally:
             model_name = args.model.path.replace("/", "-")
             dataset_name = (args.dataset if isinstance(args.dataset, str) else args.dataset[0]).replace("/", "-")
-            metainfo = {
-                "model": model_name,
-                "dataset": dataset_name,
-                "subsample_eval_dataset": args.subsample_eval_dataset,
-                "estimators": estimators
-            }
+
 
             # Create the output directory for the man file if it does not exist yet.
             # WARNING: HYDRA MULTIRUN WILL NOT WORK WITHOUT THIS!
@@ -163,7 +158,7 @@ def main(args):
                 os.makedirs(save_path, exist_ok=True)
                 log.info(f"Manually created missing output directory: {save_path}")
 
-            man.save(save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man", metainfo=metainfo)
+            man.save(save_path + f"/{model_name}_{dataset_name}_{seed}_polygraph.man")
             # man.save(save_path + f"/ue_manager_seed1")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:

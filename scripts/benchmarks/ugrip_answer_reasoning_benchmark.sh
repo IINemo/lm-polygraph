@@ -15,7 +15,8 @@ CONFIG_TYPE="both"
 
 MODEL="ugrip_llama_instruct_vllm"
 DATASET="UGRIP-LM-Polygraph/gsm8k-reasoning"
-SAMPLE_SIZE=5 # e.g. 1000
+SAMPLE_SIZE=-1 # e.g. 1000 means 1000 prompts
+               # -1 means everything
 BATCH_SIZE=20   
 # SOFIA: NOTE I DONT THINK THIS GPU MEMORY UTILIZATION THING WORKED WHEN I TESTED IT
 # GPU_MEM_UTIL=0.60 
