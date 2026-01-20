@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from vllm import SamplingParams
 
 from typing import Dict, List, Tuple, Union
 from collections import deque
@@ -121,26 +122,36 @@ class GreedyProbsCalculator(StatCalculator):
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
-        with torch.no_grad():
-            out = model.generate(
-                **batch,
-                output_scores=True,
-                return_dict_in_generate=True,
-                max_new_tokens=max_new_tokens,
-                min_new_tokens=2,
-                output_attentions=self.output_attentions,
-                output_hidden_states=self.output_hidden_states,
-                num_return_sequences=1,
-                suppress_tokens=(
-                    []
-                    if model.generation_parameters.allow_newlines
-                    else [
-                        t
-                        for t in range(len(model.tokenizer))
-                        if "\n" in model.tokenizer.decode([t])
-                    ]
-                ),
+
+        generate_kwargs = {
+            "output_scores": True,
+            "return_dict_in_generate": True,
+            "max_new_tokens": max_new_tokens,
+            "min_new_tokens": 2,
+            "output_attentions": self.output_attentions,
+            "output_hidden_states": self.output_hidden_states,
+            "num_return_sequences": 1,
+            "suppress_tokens": (
+                []
+                if model.generation_parameters.allow_newlines
+                else [
+                    t
+                    for t in range(len(model.tokenizer))
+                    if "\n" in model.tokenizer.decode([t])
+                ]
+            ),
+        }
+
+        # Method (1): specify EOS token id on generation
+        if model.model_type == "vLLMCausalLM":
+            generate_kwargs["sampling_params"] = SamplingParams(
+                stop_token_ids=[model.tokenizer.eos_token_id]
             )
+        else:
+            generate_kwargs["eos_token_id"] = model.tokenizer.eos_token_id
+
+        with torch.no_grad():
+            out = model.generate(**batch, **generate_kwargs)
             logits = torch.stack(out.scores, dim=1)
             if model.model_type == "vLLMCausalLM":
                 logits = logits.transpose(1, 0)
@@ -236,15 +247,29 @@ class GreedyProbsCalculator(StatCalculator):
                     reverse=True,
                 )
 
-        ll = []
+        # 3 Methods to handle inf:
+        # (1) Simplest: replace all inf/nan into 0
+        # (2) Little tweak: exclude all padding tokens
+        # (3) Experimental: add eos token to the .generate() argument`
+
+        lls = []
+        pad_id = getattr(model.tokenizer, "pad_token_id", None)
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
             if len(tokens) == 0:
-                ll.append([])
+                lls.append([])
                 continue
             assert len(tokens) == len(log_probs)
-            ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+
+            # Method (2): skip padding steps entirely so they never enter downstream stats
+            # filtered = [
+            #     log_probs[j, tokens[j]]
+            #     for j in range(len(log_probs))
+            #     if pad_id is None or tokens[j] != pad_id
+            # ]
+            # lls.append(filtered)
+            lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
 
@@ -289,6 +314,12 @@ class GreedyProbsCalculator(StatCalculator):
             }
         else:
             raise NotImplementedError
+        
+        # Method (1): replace nan and inf into 0 proba
+        # lls = [
+        #     np.nan_to_num(np.asarray(ll, float), nan=0.0, posinf=0.0, neginf=0.0)
+        #     for ll in lls    
+        # ]
 
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
@@ -297,7 +328,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_tokens_alternatives": cut_alternatives,
             "greedy_texts": cut_texts,
             "greedy_texts_full": full_texts, # UGRIP: full text
-            "greedy_log_likelihoods": ll,
+            "greedy_log_likelihoods": lls,
         }
         result_dict.update(embeddings_dict)
         if self.output_attentions:

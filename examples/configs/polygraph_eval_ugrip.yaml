@@ -5,10 +5,10 @@ hydra:
 task: qa
 
 defaults:
-  - model: ugrip_llama_instruct
-  - estimators: ugrip_benchmark_estimators
-  - stat_calculators: default_calculators
-  - generation_metrics: null
+  - model: ugrip_llama_instruct_vllm
+  - estimators: ugrip_benchmark_estimators_lite
+  - stat_calculators: ugrip_calculators
+  - generation_metrics: ugrip_benchmark_generation_metrics_acc
 
   - _self_
 
@@ -23,8 +23,7 @@ dataset: "UGRIP-LM-Polygraph/gsm8k-direct"
 
 text_column: question
 label_column: answer
-# Use max_new_tokens= to override
-max_new_tokens: 500
+max_new_tokens: 1024
 
 process_output_fn:
   path: instruct/output_processing_scripts/ugrip.py
@@ -37,27 +36,21 @@ cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
 
 train_split: train
-eval_split: test
-# few_shot_prompt: null
+eval_split: validation
 load_from_disk: false
 normalize: false # REQUIRED TO ALLOW process_output_fn
 trust_remote_code: false
-# generation_params:
-#   generate_until:
-#     - "\n"
 
-# \/ How many samples per dataset
-# Change with subsample_eval_dataset=25
 subsample_eval_dataset: -1
-
-# \/ What to ignore in model output
-# output_ignore_regex: "(?s).### Answer: "
-# Below is important for Gemma outputs
-# output_ignore_regex: "<end_of_turn>"
 
 ignore_exceptions: false
 
 batch_size: 1
+
+percentages: [10, 25, 50]
+tokens: [10, 50, 100]
+
+slicing_target: null
 
 stat_calculator:
     batch_size: 1
