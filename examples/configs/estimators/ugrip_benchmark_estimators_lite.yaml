@@ -1,5 +1,8 @@
 - name: MaximumSequenceProbability
 - name: Perplexity
+# note: tokensar takes a long time, ignore focus for now
+# - name: TokenSAR
+# - name: Focus
 - name: MeanTokenEntropy
 - name: CumulativeMaxSequenceProbability
 - name: CumulativePerplexity

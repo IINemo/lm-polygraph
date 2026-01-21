@@ -29,6 +29,15 @@ MODEL=$(ask_setting "Enter Model Name" "$DEFAULT_MODEL")
 DATASET=$(ask_setting "Enter Dataset Path" "$DEFAULT_DATASET")
 SAMPLE_SIZE=$(ask_setting "Enter Sample Size (-1 for all)" "$DEFAULT_SAMPLE_SIZE")
 
+# medmcqa needs to use eval_split: validation instead of test.
+if [[ "${DATASET,,}" == *"medmcqa"* ]]; then 
+  CURRENT_SPLIT="validation"
+  echo ">> Detected MedMCQA dataset...forcing eval_split=validation"
+else 
+  CURRENT_SPLIT="test"
+  echo ">> Using default eval_split=test"
+fi
+
 while true; do
   echo "Config options:"
   echo "  - answer    : Answer only"
@@ -90,6 +99,7 @@ fi
       dataset="$DATASET" \
       subsample_eval_dataset="$SAMPLE_SIZE" \
       batch_size="$BATCH_SIZE" \
+      eval_split="$CURRENT_SPLIT" \
       --config-name polygraph_eval_ugrip.yaml
 
     ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
@@ -111,6 +121,7 @@ fi
       dataset="$DATASET" \
       subsample_eval_dataset="$SAMPLE_SIZE" \
       batch_size="$BATCH_SIZE" \
+      eval_split="$CURRENT_SPLIT" \
       --config-name polygraph_eval_ugrip_segmentation_reasoning.yaml
 
     ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
@@ -132,6 +143,7 @@ fi
       dataset="$DATASET" \
       subsample_eval_dataset="$SAMPLE_SIZE" \
       batch_size="$BATCH_SIZE" \
+      eval_split="$CURRENT_SPLIT" \
       --config-name polygraph_eval_ugrip_segmentation_answer.yaml
 
     ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
