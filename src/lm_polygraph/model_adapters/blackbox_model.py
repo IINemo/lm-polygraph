@@ -36,6 +36,7 @@ class BlackboxModel(Model):
         generation_parameters: GenerationParameters = GenerationParameters(),
         api_provider_name: str = "openai",
         tokenizer: object = None,
+        seed: int = 1,
     ):
         """
         Parameters:
@@ -45,6 +46,7 @@ class BlackboxModel(Model):
         super().__init__(model_path, "Blackbox")
         self.generation_parameters = generation_parameters
         self.api_provider_name = api_provider_name
+        self.seed = seed
 
         # Initialize the adapter for this provider
         self.adapter = get_adapter(self.api_provider_name)

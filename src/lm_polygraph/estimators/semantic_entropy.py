@@ -67,14 +67,14 @@ class SemanticEntropy(Estimator):
         if self.class_probability_estimation == "sum":
             hyps_list = stats["sample_texts"]
             if self.normalize:
-                loglikelihoods_list = [[np.mean(ll) for ll in batch_ll] for batch_ll in stats["sample_log_likelihoods"]]
+                loglikelihoods_list_raw = [[np.mean(ll) for ll in batch_ll] for batch_ll in stats["sample_log_likelihoods"]]
                 # Normalized likelihoods of sequences do not sum to 1, and may give class probabilities > 1 resulting in negative entropy.
                 # We don't know the partition function here, so we approximate it by normalizing over the unique samples in the batch. This estimator is consistent but biased.
                 indices = [np.unique(hyps, return_index=True)[1] for hyps in hyps_list]
-                loglikelihoods_list = [
-                    ll - np.logaddexp.reduce(np.array(ll)[ind])
-                    for ll, ind in zip(loglikelihoods_list, indices)
-                ]
+
+                loglikelihoods_list = []
+                for ll, ind in zip(loglikelihoods_list_raw, indices):
+                    loglikelihoods_list.append(ll - np.logaddexp.reduce(np.array(ll)[ind]))
             else:
                 loglikelihoods_list = stats["sample_log_probs"]
 
@@ -122,25 +122,27 @@ class SemanticEntropy(Estimator):
 
             hyps = np.array(hyps_list[i])
 
-            class_to_sample = [list(set(ind).intersection(set(cts))) for cts in self._class_to_sample[i]]
+            class_to_sample = {i: list(set(ind).intersection(set(cts))) for i, cts in enumerate(self._class_to_sample[i])}
+            class_to_sample = {i: cts for i, cts in class_to_sample.items() if len(cts) > 0}
+
             sample_to_class = {_id: self._sample_to_class[i][_id] for _id in ind}
 
             if self.class_probability_estimation == "sum":
                 ll = np.array(loglikelihoods_list[i])
-                class_likelihoods = [
-                    np.array(ll[np.array(class_idx)])
-                    for class_idx in class_to_sample
-                ]
-                class_lp = [
-                    np.logaddexp.reduce(likelihoods)
-                    for likelihoods in class_likelihoods
-                ]
+                class_likelihoods = { 
+                    i: np.array(ll[np.array(class_idx)])
+                    for i, class_idx in class_to_sample.items()
+                }
+                class_lp = {
+                    i: np.logaddexp.reduce(likelihoods)
+                    for i, likelihoods in class_likelihoods.items()
+                }
             elif self.class_probability_estimation == "frequency":
                 num_samples = len(ind)
                 class_lp = np.log(
                     [
                         len(class_idx) / num_samples
-                        for class_idx in class_to_sample
+                        for class_idx in class_to_sample.values()
                     ]
                 )
 

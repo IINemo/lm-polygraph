@@ -81,7 +81,7 @@ def main(args):
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
 
-        model = get_model(args)
+        model = get_model(args, seed)
 
         log.info("Done with loading model.")
 
@@ -295,9 +295,9 @@ def get_generation_metrics(args):
     return result
 
 
-def get_model(args):
+def get_model(args, seed):
     if getattr(args.model, "type", "Whitebox") == "Blackbox":
-        return get_blackbox_model(args)
+        return get_blackbox_model(args, seed)
     elif getattr(args.model, "type", "Whitebox") == "vLLMCausalLM":
         return get_vllm_model(args)
     else:
@@ -308,7 +308,7 @@ def get_model(args):
         return get_whitebox_model(args, cache_kwargs)
 
 
-def get_blackbox_model(args):
+def get_blackbox_model(args, seed):
     provider = getattr(args.model, "provider", "")
     if provider is None or provider.strip() == "":
         raise ValueError(
@@ -317,7 +317,7 @@ def get_blackbox_model(args):
     elif provider not in ["openai", "huggingface", "together_ai"]:
         raise ValueError(f"Unsupported black-box model provider: {provider}")
 
-    return BlackboxModel(model_path=args.model.path, api_provider_name=provider)
+    return BlackboxModel(model_path=args.model.path, api_provider_name=provider, seed=seed)
 
 
 def get_whitebox_model(args, cache_kwargs={}):
