@@ -25,18 +25,37 @@ ask_setting() {
 
 # Prompt user for settings
 echo "Note: Hit Enter to use a default setting."
-MODEL=$(ask_setting "Enter Model Name" "$DEFAULT_MODEL")
-DATASET=$(ask_setting "Enter Dataset Path" "$DEFAULT_DATASET")
-SAMPLE_SIZE=$(ask_setting "Enter Sample Size (-1 for all)" "$DEFAULT_SAMPLE_SIZE")
 
-# medmcqa needs to use eval_split: validation instead of test.
-if [[ "${DATASET,,}" == *"medmcqa"* ]]; then 
-  CURRENT_SPLIT="validation"
-  echo ">> Detected MedMCQA dataset...forcing eval_split=validation"
+
+# MODEL=$(ask_setting "Enter Model Name" "$DEFAULT_MODEL")
+# Run on either one or both models
+INPUT_MODEL=$(ask_setting "Enter Model Name (or 'both')" "$DEFAULT_MODEL")
+if [[ "$INPUT_MODEL" == "both" ]]; then 
+  MODEL_LIST=("ugrip_llama_instruct_vllm" "ugrip_gemma_instruct_vllm")
 else 
-  CURRENT_SPLIT="test"
-  echo ">> Using default eval_split=test"
-fi
+  MODEL_LIST=("$INPUT_MODEL")
+fi 
+
+
+# Can run on a specific dataset or all 3 reasoning datasets
+# DATASET=$(ask_setting "Enter Dataset Path" "$DEFAULT_DATASET")
+echo "Dataset options:"
+echo "  - UGRIP-LM-Polygraph/gsm8k-reasoning"
+echo "  - UGRIP-LM-Polygraph/mmlu-reasoning"
+echo "  - UGRIP-LM-Polygraph/medmcqa-reasoning"
+echo "  - all"
+INPUT_DATASET=$(ask_setting "Enter Dataset Path (or 'all'))" "$DEFAULT_DATASET")
+if [[ "$INPUT_DATASET" == "all" ]]; then 
+  DATASET_LIST=(
+    "UGRIP-LM-Polygraph/gsm8k-reasoning"
+    "UGRIP-LM-Polygraph/mmlu-reasoning"
+    "UGRIP-LM-Polygraph/medmcqa-reasoning"
+  )
+else 
+  DATASET_LIST=("$INPUT_DATASET")
+fi 
+
+SAMPLE_SIZE=$(ask_setting "Enter Sample Size (-1 for all)" "$DEFAULT_SAMPLE_SIZE")
 
 while true; do
   echo "Config options:"
@@ -57,6 +76,20 @@ done
 
 BATCH_SIZE=$(ask_setting "Enter Batch Size" "$DEFAULT_BATCH_SIZE")
 
+# Prompt whether to run TokenSAR (exclusively)
+read -p "Run TokenSAR ONLY? (y/n) [n]: " TOKENSAR_INPUT 
+TOKENSAR_INPUT=${TOKENSAR_INPUT:-n}
+
+if [[ "$TOKENSAR_INPUT" == "y" ]]; then
+    # Run just tokensar
+    ESTIMATOR_CONF="ugrip_benchmark_tokensar_estimator" 
+    echo ">> Mode: TokenSAR ONLY"
+else
+    # Default config without TokenSAR
+    ESTIMATOR_CONF="ugrip_benchmark_estimators_lite" 
+    echo ">> Mode: Standard Metrics MSP, PPL, etc..."
+fi
+
 # Set up logging
 LOG_DIR="ugrip_logs/${CONFIG_TYPE}_$(date +%Y%m%d)"
 LOG_FILE="${LOG_DIR}/custom_run_$(date +%H%M%S)_batch${BATCH_SIZE}.log"
@@ -74,83 +107,104 @@ fi
   echo "========================================="
   echo "       STARTING CUSTOM BENCHMARK         "
   echo "========================================="
-  echo "Host: $(hostname)"
-  echo "Model:       $MODEL"
-  echo "Dataset:     $DATASET"
+  echo "Date/Time:   $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "Host:        $(hostname)"
+  echo "Models:      ${MODEL_LIST[*]}"
+  echo "Datasets:    ${DATASET_LIST[*]}"
   echo "Run Type:    $CONFIG_TYPE"
   echo "Sample Size: $SAMPLE_SIZE"
   echo "Batch Size:  $BATCH_SIZE"
+  echo "TokenSAR:    $TOKENSAR_INPUT"
   echo "Log File:    $LOG_FILE"
   echo "========================================="
   echo ""
+  # Give user time to read the settings
+  sleep 5
+
 
   TOTAL_START_TIME=$SECONDS
 
-  # -Run full (entire answer)
-  if [ "$CONFIG_TYPE" == "full" ] || [ "$CONFIG_TYPE" == "all" ]; then
-    echo "--- STARTING FULL (ENTIRE ANSWER) ANALYSIS ---"
-    TASK_START_TIME=$SECONDS
+  # Outer loop iterates through models
+  for CURRENT_MODEL in "${MODEL_LIST[@]}"; do
     
-    # Set the correct HYDRA_CONFIG for the standard run
-    export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip.yaml
-    
-    uv run --python 3.11 scripts/polygraph_eval \
-      model="$MODEL" \
-      dataset="$DATASET" \
-      subsample_eval_dataset="$SAMPLE_SIZE" \
-      batch_size="$BATCH_SIZE" \
-      eval_split="$CURRENT_SPLIT" \
-      --config-name polygraph_eval_ugrip.yaml
+    # Inner loop iterates through datasets
+    for CURRENT_DATASET in "${DATASET_LIST[@]}"; do
+      
+      echo ""
+      echo "#########################################################"
+      echo " PROCESSING: $CURRENT_MODEL"
+      echo " DATASET:    $CURRENT_DATASET"
+      echo "#########################################################"
 
-    ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
-    echo "--- FINISHED FULL ANALYSIS ---"
-    echo "Time Elapsed: $(($ELAPSED_TIME / 60)) min, $(($ELAPSED_TIME % 60)) sec"
-    echo "-----------------------------------------"
-  fi
+      # medmcqa needs to use eval_split: validation not test
+      if [[ "${CURRENT_DATASET,,}" == *"medmcqa"* ]]; then 
+        CURRENT_SPLIT="validation"
+        echo ">> MedMCQA detected: Using eval_split=validation"
+      else 
+        CURRENT_SPLIT="test"
+        echo ">> GSM8K or MMLU detected: Using eval_split=test"
+      fi
 
-  # Run reasoning segmentation
-  if [ "$CONFIG_TYPE" == "reasoning" ] || [ "$CONFIG_TYPE" == "both" ] || [ "$CONFIG_TYPE" == "all" ]; then
-    echo "--- STARTING REASONING ANALYSIS ---"
-    TASK_START_TIME=$SECONDS
-    
-    # Set the correct HYDRA_CONFIG for this block
-    export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip_segmentation_reasoning.yaml
-    
-    uv run --python 3.11 scripts/polygraph_eval \
-      model="$MODEL" \
-      dataset="$DATASET" \
-      subsample_eval_dataset="$SAMPLE_SIZE" \
-      batch_size="$BATCH_SIZE" \
-      eval_split="$CURRENT_SPLIT" \
-      --config-name polygraph_eval_ugrip_segmentation_reasoning.yaml
 
-    ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
-    echo "--- FINISHED REASONING ANALYSIS ---"
-    echo "Time Elapsed: $(($ELAPSED_TIME / 60)) min, $(($ELAPSED_TIME % 60)) sec"
-    echo "-----------------------------------------"
-  fi
+      # 1. run full analysis
+      if [[ "$CONFIG_TYPE" == "full" || "$CONFIG_TYPE" == "all" ]]; then
+        echo "--- STARTING FULL ANALYSIS ---"
+        TASK_START_TIME=$SECONDS
+        export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip.yaml
+        
+        uv run --python 3.11 scripts/polygraph_eval \
+          model="$CURRENT_MODEL" \
+          dataset="$CURRENT_DATASET" \
+          subsample_eval_dataset="$SAMPLE_SIZE" \
+          batch_size="$BATCH_SIZE" \
+          eval_split="$CURRENT_SPLIT" \
+          estimators="$ESTIMATOR_CONF" \
+          --config-name polygraph_eval_ugrip.yaml
 
-  # Run answer segmentation
-  if [ "$CONFIG_TYPE" == "answer" ] || [ "$CONFIG_TYPE" == "both" ] || [ "$CONFIG_TYPE" == "all" ]; then
-    echo "--- STARTING ANSWER ANALYSIS ---"
-    TASK_START_TIME=$SECONDS
+        ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
+        echo "--- FINISHED FULL (Time: $(($ELAPSED_TIME / 60))m $(($ELAPSED_TIME % 60))s) ---"
+      fi
 
-    # Set the correct HYDRA_CONFIG for this block
-    export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip_segmentation_answer.yaml
+      # 2. run reasoning analysis
+      if [[ "$CONFIG_TYPE" == "reasoning" || "$CONFIG_TYPE" == "both" || "$CONFIG_TYPE" == "all" ]]; then
+        echo "--- STARTING REASONING ANALYSIS ---"
+        TASK_START_TIME=$SECONDS
+        export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip_segmentation_reasoning.yaml
+        
+        uv run --python 3.11 scripts/polygraph_eval \
+          model="$CURRENT_MODEL" \
+          dataset="$CURRENT_DATASET" \
+          subsample_eval_dataset="$SAMPLE_SIZE" \
+          batch_size="$BATCH_SIZE" \
+          eval_split="$CURRENT_SPLIT" \
+          estimators="$ESTIMATOR_CONF" \
+          --config-name polygraph_eval_ugrip_segmentation_reasoning.yaml
 
-    uv run --python 3.11 scripts/polygraph_eval \
-      model="$MODEL" \
-      dataset="$DATASET" \
-      subsample_eval_dataset="$SAMPLE_SIZE" \
-      batch_size="$BATCH_SIZE" \
-      eval_split="$CURRENT_SPLIT" \
-      --config-name polygraph_eval_ugrip_segmentation_answer.yaml
+        ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
+        echo "--- FINISHED REASONING (Time: $(($ELAPSED_TIME / 60))m $(($ELAPSED_TIME % 60))s) ---"
+      fi
 
-    ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
-    echo "--- FINISHED ANSWER ANALYSIS ---"
-    echo "Time Elapsed: $(($ELAPSED_TIME / 60)) min, $(($ELAPSED_TIME % 60)) sec"
-    echo "-----------------------------------------"
-  fi
+      # 3. run answer analysis
+      if [[ "$CONFIG_TYPE" == "answer" || "$CONFIG_TYPE" == "both" || "$CONFIG_TYPE" == "all" ]]; then
+        echo "--- STARTING ANSWER ANALYSIS ---"
+        TASK_START_TIME=$SECONDS
+        export HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_ugrip_segmentation_answer.yaml
+
+        uv run --python 3.11 scripts/polygraph_eval \
+          model="$CURRENT_MODEL" \
+          dataset="$CURRENT_DATASET" \
+          subsample_eval_dataset="$SAMPLE_SIZE" \
+          batch_size="$BATCH_SIZE" \
+          eval_split="$CURRENT_SPLIT" \
+          estimators="$ESTIMATOR_CONF" \
+          --config-name polygraph_eval_ugrip_segmentation_answer.yaml
+
+        ELAPSED_TIME=$(($SECONDS - $TASK_START_TIME))
+        echo "--- FINISHED ANSWER (Time: $(($ELAPSED_TIME / 60))m $(($ELAPSED_TIME % 60))s) ---"
+      fi
+
+    done 
+  done 
 
   # Final summary
   TOTAL_ELAPSED_TIME=$(($SECONDS - $TOTAL_START_TIME))

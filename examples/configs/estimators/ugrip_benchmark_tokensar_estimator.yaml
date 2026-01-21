@@ -1,0 +1,4 @@
+# estimator config for running only TokenSAR
+# TokenSAR takes a while to run. May be more efficient to run tests just for TokenSAR separately from
+# other estimators
+- name: TokenSAR 
