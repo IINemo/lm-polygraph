@@ -48,7 +48,7 @@ ignore_exceptions: false
 batch_size: 1
 
 percentages: [10, 25, 50]
-tokens: [10, 50, 100]
+tokens: [5, 10, 25, 50, 100, 250]
 
 slicing_target: null
 
