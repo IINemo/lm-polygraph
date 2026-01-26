@@ -247,12 +247,22 @@ class SamplingGenerationCalculator(StatCalculator):
                     out.encoder_hidden_states = sample_embeddings[
                         "sample_embeddings_all_encoder"
                     ]
+                config = model.model.config
+                # Try direct attributes first, then check nested text_config (used by vision-language models)
+                num_layers = (
+                    getattr(config, 'num_hidden_layers', None) or 
+                    getattr(config, 'num_layers', None) or
+                    getattr(getattr(config, 'text_config', None), 'num_hidden_layers', None)
+                )
+                if num_layers is None:
+                    raise AttributeError(f"Config {type(config).__name__} has neither 'num_hidden_layers' nor 'num_layers' (also checked text_config)")
+                
                 _, cur_token_embeddings = get_embeddings_from_output(
                     out,
                     batch,
                     model.model_type,
                     level="token",
-                    hidden_layer=int(model.model.config.num_hidden_layers // 2),
+                    hidden_layer=int(num_layers // 2),
                 )
 
                 if cur_token_embeddings.dtype == torch.bfloat16:
