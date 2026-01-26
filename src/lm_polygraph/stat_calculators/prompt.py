@@ -99,10 +99,12 @@ class BasePromptCalculator(StatCalculator):
                 max_new_tokens=1,
                 num_beams=1,
             )
-
+                  
         logits = torch.stack(out.scores, dim=1)
+        if model.model_type == "vLLMCausalLM":
+            logits = logits.transpose(1, 0)
+       
         log_probs = logits[:, -1, expected_token].cpu().numpy()
-
         return {self.method: log_probs}
 
 
