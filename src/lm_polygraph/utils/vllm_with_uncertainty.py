@@ -105,20 +105,40 @@ class VLLMWithUncertainty:
         sampling_params.logprobs = max(sampling_params.logprobs or 0, self.n_logprobs)
         if sampling_params.logprobs == 0:
             sampling_params.logprobs = 20  # fallback (your previous behavior)
+        sampling_params.prompt_logprobs = sampling_params.logprobs
 
         # ---- 1) Generate with vLLM (logprobs / tokens) ----
         outputs = self.llm.generate(prompts_list, sampling_params)
 
         # ---- 2) Optionally compute hidden states for prompts (or prompt+completion) ----
         hidden_states_payload = None
+        context_lengths = None
+
         if self.output_hidden_states:
-            batch_token_ids = self._prompts_to_token_ids(prompts_list)
             hs_gen = self._get_hs_generator()
-            hidden_states_payload = hs_gen.generate(batch_token_ids)
+
+            # Prompt token ids (context)
+            prompt_token_ids = self._prompts_to_token_ids(prompts_list)  # list[list[int]]
+            context_lengths = [len(ids) for ids in prompt_token_ids]
+
+            # Build full token ids = prompt + generated (use first completion per prompt)
+            full_token_ids = []
+            for i, request_output in enumerate(outputs):
+                # pick the first completion by default
+                if not request_output.outputs:
+                    gen_ids = []
+                else:
+                    gen_ids = list(request_output.outputs[0].token_ids)  # generated tokens
+
+                full_ids = list(prompt_token_ids[i]) + gen_ids
+                full_token_ids.append(full_ids)
+
+            # Generate hidden states for FULL sequences
+            hidden_states_payload = hs_gen.generate(full_token_ids)
 
         # ---- 3) Compute uncertainty and package ----
         results: List[RequestOutputWithUncertainty] = []
-        for request_output in outputs:
+        for i, request_output in enumerate(outputs):
             request_scores = []
             prompt_hs = None
             if hidden_states_payload is not None and i < len(hidden_states_payload):
@@ -126,10 +146,16 @@ class VLLMWithUncertainty:
 
             if compute_uncertainty:
                 for out in request_output.outputs:
-                    deps = {"vllm_output": out, "token_ids": out.token_ids, "logprobs": out.logprobs}
+                    deps = {
+                        "vllm_output": out,
+                        "token_ids": out.token_ids,
+                        "logprobs": getattr(out, "logprobs", None),
+                        "prompt_logprobs": getattr(out, "prompt_logprobs", None),
+                    }
                     # pass hidden states into deps for calculators
                     if prompt_hs is not None:
                         deps["vllm_hidden_states_output"] = prompt_hs
+                    deps["context_lenghts"] = context_lengths
 
                     # Run calculators + estimator
                     for calc in self.stat_calculators:
@@ -138,7 +164,7 @@ class VLLMWithUncertainty:
                                                                                               'max_tokens') else 0))
 
                     u = self.estimator(deps)
-                    request_scores.append(float(u[0]))
+                    request_scores.append(float(u[0][0]))
 
             results.append(
                 RequestOutputWithUncertainty(
