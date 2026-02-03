@@ -36,12 +36,14 @@ class VLLMWithUncertainty:
         output_hidden_states: bool = False,
         hs_layer_ids: Optional[List[int]] = None,
         hs_generator_kwargs: Optional[dict] = None,
+        prompt_logprobs: bool = False,
     ):
         self.llm = llm
         self.tokenizer = llm.get_tokenizer()
         self.stat_calculators = stat_calculators
         self.estimator = estimator
         self.n_logprobs = n_logprobs
+        self.prompt_logprobs = prompt_logprobs
 
         self.output_hidden_states = output_hidden_states
         self.hs_layer_ids = hs_layer_ids or []
@@ -105,7 +107,8 @@ class VLLMWithUncertainty:
         sampling_params.logprobs = max(sampling_params.logprobs or 0, self.n_logprobs)
         if sampling_params.logprobs == 0:
             sampling_params.logprobs = 20  # fallback (your previous behavior)
-        sampling_params.prompt_logprobs = sampling_params.logprobs
+        if self.prompt_logprobs:
+            sampling_params.prompt_logprobs = sampling_params.logprobs
 
         # ---- 1) Generate with vLLM (logprobs / tokens) ----
         outputs = self.llm.generate(prompts_list, sampling_params)
