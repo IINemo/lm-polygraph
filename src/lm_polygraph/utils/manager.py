@@ -33,6 +33,8 @@ from lm_polygraph.defaults.register_default_stat_calculators import (
 from lm_polygraph.utils.common import flatten_results
 
 import logging
+import math
+
 
 log = logging.getLogger("lm_polygraph")
 
@@ -372,6 +374,8 @@ class UEManager:
         batch_estimations = defaultdict(list)
         bad_estimators = []
 
+        batch_stats = self.truncate_if_inf(batch_stats)
+
         for estimator in estimators:
             try:
                 if self.log_time:
@@ -433,6 +437,34 @@ class UEManager:
             gc.collect()
 
         return self.estimations
+
+
+    def truncate_if_inf(self, batch_stats, ll_key="greedy_log_likelihoods"):
+        lls_batch = batch_stats.get(ll_key)
+        if not lls_batch:
+            return batch_stats
+
+        batch_size = len(lls_batch)
+
+        for i in range(batch_size):
+            lls = lls_batch[i]
+            if not lls:
+                continue
+
+            last_ll = lls[-1]
+            if math.isinf(last_ll) or last_ll < -1e6:
+                for key in [
+                    # "greedy_tokens",
+                    # "greedy_texts",
+                    # "greedy_texts_full",
+                    "greedy_log_likelihoods",
+                    "token_similarity"
+                ]:
+                    if key in batch_stats:
+                        batch_stats[key][i] = batch_stats[key][i][:-1]
+
+        return batch_stats
+
 
     def __call__(self) -> Dict[Tuple[str, str, str, str], float]:
         """
