@@ -8,3 +8,5 @@ try:
     from .vllm_with_uncertainty import VLLMWithUncertainty
 except ImportError:
     VLLMWithUncertainty = None
+
+from .api_with_uncertainty import APIWithUncertainty
