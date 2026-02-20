@@ -405,7 +405,7 @@ class VLLMWithUncertainty:
                         "token_ids": getattr(out, "token_ids", None),
                         "logprobs": getattr(out, "logprobs", None),
                         "prompt_logprobs": prompt_lps,
-                        "context_lengths": [context_lengths[i]],
+                        "context_lengths": [context_lengths[i]] if context_lengths is not None else None,
                     }
 
                     if out_hs is not None:
