@@ -94,8 +94,9 @@ class VLLMLogprobsCalculator(StatCalculator):
 
         if self.output_matrix:
             # Output as 2D matrix [T, K] for PDGap
-            # K = number of logprobs per position (top_k or vocab_size)
-            k = len(logprobs[0]) if logprobs and logprobs[0] else 0
+            # K = max number of logprobs per position (usually top_k, but vLLM
+            # may return top_k+1 when the greedy token isn't in top_k)
+            k = max((len(d) for d in logprobs if d is not None), default=0)
             matrix = np.full((len(logprobs), k), -np.inf)
             for t, logprob_dict in enumerate(logprobs):
                 if logprob_dict is not None:
