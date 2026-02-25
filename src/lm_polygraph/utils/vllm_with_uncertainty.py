@@ -9,6 +9,7 @@ from lm_polygraph.estimators import Estimator
 from lm_polygraph.stat_calculators.extract_claims import Claim
 from vllm import LLM, SamplingParams
 from vllm.outputs import RequestOutput
+from tqdm import tqdm
 import torch
 
 # Optional dependency (only needed if output_hidden_states=True)
@@ -244,7 +245,11 @@ class VLLMWithUncertainty:
         If still unresolved, recompute unresolved sequences after resetting HS prefix cache.
         """
         hs_gen = self._get_hs_generator()
-        raw_payload = hs_gen.generate(full_token_ids)
+        try:
+            raw_payload = hs_gen.generate(full_token_ids)
+        except Exception as e:
+            log.warning(e)
+            raw_payload = None
 
         payload: List[Optional[dict]] = [None] * len(full_token_ids)
         unresolved: List[int] = []
@@ -281,7 +286,22 @@ class VLLMWithUncertainty:
                 self._reset_hs_prefix_cache(hs_gen)
 
                 # Recompute single sequence (avoid batch-level cross-contamination)
-                one = hs_gen.generate([req_ids])
+                n_tries = 5
+                one = None
+                while n_tries > 0:
+                    try:
+                        n_tries -= 1
+                        one = hs_gen.generate([req_ids])
+                        break
+                    except Exception as e:
+                        log.error(e)
+                    if n_tries <= 3:
+                        log.warning('Reloading HS generator')
+                        self._hs_gen = None
+                        hs_gen = self._get_hs_generator()
+
+                if one is None:
+                    one = hs_gen.generate([req_ids])
                 one_pay = one[0] if one else None
                 stitched = self._stitch_payload_from_cache(req_ids, one_pay)
 
@@ -381,7 +401,7 @@ class VLLMWithUncertainty:
 
         results: List[RequestOutputWithUncertainty] = []
 
-        for i, request_output in enumerate(outputs):
+        for i, request_output in tqdm(enumerate(outputs), total=len(outputs), desc="Computing uncertainty"):
             request_scores = []
 
             if compute_uncertainty:
@@ -394,6 +414,7 @@ class VLLMWithUncertainty:
 
                     # keep your existing pattern
                     out.hidden_states_payload = out_hs
+                    out.prompt_token_ids = request_output.prompt_token_ids
 
                     # prompt_logprobs can be on request_output depending on vLLM version
                     prompt_lps = getattr(out, "prompt_logprobs", None)
