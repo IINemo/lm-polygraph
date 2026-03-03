@@ -329,7 +329,13 @@ class UEManager:
 
     def _process(self, iterable_data, batch_callback):
         iterable_data = tqdm(self.data) if self.verbose else self.data
-        for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
+        for batch_i, batch in enumerate(iterable_data):
+            generation_inputs = None
+            if len(batch) == 3:
+                inp_texts, target_texts, generation_inputs = batch
+            else:
+                inp_texts, target_texts = batch
+
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ("input_texts", inp_texts),
@@ -338,8 +344,14 @@ class UEManager:
                 self.stats[key] += val
                 batch_stats[key] = val
             batch_stats["model"] = self.model
+            if generation_inputs is not None:
+                batch_stats["generation_inputs"] = generation_inputs
 
-            batch_stats = self.calculate(batch_stats, self.stat_calculators, inp_texts)
+            batch_stats = self.calculate(
+                batch_stats,
+                self.stat_calculators,
+                inp_texts,
+            )
 
             batch_estimations, bad_estimators = self.estimate(
                 batch_stats, self.estimators

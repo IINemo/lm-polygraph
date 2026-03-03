@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset as hf_dataset
 
-from typing import Iterable, Tuple, List, Union, Optional
+from typing import Any, Iterable, Tuple, List, Union, Optional
 
 
 class Dataset:
@@ -13,7 +13,13 @@ class Dataset:
     Seq2seq dataset for calculating quality of uncertainty estimation method.
     """
 
-    def __init__(self, x: List[str], y: List[str], batch_size: int):
+    def __init__(
+        self,
+        x: List[str],
+        y: List[str],
+        batch_size: int,
+        generation_inputs: Optional[List[Any]] = None,
+    ):
         """
         Parameters:
             x (List[str]): a list of input texts.
@@ -23,18 +29,32 @@ class Dataset:
         self.x = x
         self.y = y
         self.batch_size = batch_size
+        self.generation_inputs = generation_inputs
+        if self.generation_inputs is not None and len(self.generation_inputs) != len(self.x):
+            raise ValueError("generation_inputs length must match x length")
 
-    def __iter__(self) -> Iterable[Tuple[List[str], List[str]]]:
+    def __iter__(
+        self,
+    ) -> Iterable[
+        Tuple[List[str], List[str]]
+        | Tuple[List[str], List[str], List[Any]]
+    ]:
         """
         Returns:
             Iterable[Tuple[List[str], List[str]]]: iterates over batches in dataset,
                 returns list of input texts and list of corresponding output texts.
         """
         for i in range(0, len(self.x), self.batch_size):
-            yield (
-                self.x[i : i + self.batch_size],
-                self.y[i : i + self.batch_size],
-            )
+            batch_x = self.x[i : i + self.batch_size]
+            batch_y = self.y[i : i + self.batch_size]
+            if self.generation_inputs is None:
+                yield (batch_x, batch_y)
+            else:
+                yield (
+                    batch_x,
+                    batch_y,
+                    self.generation_inputs[i : i + self.batch_size],
+                )
 
     def __len__(self) -> int:
         """
@@ -52,6 +72,8 @@ class Dataset:
         """
         self.x = [self.x[i] for i in indices]
         self.y = [self.y[i] for i in indices]
+        if self.generation_inputs is not None:
+            self.generation_inputs = [self.generation_inputs[i] for i in indices]
         return self
 
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):
@@ -74,13 +96,25 @@ class Dataset:
             test_size=test_size,
             random_state=seed,
         )
+        if self.generation_inputs is not None:
+            gen_train, gen_test = train_test_split(
+                np.array(self.generation_inputs, dtype=object),
+                test_size=test_size,
+                random_state=seed,
+            )
+        else:
+            gen_train = gen_test = None
 
         if split == "train":
             self.x = X_train.tolist()
             self.y = y_train.tolist()
+            if gen_train is not None:
+                self.generation_inputs = gen_train.tolist()
         else:
             self.x = X_test.tolist()
             self.y = y_test.tolist()
+            if gen_test is not None:
+                self.generation_inputs = gen_test.tolist()
 
         return (
             X_train.tolist(),

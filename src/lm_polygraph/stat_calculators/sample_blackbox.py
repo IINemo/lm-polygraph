@@ -50,10 +50,13 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
                 - 'sample_log_probs' (List[List[float]]): sum of the log probabilities at each token of the sampling generation.
                 - 'sample_log_likelihoods' (List[List[List[float]]]): log probabilities at each token of the sampling generation.
         """
+        generation_inputs = dependencies.get("generation_inputs")
+        inference_inputs = generation_inputs if generation_inputs is not None else texts
+
         if model.supports_logprobs:
             # Greybox path: generate with logprobs
             output = model.generate_texts(
-                input_texts=texts,
+                input_texts=inference_inputs,
                 max_new_tokens=max_new_tokens,
                 n=self.samples_n,
                 output_scores=True,
@@ -84,7 +87,7 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         else:
             # Blackbox path: generate just the text
             output = model.generate_texts(
-                input_texts=texts,
+                input_texts=inference_inputs,
                 max_new_tokens=max_new_tokens,
                 n=self.samples_n,
             )

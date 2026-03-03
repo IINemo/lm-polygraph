@@ -58,10 +58,13 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
                 - 'greedy_tokens' (List[List[str]]): tokens of the generated text (greybox only),
                 - 'greedy_tokens_alternatives' (List[List[List[Tuple[str, float]]]]): alternative tokens with logprobs.
         """
+        generation_inputs = dependencies.get("generation_inputs")
+        inference_inputs = generation_inputs if generation_inputs is not None else texts
+
         if model.supports_logprobs:
             # Greybox path: generate with logprobs
             output = model.generate(
-                input_texts=texts,
+                input_texts=inference_inputs,
                 max_new_tokens=max_new_tokens,
                 output_scores=True,
                 top_logprobs=self.top_logprobs,
@@ -96,7 +99,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
         else:
             # Blackbox path: generate just the text
             output = model.generate_texts(
-                input_texts=texts,
+                input_texts=inference_inputs,
                 max_new_tokens=max_new_tokens,
             )
 
