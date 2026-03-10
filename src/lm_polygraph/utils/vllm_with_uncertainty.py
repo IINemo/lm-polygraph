@@ -350,13 +350,22 @@ class VLLMWithUncertainty:
         # ---- 1) Generate with vLLM ----
         outputs = self.llm.generate(prompts_list, sampling_params)
 
+        print(f"DEBUG: After generate, output_hidden_states={self.output_hidden_states}")
+        import sys
+        sys.stdout.flush()
+
         # ---- 2) Optionally compute hidden states per (prompt, output) ----
         hs_by_req_out: List[List[Optional[dict]]] = [
             [None] * len(ro.outputs) for ro in outputs
         ]
-        context_lengths = None
+        prompt_token_ids = self._prompts_to_token_ids(prompts_list)
+        context_lengths = [len(ids) for ids in prompt_token_ids]
 
         if self.output_hidden_states:
+            # Sleep main LLM to free GPU memory before HS generator loads
+            print("\n\n\nSleeping main LLM (level=2) to free GPU memory before HS generator\n\n\n")
+            self.llm.sleep(level=2)
+
             flat_full_ids, flat_index, context_lengths = self._build_flat_full_token_ids(
                 prompts_list, outputs
             )
