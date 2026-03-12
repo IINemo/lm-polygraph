@@ -98,7 +98,7 @@ class BlackboxGreedyTextsCalculator(StatCalculator):
             }
         else:
             # Blackbox path: generate just the text
-            output = model.generate_texts(
+            output = model.generate(
                 input_texts=inference_inputs,
                 max_new_tokens=max_new_tokens,
             )

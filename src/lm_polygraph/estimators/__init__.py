@@ -77,6 +77,7 @@ from .verbalized_1s import Verbalized1S
 from .verbalized_2s import Verbalized2S
 from .linguistic_1s import Linguistic1S
 from .claim.random_baseline import RandomBaselineClaim
+from .random_baseline import RandomBaseline
 from .label_prob import LabelProb
 from .p_true_empirical import PTrueEmpirical
 from .focus import Focus
