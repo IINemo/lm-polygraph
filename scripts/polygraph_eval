@@ -317,7 +317,11 @@ def get_blackbox_model(args):
     elif provider not in ["openai", "huggingface", "together_ai"]:
         raise ValueError(f"Unsupported black-box model provider: {provider}")
 
-    return BlackboxModel(model_path=args.model.path, api_provider_name=provider)
+    return BlackboxModel(
+        model_path=args.model.path,
+        api_provider_name=provider,
+        supports_logprobs=getattr(args.model, "supports_logprobs", None),
+    )
 
 
 def get_whitebox_model(args, cache_kwargs={}):

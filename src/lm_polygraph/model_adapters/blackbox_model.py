@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from typing import List
+from typing import List, Optional
 
 from lm_polygraph.utils.model import Model
 from lm_polygraph.utils.generation_parameters import GenerationParameters
@@ -36,15 +36,19 @@ class BlackboxModel(Model):
         generation_parameters: GenerationParameters = GenerationParameters(),
         api_provider_name: str = "openai",
         tokenizer: object = None,
+        supports_logprobs: Optional[bool] = None,
     ):
         """
         Parameters:
             model_path (Optional[str]): Unique model path or identifier understood by the provider.
             generation_parameters (GenerationParameters): parameters to use in model generation. Default: default parameters.
+            supports_logprobs (Optional[bool]): Override adapter capability detection for logprobs.
+                If None, adapter default behavior is used.
         """
         super().__init__(model_path, "Blackbox")
         self.generation_parameters = generation_parameters
         self.api_provider_name = api_provider_name
+        self._supports_logprobs_override = supports_logprobs
 
         # Initialize the adapter for this provider
         self.adapter = get_adapter(self.api_provider_name)
@@ -53,6 +57,8 @@ class BlackboxModel(Model):
     @property
     def supports_logprobs(self) -> bool:
         """Expose adapter-defined logprob support."""
+        if self._supports_logprobs_override is not None:
+            return self._supports_logprobs_override
         return self.adapter.supports_logprobs(self.model_path)
 
     def _validate_args(self, args):
@@ -100,7 +106,7 @@ class BlackboxModel(Model):
         args = self._validate_args(default_params)
 
         # Check if we're trying to access features that require logprobs support
-        requires_logprobs = getattr(args, "output_scores", False)
+        requires_logprobs = args.get("output_scores", False)
 
         # Use adapter to check logprobs support (considering model-specific rules)
         if requires_logprobs and not self.supports_logprobs:
