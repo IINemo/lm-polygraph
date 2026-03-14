@@ -258,7 +258,7 @@ class SamplingGenerationCalculator(StatCalculator):
                     batch,
                     model.model_type,
                     level="token",
-                    hidden_layer=int(model.model.config.num_hidden_layers // 2),
+                    hidden_layer=int(getattr(model.model.config, "text_config", model.model.config).num_hidden_layers // 2),
                 )
 
                 if cur_token_embeddings.dtype == torch.bfloat16:
