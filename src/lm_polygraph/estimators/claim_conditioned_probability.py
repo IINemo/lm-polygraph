@@ -9,7 +9,6 @@ class ClaimConditionedProbability(Estimator):
     def __init__(self):
         super().__init__(
             [
-                "greedy_tokens",
                 "greedy_tokens_alternatives",
                 "greedy_tokens_alternatives_nli",
             ],
@@ -38,18 +37,15 @@ class ClaimConditionedProbability(Estimator):
         return "neutral"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-        words = stats["greedy_tokens"]
         alternatives = stats["greedy_tokens_alternatives"]
         alternatives_nli = stats["greedy_tokens_alternatives_nli"]
         prob_nli = []
-        for sample_words, sample_alternatives, sample_alternatives_nli in zip(
-            words,
+        for sample_alternatives, sample_alternatives_nli in zip(
             alternatives,
             alternatives_nli,
         ):
             sample_mnlis = []
-            for word, word_alternatives, word_alternatives_nli in zip(
-                sample_words,
+            for word_alternatives, word_alternatives_nli in zip(
                 sample_alternatives,
                 sample_alternatives_nli,
             ):

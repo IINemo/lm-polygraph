@@ -52,7 +52,7 @@ class TogetherAIChatCompletionMixin:
                     break
                 except Exception as e:
                     if retries > 4:
-                        raise Exception from e
+                        raise e
                     retries += 1
                     continue
 
@@ -60,7 +60,7 @@ class TogetherAIChatCompletionMixin:
                 [self.parse_response(resp) for resp in response.choices]
             )
             
-            return parsed_responses
+        return parsed_responses
 
 @register_adapter("together_ai")
 class TogetherAIAdapter(TogetherAIChatCompletionMixin, APIProviderAdapter):
