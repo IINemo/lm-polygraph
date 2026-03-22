@@ -107,13 +107,17 @@ class RAUQ(Estimator):
             np.ndarray: Uncertainty scores for each sequence
         """
         if self.n_layers is None:
-            _cfg = getattr(stats["model"].model.config, "text_config", stats["model"].model.config)
+            _cfg = getattr(
+                stats["model"].model.config, "text_config", stats["model"].model.config
+            )
             self.n_layers = _cfg.num_hidden_layers
             self.layers = list(
                 range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
             )
         if self.n_heads is None:
-            _cfg = getattr(stats["model"].model.config, "text_config", stats["model"].model.config)
+            _cfg = getattr(
+                stats["model"].model.config, "text_config", stats["model"].model.config
+            )
             self.n_heads = _cfg.num_attention_heads
 
         # Extract diagonal attention patterns for each sequence

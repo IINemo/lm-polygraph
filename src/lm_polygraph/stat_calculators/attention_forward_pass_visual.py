@@ -60,7 +60,11 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
 
                             # Get model config for proper dimensions
                             try:
-                                _cfg = getattr(model.model.config, "text_config", model.model.config)
+                                _cfg = getattr(
+                                    model.model.config,
+                                    "text_config",
+                                    model.model.config,
+                                )
                                 num_heads = _cfg.num_attention_heads
                             except Exception:  # Fixed: removed unused 'e'
                                 num_heads = 12  # fallback
@@ -85,7 +89,9 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                         # Fallback if no attentions
                         batch_size, seq_len = encoding["input_ids"].shape
                         try:
-                            _cfg = getattr(model.model.config, "text_config", model.model.config)
+                            _cfg = getattr(
+                                model.model.config, "text_config", model.model.config
+                            )
                             num_layers = _cfg.num_hidden_layers
                             num_heads = _cfg.num_attention_heads
                         except Exception:  # Fixed: removed unused 'e'
@@ -98,7 +104,9 @@ class AttentionForwardPassCalculatorVisual(StatCalculator):
                     # Fallback if model didn't return attentions
                     batch_size, seq_len = encoding["input_ids"].shape
                     try:
-                        _cfg = getattr(model.model.config, "text_config", model.model.config)
+                        _cfg = getattr(
+                            model.model.config, "text_config", model.model.config
+                        )
                         num_layers = _cfg.num_hidden_layers
                         num_heads = _cfg.num_attention_heads
                     except Exception:  # Fixed: removed unused 'e'

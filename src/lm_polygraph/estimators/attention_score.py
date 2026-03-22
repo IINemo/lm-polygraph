@@ -58,7 +58,9 @@ class AttentionScore(Estimator):
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         if self.layer is None:
-            _cfg = getattr(stats["model"].model.config, "text_config", stats["model"].model.config)
+            _cfg = getattr(
+                stats["model"].model.config, "text_config", stats["model"].model.config
+            )
             self.layer = _cfg.num_hidden_layers // 2
 
         forwardpass_attention_weights_original = stats["forwardpass_attention_weights"]

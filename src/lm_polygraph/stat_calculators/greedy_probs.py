@@ -199,8 +199,7 @@ class GreedyProbsCalculator(StatCalculator):
                 _cfg = getattr(model.model.config, "text_config", model.model.config)
                 attn_mask = np.zeros(
                     shape=(
-                        _cfg.num_attention_heads
-                        * _cfg.num_hidden_layers,
+                        _cfg.num_attention_heads * _cfg.num_hidden_layers,
                         c,
                         c,
                     )

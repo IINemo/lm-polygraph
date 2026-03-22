@@ -4,7 +4,6 @@ import time
 import logging
 import diskcache as dc
 
-
 log = logging.getLogger()
 
 
