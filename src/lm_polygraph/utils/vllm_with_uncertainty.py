@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union, Any
 
+import pickle
 from collections import OrderedDict
 from typing import Tuple
 import numpy as np
@@ -9,14 +10,16 @@ from lm_polygraph.estimators import Estimator
 from lm_polygraph.stat_calculators.extract_claims import Claim
 from vllm import LLM, SamplingParams
 from vllm.outputs import RequestOutput
+from vllm import TokensPrompt
 from tqdm import tqdm
 import torch
 
-# Optional dependency (only needed if output_hidden_states=True)
+# Optional dependency (only needed for Path 1: VllmHiddenStatesGenerator)
 try:
     from speculators.data_generation.vllm_hidden_states_generator import VllmHiddenStatesGenerator
 except Exception:
     VllmHiddenStatesGenerator = None
+
 
 log = logging.getLogger()
 
@@ -48,6 +51,20 @@ class RequestOutputWithUncertainty:
 
 
 class VLLMWithUncertainty:
+    """
+    vLLM wrapper with uncertainty estimation and optional hidden states extraction.
+
+    Hidden states can be computed using two paths:
+    - Path 1 (use_native_hs_capture=False): Uses VllmHiddenStatesGenerator from speculators.
+      Requires separate generation pass; main LLM is slept during HS generation.
+    - Path 2 (use_native_hs_capture=True): Uses native vLLM capture via collective_rpc.
+      Captures HS during main generation; requires vLLM with HS capture extension.
+
+    Args:
+        use_native_hs_capture: If True, use Path 2 (native capture). Otherwise use Path 1 (VllmHiddenStatesGenerator).
+        hs_generator_kwargs: Additional kwargs for VllmHiddenStatesGenerator (Path 1 only).
+    """
+
     def __init__(
             self,
             llm: LLM,
@@ -56,11 +73,12 @@ class VLLMWithUncertainty:
             n_logprobs: int = 0,
             output_hidden_states: bool = False,
             hs_layer_ids: Optional[List[int]] = None,
-            hs_generator_kwargs: Optional[dict] = None,
             prompt_logprobs: bool = False,
             hs_cache_max_seqs: int = 32,
             hs_recompute_on_miss: bool = True,
             hs_strict: bool = False,
+            hs_generator_kwargs: Optional[dict] = None,
+            use_native_hs_capture: bool = False,
     ):
         self.llm = llm
         self.tokenizer = llm.get_tokenizer()
@@ -72,7 +90,13 @@ class VLLMWithUncertainty:
         self.output_hidden_states = output_hidden_states
         self.hs_layer_ids = hs_layer_ids or []
         self.hs_generator_kwargs = hs_generator_kwargs or {}
+        self.use_native_hs_capture = use_native_hs_capture
 
+        # Path 2: Native capture variables
+        self._hs_extension_ready = False
+        self._engine_core = None
+
+        # Path 1: VllmHiddenStatesGenerator variables
         self._hs_gen = None  # lazy init
 
         self.hs_cache_max_seqs = hs_cache_max_seqs
@@ -82,21 +106,77 @@ class VLLMWithUncertainty:
         self._hs_seq_cache = OrderedDict()
 
         if self.output_hidden_states:
-            if VllmHiddenStatesGenerator is None:
-                raise ImportError(
-                    "output_hidden_states=True requires "
-                    "`speculators.data_generation.vllm_hidden_states_generator.VllmHiddenStatesGenerator` "
-                    "(install `speculators`)."
-                )
             if not self.hs_layer_ids:
                 raise ValueError("output_hidden_states=True requires hs_layer_ids (e.g., [2, 10, 20]).")
 
+            if self.use_native_hs_capture:
+                log.warning(
+                    "Native HS capture (use_native_hs_capture=True) uses enforce_eager=True, "
+                    "which is 10-20%% slower than CUDA graph mode."
+                )
+                # Verify vLLM is initialized correctly for native HS capture
+                llm_engine = getattr(self.llm, "llm_engine", None)
+                if llm_engine is not None:
+                    model_config = getattr(llm_engine, "model_config", None)
+
+                    if model_config is not None:
+                        # Check enforce_eager=True
+                        enforce_eager = getattr(model_config, "enforce_eager", None)
+                        if enforce_eager is not True:
+                            raise ValueError(
+                                f"Native HS capture (use_native_hs_capture=True) requires "
+                                f"enforce_eager=True in LLM initialization. Current value: {enforce_eager}. "
+                                f"Please initialize LLM with: LLM(..., enforce_eager=True, ...)"
+                            )
+
+                        # Check worker_extension_cls contains HookHiddenStatesExtension
+                        vllm_config = getattr(llm_engine, "vllm_config", None)
+                        parallel_config = getattr(vllm_config, "parallel_config", None)
+                        worker_extension_cls = getattr(parallel_config, "worker_extension_cls", None)
+                        if worker_extension_cls is None:
+                            raise ValueError(
+                                "Native HS capture (use_native_hs_capture=True) requires "
+                                "worker_extension_cls='hook_hs_extension.HookHiddenStatesExtension' "
+                                "in LLM initialization. "
+                                "Please initialize LLM with: LLM(..., worker_extension_cls='hook_hs_extension.HookHiddenStatesExtension', ...)"
+                            )
+                        elif "HookHiddenStatesExtension" not in str(worker_extension_cls):
+                            raise ValueError(
+                                f"Native HS capture (use_native_hs_capture=True) requires "
+                                f"worker_extension_cls='hook_hs_extension.HookHiddenStatesExtension'. "
+                                f"Current value: {worker_extension_cls}. "
+                                f"Please initialize LLM with: LLM(..., worker_extension_cls='hook_hs_extension.HookHiddenStatesExtension', ...)"
+                            )
+            elif VllmHiddenStatesGenerator is None:
+                raise ImportError(
+                    "output_hidden_states=True with use_native_hs_capture=False requires "
+                    "`speculators.data_generation.vllm_hidden_states_generator.VllmHiddenStatesGenerator` "
+                    "(install `speculators`)."
+                )
+
+    def _ensure_hs_extension(self) -> None:
+        if self._hs_extension_ready:
+            return
+        engine_core = self.llm.llm_engine.engine_core
+
+        # Check initialization result
+        setup_result = engine_core.collective_rpc(
+            "_setup_hidden_states_capture",
+            args=(self.hs_layer_ids,),
+        )
+        log.info("HS extension setup result: %s", setup_result)
+
+        self._engine_core = engine_core
+        self._hs_extension_ready = True
+        log.info("HS extension ready (Path 2: native capture). layer_ids=%s", self.hs_layer_ids)
+
     def _get_hs_generator(self) -> "VllmHiddenStatesGenerator":
+        """Path 1: Get or create VllmHiddenStatesGenerator instance."""
         if self._hs_gen is not None:
             return self._hs_gen
 
         # You used model_path=... when constructing the generator.
-        # We try to infer model path/name from llm, but often you’ll want to pass it explicitly
+        # We try to infer model path/name from llm, but often you'll want to pass it explicitly
         # via hs_generator_kwargs["model_path"].
         if "model_path" not in self.hs_generator_kwargs:
             # Best effort; many vLLM LLM objects store model name under llm.model or llm.llm_engine.model_config.model
@@ -111,6 +191,7 @@ class VLLMWithUncertainty:
             layer_ids=self.hs_layer_ids,
             **self.hs_generator_kwargs,
         )
+        log.info("HS generator ready (Path 1: VllmHiddenStatesGenerator). layer_ids=%s", self.hs_layer_ids)
         return self._hs_gen
 
     def _normalize_prompts(self, prompts: Union[str, List[str]]) -> List[str]:
@@ -170,13 +251,60 @@ class VLLMWithUncertainty:
 
         return None
 
-    def _reset_hs_prefix_cache(self, hs_gen) -> bool:
+    def _reset_hs_prefix_cache(self, hs_gen=None) -> bool:
         """
-        Best-effort reset of prefix cache ONLY for the hidden-states generator path.
+        Reset prefix cache for the active hidden states path.
+        For Path 2 (native): uses engine_core
+        For Path 1 (VllmHiddenStatesGenerator): uses hs_gen parameter
+        """
+        if self.use_native_hs_capture:
+            # Path 2: Native capture
+            try:
+                self.llm.llm_engine.reset_prefix_cache()
+                # self._engine_core.call_utility("reset_prefix_cache")
+                return True
+            except Exception as e:
+                log.warning("Could not reset native prefix cache: %s", e)
+                return False
+        else:
+            # Path 1: VllmHiddenStatesGenerator
+            try:
+                sch = getattr(hs_gen, "scheduler", None)
+                if sch is None:
+                    return False
+
+                # Some versions expose reset on scheduler
+                if hasattr(sch, "reset_prefix_cache"):
+                    return bool(sch.reset_prefix_cache())
+
+                # Others expose it on kv_cache_manager
+                kvm = getattr(sch, "kv_cache_manager", None)
+                if kvm is not None and hasattr(kvm, "reset_prefix_cache"):
+                    return bool(kvm.reset_prefix_cache())
+            except Exception as e:
+                log.warning("Could not reset HS generator prefix cache: %s", e)
+
+            return False
+
+    def _reset_llm_prefix_cache(self, llm) -> bool:
+        """
+        Best-effort reset of prefix cache for the main LLM to force full forward pass.
+
+        This invalidates KV cache so that the additional forward pass for HS capture
+        processes the entire input sequence (prompt + generated tokens) instead of
+        using cached KV pairs from previous generation.
         """
         try:
-            sch = getattr(hs_gen, "scheduler", None)
+            # Try to get scheduler from llm
+            sch = getattr(llm, "scheduler", None)
             if sch is None:
+                # Try llm.llm_engine.scheduler for vLLM
+                sch = getattr(llm, "llm_engine", None)
+                if sch is not None:
+                    sch = getattr(sch, "scheduler", None)
+
+            if sch is None:
+                log.warning("Could not find scheduler in LLM for cache reset")
                 return False
 
             # Some versions expose reset on scheduler
@@ -187,10 +315,20 @@ class VLLMWithUncertainty:
             kvm = getattr(sch, "kv_cache_manager", None)
             if kvm is not None and hasattr(kvm, "reset_prefix_cache"):
                 return bool(kvm.reset_prefix_cache())
-        except Exception as e:
-            log.warning("Could not reset HS generator prefix cache: %s", e)
 
-        return False
+            # Try alternative methods
+            if hasattr(sch, "reset"):
+                return bool(sch.reset())
+
+            if hasattr(sch, "clear"):
+                return bool(sch.clear())
+
+            log.warning("Found scheduler but no reset method available")
+            return False
+
+        except Exception as e:
+            log.warning("Could not reset LLM prefix cache: %s", e)
+            return False
 
     def _stitch_payload_from_cache(
             self,
@@ -223,23 +361,16 @@ class VLLMWithUncertainty:
         prefix_ids = req_ids[:missing]
         prefix_hs = self._lookup_prefix_hs(prefix_ids)
         if prefix_hs is None:
-            log.info(
-                "HS stitch: cache miss for prefix (missing=%d, suffix=%d, expected=%d).",
-                missing, got, expected
-            )
             return None
 
         full = [torch.cat([p, s], dim=0) for p, s in zip(prefix_hs, hs_suffix)]
         out = dict(payload)
         out["hidden_states"] = full
-        log.info(
-            "HS stitch: stitched %d tokens from cache + %d suffix tokens = %d total.",
-            missing, got, expected
-        )
         return out
 
     def _gen_hidden_states(self, full_token_ids):
         """
+        Path 1: Generate hidden states using VllmHiddenStatesGenerator.
         Try normal generation first.
         If got_len < expected_len (APC reused prefix), stitch missing prefix from local cache.
         If still unresolved, recompute unresolved sequences after resetting HS prefix cache.
@@ -367,34 +498,97 @@ class VLLMWithUncertainty:
         if self.prompt_logprobs:
             sampling_params.prompt_logprobs = sampling_params.logprobs
 
-        # ---- 1) Generate with vLLM ----
+        # ---- 1) MAIN GENERATION (without HS capture) ----
         outputs = self.llm.generate(prompts_list, sampling_params)
 
-        print(f"DEBUG: After generate, output_hidden_states={self.output_hidden_states}")
-        import sys
-        sys.stdout.flush()
-
-        # ---- 2) Optionally compute hidden states per (prompt, output) ----
-        hs_by_req_out: List[List[Optional[dict]]] = [
+        # ---- 2) Setup HS capture for additional forward pass ----
+        hs_by_req_out: List[List[Optional[List[torch.Tensor]]]] = [
             [None] * len(ro.outputs) for ro in outputs
         ]
-        prompt_token_ids = self._prompts_to_token_ids(prompts_list)
-        context_lengths = [len(ids) for ids in prompt_token_ids]
+        context_lengths = None
 
         if self.output_hidden_states:
-            # Sleep main LLM to free GPU memory before HS generator loads
-            print("\n\n\nSleeping main LLM (level=2) to free GPU memory before HS generator\n\n\n")
-            self.llm.sleep(level=2)
+            prompt_token_ids = self._prompts_to_token_ids(prompts_list)
+            context_lengths = [len(ids) for ids in prompt_token_ids]
 
-            flat_full_ids, flat_index, context_lengths = self._build_flat_full_token_ids(
-                prompts_list, outputs
+            flat_full_ids, flat_index, _ = self._build_flat_full_token_ids(
+                    prompts_list, outputs
             )
 
-            if flat_full_ids:
-                flat_payloads = self._gen_hidden_states(flat_full_ids)
-                for k, payload in enumerate(flat_payloads):
-                    i, j = flat_index[k]
-                    hs_by_req_out[i][j] = payload
+            if self.use_native_hs_capture:
+                # Path 2: Native capture - sequential additional forward pass
+                # Process each sequence separately to avoid prefix sharing issues
+                self._ensure_hs_extension()
+
+                # Create sampling params for 1 token generation
+                one_token_params = SamplingParams(
+                    temperature=0,
+                    max_tokens=1,
+                )
+
+                log.info(f"Running sequential additional forward pass with HS capture for {len(flat_full_ids)} sequences")
+
+                # Process each sequence separately (batch_size=1)
+                for k, (i, j) in enumerate(flat_index):
+                    seq_ids = flat_full_ids[k]
+                    seq_len = len(seq_ids)
+
+                    log.info(f"Processing sequence {k+1}/{len(flat_full_ids)} (req_idx={i}, out_idx={j}, seq_len={seq_len})")
+
+                    # Reset capture buffer and prefix cache for each sequence
+                    self._engine_core.collective_rpc("_reset_capture")
+                    self._reset_hs_prefix_cache()
+
+                    # Generate 1 token for THIS SEQUENCE ONLY (batch_size=1)
+                    _ = self.llm.generate([TokensPrompt(prompt_token_ids=seq_ids)], sampling_params=one_token_params)
+
+                    # Extract captured states for this sequence
+                    per_rank = self._engine_core.collective_rpc("_get_captured_states")
+                    captured_raw: dict = per_rank[0] if per_rank else {}
+
+                    # Deserialize pickled arrays
+                    captured = {}
+                    for lid, pickled_bytes in captured_raw.items():
+                        arr = pickle.loads(pickled_bytes)
+                        captured[lid] = torch.from_numpy(arr)
+                        log.info(f"  Sequence {k}: Layer {lid}: captured shape={arr.shape}, dtype={arr.dtype}")
+
+                    # Verify we captured exactly seq_len tokens
+                    total_captured = 0
+                    if captured:
+                        first_lid = list(captured.keys())[0]
+                        total_captured = captured[first_lid].shape[0]
+                        log.info(f"  Sequence {k}: captured {total_captured} tokens, expected {seq_len}, match={total_captured == seq_len}")
+
+                    # Form hidden states list for this sequence
+                    layer_states = []
+                    for lid in self.hs_layer_ids:
+                        if lid in captured:
+                            tensor = captured[lid]
+                            # We expect exactly seq_len tokens for this single sequence
+                            if tensor.shape[0] == seq_len:
+                                layer_states.append(tensor)
+                            else:
+                                log.warning(f"  Sequence {k}: Layer {lid} has {tensor.shape[0]} tokens, expected {seq_len}")
+                                # Slice to expected length if needed
+                                layer_states.append(tensor[:seq_len])
+
+                    hs_by_req_out[i][j] = {"hidden_states": layer_states} if layer_states else None
+            else:
+                # Path 1: VllmHiddenStatesGenerator - separate generation
+                # Sleep main LLM to free GPU memory before HS generator loads
+                log.info("Sleeping main LLM (level=2) to free GPU memory before HS generator")
+                self.llm.sleep(level=2)
+
+                if flat_full_ids:
+                    flat_payloads = self._gen_hidden_states(flat_full_ids)
+                    for k, payload in enumerate(flat_payloads):
+                        i, j = flat_index[k]
+                        # Convert dict payload to list of tensors format
+                        if payload is not None and "hidden_states" in payload:
+                            hs_by_req_out[i][j] = payload  # Keep the whole dict with "hidden_states" key
+                        else:
+                            hs_by_req_out[i][j] = None
 
         return outputs, hs_by_req_out, context_lengths, prompts_list
 
