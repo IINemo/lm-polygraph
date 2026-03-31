@@ -59,17 +59,21 @@ class InferCausalLMCalculator(StatCalculator):
 
         if not all_layers:
             hidden_layer = -1
-            input_tokens_hs = output.hidden_states[0][hidden_layer].cpu().detach()
+            input_tokens_hs = output.hidden_states[0][hidden_layer].cpu(
+            ).detach()
             if len(output.hidden_states) > 1:
                 generated_tokens_hs = torch.cat(
-                    [h[hidden_layer].cpu().detach() for h in output.hidden_states[1:]],
+                    [h[hidden_layer].cpu().detach()
+                     for h in output.hidden_states[1:]],
                     dim=1,
                 )
         else:
-            input_tokens_hs = output.hidden_states[0].mean(axis=0).cpu().detach()
+            input_tokens_hs = output.hidden_states[0].mean(
+                axis=0).cpu().detach()
             if len(output.hidden_states) > 1:
                 generated_tokens_hs = torch.cat(
-                    [h.mean(axis=0).cpu().detach() for h in output.hidden_states[1:]],
+                    [h.mean(axis=0).cpu().detach()
+                     for h in output.hidden_states[1:]],
                     dim=1,
                 )
 
@@ -81,7 +85,8 @@ class InferCausalLMCalculator(StatCalculator):
                 .detach()
             )
         else:
-            batch_embeddings_decoder = input_tokens_hs.mean(axis=1).cpu().detach()
+            batch_embeddings_decoder = input_tokens_hs.mean(
+                axis=1).cpu().detach()
 
         return batch_embeddings_decoder
 
@@ -93,8 +98,8 @@ class InferCausalLMCalculator(StatCalculator):
         lls = []
 
         all_logits = torch.stack(out.scores, dim=1)
-        for i in range(len(model_inputs)):
-            seq = out.sequences[i, model_inputs.shape[1] :].cpu()
+        for i in range(len(out.sequences)):
+            seq = out.sequences[i, model_inputs.shape[1]:].cpu()
 
             length = len(seq)
             for j in range(len(seq)):
@@ -110,14 +115,15 @@ class InferCausalLMCalculator(StatCalculator):
 
             log_probs = logits.log_softmax(-1)
             cut_log_probs.append(log_probs.numpy())
-            lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+            lls.append([log_probs[j, tokens[j]]
+                       for j in range(len(log_probs))])
 
             cut_alternatives.append([[] for _ in range(length)])
             for j in range(length):
                 lt = logits[j, :].numpy()
                 best_tokens = np.argpartition(lt, -self.n_alternatives)
                 ln = len(best_tokens)
-                best_tokens = best_tokens[ln - self.n_alternatives : ln]
+                best_tokens = best_tokens[ln - self.n_alternatives: ln]
                 for t in best_tokens:
                     cut_alternatives[-1][j].append((t.item(), lt[t].item()))
 
@@ -183,7 +189,9 @@ class InferCausalLMCalculator(StatCalculator):
             "max_new_tokens": max_new_tokens,
         }
         args_generate.update(kwargs)
-        out = model.generate(**model_inputs, **args_generate)
+        model_inputs.update(args_generate)
+        #out = model.generate(**model_inputs, **args_generate)
+        out = model.generate(**model_inputs)
 
         result_dict = self._post_process_logits(
             out, input_ids, model.model.generation_config.eos_token_id
