@@ -5,7 +5,7 @@ Extracts greedy_log_likelihoods and greedy_log_probs from vLLM output
 or from token_ids/logprobs directly (for truncated scoring).
 """
 
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 from lm_polygraph.stat_calculators import StatCalculator

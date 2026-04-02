@@ -1,22 +1,23 @@
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Union, Any
-
+import logging
 import pickle
 from collections import OrderedDict
-from typing import Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
-import logging
+import torch
+from tqdm import tqdm
+from vllm import LLM, SamplingParams, TokensPrompt
+from vllm.outputs import RequestOutput
+
 from lm_polygraph.estimators import Estimator
 from lm_polygraph.stat_calculators.extract_claims import Claim
-from vllm import LLM, SamplingParams
-from vllm.outputs import RequestOutput
-from vllm import TokensPrompt
-from tqdm import tqdm
-import torch
 
 # Optional dependency (only needed for Path 1: VllmHiddenStatesGenerator)
 try:
-    from speculators.data_generation.vllm_hidden_states_generator import VllmHiddenStatesGenerator
+    from speculators.data_generation.vllm_hidden_states_generator import (
+        VllmHiddenStatesGenerator,
+    )
 except Exception:
     VllmHiddenStatesGenerator = None
 
@@ -43,6 +44,7 @@ def _safe_float_uncertainty(u: Any) -> float:
 @dataclass
 class RequestOutputWithUncertainty:
     """Extends vLLM RequestOutput to include uncertainty scores + optional hidden states payload."""
+
     request_output: RequestOutput
     uncertainty_scores: List[float]  # One score per output sequence
 
@@ -66,19 +68,19 @@ class VLLMWithUncertainty:
     """
 
     def __init__(
-            self,
-            llm: LLM,
-            stat_calculators: List,
-            estimator: Estimator,
-            n_logprobs: int = 0,
-            output_hidden_states: bool = False,
-            hs_layer_ids: Optional[List[int]] = None,
-            prompt_logprobs: bool = False,
-            hs_cache_max_seqs: int = 32,
-            hs_recompute_on_miss: bool = True,
-            hs_strict: bool = False,
-            hs_generator_kwargs: Optional[dict] = None,
-            use_native_hs_capture: bool = False,
+        self,
+        llm: LLM,
+        stat_calculators: List,
+        estimator: Estimator,
+        n_logprobs: int = 0,
+        output_hidden_states: bool = False,
+        hs_layer_ids: Optional[List[int]] = None,
+        prompt_logprobs: bool = False,
+        hs_cache_max_seqs: int = 32,
+        hs_recompute_on_miss: bool = True,
+        hs_strict: bool = False,
+        hs_generator_kwargs: Optional[dict] = None,
+        use_native_hs_capture: bool = False,
     ):
         self.llm = llm
         self.tokenizer = llm.get_tokenizer()
@@ -107,7 +109,9 @@ class VLLMWithUncertainty:
 
         if self.output_hidden_states:
             if not self.hs_layer_ids:
-                raise ValueError("output_hidden_states=True requires hs_layer_ids (e.g., [2, 10, 20]).")
+                raise ValueError(
+                    "output_hidden_states=True requires hs_layer_ids (e.g., [2, 10, 20])."
+                )
 
             if self.use_native_hs_capture:
                 log.warning(
@@ -132,7 +136,9 @@ class VLLMWithUncertainty:
                         # Check worker_extension_cls contains HookHiddenStatesExtension
                         vllm_config = getattr(llm_engine, "vllm_config", None)
                         parallel_config = getattr(vllm_config, "parallel_config", None)
-                        worker_extension_cls = getattr(parallel_config, "worker_extension_cls", None)
+                        worker_extension_cls = getattr(
+                            parallel_config, "worker_extension_cls", None
+                        )
                         if worker_extension_cls is None:
                             raise ValueError(
                                 "Native HS capture (use_native_hs_capture=True) requires "
@@ -140,7 +146,9 @@ class VLLMWithUncertainty:
                                 "in LLM initialization. "
                                 "Please initialize LLM with: LLM(..., worker_extension_cls='hook_hs_extension.HookHiddenStatesExtension', ...)"
                             )
-                        elif "HookHiddenStatesExtension" not in str(worker_extension_cls):
+                        elif "HookHiddenStatesExtension" not in str(
+                            worker_extension_cls
+                        ):
                             raise ValueError(
                                 f"Native HS capture (use_native_hs_capture=True) requires "
                                 f"worker_extension_cls='hook_hs_extension.HookHiddenStatesExtension'. "
@@ -168,7 +176,10 @@ class VLLMWithUncertainty:
 
         self._engine_core = engine_core
         self._hs_extension_ready = True
-        log.info("HS extension ready (Path 2: native capture). layer_ids=%s", self.hs_layer_ids)
+        log.info(
+            "HS extension ready (Path 2: native capture). layer_ids=%s",
+            self.hs_layer_ids,
+        )
 
     def _get_hs_generator(self) -> "VllmHiddenStatesGenerator":
         """Path 1: Get or create VllmHiddenStatesGenerator instance."""
@@ -191,7 +202,10 @@ class VLLMWithUncertainty:
             layer_ids=self.hs_layer_ids,
             **self.hs_generator_kwargs,
         )
-        log.info("HS generator ready (Path 1: VllmHiddenStatesGenerator). layer_ids=%s", self.hs_layer_ids)
+        log.info(
+            "HS generator ready (Path 1: VllmHiddenStatesGenerator). layer_ids=%s",
+            self.hs_layer_ids,
+        )
         return self._hs_gen
 
     def _normalize_prompts(self, prompts: Union[str, List[str]]) -> List[str]:
@@ -200,7 +214,9 @@ class VLLMWithUncertainty:
     def _prompts_to_token_ids(self, prompts_list: List[str]) -> List[List[int]]:
         # Match your example (add_special_tokens=True)
         # If your generation uses different prompt formatting, keep this consistent.
-        return [self.tokenizer(p, add_special_tokens=True).input_ids for p in prompts_list]
+        return [
+            self.tokenizer(p, add_special_tokens=True).input_ids for p in prompts_list
+        ]
 
     # VllmHiddenStatesGenerator may reuse KV-cached prefixes and return hidden states
     # only for newly computed suffix tokens.
@@ -212,13 +228,21 @@ class VLLMWithUncertainty:
         return t.reshape(-1, t.shape[-1]).detach().cpu()
 
     def _payload_seq_len(self, payload: Optional[dict]) -> int:
-        if payload is None or "hidden_states" not in payload or not payload["hidden_states"]:
+        if (
+            payload is None
+            or "hidden_states" not in payload
+            or not payload["hidden_states"]
+        ):
             return 0
         t0 = payload["hidden_states"][0]
         return int(t0.reshape(-1, t0.shape[-1]).shape[0])
 
     def _cache_hs_sequence(self, token_ids: List[int], payload: Optional[dict]) -> None:
-        if payload is None or "hidden_states" not in payload or not payload["hidden_states"]:
+        if (
+            payload is None
+            or "hidden_states" not in payload
+            or not payload["hidden_states"]
+        ):
             return
         key = tuple(int(x) for x in token_ids)
         hs_layers = [self._flat_hs_layer(h).clone() for h in payload["hidden_states"]]
@@ -331,15 +355,19 @@ class VLLMWithUncertainty:
             return False
 
     def _stitch_payload_from_cache(
-            self,
-            req_ids: List[int],
-            payload: Optional[dict],
+        self,
+        req_ids: List[int],
+        payload: Optional[dict],
     ) -> Optional[dict]:
         """
         If payload contains only uncached suffix hidden states, stitch the missing prefix
         from self._hs_seq_cache.
         """
-        if payload is None or "hidden_states" not in payload or not payload["hidden_states"]:
+        if (
+            payload is None
+            or "hidden_states" not in payload
+            or not payload["hidden_states"]
+        ):
             return payload
 
         expected = len(req_ids)
@@ -387,7 +415,11 @@ class VLLMWithUncertainty:
 
         # Pass 1: stitch from local cache
         for i, req_ids in enumerate(full_token_ids):
-            pay = raw_payload[i] if raw_payload is not None and i < len(raw_payload) else None
+            pay = (
+                raw_payload[i]
+                if raw_payload is not None and i < len(raw_payload)
+                else None
+            )
             stitched = self._stitch_payload_from_cache(req_ids, pay)
 
             if stitched is None:
@@ -407,7 +439,8 @@ class VLLMWithUncertainty:
         if unresolved and self.hs_recompute_on_miss:
             log.warning(
                 "HS length mismatch for %d/%d sequences; recomputing unresolved with HS cache reset.",
-                len(unresolved), len(full_token_ids),
+                len(unresolved),
+                len(full_token_ids),
             )
 
             for i in unresolved:
@@ -427,7 +460,7 @@ class VLLMWithUncertainty:
                     except Exception as e:
                         log.error(e)
                     if n_tries <= 3:
-                        log.warning('Reloading HS generator')
+                        log.warning("Reloading HS generator")
                         self._hs_gen = None
                         hs_gen = self._get_hs_generator()
 
@@ -454,9 +487,9 @@ class VLLMWithUncertainty:
         return payload
 
     def _build_flat_full_token_ids(
-            self,
-            prompts_list: List[str],
-            outputs: List[RequestOutput],
+        self,
+        prompts_list: List[str],
+        outputs: List[RequestOutput],
     ):
         """
         Returns:
@@ -480,9 +513,9 @@ class VLLMWithUncertainty:
         return flat_full_ids, flat_index, context_lengths
 
     def _raw_generate(
-            self,
-            prompts: Union[str, List[str]],
-            sampling_params: Optional[SamplingParams] = None,
+        self,
+        prompts: Union[str, List[str]],
+        sampling_params: Optional[SamplingParams] = None,
     ):
 
         prompts_list = self._normalize_prompts(prompts)
@@ -512,7 +545,7 @@ class VLLMWithUncertainty:
             context_lengths = [len(ids) for ids in prompt_token_ids]
 
             flat_full_ids, flat_index, _ = self._build_flat_full_token_ids(
-                    prompts_list, outputs
+                prompts_list, outputs
             )
 
             if self.use_native_hs_capture:
@@ -526,21 +559,28 @@ class VLLMWithUncertainty:
                     max_tokens=1,
                 )
 
-                log.info(f"Running sequential additional forward pass with HS capture for {len(flat_full_ids)} sequences")
+                log.info(
+                    f"Running sequential additional forward pass with HS capture for {len(flat_full_ids)} sequences"
+                )
 
                 # Process each sequence separately (batch_size=1)
                 for k, (i, j) in enumerate(flat_index):
                     seq_ids = flat_full_ids[k]
                     seq_len = len(seq_ids)
 
-                    log.info(f"Processing sequence {k+1}/{len(flat_full_ids)} (req_idx={i}, out_idx={j}, seq_len={seq_len})")
+                    log.info(
+                        f"Processing sequence {k+1}/{len(flat_full_ids)} (req_idx={i}, out_idx={j}, seq_len={seq_len})"
+                    )
 
                     # Reset capture buffer and prefix cache for each sequence
                     self._engine_core.collective_rpc("_reset_capture")
                     self._reset_hs_prefix_cache()
 
                     # Generate 1 token for THIS SEQUENCE ONLY (batch_size=1)
-                    _ = self.llm.generate([TokensPrompt(prompt_token_ids=seq_ids)], sampling_params=one_token_params)
+                    _ = self.llm.generate(
+                        [TokensPrompt(prompt_token_ids=seq_ids)],
+                        sampling_params=one_token_params,
+                    )
 
                     # Extract captured states for this sequence
                     per_rank = self._engine_core.collective_rpc("_get_captured_states")
@@ -551,14 +591,18 @@ class VLLMWithUncertainty:
                     for lid, pickled_bytes in captured_raw.items():
                         arr = pickle.loads(pickled_bytes)
                         captured[lid] = torch.from_numpy(arr)
-                        log.info(f"  Sequence {k}: Layer {lid}: captured shape={arr.shape}, dtype={arr.dtype}")
+                        log.info(
+                            f"  Sequence {k}: Layer {lid}: captured shape={arr.shape}, dtype={arr.dtype}"
+                        )
 
                     # Verify we captured exactly seq_len tokens
                     total_captured = 0
                     if captured:
                         first_lid = list(captured.keys())[0]
                         total_captured = captured[first_lid].shape[0]
-                        log.info(f"  Sequence {k}: captured {total_captured} tokens, expected {seq_len}, match={total_captured == seq_len}")
+                        log.info(
+                            f"  Sequence {k}: captured {total_captured} tokens, expected {seq_len}, match={total_captured == seq_len}"
+                        )
 
                     # Form hidden states list for this sequence
                     layer_states = []
@@ -569,15 +613,21 @@ class VLLMWithUncertainty:
                             if tensor.shape[0] == seq_len:
                                 layer_states.append(tensor)
                             else:
-                                log.warning(f"  Sequence {k}: Layer {lid} has {tensor.shape[0]} tokens, expected {seq_len}")
+                                log.warning(
+                                    f"  Sequence {k}: Layer {lid} has {tensor.shape[0]} tokens, expected {seq_len}"
+                                )
                                 # Slice to expected length if needed
                                 layer_states.append(tensor[:seq_len])
 
-                    hs_by_req_out[i][j] = {"hidden_states": layer_states} if layer_states else None
+                    hs_by_req_out[i][j] = (
+                        {"hidden_states": layer_states} if layer_states else None
+                    )
             else:
                 # Path 1: VllmHiddenStatesGenerator - separate generation
                 # Sleep main LLM to free GPU memory before HS generator loads
-                log.info("Sleeping main LLM (level=2) to free GPU memory before HS generator")
+                log.info(
+                    "Sleeping main LLM (level=2) to free GPU memory before HS generator"
+                )
                 self.llm.sleep(level=2)
 
                 if flat_full_ids:
@@ -586,25 +636,29 @@ class VLLMWithUncertainty:
                         i, j = flat_index[k]
                         # Convert dict payload to list of tensors format
                         if payload is not None and "hidden_states" in payload:
-                            hs_by_req_out[i][j] = payload  # Keep the whole dict with "hidden_states" key
+                            hs_by_req_out[i][
+                                j
+                            ] = payload  # Keep the whole dict with "hidden_states" key
                         else:
                             hs_by_req_out[i][j] = None
 
         return outputs, hs_by_req_out, context_lengths, prompts_list
 
     def _construct_request_with_uncertainty(
-            self,
-            prompts_list: Union[str, List[str]],
-            sampling_params: Optional[SamplingParams],
-            outputs,
-            hs_by_req_out,
-            context_lengths,
-            compute_uncertainty: bool = True,
+        self,
+        prompts_list: Union[str, List[str]],
+        sampling_params: Optional[SamplingParams],
+        outputs,
+        hs_by_req_out,
+        context_lengths,
+        compute_uncertainty: bool = True,
     ) -> List[RequestOutputWithUncertainty]:
 
         results: List[RequestOutputWithUncertainty] = []
 
-        for i, request_output in tqdm(enumerate(outputs), total=len(outputs), desc="Computing uncertainty"):
+        for i, request_output in tqdm(
+            enumerate(outputs), total=len(outputs), desc="Computing uncertainty"
+        ):
             request_scores = []
 
             if compute_uncertainty:
@@ -629,7 +683,11 @@ class VLLMWithUncertainty:
                         "token_ids": getattr(out, "token_ids", None),
                         "logprobs": getattr(out, "logprobs", None),
                         "prompt_logprobs": prompt_lps,
-                        "context_lengths": [context_lengths[i]] if context_lengths is not None else None,
+                        "context_lengths": (
+                            [context_lengths[i]]
+                            if context_lengths is not None
+                            else None
+                        ),
                     }
 
                     if out_hs is not None:
@@ -641,7 +699,8 @@ class VLLMWithUncertainty:
                                 deps,
                                 texts=[prompts_list[i]],
                                 model=self,
-                                max_new_tokens=getattr(sampling_params, "max_tokens", 0) or 0,
+                                max_new_tokens=getattr(sampling_params, "max_tokens", 0)
+                                or 0,
                             )
                         )
 
@@ -660,17 +719,22 @@ class VLLMWithUncertainty:
         return results
 
     def generate(
-            self,
-            prompts: Union[str, List[str]],
-            sampling_params: Optional[SamplingParams] = None,
-            compute_uncertainty: bool = True,
+        self,
+        prompts: Union[str, List[str]],
+        sampling_params: Optional[SamplingParams] = None,
+        compute_uncertainty: bool = True,
     ) -> List[RequestOutputWithUncertainty]:
         outputs, hs_by_req_out, context_lengths, prompts_list = self._raw_generate(
-            prompts, sampling_params,
+            prompts,
+            sampling_params,
         )
         results = self._construct_request_with_uncertainty(
-            prompts_list, sampling_params, outputs,
-            hs_by_req_out, context_lengths, compute_uncertainty,
+            prompts_list,
+            sampling_params,
+            outputs,
+            hs_by_req_out,
+            context_lengths,
+            compute_uncertainty,
         )
 
         return results
@@ -689,11 +753,11 @@ class VLLMWithUncertainty:
         return float(uncertainty)
 
     def score(
-            self,
-            token_ids: List[int],
-            logprobs: List[Dict],
-            output=None,
-            claim_range=None,
+        self,
+        token_ids: List[int],
+        logprobs: List[Dict],
+        output=None,
+        claim_range=None,
     ) -> float:
         """
         Score arbitrary (possibly truncated) sequences.
@@ -703,10 +767,15 @@ class VLLMWithUncertainty:
 
         if output is not None and hasattr(output, "deps"):
             deps = output.deps
-            deps["claims"] = [[Claim(
-                None, None,
-                list(range(claim_range[0], claim_range[1])),
-            )]]
+            deps["claims"] = [
+                [
+                    Claim(
+                        None,
+                        None,
+                        list(range(claim_range[0], claim_range[1])),
+                    )
+                ]
+            ]
             log.debug(f"Recovered deps: {deps.keys()}")
         else:
             deps = {
