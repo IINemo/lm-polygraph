@@ -94,7 +94,7 @@ class KernelLanguageEntropy(Estimator):
         2. Let NLI'(Si, Sj) = one-hot prediction over (entailment, neutral class, contradiction)
         Note that NLI'(Si, Sj) is calculated in stats
         3. Let W be a matrix, such that Wij = wNLI'(Si, Sj), where w = (1, 0.5, 0)
-        4. Let L be a laplacian matrix of W, i.e. L = W - D, where Dii = sum(Wij) over j.
+        4. Let L be a laplacian matrix of W, i.e. L = D - W, where Dii = sum(Wij) over j.
         5. Let Kheat = heat kernel of W, i.e. Kheat = expm(-t * L), where t is a hyperparameter.
         6. Finally, KLE(x) = VNE(Kheat), where VNE(A) = -Tr(A log A).
         """
@@ -105,11 +105,11 @@ class KernelLanguageEntropy(Estimator):
         for matrix_entail, matrix_contra in zip(
             semantic_matrix_entail, semantic_matrix_contra
         ):
-            matrix_entail = (matrix_entail + matrix_entail.T) / 2
-            matrix_contra = (matrix_contra + matrix_contra.T) / 2
+            matrix_entail = (matrix_entail + matrix_entail.T) 
+            matrix_contra = (matrix_contra + matrix_contra.T) 
 
             matrix_neutral = (
-                np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
+                2 * np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
             )
             weighted_graph = matrix_entail + 0.5 * matrix_neutral
 
