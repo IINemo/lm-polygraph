@@ -455,6 +455,12 @@ class WhiteboxModel(Model):
             self.scores.append(scores.log_softmax(-1))
             return scores
 
+    class _SanitizeLogitsProcessor:
+        # Replaces inf/nan in logits with large finite values to prevent
+        # RuntimeError in torch.multinomial during sampling
+        def __call__(self, input_ids=None, scores=None):
+            return torch.nan_to_num(scores, nan=0.0, posinf=1e4, neginf=-1e4)
+
     def generate(self, **args):
         """
         Generates the model output with scores from batch formed by HF Tokenizer.
@@ -466,14 +472,16 @@ class WhiteboxModel(Model):
         """
         default_params = asdict(self.generation_parameters)
 
-        # add ScoresProcessor to collect original scores
+        # add ScoresProcessor to collect original scores, and SanitizeLogitsProcessor
+        # to prevent inf/nan from crashing torch.multinomial during sampling
         processor = self._ScoresProcessor()
+        sanitizer = self._SanitizeLogitsProcessor()
         if "logits_processor" in args.keys():
             logits_processor = LogitsProcessorList(
-                [processor, args["logits_processor"]]
+                [sanitizer, processor, args["logits_processor"]]
             )
         else:
-            logits_processor = LogitsProcessorList([processor])
+            logits_processor = LogitsProcessorList([sanitizer, processor])
         args["logits_processor"] = logits_processor
 
         # update default parameters with passed arguments
