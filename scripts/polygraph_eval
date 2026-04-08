@@ -2,6 +2,7 @@
 
 import hydra
 import os
+import time
 import transformers
 from pathlib import Path
 from omegaconf import OmegaConf
@@ -98,13 +99,15 @@ def main(args):
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
 
+        t_step = time.time()
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
 
         model = get_model(args)
 
-        log.info("Done with loading model.")
+        log.info(f"Done with loading model. ({time.time() - t_step:.1f}s)")
 
+        t_step = time.time()
         log.info(f"Loading dataset {args.dataset}...")
         dataset = Dataset.load(
             args.dataset,
@@ -125,13 +128,14 @@ def main(args):
             **cache_kwargs,
         )
 #	images=dataset.images
-        log.info("Done with loading eval data.")
+        log.info(f"Done with loading eval data. ({time.time() - t_step:.1f}s)")
 
         log.info("=" * 100)
+        t_step = time.time()
         log.info("Initializing UE estimators...")
         estimators = []
         estimators += get_ue_methods(args, model)
-        log.info("Done loading UE estimators")
+        log.info(f"Done loading UE estimators ({time.time() - t_step:.1f}s)")
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
@@ -160,12 +164,15 @@ def main(args):
             log_time=getattr(args, "log_time", False),
         )
 
+        t_step = time.time()
+        log.info("Starting UEManager evaluation...")
         try:
             man()
         except Exception as e:
             man.state = "failed"
             raise e
         finally:
+            log.info(f"UEManager evaluation finished. ({time.time() - t_step:.1f}s)")
             man.save(save_path + f"/ue_manager_seed{seed}")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:

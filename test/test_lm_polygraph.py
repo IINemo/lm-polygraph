@@ -1,5 +1,7 @@
 import subprocess
 import pathlib
+import time
+import sys
 
 from lm_polygraph.utils.manager import UEManager
 
@@ -14,7 +16,18 @@ from lm_polygraph.utils.manager import UEManager
 
 
 def exec_bash(s):
-    return subprocess.run(s, shell=True)
+    print(f"\n[TIMER] Starting command: {s}", flush=True)
+    t0 = time.time()
+    proc = subprocess.Popen(
+        s, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    for line in proc.stdout:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+    proc.wait()
+    elapsed = time.time() - t0
+    print(f"[TIMER] Command finished in {elapsed:.1f}s (rc={proc.returncode})", flush=True)
+    return proc
 
 
 def pwd():
