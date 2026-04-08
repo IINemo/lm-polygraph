@@ -49,5 +49,6 @@ jobs:
       run: rm -rf $HOME/.cache
     # If we exceed disk space limit again, we can test lm-polygraph tests separately, and delete cachedir again
     - name: Test with pytest
+      timeout-minutes: 30
       run: |
         pytest --ignore=test/local

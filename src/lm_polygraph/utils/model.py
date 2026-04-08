@@ -456,10 +456,30 @@ class WhiteboxModel(Model):
             return scores
 
     class _SanitizeLogitsProcessor:
-        # Replaces inf/nan in logits with large finite values to prevent
-        # RuntimeError in torch.multinomial during sampling
+        # Replaces inf/nan in logits with finite values to prevent
+        # RuntimeError in torch.multinomial during sampling.
+        # Uses per-row max/min of finite values to avoid dominating softmax.
         def __call__(self, input_ids=None, scores=None):
-            return torch.nan_to_num(scores, nan=0.0, posinf=1e4, neginf=-1e4)
+            if torch.isfinite(scores).all():
+                return scores
+            finite_mask = torch.isfinite(scores)
+            # Compute per-row max/min of finite values
+            masked = scores.clone()
+            masked[~finite_mask] = float("-inf")
+            row_max = masked.max(dim=-1, keepdim=True).values
+            masked[~finite_mask] = float("inf")
+            row_min = masked.min(dim=-1, keepdim=True).values
+            # Fallback if entire row is non-finite
+            row_max = torch.where(
+                torch.isfinite(row_max), row_max, torch.zeros_like(row_max)
+            )
+            row_min = torch.where(
+                torch.isfinite(row_min), row_min, torch.zeros_like(row_min)
+            )
+            scores = torch.where(torch.isposinf(scores), row_max, scores)
+            scores = torch.where(torch.isneginf(scores), row_min, scores)
+            scores = torch.nan_to_num(scores, nan=0.0)
+            return scores
 
     def generate(self, **args):
         """
