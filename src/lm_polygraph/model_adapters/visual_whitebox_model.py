@@ -16,8 +16,8 @@ from transformers import (
 try:
     from transformers import AutoModelForVision2Seq
 except ImportError:
-    # transformers >= 5.0 removed AutoModelForVision2Seq
-    AutoModelForVision2Seq = None
+    # transformers >= 5.0 renamed AutoModelForVision2Seq → AutoModelForImageTextToText
+    from transformers import AutoModelForImageTextToText as AutoModelForVision2Seq
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.dataset import Dataset
