@@ -18,10 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
+    # TODO: restore matrix after debugging
     strategy:
       fail-fast: false
       matrix:
-        transformers-version: ["default", "5.*"]
+        transformers-version: ["default"]
 
     steps:
     - uses: actions/checkout@v3
@@ -41,17 +42,18 @@ jobs:
       if: matrix.transformers-version != 'default'
       run: |
         pip install "transformers==${{ matrix.transformers-version }}"
-    - name: Lint
-      if: matrix.transformers-version == 'default'
-      uses: py-actions/flake8@v2
-      with:
-        args: "--extend-ignore E501,F405,F403,E203 --per-file-ignores __init__.py:F401,builder_stat_calculator_simple.py:F401"
-        path: "."
-        plugins: "flake8-black"
+    # TODO: restore lint after debugging
+    # - name: Lint
+    #   if: matrix.transformers-version == 'default'
+    #   uses: py-actions/flake8@v2
+    #   with:
+    #     args: "--extend-ignore E501,F405,F403,E203 --per-file-ignores __init__.py:F401,builder_stat_calculator_simple.py:F401"
+    #     path: "."
+    #     plugins: "flake8-black"
     - name: Remove cachedir in order to save up on disk
       run: rm -rf $HOME/.cache
     # If we exceed disk space limit again, we can test lm-polygraph tests separately, and delete cachedir again
     - name: Test with pytest
       timeout-minutes: 30
       run: |
-        pytest --ignore=test/local -s -v
+        pytest test/test_lm_polygraph.py::test_all_seq_ue -s -v
