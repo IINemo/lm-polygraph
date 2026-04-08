@@ -1,3 +1,31 @@
+"""
+vLLM model wrapper with uncertainty estimation and optional hidden states extraction.
+
+Wraps a vLLM LLM instance with lm-polygraph uncertainty scoring.
+Supports generation with immediate scoring, standalone scoring of pre-extracted
+logprobs, and optional hidden states capture for UQ head-based estimators.
+
+Usage:
+    from vllm import LLM
+    from lm_polygraph.estimators import MeanTokenEntropy
+    from lm_polygraph.stat_calculators import VLLMLogprobsExtractionCalculator, EntropyCalculator
+    from lm_polygraph.utils import VLLMWithUncertainty
+
+    llm = LLM(model="Qwen/Qwen2.5-7B")
+    model = VLLMWithUncertainty(
+        llm=llm,
+        stat_calculators=[VLLMLogprobsExtractionCalculator(), EntropyCalculator()],
+        estimator=MeanTokenEntropy(),
+    )
+
+    # Generate with uncertainty scoring
+    results = model.generate(prompts=["What is 2+2?"], sampling_params=params)
+    # results[i].uncertainty_scores  -- one score per output sequence
+
+    # Score pre-extracted logprobs
+    uncertainty = model.score(token_ids, logprobs)
+"""
+
 import logging
 import pickle
 from collections import OrderedDict
@@ -63,8 +91,24 @@ class VLLMWithUncertainty:
       Captures HS during main generation; requires vLLM with HS capture extension.
 
     Args:
-        use_native_hs_capture: If True, use Path 2 (native capture). Otherwise use Path 1 (VllmHiddenStatesGenerator).
+        llm: vLLM LLM engine instance.
+        stat_calculators: List of lm-polygraph stat calculators to compute statistics
+            from generation output (e.g., VLLMLogprobsExtractionCalculator, EntropyCalculator).
+        estimator: lm-polygraph Estimator to compute final uncertainty score
+            from calculator statistics (e.g., MeanTokenEntropy, Perplexity).
+        n_logprobs: Number of top logprobs to request from vLLM per token. Default: 0.
+        output_hidden_states: If True, extract hidden states during generation.
+            Requires hs_layer_ids to be set. Default: False.
+        hs_layer_ids: List of transformer layer indices to capture hidden states from
+            (e.g., [2, 10, 20]). Required when output_hidden_states=True.
+        prompt_logprobs: If True, request logprobs for prompt tokens. Default: False.
+        hs_cache_max_seqs: Max number of sequences to cache hidden states for. Default: 32.
+        hs_recompute_on_miss: If True, recompute hidden states on cache miss. Default: True.
+        hs_strict: If True, raise on hidden states mismatches. Default: False.
         hs_generator_kwargs: Additional kwargs for VllmHiddenStatesGenerator (Path 1 only).
+        use_native_hs_capture: If True, use Path 2 (native capture via collective_rpc).
+            Requires enforce_eager=True and HookHiddenStatesExtension worker.
+            If False, use Path 1 (VllmHiddenStatesGenerator). Default: False.
     """
 
     def __init__(

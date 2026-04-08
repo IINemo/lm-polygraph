@@ -1,8 +1,10 @@
 """
-vLLM logprobs calculator for lm-polygraph.
+vLLM logprobs extraction calculator for lm-polygraph.
 
 Extracts greedy_log_likelihoods and greedy_log_probs from vLLM output
 or from token_ids/logprobs directly (for truncated scoring).
+Unlike greedy_probs.py which both generates and extracts probabilities,
+this calculator only extracts probabilities from existing vLLM output.
 """
 
 from typing import Dict
@@ -11,7 +13,7 @@ import numpy as np
 from lm_polygraph.stat_calculators import StatCalculator
 
 
-class VLLMLogprobsCalculator(StatCalculator):
+class VLLMLogprobsExtractionCalculator(StatCalculator):
     """
     Extracts greedy_log_likelihoods and greedy_log_probs from vLLM output
     or from token_ids/logprobs directly.
@@ -71,7 +73,7 @@ class VLLMLogprobsCalculator(StatCalculator):
             logprobs = dependencies["logprobs"]
         else:
             raise ValueError(
-                "VLLMLogprobsCalculator requires either 'vllm_output' or "
+                "VLLMLogprobsExtractionCalculator requires either 'vllm_output' or "
                 "both 'token_ids' and 'logprobs' in dependencies"
             )
 
