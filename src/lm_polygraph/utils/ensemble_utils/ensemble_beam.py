@@ -8,7 +8,13 @@ from torch.distributions.categorical import Categorical
 from torch import nn
 
 from transformers import GenerationMixin
-from transformers.generation.beam_search import BeamScorer
+
+try:
+    from transformers.generation.beam_search import BeamScorer
+except ImportError:
+    # transformers >= 5.0 removed BeamScorer entirely
+    BeamScorer = None
+
 from transformers.generation.logits_process import (
     LogitsProcessorList,
 )
@@ -16,11 +22,19 @@ from transformers.generation.stopping_criteria import (
     StoppingCriteriaList,
     validate_stopping_criteria,
 )
-from transformers.generation.utils import (
-    BeamSearchOutput,
-    BeamSearchDecoderOnlyOutput,
-    ModelOutput,
-)
+from transformers.generation.utils import ModelOutput
+
+try:
+    from transformers.generation.utils import (
+        BeamSearchOutput,
+        BeamSearchDecoderOnlyOutput,
+    )
+except ImportError:
+    # transformers >= 5.0 renamed these classes
+    from transformers.generation.utils import (
+        GenerateBeamEncoderDecoderOutput as BeamSearchOutput,
+        GenerateBeamDecoderOnlyOutput as BeamSearchDecoderOnlyOutput,
+    )
 
 
 class EnsembleBeamSearchMixin(GenerationMixin):

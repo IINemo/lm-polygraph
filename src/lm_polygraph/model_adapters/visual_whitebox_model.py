@@ -8,11 +8,16 @@ from typing import Dict, List, Optional, Union
 import torch
 from PIL import Image
 from transformers import (
-    AutoModelForVision2Seq,
     AutoProcessor,
     GenerationConfig,
     LogitsProcessorList,
 )
+
+try:
+    from transformers import AutoModelForVision2Seq
+except ImportError:
+    # transformers >= 5.0 removed AutoModelForVision2Seq
+    AutoModelForVision2Seq = None
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.dataset import Dataset

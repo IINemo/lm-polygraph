@@ -16,11 +16,19 @@ from transformers.generation.stopping_criteria import (
     validate_stopping_criteria,
 )
 from transformers.generation.streamers import BaseStreamer
-from transformers.generation.utils import (
-    SampleOutput,
-    SampleDecoderOnlyOutput,
-    ModelOutput,
-)
+from transformers.generation.utils import ModelOutput
+
+try:
+    from transformers.generation.utils import (
+        SampleOutput,
+        SampleDecoderOnlyOutput,
+    )
+except ImportError:
+    # transformers >= 5.0 renamed these classes
+    from transformers.generation.utils import (
+        GenerateNonBeamOutput as SampleOutput,
+        GenerateDecoderOnlyOutput as SampleDecoderOnlyOutput,
+    )
 
 
 class EnsembleSampleMixin(GenerationMixin):
