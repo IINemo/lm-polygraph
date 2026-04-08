@@ -31,6 +31,7 @@ stat_calculators:
 
 subsample_eval_dataset: 10
 batch_size: 2
-seed: 42
+seed:
+  - 42
 device: null
 max_new_tokens: 256
