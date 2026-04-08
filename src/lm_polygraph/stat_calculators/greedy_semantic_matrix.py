@@ -47,16 +47,16 @@ class BaseGreedySemanticMatrixCalculator(StatCalculator):
                 probs_b = []
                 for first_texts, second_texts in tqdm(dl):
                     batch = list(zip(first_texts, second_texts))
-                    encoded = tokenizer(
-                        batch, padding=True, return_tensors="pt"
-                    ).to(deberta.device)
+                    encoded = tokenizer(batch, padding=True, return_tensors="pt").to(
+                        deberta.device
+                    )
                     logits = deberta.deberta(**encoded).logits
                     probs_f.append(softmax(logits))
 
                     batch = list(zip(second_texts, first_texts))
-                    encoded = tokenizer(
-                        batch, padding=True, return_tensors="pt"
-                    ).to(deberta.device)
+                    encoded = tokenizer(batch, padding=True, return_tensors="pt").to(
+                        deberta.device
+                    )
                     logits = deberta.deberta(**encoded).logits
                     probs_b.append(softmax(logits))
 
