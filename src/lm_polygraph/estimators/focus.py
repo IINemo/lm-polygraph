@@ -26,7 +26,13 @@ log = logging.getLogger(__name__)
 
 
 def calcu_idf(
-    tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed, idf_dataset_size, idf_dataset_text_column="text"
+    tokenizer_path,
+    path,
+    idf_dataset,
+    trust_remote_code,
+    idf_seed,
+    idf_dataset_size,
+    idf_dataset_text_column="text",
 ):
     """
     Calculate inverse document frequency (IDF) scores for each token using a Hugging Face tokenizer
