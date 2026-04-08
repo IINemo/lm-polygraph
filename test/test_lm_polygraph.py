@@ -26,7 +26,9 @@ def exec_bash(s):
         sys.stdout.flush()
     proc.wait()
     elapsed = time.time() - t0
-    print(f"[TIMER] Command finished in {elapsed:.1f}s (rc={proc.returncode})", flush=True)
+    print(
+        f"[TIMER] Command finished in {elapsed:.1f}s (rc={proc.returncode})", flush=True
+    )
     return proc
 
 
