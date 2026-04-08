@@ -480,8 +480,10 @@ class WhiteboxModel(Model):
         default_params.update(args)
         args = default_params
 
-        if "stop_strings" in args:
+        if args.get("stop_strings"):
             args["tokenizer"] = self.tokenizer
+        else:
+            args.pop("stop_strings", None)
 
         args = self._validate_args(args)
         generation = self.model.generate(**args)
