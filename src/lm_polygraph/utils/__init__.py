@@ -2,6 +2,7 @@ from .model import WhiteboxModel, BlackboxModel
 from .manager import UEManager
 from .estimate_uncertainty import estimate_uncertainty
 from .dataset import Dataset
+from .api_with_uncertainty import APIWithUncertainty
 
 # Optional vLLM support (requires vllm package)
 try:
