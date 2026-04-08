@@ -574,6 +574,12 @@ class VLLMWithUncertainty:
                                 layer_states.append(tensor[:seq_len])
 
                     hs_by_req_out[i][j] = {"hidden_states": layer_states} if layer_states else None
+
+                # Cleanup: remove hooks and reset capture buffer after generation
+                self._engine_core.collective_rpc("_setup_hidden_states_capture", args=([],))
+                self._engine_core.collective_rpc("_reset_capture")
+                self._hs_extension_ready = False  # Reset flag so hooks are re-registered on next run
+                log.info("Removed HS capture hooks and reset buffer after generation")
             else:
                 # Path 1: VllmHiddenStatesGenerator - separate generation
                 # Sleep main LLM to free GPU memory before HS generator loads
