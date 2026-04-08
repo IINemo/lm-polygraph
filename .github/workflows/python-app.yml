@@ -17,6 +17,11 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        transformers-version: ["default", "5.*"]
+
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.12
@@ -28,7 +33,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest hydra-core==1.3.2
         pip install .
+    - name: Override transformers version
+      if: matrix.transformers-version != 'default'
+      run: |
+        pip install "transformers==${{ matrix.transformers-version }}"
     - name: Lint
+      if: matrix.transformers-version == 'default'
       uses: py-actions/flake8@v2
       with:
         args: "--extend-ignore E501,F405,F403,E203 --per-file-ignores __init__.py:F401,builder_stat_calculator_simple.py:F401"
