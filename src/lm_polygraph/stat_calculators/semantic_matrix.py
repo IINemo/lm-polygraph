@@ -102,7 +102,7 @@ class SemanticMatrixCalculator(StatCalculator):
                 logits_all = []
                 for first_texts, second_texts in dl:
                     batch = list(zip(first_texts, second_texts))
-                    encoded = tokenizer.batch_encode_plus(
+                    encoded = tokenizer(
                         batch, padding=True, return_tensors="pt"
                     ).to(device)
                     logits = deberta.deberta(**encoded).logits
