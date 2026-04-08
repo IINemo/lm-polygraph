@@ -22,9 +22,6 @@ instruct: false
 prompt: ""
 
 ignore_exceptions: false
-
-generation_params:
-  temperature: 0.7
 generation_metrics:
   - name: RougeMetric
     args: ["rouge1"]
@@ -34,7 +31,6 @@ stat_calculators:
 
 subsample_eval_dataset: 10
 batch_size: 2
-seed:
-  - 42
+seed: null
 device: null
 max_new_tokens: 256

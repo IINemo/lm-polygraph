@@ -1,6 +1,4 @@
-import logging
 import numpy as np
-import time
 import torch
 
 from typing import Dict, List, Tuple
@@ -11,8 +9,6 @@ from lm_polygraph.utils.deberta import Deberta
 from collections import defaultdict
 import torch.nn as nn
 import string
-
-log = logging.getLogger("lm_polygraph")
 
 
 def eval_nli_model(
@@ -73,15 +69,9 @@ class GreedyAlternativesNLICalculator(StatCalculator):
         **kwargs,
     ) -> Dict[str, np.ndarray]:
         greedy_alternatives = dependencies["greedy_tokens_alternatives"]
-        total_samples = len(greedy_alternatives)
-        log.info(
-            f"[NLI] Processing {total_samples} samples, "
-            f"tokens per sample: {[len(s) for s in greedy_alternatives]}"
-        )
         greedy_alternatives_nli = []
-        for sample_idx, sample_alternatives in enumerate(greedy_alternatives):
+        for sample_alternatives in greedy_alternatives:
             nli_matrixes = []
-            t_sample = time.time()
             for w_number, word_alternatives in enumerate(sample_alternatives):
                 nli_queue = []
                 nli_matrix = [
@@ -117,10 +107,6 @@ class GreedyAlternativesNLICalculator(StatCalculator):
                         nli_matrix[i][j] = nli_class[wi, wj]
 
                 nli_matrixes.append(nli_matrix)
-            log.info(
-                f"[NLI] Sample {sample_idx + 1}/{total_samples}: "
-                f"{len(sample_alternatives)} tokens in {time.time() - t_sample:.1f}s"
-            )
             greedy_alternatives_nli.append(nli_matrixes)
 
         return {"greedy_tokens_alternatives_nli": greedy_alternatives_nli}

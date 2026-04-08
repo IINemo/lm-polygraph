@@ -252,14 +252,16 @@ class UEManager:
         """
         for stat_calculator in calculators:
             try:
-                start_time = time.time()
-                log.info(f"[CALC] Starting {stat_calculator.__class__.__name__}...")
+                if self.log_time:
+                    start_time = time.time()
+                    log.info(f"Calculating {stat_calculator}...")
                 new_stats = stat_calculator(
                     batch_stats, inp_texts, self.model, self.max_new_tokens
                 )
-                log.info(
-                    f"[CALC] Done {stat_calculator.__class__.__name__} in {round(time.time() - start_time, 2)}s"
-                )
+                if self.log_time:
+                    log.info(
+                        f"Done calculating {stat_calculator} in {round(time.time() - start_time, 2)} secs"
+                    )
                 for stat, stat_value in new_stats.items():
                     if stat in batch_stats.keys():
                         continue

@@ -2,7 +2,6 @@
 
 import hydra
 import os
-import time
 import transformers
 from pathlib import Path
 from omegaconf import OmegaConf
@@ -23,10 +22,7 @@ from lm_polygraph.generation_metrics import *
 from lm_polygraph.estimators import *
 from lm_polygraph.ue_metrics import *
 from lm_polygraph.utils.common import load_external_module, load_processor, load_image
-from lm_polygraph.utils.generation_parameters import (
-    GenerationParameters,
-    GenerationParametersFactory,
-)
+from lm_polygraph.utils.generation_parameters import GenerationParameters, GenerationParametersFactory
 from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
@@ -35,8 +31,7 @@ from lm_polygraph.utils.builder_enviroment_stat_calculator import (
 )
 from lm_polygraph.utils.factory_estimator import FactoryEstimator
 from lm_polygraph.utils.factory_stat_calculator import StatCalculatorContainer
-
-# from transformers import AutoProcessor, AutoModelForVision2Seq
+#from transformers import AutoProcessor, AutoModelForVision2Seq
 
 hydra_config = Path(os.environ.get("HYDRA_CONFIG", ""))
 
@@ -88,7 +83,7 @@ def main(args):
         project = os.environ["WANDB_PROJECT"]
         wandb.init(project=project, dir=save_path, config=wandb_cfg)
         wandb_save_directory(Path(save_path) / ".hydra")
-
+    
     save_path = args.save_path if "save_path" in args else save_path
     log.info(f"Main directory: {save_path}")
 
@@ -103,15 +98,13 @@ def main(args):
         log.info("=" * 100)
         log.info(f"SEED: {seed}")
 
-        t_step = time.time()
         log.info(f"Loading model {args.model.path}...")
         transformers.set_seed(seed)
 
         model = get_model(args)
 
-        log.info(f"Done with loading model. ({time.time() - t_step:.1f}s)")
+        log.info("Done with loading model.")
 
-        t_step = time.time()
         log.info(f"Loading dataset {args.dataset}...")
         dataset = Dataset.load(
             args.dataset,
@@ -131,15 +124,14 @@ def main(args):
             trust_remote_code=getattr(args, "trust_remote_code", False),
             **cache_kwargs,
         )
-        # 	images=dataset.images
-        log.info(f"Done with loading eval data. ({time.time() - t_step:.1f}s)")
+#	images=dataset.images
+        log.info("Done with loading eval data.")
 
         log.info("=" * 100)
-        t_step = time.time()
         log.info("Initializing UE estimators...")
         estimators = []
         estimators += get_ue_methods(args, model)
-        log.info(f"Done loading UE estimators ({time.time() - t_step:.1f}s)")
+        log.info("Done loading UE estimators")
 
         if args.subsample_eval_dataset != -1:
             dataset.subsample(args.subsample_eval_dataset, seed=seed)
@@ -164,28 +156,27 @@ def main(args):
             ],
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
-            save_stats=getattr(args, "save_stats", []),
+            save_stats=getattr(args, 'save_stats', []),
             log_time=getattr(args, "log_time", False),
         )
 
-        t_step = time.time()
-        log.info("Starting UEManager evaluation...")
         try:
             man()
         except Exception as e:
             man.state = "failed"
             raise e
         finally:
-            log.info(f"UEManager evaluation finished. ({time.time() - t_step:.1f}s)")
             man.save(save_path + f"/ue_manager_seed{seed}")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
-            wandb.log({str(k): v for k, v in man.gen_metrics})
-            wandb.log({str(k): v for k, v in man.metrics.items()})
+            wandb.log({str(k) : v for k, v in man.gen_metrics})
+            wandb.log({str(k) : v for k, v in man.metrics.items()})
             wandb.save(save_path + f"/ue_manager_seed{seed}")
 
+    
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
+        
 
 
 def get_ue_metrics(args):
@@ -206,17 +197,13 @@ def get_ue_metrics(args):
 def get_stat_calculator_names(config):
     model_type_raw = getattr(config.model, "type", "Whitebox")
     model_type = (
-        "Blackbox"
-        if model_type_raw == "Blackbox"
-        else "VisualLM" if model_type_raw == "VisualLM" else "Whitebox"
+        "Blackbox" if model_type_raw == "Blackbox"
+        else "VisualLM" if model_type_raw == "VisualLM"
+        else "Whitebox"
     )
     language = getattr(config, "language", "en")
-    output_attentions = getattr(config, "output_attentions", True) and (
-        getattr(config.model, "type", "Whitebox") != "vLLMCausalLM"
-    )
-    output_hidden_states = (
-        False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
-    )
+    output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
+    output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
     hf_cache = getattr(config, "hf_cache", None)
     deberta_batch_size = getattr(config, "deberta_batch_size", 10)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
@@ -229,7 +216,7 @@ def get_stat_calculator_names(config):
             model_type,
             language,
             hf_cache,
-            output_attentions=output_attentions,
+            output_attentions=output_attentions, 
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
             deberta_batch_size=deberta_batch_size,
@@ -281,13 +268,7 @@ def get_generation_metrics(args):
             ),
         ]
         if args.task == "ats":
-            result += [
-                AlignScore(
-                    target_is_claims=False,
-                    source_ignore_regex=ignore_regex,
-                    source_as_target=True,
-                )
-            ]
+            result += [AlignScore(target_is_claims=False, source_ignore_regex=ignore_regex, source_as_target=True)]
         else:
             result += [AlignScore(target_is_claims=True)]
         if getattr(args.model, "type", "Whitebox") != "Blackbox":
@@ -424,7 +405,7 @@ def get_whitebox_model(args, cache_kwargs={}):
 
     generation_params = GenerationParametersFactory.from_params(
         yaml_config=getattr(args, "generation_params", {}),
-        native_config=base_model.generation_config.to_dict(),
+        native_config=base_model.generation_config.to_dict()
     )
 
     model = WhiteboxModel(
@@ -433,7 +414,7 @@ def get_whitebox_model(args, cache_kwargs={}):
         args.model.path,
         args.model.type,
         generation_params,
-        instruct=getattr(args, "instruct", False),
+        instruct=getattr(args, "instruct", False)
     )
 
     return model
@@ -450,59 +431,59 @@ def get_visual_model(args, cache_kwargs={}):
             getattr(args, "generation_params", {}),
             device_map=args.model.load_model_args.device_map,
             add_bos_token=getattr(args.model, "add_bos_token", True),
-            **cache_kwargs,
+            **cache_kwargs
         )
 
-    path_to_load_script = get_abs_path_from_hydra_config(args.model.path_to_load_script)
+    path_to_load_script = get_abs_path_from_hydra_config(
+            args.model.path_to_load_script
+        )
     load_module = load_external_module(path_to_load_script)
 
-    load_model_args = {"model_path": args.model.path}
+    load_model_args = {'model_path': args.model.path}
     load_model_args.update(args.model.load_model_args)
     base_model = load_module.load_model(**load_model_args)
 
-    load_tok_args = {"model_path": args.model.path}
+    load_tok_args = {'model_path': args.model.path}
     load_tok_args.update(args.model.load_tokenizer_args)
     tokenizer = load_module.load_tokenizer(**load_tok_args)
 
-    load_proc_args = {"model_path": args.model.path}
+    load_proc_args = {'model_path': args.model.path}
     load_proc_args.update(getattr(args.model, "load_processor_args", {}))
     processor = load_processor(**load_proc_args)
 
     generation_params = GenerationParametersFactory.from_params(
         yaml_config=getattr(args, "generation_params", {}),
-        native_config=base_model.generation_config.to_dict(),
+        native_config=base_model.generation_config.to_dict()
     )
 
-    model = VisualWhiteboxModel(
-        base_model, processor, args.model.path, args.model.type, generation_params
-    )
+    model = VisualWhiteboxModel(base_model,
+                          processor,
+                          args.model.path,
+                          args.model.type,
+                          generation_params)
 
     return model
 
 
 def get_vllm_model(args):
-    path_to_load_script = get_abs_path_from_hydra_config(args.model.path_to_load_script)
+    path_to_load_script = get_abs_path_from_hydra_config(
+            args.model.path_to_load_script
+        )
     load_module = load_external_module(path_to_load_script)
 
-    load_model_args = {
-        "model_path": args.model.path,
-        "max_new_tokens": args.max_new_tokens,
-        "logprobs": args.model.logprobs,
-    }
+    load_model_args = {'model_path': args.model.path, 
+                       'max_new_tokens': args.max_new_tokens, 
+                       'logprobs': args.model.logprobs}
 
     load_model_args.update(args.model.load_model_args)
     base_model, sampling_params = load_module.load_model(**load_model_args)
-    generation_parameters = GenerationParameters(
-        **getattr(args, "generation_params", {})
-    )
+    generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
 
-    model = WhiteboxModelvLLM(
-        model=base_model,
-        sampling_params=sampling_params,
-        generation_parameters=generation_parameters,
-        device=args.model.device,
-        instruct=getattr(args.model, "instruct", False),
-    )
+    model = WhiteboxModelvLLM(model=base_model, 
+                              sampling_params=sampling_params,
+                              generation_parameters=generation_parameters,
+                              device=args.model.device,
+                              instruct= getattr(args.model, "instruct", False))
 
     return model
 
