@@ -12,7 +12,6 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
     AutoConfig,
-    GenerationConfig,
     LogitsProcessorList,
     BartForConditionalGeneration,
 )
@@ -420,25 +419,9 @@ class WhiteboxModel(Model):
         self.generation_parameters = generation_parameters
         self.instruct = instruct
 
-    # Parameters that belong in GenerationConfig, not as loose kwargs
-    _GENERATION_CONFIG_KEYS = {
-        "temperature",
-        "top_k",
-        "top_p",
-        "do_sample",
-        "num_beams",
-        "repetition_penalty",
-        "max_new_tokens",
-        "max_length",
-        "min_length",
-        "num_return_sequences",
-        "renormalize_logits",
-    }
-
     def _validate_args(self, args):
         """
         Validates and adapts arguments for WhiteboxModel generation.
-        Wraps generation parameters in a GenerationConfig for transformers 5.x compat.
 
         Parameters:
             args (dict): The arguments to validate.
@@ -460,15 +443,6 @@ class WhiteboxModel(Model):
         keys_to_remove = ["presence_penalty", "allow_newlines"]
         for key in keys_to_remove:
             args_copy.pop(key, None)
-
-        # Wrap generation parameters in GenerationConfig for transformers 5.x compat
-        # (transformers 5.x ignores temperature/top_k/etc. as loose kwargs)
-        gen_config_kwargs = {}
-        for key in list(args_copy.keys()):
-            if key in self._GENERATION_CONFIG_KEYS:
-                gen_config_kwargs[key] = args_copy.pop(key)
-        if gen_config_kwargs:
-            args_copy["generation_config"] = GenerationConfig(**gen_config_kwargs)
 
         return args_copy
 
