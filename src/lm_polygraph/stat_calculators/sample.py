@@ -185,6 +185,7 @@ class SamplingGenerationCalculator(StatCalculator):
             max_new_tokens=max_new_tokens,
             min_new_tokens=2,
             do_sample=True,
+            renormalize_logits=True,
             num_beams=1,
             num_return_sequences=1,
             suppress_tokens=(
