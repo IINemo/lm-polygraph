@@ -630,9 +630,7 @@ class VLLMWithUncertainty:
                 self._engine_core.collective_rpc("_reset_capture")
                 # Reset flag so hooks are re-registered on next run
                 self._hs_extension_ready = False
-                log.info(
-                    "Removed HS capture hooks and reset buffer after generation"
-                )
+                log.info("Removed HS capture hooks and reset buffer after generation")
             else:
                 # Path 1: VllmHiddenStatesGenerator - separate generation
                 # Sleep main LLM to free GPU memory before HS generator loads
