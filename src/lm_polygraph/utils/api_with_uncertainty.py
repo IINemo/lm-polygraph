@@ -7,13 +7,13 @@ of pre-extracted logprobs.
 
 Usage:
     from lm_polygraph.estimators import MeanTokenEntropy
-    from lm_polygraph.stat_calculators import VLLMLogprobsCalculator, EntropyCalculator
+    from lm_polygraph.stat_calculators import VLLMLogprobsExtractionCalculator, EntropyCalculator
     from lm_polygraph.utils import APIWithUncertainty
 
     # Wrap an existing API model
     model_with_uncertainty = APIWithUncertainty(
         model=blackbox_model,
-        stat_calculators=[VLLMLogprobsCalculator(), EntropyCalculator()],
+        stat_calculators=[VLLMLogprobsExtractionCalculator(), EntropyCalculator()],
         estimator=MeanTokenEntropy(),
     )
 
@@ -143,7 +143,7 @@ class APIWithUncertainty:
             that returns results with "logprobs" in OpenAI API format.
             Can be None if only using score() for pre-extracted logprobs.
         stat_calculators: List of lm-polygraph stat calculators
-            (e.g., [VLLMLogprobsCalculator(), EntropyCalculator()]).
+            (e.g., [VLLMLogprobsExtractionCalculator(), EntropyCalculator()]).
         estimator: lm-polygraph Estimator instance
             (e.g., MeanTokenEntropy, Perplexity).
     """
