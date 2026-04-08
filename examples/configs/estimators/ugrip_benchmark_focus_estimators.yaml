@@ -1,4 +1,4 @@
-- name: focus
+- name: Focus
   cfg:
     model_name: '${model.path}'
     path: "${cache_path}/focus/${model.path}/token_idf.pkl"
