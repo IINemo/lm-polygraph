@@ -480,10 +480,20 @@ class WhiteboxModel(Model):
         default_params.update(args)
         args = default_params
 
-        if args.get("stop_strings"):
-            args["tokenizer"] = self.tokenizer
-        else:
-            args.pop("stop_strings", None)
+        # Handle stop_strings via stopping_criteria to avoid passing tokenizer
+        # as a kwarg (breaks with transformers>=4.51 + Bloom-like models)
+        stop_strings = args.pop("stop_strings", None)
+        if stop_strings:
+            from transformers import StoppingCriteriaList
+            from transformers.generation.stopping_criteria import StopStringCriteria
+
+            stop_criteria = StopStringCriteria(
+                stop_strings=stop_strings, tokenizer=self.tokenizer
+            )
+            if "stopping_criteria" in args and args["stopping_criteria"]:
+                args["stopping_criteria"].append(stop_criteria)
+            else:
+                args["stopping_criteria"] = StoppingCriteriaList([stop_criteria])
 
         args = self._validate_args(args)
         generation = self.model.generate(**args)
