@@ -55,8 +55,13 @@ pip install lm-polygraph
 
 Some features require additional packages that are not installed by default:
 
-- **COMET metric** (translation evaluation): `unbabel-comet` has constrained `transformers` version requirements, so it is installed separately:
+- **COMET metric** (translation evaluation): `unbabel-comet` pins `numpy<2.0` which may conflict with packages like vLLM. Install via extras:
   ```shell
+  pip install lm-polygraph[comet]
+  ```
+  If you need numpy 2.x (e.g., for vLLM), install without the extra and add comet manually:
+  ```shell
+  pip install lm-polygraph
   pip install unbabel-comet --no-deps
   ```
 
