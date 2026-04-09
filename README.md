@@ -51,6 +51,20 @@ The latest tagged version is also available via PyPI:
 pip install lm-polygraph
 ```
 
+### Optional dependencies
+
+Some features require additional packages that are not installed by default:
+
+- **COMET metric** (translation evaluation): `unbabel-comet` pins `numpy<2.0` which may conflict with packages like vLLM. Install via extras:
+  ```shell
+  pip install lm-polygraph[comet]
+  ```
+  If you need numpy 2.x (e.g., for vLLM), install without the extra and add comet manually:
+  ```shell
+  pip install lm-polygraph
+  pip install unbabel-comet --no-deps
+  ```
+
 ## <a name="basic_usage"></a>Basic usage
 1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation:
 ```python

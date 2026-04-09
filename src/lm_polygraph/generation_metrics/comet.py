@@ -1,6 +1,5 @@
 import re
 import numpy as np
-from evaluate import load
 
 from typing import List, Dict
 from .generation_metric import GenerationMetric
@@ -14,6 +13,8 @@ class Comet(GenerationMetric):
 
     def __init__(self, source_ignore_regex=None, lang="en"):
         super().__init__(["greedy_texts", "input_texts"], "sequence")
+        from evaluate import load
+
         self.scorer = load("comet")
         self.source_ignore_regex = (
             re.compile(source_ignore_regex) if source_ignore_regex else None

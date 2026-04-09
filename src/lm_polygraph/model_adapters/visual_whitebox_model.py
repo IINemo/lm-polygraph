@@ -8,11 +8,16 @@ from typing import Dict, List, Optional, Union
 import torch
 from PIL import Image
 from transformers import (
-    AutoModelForVision2Seq,
     AutoProcessor,
     GenerationConfig,
     LogitsProcessorList,
 )
+
+try:
+    from transformers import AutoModelForVision2Seq
+except ImportError:
+    # transformers >= 5.0 renamed AutoModelForVision2Seq → AutoModelForImageTextToText
+    from transformers import AutoModelForImageTextToText as AutoModelForVision2Seq
 
 from lm_polygraph.utils.generation_parameters import GenerationParameters
 from lm_polygraph.utils.dataset import Dataset
