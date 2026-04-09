@@ -37,13 +37,11 @@ def vn_entropy(
         K = normalize_kernel(K) / K.shape[0]
     result = 0
     try:
-        eigvs = np.linalg.eig(
-            K + jitter * np.eye(K.shape[0])
-        ).eigenvalues.astype(np.float64)
-    except AttributeError:
-        eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0]))[0].astype(
+        eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0])).eigenvalues.astype(
             np.float64
         )
+    except AttributeError:
+        eigvs = np.linalg.eig(K + jitter * np.eye(K.shape[0]))[0].astype(np.float64)
     for e in eigvs:
         if np.abs(e) > 1e-8:
             result -= e * np.log(e)
@@ -120,17 +118,13 @@ class KernelLanguageEntropy(Estimator):
             matrix_contra = matrix_contra + matrix_contra.T
 
             matrix_neutral = (
-                2 * np.ones(matrix_entail.shape)
-                - matrix_entail
-                - matrix_contra
+                2 * np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
             )
             weighted_graph = matrix_entail + 0.5 * matrix_neutral
 
             laplacian = laplacian_matrix(weighted_graph)
             heat_kernel_score = heat_kernel(laplacian, self.t)
             kle.append(
-                vn_entropy(
-                    heat_kernel_score, self.normalize, self.scale, self.jitter
-                )
+                vn_entropy(heat_kernel_score, self.normalize, self.scale, self.jitter)
             )
         return kle
