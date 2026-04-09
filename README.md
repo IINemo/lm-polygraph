@@ -51,6 +51,15 @@ The latest tagged version is also available via PyPI:
 pip install lm-polygraph
 ```
 
+### Optional dependencies
+
+Some features require additional packages that are not installed by default:
+
+- **COMET metric** (translation evaluation): `unbabel-comet` has constrained `transformers` version requirements, so it is installed separately:
+  ```shell
+  pip install unbabel-comet --no-deps
+  ```
+
 ## <a name="basic_usage"></a>Basic usage
 1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation:
 ```python

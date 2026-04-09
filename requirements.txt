@@ -7,7 +7,7 @@ matplotlib>=3.6
 pandas>=1.3.5
 torch>=2.6.0
 bs4
-transformers>=4.50.0
+transformers>=4.50.0,<5
 nltk>=3.6.5
 sacrebleu>=1.5.0
 sentencepiece>=0.2.1
@@ -29,10 +29,10 @@ openai>=1.52.0
 wget
 sentence-transformers
 bert-score>=0.3.13
-unbabel-comet<3
+# unbabel-comet<3  # Optional: install separately, see README
 nltk>=3.7,<4
 evaluate>=0.4.2
-spacy>=3.4.0,<3.8.0
+spacy>=3.4.0
 fastchat
 diskcache>=5.6.3
 boostedprob
