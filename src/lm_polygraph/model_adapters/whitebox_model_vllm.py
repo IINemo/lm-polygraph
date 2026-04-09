@@ -6,6 +6,7 @@ import torch
 from typing import List
 from copy import copy
 
+
 class WhiteboxModelvLLM(Model):
     """Basic whitebox model adapter for using vLLM in stat calculators and uncertainty estimators."""
 
