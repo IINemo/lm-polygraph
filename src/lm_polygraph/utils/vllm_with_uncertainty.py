@@ -707,9 +707,7 @@ class VLLMWithUncertainty:
 
                 # Map output request_id to prompt index in prompts_list.
                 # vLLM request IDs vary by version/config: "6", "6-abc123",
-                # "4_0", etc.  Build a lookup from every output's request_id
-                # and also from its numeric prefix so we can match captured
-                # req_ids that may use a different suffix convention.
+                # "4_0" (where _0 is the sequence index for best-of-n), etc.
                 output_short_ids: Dict[str, int] = {}
                 for i, out in enumerate(outputs):
                     output_short_ids[out.request_id] = i
@@ -727,6 +725,16 @@ class VLLMWithUncertainty:
                         prefix = req_id.split(sep)[0]
                         if prefix != req_id and prefix in output_short_ids:
                             return output_short_ids[prefix]
+                    return None
+
+                def _resolve_seq_idx(req_id: str) -> Optional[int]:
+                    """Extract sequence index from req_id like '4_0' -> 0."""
+                    if "_" in req_id:
+                        parts = req_id.split("_")
+                        try:
+                            return int(parts[-1])
+                        except ValueError:
+                            pass
                     return None
 
                 # Process each captured layer
@@ -759,24 +767,37 @@ class VLLMWithUncertainty:
                         prompt_tokens=req_prompt_tokens,
                     )
 
-                    # Assign filled HS to the right (request, output) slot
+                    # Assign filled HS to the right (request, output) slot.
+                    # With best-of-n, vLLM creates sub-requests like "4_0",
+                    # "4_1" — each with its own hidden states.  Map the suffix
+                    # to the correct output sequence index j.
                     for req_id, arr in filled.items():
                         idx = _resolve_prompt_idx(req_id)
                         if idx is None:
                             continue
 
-                        # For each output sequence of this request
-                        for j, out in enumerate(outputs[idx].outputs):
+                        seq_j = _resolve_seq_idx(req_id)
+                        num_outputs = len(outputs[idx].outputs)
+
+                        if seq_j is not None and seq_j < num_outputs:
+                            # Specific sequence index from req_id (e.g. "4_0")
+                            target_js = [seq_j]
+                        else:
+                            # No sequence suffix or n=1 — assign to all outputs
+                            target_js = list(range(num_outputs))
+
+                        for j in target_js:
+                            out = outputs[idx].outputs[j]
                             gen_len = len(getattr(out, "token_ids", []) or [])
                             expected = len(prompt_token_ids[idx]) + gen_len
 
                             tensor = torch.from_numpy(arr)
 
-                            # Trim to prompt_len + gen_len - 1 (last decode may be missing)
+                            # Trim if captured more than expected
                             if tensor.shape[0] > expected:
                                 tensor = tensor[:expected]
 
-                            # Pad with one zero vector if short by 1
+                            # Pad with zero vectors if short
                             # (last generated token may not get a forward pass)
                             if tensor.shape[0] < expected:
                                 pad_count = expected - tensor.shape[0]
