@@ -705,16 +705,28 @@ class VLLMWithUncertainty:
                 meta_raw = self._engine_core.collective_rpc("_get_capture_metadata")
                 meta: dict = meta_raw[0] if meta_raw else {}
 
-                # Map output request_id ("6") to captured req_id ("6-abc123")
-                # and to prompt index in prompts_list
-                output_short_ids = {out.request_id: i for i, out in enumerate(outputs)}
+                # Map output request_id to prompt index in prompts_list.
+                # vLLM request IDs vary by version/config: "6", "6-abc123",
+                # "4_0", etc.  Build a lookup from every output's request_id
+                # and also from its numeric prefix so we can match captured
+                # req_ids that may use a different suffix convention.
+                output_short_ids: Dict[str, int] = {}
+                for i, out in enumerate(outputs):
+                    output_short_ids[out.request_id] = i
+                    # Also index by numeric prefix: "4_0" -> "4", "6-ab" -> "6"
+                    for sep in ("-", "_"):
+                        prefix = out.request_id.split(sep)[0]
+                        if prefix != out.request_id:
+                            output_short_ids.setdefault(prefix, i)
 
                 def _resolve_prompt_idx(req_id: str) -> Optional[int]:
                     if req_id in output_short_ids:
                         return output_short_ids[req_id]
-                    short_id = req_id.split("-")[0]
-                    if short_id in output_short_ids:
-                        return output_short_ids[short_id]
+                    # Try extracting numeric prefix from captured req_id
+                    for sep in ("-", "_"):
+                        prefix = req_id.split(sep)[0]
+                        if prefix != req_id and prefix in output_short_ids:
+                            return output_short_ids[prefix]
                     return None
 
                 # Process each captured layer
