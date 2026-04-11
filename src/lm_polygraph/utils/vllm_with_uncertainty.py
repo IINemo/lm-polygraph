@@ -706,33 +706,44 @@ class VLLMWithUncertainty:
                 meta: dict = meta_raw[0] if meta_raw else {}
 
                 # Map output request_id to prompt index in prompts_list.
-                # vLLM request IDs vary by version/config: "6", "6-abc123",
-                # "4_0" (where _0 is the sequence index for best-of-n), etc.
+                # vLLM request ID formats:
+                #   "6"         — simple numeric
+                #   "6-abc123"  — numeric prefix + hash suffix
+                #   "2_0"       — format {seq_idx}_{prompt_idx} for best-of-n
                 output_short_ids: Dict[str, int] = {}
                 for i, out in enumerate(outputs):
                     output_short_ids[out.request_id] = i
-                    # Also index by numeric prefix: "4_0" -> "4", "6-ab" -> "6"
-                    for sep in ("-", "_"):
-                        prefix = out.request_id.split(sep)[0]
-                        if prefix != out.request_id:
-                            output_short_ids.setdefault(prefix, i)
+                    # Index by numeric prefix: "6-ab" -> "6"
+                    if "-" in out.request_id:
+                        prefix = out.request_id.split("-")[0]
+                        output_short_ids.setdefault(prefix, i)
+                    # Index by suffix for {seq}_{prompt} format: "0_1" -> "1"
+                    if "_" in out.request_id:
+                        suffix = out.request_id.rsplit("_", 1)[-1]
+                        output_short_ids.setdefault(suffix, i)
 
                 def _resolve_prompt_idx(req_id: str) -> Optional[int]:
+                    # Exact match
                     if req_id in output_short_ids:
                         return output_short_ids[req_id]
-                    # Try extracting numeric prefix from captured req_id
-                    for sep in ("-", "_"):
-                        prefix = req_id.split(sep)[0]
-                        if prefix != req_id and prefix in output_short_ids:
+                    # Format {seq}_{prompt}: suffix is prompt index
+                    if "_" in req_id:
+                        suffix = req_id.rsplit("_", 1)[-1]
+                        if suffix in output_short_ids:
+                            return output_short_ids[suffix]
+                    # Format {prompt}-{hash}: prefix is prompt index
+                    if "-" in req_id:
+                        prefix = req_id.split("-")[0]
+                        if prefix in output_short_ids:
                             return output_short_ids[prefix]
                     return None
 
                 def _resolve_seq_idx(req_id: str) -> Optional[int]:
-                    """Extract sequence index from req_id like '4_0' -> 0."""
+                    """Extract sequence index: '2_0' -> seq=2 (prefix)."""
                     if "_" in req_id:
-                        parts = req_id.split("_")
+                        parts = req_id.rsplit("_", 1)
                         try:
-                            return int(parts[-1])
+                            return int(parts[0])
                         except ValueError:
                             pass
                     return None
