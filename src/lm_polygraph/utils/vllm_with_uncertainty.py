@@ -30,7 +30,7 @@ import logging
 import pickle
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -241,6 +241,14 @@ class VLLMWithUncertainty:
         self._hs_extension_ready = False
         self._engine_core = None
 
+        # Multi-step HS accumulator: stores HS from previous generation steps
+        # so that prefix-cached tokens can be filled from prior captures.
+        # Structure: list of {
+        #   "tokens": Tuple[int, ...],  — full token sequence (prompt + generated)
+        #   "layers": {layer_id: np.ndarray}  — HS arrays per layer
+        # }
+        self._hs_step_cache: List[Dict] = []
+
         # Path 1: VllmHiddenStatesGenerator variables
         self._hs_gen = None  # lazy init
 
@@ -323,6 +331,64 @@ class VLLMWithUncertainty:
             "HS extension ready (Path 2: native capture). layer_ids=%s",
             self.hs_layer_ids,
         )
+
+    # ------------------------------------------------------------------ #
+    # Multi-step HS accumulator (cross-step prefix fill)                 #
+    # ------------------------------------------------------------------ #
+
+    def reset_hs_step_cache(self) -> None:
+        """Clear the multi-step HS accumulator.
+
+        Call this when starting a new problem/session so that HS from a
+        previous problem are not incorrectly prepended.
+        """
+        self._hs_step_cache = []
+
+    def _find_cached_hs(
+        self, token_ids: List[int]
+    ) -> Optional[Tuple[int, Dict[int, np.ndarray]]]:
+        """Find the longest cached entry whose tokens are a prefix of *token_ids*.
+
+        Returns (prefix_length, {layer_id: hs_array}) or None.
+        """
+        best: Optional[Dict] = None
+        best_len = 0
+        tok = tuple(token_ids)
+        for entry in self._hs_step_cache:
+            stored = entry["tokens"]
+            slen = len(stored)
+            if slen <= best_len or slen > len(tok):
+                continue
+            if tok[:slen] == stored:
+                best = entry
+                best_len = slen
+        if best is not None:
+            return best_len, best["layers"]
+        return None
+
+    def _update_hs_step_cache(
+        self, token_ids: List[int], layer_id: int, hs_array: np.ndarray
+    ) -> None:
+        """Store (or extend) HS for a token sequence in the step cache."""
+        tok = tuple(token_ids)
+        for entry in self._hs_step_cache:
+            if entry["tokens"] == tok:
+                entry["layers"][layer_id] = hs_array
+                return
+        self._hs_step_cache.append({"tokens": tok, "layers": {layer_id: hs_array}})
+
+    def _cleanup_hs_step_cache(self, active_seqs: List[List[int]]) -> None:
+        """Remove cached entries that are not a prefix of any active sequence."""
+        active_tuples = [tuple(s) for s in active_seqs]
+        keep = []
+        for entry in self._hs_step_cache:
+            stored = entry["tokens"]
+            if any(
+                len(a) >= len(stored) and a[: len(stored)] == stored
+                for a in active_tuples
+            ):
+                keep.append(entry)
+        self._hs_step_cache = keep
 
     def _get_hs_generator(self) -> "VllmHiddenStatesGenerator":
         """Path 1: Get or create VllmHiddenStatesGenerator instance."""
@@ -791,10 +857,8 @@ class VLLMWithUncertainty:
                         num_outputs = len(outputs[idx].outputs)
 
                         if seq_j is not None and seq_j < num_outputs:
-                            # Specific sequence index from req_id (e.g. "4_0")
                             target_js = [seq_j]
                         else:
-                            # No sequence suffix or n=1 — assign to all outputs
                             target_js = list(range(num_outputs))
 
                         for j in target_js:
@@ -802,14 +866,29 @@ class VLLMWithUncertainty:
                             gen_len = len(getattr(out, "token_ids", []) or [])
                             expected = len(prompt_token_ids[idx]) + gen_len
 
+                            # Multi-step: if arr is short (prefix was cached
+                            # from a previous step), prepend from step cache.
+                            if arr.shape[0] < expected:
+                                match = self._find_cached_hs(prompt_token_ids[idx])
+                                if match is not None:
+                                    _, cached_layers = match
+                                    if lid in cached_layers:
+                                        gap = expected - arr.shape[0]
+                                        stored = cached_layers[lid]
+                                        fillable = min(gap, stored.shape[0])
+                                        if fillable > 0:
+                                            arr = np.concatenate(
+                                                [stored[:fillable], arr],
+                                                axis=0,
+                                            )
+
                             tensor = torch.from_numpy(arr)
 
                             # Trim if captured more than expected
                             if tensor.shape[0] > expected:
                                 tensor = tensor[:expected]
 
-                            # Pad with zero vectors if short
-                            # (last generated token may not get a forward pass)
+                            # Pad with zero vectors if short (±1 token)
                             if tensor.shape[0] < expected:
                                 pad_count = expected - tensor.shape[0]
                                 pad = torch.zeros(
@@ -820,6 +899,22 @@ class VLLMWithUncertainty:
                             if hs_by_req_out[idx][j] is None:
                                 hs_by_req_out[idx][j] = {"hidden_states": []}
                             hs_by_req_out[idx][j]["hidden_states"].append(tensor)
+
+                            # Update step cache with full HS (before padding,
+                            # after accumulator prepend) for next step.
+                            gen_ids = list(getattr(out, "token_ids", []) or [])
+                            full_seq = prompt_token_ids[idx] + gen_ids
+                            # Store trimmed arr (actual HS, not padded)
+                            actual = arr[: len(prompt_token_ids[idx]) + gen_len]
+                            self._update_hs_step_cache(full_seq, lid, actual)
+
+                # Cleanup stale cache entries
+                active_seqs: List[List[int]] = []
+                for i_out, ro in enumerate(outputs):
+                    for co in ro.outputs:
+                        gen_ids = list(getattr(co, "token_ids", []) or [])
+                        active_seqs.append(prompt_token_ids[i_out] + gen_ids)
+                self._cleanup_hs_step_cache(active_seqs)
 
                 # Cleanup hooks
                 self._engine_core.collective_rpc(
