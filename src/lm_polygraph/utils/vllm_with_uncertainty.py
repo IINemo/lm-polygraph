@@ -30,7 +30,7 @@ import logging
 import pickle
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -244,7 +244,7 @@ class VLLMWithUncertainty:
         # Multi-step HS accumulator: stores HS from previous generation steps
         # so that prefix-cached tokens can be filled from prior captures.
         # Structure: list of {
-        #   "tokens": Tuple[int, ...],  — full token sequence (prompt + generated)
+        #   "text": str,  — prompt text (string prefix matching)
         #   "layers": {layer_id: np.ndarray}  — HS arrays per layer
         # }
         self._hs_step_cache: List[Dict] = []
@@ -354,49 +354,46 @@ class VLLMWithUncertainty:
         if reset_prefix_cache and self.use_native_hs_capture:
             self._reset_hs_prefix_cache()
 
-    def _find_cached_hs(
-        self, token_ids: List[int]
-    ) -> Optional[Tuple[int, Dict[int, np.ndarray]]]:
-        """Find the longest cached entry whose tokens are a prefix of *token_ids*.
+    def _find_cached_hs(self, prompt_text: str) -> Optional[Dict[int, np.ndarray]]:
+        """Find the longest cached entry whose text is a prefix of *prompt_text*.
 
-        Returns (prefix_length, {layer_id: hs_array}) or None.
+        Uses raw prompt strings as keys — immune to BPE re-tokenisation
+        differences that break token-level prefix matching.
+
+        Returns {layer_id: hs_array} or None.
         """
         best: Optional[Dict] = None
         best_len = 0
-        tok = tuple(token_ids)
         for entry in self._hs_step_cache:
-            stored = entry["tokens"]
-            slen = len(stored)
-            if slen <= best_len or slen > len(tok):
+            key = entry["text"]
+            klen = len(key)
+            if klen <= best_len or klen > len(prompt_text):
                 continue
-            if tok[:slen] == stored:
+            if prompt_text[:klen] == key:
                 best = entry
-                best_len = slen
+                best_len = klen
         if best is not None:
-            return best_len, best["layers"]
+            return best["layers"]
         return None
 
     def _update_hs_step_cache(
-        self, token_ids: List[int], layer_id: int, hs_array: np.ndarray
+        self, prompt_text: str, layer_id: int, hs_array: np.ndarray
     ) -> None:
-        """Store (or extend) HS for a token sequence in the step cache."""
-        tok = tuple(token_ids)
+        """Store (or extend) HS for a prompt text in the step cache."""
         for entry in self._hs_step_cache:
-            if entry["tokens"] == tok:
+            if entry["text"] == prompt_text:
                 entry["layers"][layer_id] = hs_array
                 return
-        self._hs_step_cache.append({"tokens": tok, "layers": {layer_id: hs_array}})
+        self._hs_step_cache.append(
+            {"text": prompt_text, "layers": {layer_id: hs_array}}
+        )
 
-    def _cleanup_hs_step_cache(self, active_seqs: List[List[int]]) -> None:
-        """Remove cached entries that are not a prefix of any active sequence."""
-        active_tuples = [tuple(s) for s in active_seqs]
+    def _cleanup_hs_step_cache(self, active_texts: List[str]) -> None:
+        """Remove cached entries that are not a prefix of any active text."""
         keep = []
         for entry in self._hs_step_cache:
-            stored = entry["tokens"]
-            if any(
-                len(a) >= len(stored) and a[: len(stored)] == stored
-                for a in active_tuples
-            ):
+            key = entry["text"]
+            if any(a.startswith(key) for a in active_texts):
                 keep.append(entry)
         self._hs_step_cache = keep
 
@@ -879,9 +876,8 @@ class VLLMWithUncertainty:
                             # Multi-step: if arr is short (prefix was cached
                             # from a previous step), prepend from step cache.
                             if arr.shape[0] < expected:
-                                match = self._find_cached_hs(prompt_token_ids[idx])
-                                if match is not None:
-                                    _, cached_layers = match
+                                cached_layers = self._find_cached_hs(prompts_list[idx])
+                                if cached_layers is not None:
                                     if lid in cached_layers:
                                         gap = expected - arr.shape[0]
                                         stored = cached_layers[lid]
@@ -910,33 +906,22 @@ class VLLMWithUncertainty:
                                 hs_by_req_out[idx][j] = {"hidden_states": []}
                             hs_by_req_out[idx][j]["hidden_states"].append(tensor)
 
-                            # Update step cache with full HS (before padding,
-                            # after accumulator prepend) for next step.
-                            #
-                            # KEY: build cache key from the TEXT the next
-                            # step will see.  vLLM includes stop tokens in
-                            # output.token_ids but strips them from
-                            # output.text.  Multi-step callers (beam search)
-                            # build the next prompt from the text, so the
-                            # key must match that tokenisation exactly.
-                            gen_text = getattr(out, "text", "") or ""
-                            cache_key_text = prompts_list[idx] + gen_text
-                            cache_key_tokens = self._prompts_to_token_ids(
-                                [cache_key_text]
-                            )[0]
-                            # Store trimmed arr (actual HS, not padded)
+                            # Update step cache: use the current prompt
+                            # TEXT as the key.  The next step's prompt is
+                            # always an extension of the current prompt
+                            # (prompt + trajectory), so string prefix
+                            # matching is guaranteed to work — no BPE or
+                            # stop-token issues.
                             actual = arr[: len(prompt_token_ids[idx]) + gen_len]
-                            self._update_hs_step_cache(cache_key_tokens, lid, actual)
+                            self._update_hs_step_cache(prompts_list[idx], lid, actual)
 
-                # Cleanup stale cache entries (use text-based keys
-                # to match what we stored above).
-                active_seqs: List[List[int]] = []
+                # Cleanup stale cache entries.
+                active_texts: List[str] = []
                 for i_out, ro in enumerate(outputs):
                     for co in ro.outputs:
                         co_text = getattr(co, "text", "") or ""
-                        full_text = prompts_list[i_out] + co_text
-                        active_seqs.append(self._prompts_to_token_ids([full_text])[0])
-                self._cleanup_hs_step_cache(active_seqs)
+                        active_texts.append(prompts_list[i_out] + co_text)
+                self._cleanup_hs_step_cache(active_texts)
 
                 # Cleanup hooks
                 self._engine_core.collective_rpc(
