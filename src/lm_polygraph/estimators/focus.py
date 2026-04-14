@@ -4,6 +4,8 @@ import torch
 import math
 import dataclasses
 
+import itertools
+
 from typing import Dict, Tuple, List
 
 from spacy import Language
@@ -15,7 +17,7 @@ from tqdm import tqdm
 from torch.nn import NLLLoss
 
 from datasets import load_dataset
-from collections import defaultdict
+from collections import defaultdict, Counter
 import random
 import logging
 
@@ -26,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 def calcu_idf(
-    tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed, idf_dataset_size
+    tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed, idf_dataset_size, num_workers=16,
 ):
     """
     Calculate inverse document frequency (IDF) scores for each token using a Hugging Face tokenizer
@@ -41,33 +43,49 @@ def calcu_idf(
        idf_dataset_size (int): Max number of documents to use (-1 for all).
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
-    data = [d for d in dataset["train"]]
-    rng = random.Random(idf_seed)
-    rng.shuffle(data)
+    dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code, split="train").shuffle(seed=idf_seed)
 
     if (idf_dataset_size > 0) and (idf_dataset_size < len(data)):
-        data = rng.sample(data, idf_dataset_size)
+        dataset = dataset.select(range(idf_dataset_size))
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
-    document_frequency = defaultdict(int)
     offset = 1 if "facebook" in tokenizer_path else 0
-    for doc in tqdm(data):
-        tokenized_doc = tokenizer(doc["text"])["input_ids"][offset:]
-        unique_tokens = set(tokenized_doc)
-        for token in unique_tokens:
-            document_frequency[token] += 1
+    
+    def process_batch(batch):
+        tokenized = tokenizer(batch["text"])["input_ids"]
+        unique_tokens = [list(set(doc[offset:])) for doc in tokenized]
+        return {"unique_tokens": unique_tokens}
 
-    total_documents = len(data)
-    pickle.dump(
-        np.array(
-            [
-                math.log(total_documents / (document_frequency[i] + 1))
-                for i in range(len(tokenizer.vocab))
-            ]
-        ),
-        open(path, "wb"),
+    tokenized_dataset = dataset.map(
+        process_batch,
+        batched=True,
+        num_proc=num_workers,
+        remove_columns=dataset.column_names,
     )
+
+    total_documents = len(tokenized_dataset)
+    all_tokens_flattened = itertools.chain.from_iterable(tokenized_dataset["unique_tokens"])
+    document_frequency = Counter(all_tokens_flattened)
+
+    # for doc in tqdm(data):
+    #     tokenized_doc = tokenizer(doc["text"])["input_ids"][offset:]
+    #     unique_tokens = set(tokenized_doc)
+    #     for token in unique_tokens:
+    #         document_frequency[token] += 1
+
+    vocab_size = len(tokenizer)
+    doc_freq_arr = np.zeros(vocab_size)
+
+    for token_id, count in document_frequency.items():
+        if token_id < vocab_size:
+            doc_freq_arr[token_id] = count
+
+    idf_scores = np.log(total_documents / (doc_freq_arr + 1))
+
+    with open(path, "wb") as f:
+        pickle.dump(idf_scores, f)
+
+    print(f"Saved IDF array of shape {idf_scores.shape} to {path}")
 
 
 @dataclasses.dataclass
