@@ -336,13 +336,23 @@ class VLLMWithUncertainty:
     # Multi-step HS accumulator (cross-step prefix fill)                 #
     # ------------------------------------------------------------------ #
 
-    def reset_hs_step_cache(self) -> None:
-        """Clear the multi-step HS accumulator.
+    def reset_hs_step_cache(self, reset_prefix_cache: bool = True) -> None:
+        """Clear the multi-step HS accumulator and (optionally) vLLM APC.
 
-        Call this when starting a new problem/session so that HS from a
-        previous problem are not incorrectly prepended.
+        Call this before starting a new multi-step loop (beam search,
+        online BoN).  Resetting the vLLM prefix cache ensures the first
+        step captures full hidden states for the prompt — otherwise
+        APC may have cached the shared system-prompt prefix from a
+        prior call, leaving a permanent gap in every subsequent step.
+
+        Args:
+            reset_prefix_cache: If True (default), also reset the vLLM
+                automatic prefix cache so the first generation step
+                computes hidden states for all prompt tokens.
         """
         self._hs_step_cache = []
+        if reset_prefix_cache and self.use_native_hs_capture:
+            self._reset_hs_prefix_cache()
 
     def _find_cached_hs(
         self, token_ids: List[int]
@@ -902,18 +912,30 @@ class VLLMWithUncertainty:
 
                             # Update step cache with full HS (before padding,
                             # after accumulator prepend) for next step.
-                            gen_ids = list(getattr(out, "token_ids", []) or [])
-                            full_seq = prompt_token_ids[idx] + gen_ids
+                            #
+                            # KEY: build cache key from the TEXT the next
+                            # step will see.  vLLM includes stop tokens in
+                            # output.token_ids but strips them from
+                            # output.text.  Multi-step callers (beam search)
+                            # build the next prompt from the text, so the
+                            # key must match that tokenisation exactly.
+                            gen_text = getattr(out, "text", "") or ""
+                            cache_key_text = prompts_list[idx] + gen_text
+                            cache_key_tokens = self._prompts_to_token_ids(
+                                [cache_key_text]
+                            )[0]
                             # Store trimmed arr (actual HS, not padded)
                             actual = arr[: len(prompt_token_ids[idx]) + gen_len]
-                            self._update_hs_step_cache(full_seq, lid, actual)
+                            self._update_hs_step_cache(cache_key_tokens, lid, actual)
 
-                # Cleanup stale cache entries
+                # Cleanup stale cache entries (use text-based keys
+                # to match what we stored above).
                 active_seqs: List[List[int]] = []
                 for i_out, ro in enumerate(outputs):
                     for co in ro.outputs:
-                        gen_ids = list(getattr(co, "token_ids", []) or [])
-                        active_seqs.append(prompt_token_ids[i_out] + gen_ids)
+                        co_text = getattr(co, "text", "") or ""
+                        full_text = prompts_list[i_out] + co_text
+                        active_seqs.append(self._prompts_to_token_ids([full_text])[0])
                 self._cleanup_hs_step_cache(active_seqs)
 
                 # Cleanup hooks
