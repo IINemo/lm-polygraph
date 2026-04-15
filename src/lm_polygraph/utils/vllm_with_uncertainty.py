@@ -906,14 +906,18 @@ class VLLMWithUncertainty:
                                 hs_by_req_out[idx][j] = {"hidden_states": []}
                             hs_by_req_out[idx][j]["hidden_states"].append(tensor)
 
-                            # Update step cache: use the current prompt
-                            # TEXT as the key.  The next step's prompt is
-                            # always an extension of the current prompt
+                            # Update step cache: use prompt + generated text
+                            # as the key.  Including out_text ensures that
+                            # different outputs for the same prompt get
+                            # separate cache entries (offline BoN).
+                            # The next step's prompt starts with this text
                             # (prompt + trajectory), so string prefix
-                            # matching is guaranteed to work — no BPE or
-                            # stop-token issues.
+                            # matching works across steps.
                             actual = arr[: len(prompt_token_ids[idx]) + gen_len]
-                            self._update_hs_step_cache(prompts_list[idx], lid, actual)
+                            out_text = getattr(out, "text", "") or ""
+                            self._update_hs_step_cache(
+                                prompts_list[idx] + out_text, lid, actual
+                            )
 
                 # Cleanup stale cache entries.
                 active_texts: List[str] = []
