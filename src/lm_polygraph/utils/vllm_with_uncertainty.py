@@ -35,7 +35,7 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import torch
 from tqdm import tqdm
-from vllm import LLM, SamplingParams, TokensPrompt
+from vllm import LLM, SamplingParams
 from vllm.outputs import RequestOutput
 
 from lm_polygraph.estimators import Estimator
@@ -51,6 +51,105 @@ except Exception:
 
 
 log = logging.getLogger()
+
+
+def _fill_prefix_gaps(
+    captured: Dict[str, np.ndarray],
+    metadata: Dict[str, Dict],
+    prompt_groups: Dict[str, List[str]],
+    prompt_tokens: Optional[Dict[str, List[int]]] = None,
+) -> Dict[str, np.ndarray]:
+    """
+    Fill prefix-cache gaps in captured hidden states.
+
+    Phase 1 — Within-group: for identical prompts, copy the missing prefix
+    from the group donor (request with the most prefill tokens).
+
+    Phase 2 — Cross-group (requires prompt_tokens): vLLM caches the shared
+    chat-template prefix across different prompts. Uses token-level
+    longest-common-prefix (LCP) with a global donor to fill remaining gaps.
+
+    Args:
+        captured:      {req_id: numpy_array} — deserialized hidden states
+        metadata:      {req_id: {"total_computed": int, "prefill_tokens": int}}
+        prompt_groups: {group: [req_id, ...]} — requests with identical prompts
+        prompt_tokens: {req_id: [token_ids]} — for cross-group filling
+    Returns:
+        {req_id: numpy_array} with gaps filled.
+    """
+    result = dict(captured)
+
+    # Track effective prefill per request (updated as we fill)
+    eff_prefill: Dict[str, int] = {
+        rid: metadata.get(rid, {}).get("prefill_tokens", 0) for rid in result
+    }
+
+    # Phase 1: within-group fill (identical prompts)
+    for _, req_ids in prompt_groups.items():
+        group_reqs = [rid for rid in req_ids if rid in result]
+        if len(group_reqs) < 2:
+            continue
+        donor_id = max(group_reqs, key=lambda rid: eff_prefill.get(rid, 0))
+        donor_prefill = eff_prefill[donor_id]
+        donor_arr = result[donor_id]
+        for req_id in group_reqs:
+            if req_id == donor_id:
+                continue
+            gap = donor_prefill - eff_prefill[req_id]
+            if gap > 0:
+                result[req_id] = np.concatenate(
+                    [donor_arr[:gap], result[req_id]], axis=0
+                )
+                eff_prefill[req_id] = donor_prefill
+
+    # Phase 2: cross-group fill (shared token prefix)
+    if not prompt_tokens:
+        return result
+
+    all_req_ids = list(result.keys())
+    if len(all_req_ids) < 2:
+        return result
+
+    # Global donor: pick from requests with full prefill, then longest prompt
+    full_prefill_reqs = [
+        rid
+        for rid in all_req_ids
+        if eff_prefill.get(rid, 0) >= len(prompt_tokens.get(rid, []))
+    ]
+    if not full_prefill_reqs:
+        return result
+
+    global_donor = max(
+        full_prefill_reqs, key=lambda rid: len(prompt_tokens.get(rid, []))
+    )
+    gd_prefill = eff_prefill[global_donor]
+    gd_tokens = prompt_tokens.get(global_donor, [])
+    gd_arr = result[global_donor]
+
+    for req_id in all_req_ids:
+        if req_id == global_donor:
+            continue
+        req_toks = prompt_tokens.get(req_id, [])
+        req_prompt_len = len(req_toks)
+        cur_prefill = eff_prefill[req_id]
+        if cur_prefill >= req_prompt_len:
+            continue
+
+        # Longest common prefix with global donor
+        lcp = 0
+        for a, b in zip(gd_tokens, req_toks):
+            if a == b:
+                lcp += 1
+            else:
+                break
+
+        missing = req_prompt_len - cur_prefill
+        fillable = min(missing, lcp, gd_prefill)
+        if fillable > 0:
+            result[req_id] = np.concatenate([gd_arr[:fillable], result[req_id]], axis=0)
+            eff_prefill[req_id] = cur_prefill + fillable
+
+    return result
 
 
 def _safe_float_uncertainty(u: Any) -> float:
@@ -142,6 +241,14 @@ class VLLMWithUncertainty:
         self._hs_extension_ready = False
         self._engine_core = None
 
+        # Multi-step HS accumulator: stores HS from previous generation steps
+        # so that prefix-cached tokens can be filled from prior captures.
+        # Structure: list of {
+        #   "text": str,  — prompt text (string prefix matching)
+        #   "layers": {layer_id: np.ndarray}  — HS arrays per layer
+        # }
+        self._hs_step_cache: List[Dict] = []
+
         # Path 1: VllmHiddenStatesGenerator variables
         self._hs_gen = None  # lazy init
 
@@ -224,6 +331,71 @@ class VLLMWithUncertainty:
             "HS extension ready (Path 2: native capture). layer_ids=%s",
             self.hs_layer_ids,
         )
+
+    # ------------------------------------------------------------------ #
+    # Multi-step HS accumulator (cross-step prefix fill)                 #
+    # ------------------------------------------------------------------ #
+
+    def reset_hs_step_cache(self, reset_prefix_cache: bool = True) -> None:
+        """Clear the multi-step HS accumulator and (optionally) vLLM APC.
+
+        Call this before starting a new multi-step loop (beam search,
+        online BoN).  Resetting the vLLM prefix cache ensures the first
+        step captures full hidden states for the prompt — otherwise
+        APC may have cached the shared system-prompt prefix from a
+        prior call, leaving a permanent gap in every subsequent step.
+
+        Args:
+            reset_prefix_cache: If True (default), also reset the vLLM
+                automatic prefix cache so the first generation step
+                computes hidden states for all prompt tokens.
+        """
+        self._hs_step_cache = []
+        if reset_prefix_cache and self.use_native_hs_capture:
+            self._reset_hs_prefix_cache()
+
+    def _find_cached_hs(self, prompt_text: str) -> Optional[Dict[int, np.ndarray]]:
+        """Find the longest cached entry whose text is a prefix of *prompt_text*.
+
+        Uses raw prompt strings as keys — immune to BPE re-tokenisation
+        differences that break token-level prefix matching.
+
+        Returns {layer_id: hs_array} or None.
+        """
+        best: Optional[Dict] = None
+        best_len = 0
+        for entry in self._hs_step_cache:
+            key = entry["text"]
+            klen = len(key)
+            if klen <= best_len or klen > len(prompt_text):
+                continue
+            if prompt_text[:klen] == key:
+                best = entry
+                best_len = klen
+        if best is not None:
+            return best["layers"]
+        return None
+
+    def _update_hs_step_cache(
+        self, prompt_text: str, layer_id: int, hs_array: np.ndarray
+    ) -> None:
+        """Store (or extend) HS for a prompt text in the step cache."""
+        for entry in self._hs_step_cache:
+            if entry["text"] == prompt_text:
+                entry["layers"][layer_id] = hs_array
+                return
+        self._hs_step_cache.append(
+            {"text": prompt_text, "layers": {layer_id: hs_array}}
+        )
+
+    def _cleanup_hs_step_cache(self, active_texts: List[str]) -> None:
+        """Remove cached entries that are not a prefix of any active text."""
+        keep = []
+        for entry in self._hs_step_cache:
+            key = entry["text"]
+            if any(a.startswith(key) for a in active_texts):
+                keep.append(entry)
+        self._hs_step_cache = keep
 
     def _get_hs_generator(self) -> "VllmHiddenStatesGenerator":
         """Path 1: Get or create VllmHiddenStatesGenerator instance."""
@@ -575,10 +747,15 @@ class VLLMWithUncertainty:
         if self.prompt_logprobs:
             sampling_params.prompt_logprobs = sampling_params.logprobs
 
-        # ---- 1) MAIN GENERATION (without HS capture) ----
+        # ---- Setup HS capture BEFORE generation if using native path ----
+        if self.output_hidden_states and self.use_native_hs_capture:
+            self._ensure_hs_extension()
+            self._engine_core.collective_rpc("_reset_capture")
+
+        # ---- 1) MAIN GENERATION (with HS capture if native path) ----
         outputs = self.llm.generate(prompts_list, sampling_params)
 
-        # ---- 2) Setup HS capture for additional forward pass ----
+        # ---- 2) Extract hidden states ----
         hs_by_req_out: List[List[Optional[List[torch.Tensor]]]] = [
             [None] * len(ro.outputs) for ro in outputs
         ]
@@ -593,88 +770,177 @@ class VLLMWithUncertainty:
             )
 
             if self.use_native_hs_capture:
-                # Path 2: Native capture - sequential additional forward pass
-                # Process each sequence separately to avoid prefix sharing issues
-                self._ensure_hs_extension()
+                # Path 2: Native capture — HS were captured during main generation.
+                # Extract per-request hidden states and fill prefix-cache gaps.
 
-                # Create sampling params for 1 token generation
-                one_token_params = SamplingParams(
-                    temperature=0,
-                    max_tokens=1,
-                )
+                per_rank = self._engine_core.collective_rpc("_get_captured_states")
+                captured_raw: dict = per_rank[0] if per_rank else {}
+                meta_raw = self._engine_core.collective_rpc("_get_capture_metadata")
+                meta: dict = meta_raw[0] if meta_raw else {}
 
-                log.info(
-                    f"Running sequential additional forward pass with HS capture for {len(flat_full_ids)} sequences"
-                )
+                # Map output request_id to prompt index in prompts_list.
+                # vLLM request ID formats:
+                #   "6"         — simple numeric
+                #   "6-abc123"  — numeric prefix + hash suffix
+                #   "2_0"       — format {seq_idx}_{prompt_idx} for best-of-n
+                output_short_ids: Dict[str, int] = {}
+                for i, out in enumerate(outputs):
+                    output_short_ids[out.request_id] = i
+                    # Index by numeric prefix: "6-ab" -> "6"
+                    if "-" in out.request_id:
+                        prefix = out.request_id.split("-")[0]
+                        output_short_ids.setdefault(prefix, i)
+                    # Index by suffix for {seq}_{prompt} format: "0_1" -> "1"
+                    if "_" in out.request_id:
+                        suffix = out.request_id.rsplit("_", 1)[-1]
+                        output_short_ids.setdefault(suffix, i)
 
-                # Process each sequence separately (batch_size=1)
-                for k, (i, j) in enumerate(flat_index):
-                    seq_ids = flat_full_ids[k]
-                    seq_len = len(seq_ids)
+                def _resolve_prompt_idx(req_id: str) -> Optional[int]:
+                    # Exact match
+                    if req_id in output_short_ids:
+                        return output_short_ids[req_id]
+                    # Format {seq}_{prompt}: suffix is prompt index
+                    if "_" in req_id:
+                        suffix = req_id.rsplit("_", 1)[-1]
+                        if suffix in output_short_ids:
+                            return output_short_ids[suffix]
+                    # Format {prompt}-{hash}: prefix is prompt index
+                    if "-" in req_id:
+                        prefix = req_id.split("-")[0]
+                        if prefix in output_short_ids:
+                            return output_short_ids[prefix]
+                    return None
 
-                    log.info(
-                        f"Processing sequence {k+1}/{len(flat_full_ids)} (req_idx={i}, out_idx={j}, seq_len={seq_len})"
+                def _resolve_seq_idx(req_id: str) -> Optional[int]:
+                    """Extract sequence index: '2_0' -> seq=2 (prefix)."""
+                    if "_" in req_id:
+                        parts = req_id.rsplit("_", 1)
+                        try:
+                            return int(parts[0])
+                        except ValueError:
+                            pass
+                    return None
+
+                # Buffer step-cache updates: write AFTER all outputs are
+                # processed so that HS from output_1 cannot be read back
+                # when processing output_2 of the same prompt (offline BoN).
+                # Key is prompts_list[idx] (without out_text) so that the
+                # next step's prompt (which starts with this text) matches
+                # via startswith — even if the strategy modifies/truncates
+                # the generated text before adding it to the trajectory.
+                deferred_cache_updates: List[tuple] = []
+
+                # Process each captured layer
+                for lid in self.hs_layer_ids:
+                    layer_data = captured_raw.get(lid, {})
+                    if not layer_data:
+                        continue
+
+                    # Deserialize per-request arrays
+                    captured_arrays: Dict[str, np.ndarray] = {}
+                    for req_id, pickled_bytes in layer_data.items():
+                        captured_arrays[req_id] = pickle.loads(pickled_bytes)
+
+                    # Build prompt groups and prompt_tokens for gap filling
+                    prompt_groups: Dict[str, List[str]] = {}
+                    req_prompt_tokens: Dict[str, List[int]] = {}
+                    for req_id in captured_arrays:
+                        idx = _resolve_prompt_idx(req_id)
+                        if idx is None:
+                            continue
+                        text = prompts_list[idx]
+                        prompt_groups.setdefault(text, []).append(req_id)
+                        req_prompt_tokens[req_id] = prompt_token_ids[idx]
+
+                    # Fill prefix-cache gaps
+                    filled = _fill_prefix_gaps(
+                        captured_arrays,
+                        meta,
+                        prompt_groups,
+                        prompt_tokens=req_prompt_tokens,
                     )
 
-                    # Reset capture buffer and prefix cache for each sequence
-                    self._engine_core.collective_rpc("_reset_capture")
-                    self._reset_hs_prefix_cache()
+                    # Assign filled HS to the right (request, output) slot.
+                    # With best-of-n, vLLM creates sub-requests like "4_0",
+                    # "4_1" — each with its own hidden states.  Map the suffix
+                    # to the correct output sequence index j.
+                    for req_id, arr in filled.items():
+                        idx = _resolve_prompt_idx(req_id)
+                        if idx is None:
+                            continue
 
-                    # Generate 1 token for THIS SEQUENCE ONLY (batch_size=1)
-                    _ = self.llm.generate(
-                        [TokensPrompt(prompt_token_ids=seq_ids)],
-                        sampling_params=one_token_params,
-                    )
+                        seq_j = _resolve_seq_idx(req_id)
+                        num_outputs = len(outputs[idx].outputs)
 
-                    # Extract captured states for this sequence
-                    per_rank = self._engine_core.collective_rpc("_get_captured_states")
-                    captured_raw: dict = per_rank[0] if per_rank else {}
+                        if seq_j is not None and seq_j < num_outputs:
+                            target_js = [seq_j]
+                        else:
+                            target_js = list(range(num_outputs))
 
-                    # Deserialize pickled arrays
-                    captured = {}
-                    for lid, pickled_bytes in captured_raw.items():
-                        arr = pickle.loads(pickled_bytes)
-                        captured[lid] = torch.from_numpy(arr)
-                        log.info(
-                            f"  Sequence {k}: Layer {lid}: captured shape={arr.shape}, dtype={arr.dtype}"
-                        )
+                        for j in target_js:
+                            out = outputs[idx].outputs[j]
+                            gen_len = len(getattr(out, "token_ids", []) or [])
+                            expected = len(prompt_token_ids[idx]) + gen_len
 
-                    # Verify we captured exactly seq_len tokens
-                    total_captured = 0
-                    if captured:
-                        first_lid = list(captured.keys())[0]
-                        total_captured = captured[first_lid].shape[0]
-                        log.info(
-                            f"  Sequence {k}: captured {total_captured} tokens, expected {seq_len}, match={total_captured == seq_len}"
-                        )
+                            # Multi-step: if arr is short (prefix was cached
+                            # from a previous step), prepend from step cache.
+                            if arr.shape[0] < expected:
+                                cached_layers = self._find_cached_hs(prompts_list[idx])
+                                if cached_layers is not None:
+                                    if lid in cached_layers:
+                                        gap = expected - arr.shape[0]
+                                        stored = cached_layers[lid]
+                                        fillable = min(gap, stored.shape[0])
+                                        if fillable > 0:
+                                            arr = np.concatenate(
+                                                [stored[:fillable], arr],
+                                                axis=0,
+                                            )
 
-                    # Form hidden states list for this sequence
-                    layer_states = []
-                    for lid in self.hs_layer_ids:
-                        if lid in captured:
-                            tensor = captured[lid]
-                            # We expect exactly seq_len tokens for this single sequence
-                            if tensor.shape[0] == seq_len:
-                                layer_states.append(tensor)
-                            else:
-                                log.warning(
-                                    f"  Sequence {k}: Layer {lid} has {tensor.shape[0]} tokens, expected {seq_len}"
+                            tensor = torch.from_numpy(arr)
+
+                            # Trim if captured more than expected
+                            if tensor.shape[0] > expected:
+                                tensor = tensor[:expected]
+
+                            # Pad with zero vectors if short (±1 token)
+                            if tensor.shape[0] < expected:
+                                pad_count = expected - tensor.shape[0]
+                                pad = torch.zeros(
+                                    pad_count, tensor.shape[1], dtype=tensor.dtype
                                 )
-                                # Slice to expected length if needed
-                                layer_states.append(tensor[:seq_len])
+                                tensor = torch.cat([tensor, pad], dim=0)
 
-                    hs_by_req_out[i][j] = (
-                        {"hidden_states": layer_states} if layer_states else None
-                    )
+                            if hs_by_req_out[idx][j] is None:
+                                hs_by_req_out[idx][j] = {"hidden_states": []}
+                            hs_by_req_out[idx][j]["hidden_states"].append(tensor)
 
-                # Cleanup: remove hooks and reset capture buffer after generation
+                            # Defer cache update — written after all outputs
+                            # are processed to prevent cross-pollution.
+                            actual = arr[: len(prompt_token_ids[idx]) + gen_len]
+                            deferred_cache_updates.append(
+                                (prompts_list[idx], lid, actual)
+                            )
+
+                # Apply deferred step-cache updates.
+                for cache_text, cache_lid, cache_hs in deferred_cache_updates:
+                    self._update_hs_step_cache(cache_text, cache_lid, cache_hs)
+
+                # Cleanup stale cache entries.
+                active_texts: List[str] = []
+                for i_out, ro in enumerate(outputs):
+                    for co in ro.outputs:
+                        co_text = getattr(co, "text", "") or ""
+                        active_texts.append(prompts_list[i_out] + co_text)
+                self._cleanup_hs_step_cache(active_texts)
+
+                # Cleanup hooks
                 self._engine_core.collective_rpc(
                     "_setup_hidden_states_capture", args=([],)
                 )
                 self._engine_core.collective_rpc("_reset_capture")
-                # Reset flag so hooks are re-registered on next run
                 self._hs_extension_ready = False
-                log.info("Removed HS capture hooks and reset buffer after generation")
+                log.info("Native HS capture: extracted per-request hidden states")
             else:
                 # Path 1: VllmHiddenStatesGenerator - separate generation
                 # Sleep main LLM to free GPU memory before HS generator loads
