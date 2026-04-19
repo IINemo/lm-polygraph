@@ -821,6 +821,15 @@ class VLLMWithUncertainty:
                             pass
                     return None
 
+                # Buffer step-cache updates: write AFTER all outputs are
+                # processed so that HS from output_1 cannot be read back
+                # when processing output_2 of the same prompt (offline BoN).
+                # Key is prompts_list[idx] (without out_text) so that the
+                # next step's prompt (which starts with this text) matches
+                # via startswith — even if the strategy modifies/truncates
+                # the generated text before adding it to the trajectory.
+                deferred_cache_updates: List[tuple] = []
+
                 # Process each captured layer
                 for lid in self.hs_layer_ids:
                     layer_data = captured_raw.get(lid, {})
@@ -906,18 +915,16 @@ class VLLMWithUncertainty:
                                 hs_by_req_out[idx][j] = {"hidden_states": []}
                             hs_by_req_out[idx][j]["hidden_states"].append(tensor)
 
-                            # Update step cache: use prompt + generated text
-                            # as the key.  Including out_text ensures that
-                            # different outputs for the same prompt get
-                            # separate cache entries (offline BoN).
-                            # The next step's prompt starts with this text
-                            # (prompt + trajectory), so string prefix
-                            # matching works across steps.
+                            # Defer cache update — written after all outputs
+                            # are processed to prevent cross-pollution.
                             actual = arr[: len(prompt_token_ids[idx]) + gen_len]
-                            out_text = getattr(out, "text", "") or ""
-                            self._update_hs_step_cache(
-                                prompts_list[idx] + out_text, lid, actual
+                            deferred_cache_updates.append(
+                                (prompts_list[idx], lid, actual)
                             )
+
+                # Apply deferred step-cache updates.
+                for cache_text, cache_lid, cache_hs in deferred_cache_updates:
+                    self._update_hs_step_cache(cache_text, cache_lid, cache_hs)
 
                 # Cleanup stale cache entries.
                 active_texts: List[str] = []
