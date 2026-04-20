@@ -36,6 +36,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_log_likelihoods",
             "embeddings",
             "attention_all",
+            "attention_selected",
             "tokenizer",
         ], []
 
@@ -272,6 +273,7 @@ class GreedyProbsCalculator(StatCalculator):
             lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
+        attention_selected = []
 
         if self.output_attentions and (model.model_type != "vLLMCausalLM"):
             config = model.model.config
@@ -301,6 +303,44 @@ class GreedyProbsCalculator(StatCalculator):
                         attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
                 attention_all.append(attn_mask.max(0))
 
+
+
+            num_layers = len(attentions[0])
+            mid_layer = num_layers // 2
+            # selected_layers = [mid_layer, num_layers - 2, num_layers - 1]
+            selected_layers = [mid_layer]
+
+            for i in range(len(texts)):
+                input_len = batch["input_ids"].shape[1]
+                slice_start_idx = all_slice_start_indices[i]
+                c = len(cut_sequences[i])
+
+                if c == 0:
+                    attention_selected.append(None)
+                    continue
+
+                # num_heads = attentions[0][selected_layers[0]].shape[1]
+                num_heads = 1
+
+                # get actual total_key_len from the last valid attention step
+                last_t = min(slice_start_idx + c - 1, len(attentions) - 1)
+                total_key_len = attentions[last_t][selected_layers[0]].shape[-1] - c # actual size
+
+                attn_mask = np.zeros(shape=(len(selected_layers), num_heads, c, total_key_len))
+
+                for j in range(c):
+                    original_token_index = j + slice_start_idx
+                    if original_token_index < len(attentions):
+                        for li, layer in enumerate(selected_layers):
+                            layer_attn = attentions[original_token_index][layer][0, 0, 0, :total_key_len]  # (num_heads, key_len)   # -386
+                            if layer_attn.dtype == torch.bfloat16:
+                                layer_attn = layer_attn.to(torch.float16)
+                            key_len_at_j = layer_attn.shape[-1]
+                            attn_mask[li, 0, j, :key_len_at_j] = layer_attn.cpu().numpy()
+
+                attention_selected.append(attn_mask)  # (3, 16, c, total_key_len)
+
+                
         if not self.output_hidden_states:
             embeddings_dict = {}
         elif model.model_type == "CausalLM":
@@ -333,5 +373,6 @@ class GreedyProbsCalculator(StatCalculator):
         result_dict.update(embeddings_dict)
         if self.output_attentions:
             result_dict.update({"attention_all": attention_all})
+            result_dict.update({"attention_selected": attention_selected})
             result_dict.update({"tokenizer": model.tokenizer})
         return result_dict
