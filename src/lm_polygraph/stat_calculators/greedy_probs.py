@@ -113,6 +113,7 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
+        is_vllm = model.model_type == "vLLMCausalLM"
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():
@@ -122,8 +123,8 @@ class GreedyProbsCalculator(StatCalculator):
                 return_dict_in_generate=True,
                 max_new_tokens=max_new_tokens,
                 min_new_tokens=2,
-                output_attentions=self.output_attentions,
-                output_hidden_states=self.output_hidden_states,
+                output_attentions=self.output_attentions and not is_vllm,
+                output_hidden_states=self.output_hidden_states and not is_vllm,
                 num_return_sequences=1,
                 suppress_tokens=(
                     []
@@ -136,12 +137,12 @@ class GreedyProbsCalculator(StatCalculator):
                 ),
             )
             logits = torch.stack(out.scores, dim=1)
-            if model.model_type == "vLLMCausalLM":
+            if is_vllm:
                 logits = logits.transpose(1, 0)
             sequences = out.sequences
-            if self.output_attentions:
+            if self.output_attentions and not is_vllm:
                 attentions = out.attentions
-            if self.output_hidden_states:
+            if self.output_hidden_states and not is_vllm:
                 embeddings_encoder, embeddings_decoder = get_embeddings_from_output(
                     out, batch, model.model_type
                 )
@@ -238,7 +239,7 @@ class GreedyProbsCalculator(StatCalculator):
                     attn_mask[:, j, :j] = stacked_attention.cpu().numpy()
                 attention_all.append(attn_mask)
 
-        if not self.output_hidden_states:
+        if not self.output_hidden_states or is_vllm:
             embeddings_dict = {}
         elif model.model_type == "CausalLM":
             embeddings_dict = {
@@ -261,7 +262,7 @@ class GreedyProbsCalculator(StatCalculator):
             "greedy_log_likelihoods": ll,
         }
         result_dict.update(embeddings_dict)
-        if self.output_attentions:
+        if self.output_attentions and not is_vllm:
             result_dict.update({"attention_all": attention_all})
             result_dict.update({"tokenizer": model.tokenizer})
         return result_dict

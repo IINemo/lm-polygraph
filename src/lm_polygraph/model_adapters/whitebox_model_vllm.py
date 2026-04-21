@@ -17,7 +17,9 @@ class WhiteboxModelvLLM(Model):
         generation_parameters: GenerationParameters = GenerationParameters(),
         device: str = "cuda",
         instruct: bool = False,
+        model_path: str = None,
     ):
+        super().__init__(model_path or getattr(model, "model_name", ""), "vLLMCausalLM")
         self.model = model
         self.tokenizer = self.model.get_tokenizer()
         self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -44,7 +46,6 @@ class WhiteboxModelvLLM(Model):
             )
 
         self.base_device = device
-        self.model_type = "vLLMCausalLM"
 
     def generate(self, *args, **kwargs):
         sampling_params = copy(self.sampling_params)
