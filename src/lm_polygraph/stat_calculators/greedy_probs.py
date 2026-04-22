@@ -145,11 +145,28 @@ class GreedyProbsCalculator(StatCalculator):
 
         # Method (1): specify EOS token id on generation
         if model.model_type == "vLLMCausalLM":
+            eos_ids = [model.tokenizer.eos_token_id]
             generate_kwargs["sampling_params"] = SamplingParams(
-                stop_token_ids=[model.tokenizer.eos_token_id]
+                stop_token_ids=eos_ids
             )
         else:
-            generate_kwargs["eos_token_id"] = model.tokenizer.eos_token_id
+            
+            # List of EOS
+            eos_ids_tokenizer = model.tokenizer.eos_token_id
+            eos_ids_model_config = model.model.config.eos_token_id
+
+            if isinstance(eos_ids_tokenizer, int):
+                eos_ids_tokenizer = [eos_ids_tokenizer]
+
+            if isinstance(eos_ids_model_config, int):
+                eos_ids_model_config = [eos_ids_model_config]
+
+            eos_ids_tokenizer = eos_ids_tokenizer or []
+            eos_ids_model_config = eos_ids_model_config or []
+
+            eos_ids = list(set(eos_ids_tokenizer) | set(eos_ids_model_config))
+
+            generate_kwargs["eos_token_id"] = eos_ids
 
         with torch.no_grad():
             out = model.generate(**batch, **generate_kwargs)
@@ -179,6 +196,8 @@ class GreedyProbsCalculator(StatCalculator):
                 self.answer_marker, add_special_tokens=False
             ).input_ids
 
+        print("sequences !!!!!!!!!!!!!!!!", model.tokenizer.decode(sequences[0]))
+
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]
@@ -191,7 +210,7 @@ class GreedyProbsCalculator(StatCalculator):
             # UGRIP: Code to save full text
             full_text_length = len(full_gen_seq)
             for j in range(len(full_gen_seq)):
-                if full_gen_seq[j] == model.tokenizer.eos_token_id:
+                if full_gen_seq[j] in eos_ids:
                     full_text_length = j
                     break 
             full_texts.append(model.tokenizer.decode(full_gen_seq[:full_text_length]))
@@ -221,7 +240,7 @@ class GreedyProbsCalculator(StatCalculator):
 
             length, text_length = len(seq), len(seq)
             for j in range(len(seq)):
-                if seq[j] == model.tokenizer.eos_token_id:
+                if seq[j] in eos_ids:
                     length = j + 1
                     text_length = j
                     break
@@ -264,7 +283,7 @@ class GreedyProbsCalculator(StatCalculator):
             assert len(tokens) == len(log_probs)
 
             # Method (2): skip padding steps entirely so they never enter downstream stats
-            # filtered = [
+            # 'filtered = [
             #     log_probs[j, tokens[j]]
             #     for j in range(len(log_probs))
             #     if pad_id is None or tokens[j] != pad_id
@@ -323,8 +342,8 @@ class GreedyProbsCalculator(StatCalculator):
                 # num_heads = 1
 
                 # get actual total_key_len from the last valid attention step
-                last_t = min(slice_start_idx + c - 1, len(attentions) - 1)
-                total_key_len = attentions[last_t][selected_layers[0]].shape[-1] - c # actual size
+                # last_t = min(slice_start_idx + c - 1, len(attentions) - 1)
+                total_key_len = len(sequences[i]) - c - 1 # attentions[last_t][selected_layers[0]].shape[-1] - c # actual size
 
                 attn_mask = np.zeros(shape=(len(selected_layers), num_heads, c, total_key_len))
 
@@ -332,7 +351,7 @@ class GreedyProbsCalculator(StatCalculator):
                     original_token_index = j + slice_start_idx
                     if original_token_index < len(attentions):
                         for li, layer in enumerate(selected_layers):
-                            layer_attn = attentions[original_token_index][layer][0, :num_heads, 0, :total_key_len]  # (num_heads, key_len)   # -386
+                            layer_attn = attentions[original_token_index][layer][0, :num_heads, 0, :total_key_len]  # (num_heads, key_len) 
                             if layer_attn.dtype == torch.bfloat16:
                                 layer_attn = layer_attn.to(torch.float16)
                             key_len_at_j = layer_attn.shape[-1]
