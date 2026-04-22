@@ -94,9 +94,13 @@ class WhiteboxModelvLLM(Model):
         return texts
 
     def post_processing(self, outputs):
-        vocab_size = max(
-            self.tokenizer.vocab_size, max(self.tokenizer.added_tokens_decoder.keys())
+        max_added_token_id = (
+            max(self.tokenizer.added_tokens_decoder.keys())
+            if self.tokenizer.added_tokens_decoder
+            else 0
         )
+        vocab_size = max(self.tokenizer.vocab_size, max_added_token_id + 1)
+
         logits = []
         sequences = []
 
