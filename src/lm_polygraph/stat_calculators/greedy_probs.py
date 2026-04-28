@@ -196,8 +196,6 @@ class GreedyProbsCalculator(StatCalculator):
                 self.answer_marker, add_special_tokens=False
             ).input_ids
 
-        print("sequences !!!!!!!!!!!!!!!!", model.tokenizer.decode(sequences[0]))
-
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]
