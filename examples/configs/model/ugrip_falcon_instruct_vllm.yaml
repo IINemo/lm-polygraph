@@ -1,7 +1,7 @@
 defaults:
   - default
 
-path: tiiuae/Falcon3-7B-Instruct # tiiuae/falcon-7b-instruct
+path: tiiuae/falcon-7b-instruct
 type: vLLMCausalLM
 path_to_load_script: model/default_vllm.py
 logprobs: 10

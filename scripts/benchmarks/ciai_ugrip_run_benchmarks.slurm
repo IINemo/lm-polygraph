@@ -20,32 +20,11 @@ hostname
 
 mkdir -p slurm_logs
 cd ~/workspace/lm-polygraph
+source .venv/bin/activate
 
 
-
-
-
-
-# ---------------- TRY WITH ATTENTION MAPS -----------------------
-
-scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-model=ugrip_qwen25_instruct dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-estimators=ugrip_benchmark_estimators_lite.yaml \
-subsample_eval_dataset=5 batch_size=1 eval_split=test
-
-# ----------------------------------------------------------------
-
-
-
-# llama
-# medmcqa
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=50 batch_size=20 eval_split=validation
-
+# # llama
+# # medmcqa
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
 # model=ugrip_llama_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
@@ -83,208 +62,92 @@ subsample_eval_dataset=5 batch_size=1 eval_split=test
 
 
 
-
-# gemma
-# gsm8k
+# # gemma
+# # gsm8k
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
-# mmlu
+# # mmlu
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
 # # medmcqa
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
+# subsample_eval_dataset=1000 batch_size=1 eval_split=validation
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
+# subsample_eval_dataset=1000 batch_size=1 eval_split=validation
 
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
+# subsample_eval_dataset=1000 batch_size=1 eval_split=validation
 
 
 
 
-# # qwen
-# # gsm8k
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-
-# # mmlu
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# # # medmcqa
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-# model=ugrip_qwen25_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
-
-
-
-
-
-# falcon
+# tokensar gemma
 # gsm8k
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=10 batch_size=20 eval_split=test
-
-# # mmlu
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
-
-# # # medmcqa
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_reasoning.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
-
-# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip_segmentation_answer.yaml \
-# model=ugrip_falcon_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-# estimators=ugrip_benchmark_estimators_lite.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=validation
-
-
-
-
-
-
-# # tokensar gemma
-# # gsm8k
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_tokensar_estimator.yaml \
 # subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
+uv run --python 3.11 scripts/polygraph_eval \
+  --config-dir=./examples/configs \
+  --config-name=polygraph_eval_ugrip.yaml \
+  model=ugrip_gemma_instruct_vllm \
+  dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
+  generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
+  estimators=ugrip_benchmark_tokensar_estimator.yaml \
+  subsample_eval_dataset=1000 \
+  batch_size=1 \
+  eval_split=test
+
 # mmlu
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
 # model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
 # generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
 # estimators=ugrip_benchmark_tokensar_estimator.yaml \
-# subsample_eval_dataset=1000 batch_size=20 eval_split=test
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
 # # medmcqa
 # scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
