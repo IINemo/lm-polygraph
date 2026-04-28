@@ -804,6 +804,14 @@ class VLLMWithUncertainty:
                         suffix = req_id.rsplit("_", 1)[-1]
                         if suffix in output_short_ids:
                             return output_short_ids[suffix]
+                        # Format {seq}_{prompt}-{hash}: peel the trailing
+                        # -hash off the suffix and retry. Without this branch
+                        # best-of-n captures (e.g. "0_0-947ca420") never resolve
+                        # to a prompt when the parent request_id is just "0".
+                        if "-" in suffix:
+                            bare = suffix.split("-")[0]
+                            if bare in output_short_ids:
+                                return output_short_ids[bare]
                     # Format {prompt}-{hash}: prefix is prompt index
                     if "-" in req_id:
                         prefix = req_id.split("-")[0]
