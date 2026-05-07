@@ -31,7 +31,7 @@ load_from_disk: false
 generation_params:
   generate_until:
     - "\n"
-subsample_eval_dataset: -1
+subsample_eval_dataset: 2000
 batch_size: 1
 
 generation_metrics: null

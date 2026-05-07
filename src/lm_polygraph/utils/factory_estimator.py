@@ -61,7 +61,7 @@ def load_simple_estimators(name: str, config):
         Dissimilarity,
         DissimilarityP,
         EccentricityConf,
-        EccentricityConfP,
+        EccentricityPConf,
         EigVecDissimilarity,
         EigVecDissimilarityP,
         RAUQ,

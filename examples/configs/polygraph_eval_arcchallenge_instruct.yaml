@@ -28,7 +28,11 @@ generation_params:
   generate_until:
     - "\n"
 
+<<<<<<< Updated upstream
 subsample_eval_dataset: -1
+=======
+subsample_eval_dataset: 2000
+>>>>>>> Stashed changes
 
 generation_metrics: null
 

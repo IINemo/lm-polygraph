@@ -11,10 +11,10 @@ defaults:
 
 cache_path: ./workdir/output
 save_path: '${hydra:run.dir}'
-instruct: false
+instruct: true
 task: qa
 
-dataset: ['LM-Polygraph/triviaqa', 'continuation']
+dataset: ['rediska0123/webq_lmpoly', 'instruct']
 text_column: input
 label_column: output
 train_split: train
@@ -23,7 +23,7 @@ max_new_tokens: 20
 load_from_disk: false
 multiref: true
 trust_remote_code: false
-size: 10000
+size: 2000
 generation_params:
   generate_until:
     - "\n"
