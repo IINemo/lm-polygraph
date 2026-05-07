@@ -33,7 +33,7 @@ Our beam-weighted estimators achieve state-of-the-art results across:
 - multiple consistency-based uncertainty estimation methods.
 
 <p align="center">
-  <img width="850" src="assets/beamsearch.pdf">
+  <img width="850" src="https://github.com/IINemo/lm-polygraph/blob/beam-uncertainty/assets/beamsearch.pdf">
 </p>
 
 ---
