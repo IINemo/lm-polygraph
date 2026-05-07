@@ -35,6 +35,7 @@ Our beam-weighted estimators achieve state-of-the-art results across:
 <p align="center">
   <img width="850" src="https://github.com/IINemo/lm-polygraph/blob/beam-uncertainty/assets/beamsearch.png">
 </p>
+Figure: Beam Search vs Multinomial Sampling. Sampling produces multiple identical generations resulting in noisy confidence estimate, while beam search covers top answers from LLM distribution resulting in a better confidence score.
 
 ---
 
