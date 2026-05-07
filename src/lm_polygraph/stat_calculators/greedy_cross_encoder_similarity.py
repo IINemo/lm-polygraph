@@ -9,45 +9,37 @@ from sentence_transformers import CrossEncoder
 from lm_polygraph.utils.model import WhiteboxModel
 
 
-class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
+class GreedyCrossEncoderSimilarityMatrixCalculatorBase(StatCalculator):
     """
     Calculates the cross-encoder similarity between greedy sequence and sampled sequences.
     """
-
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
-
-        return (
-            [
-                "greedy_sentence_similarity_forward",
-                "greedy_sentence_similarity_backward",
-                "greedy_sentence_similarity",
-            ],
-            ["input_texts", "sample_texts", "greedy_texts"],
-        )
+        return [], []
 
     def __init__(
-        self,
-        batch_size: int = 10,
-        cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+            self,
+            batch_size: int = 10,
+            cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+            sample_source: str = "sample",
+            progress: bool = True,
     ):
         super().__init__()
         self.crossencoder_setup = False
         self.batch_size = batch_size
         self.cross_encoder_name = cross_encoder_name
+        self.sample_source = sample_source
+        self.progress = progress
 
     def _setup(self, device="cuda"):
         self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
 
     def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: WhiteboxModel,
-        max_new_tokens: int = 100,
+            self,
+            dependencies: Dict[str, np.array],
+            texts: List[str],
+            model: WhiteboxModel,
+            max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         device = model.device()
 
@@ -55,7 +47,7 @@ class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
             self._setup(device=device)
             self.crossencoder_setup = True
 
-        batch_texts = dependencies["sample_texts"]
+        batch_texts = dependencies[f"{self.sample_source}_texts"]
         batch_greedy_texts = dependencies["greedy_texts"]
 
         batch_pairs = []
@@ -70,7 +62,10 @@ class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
         sim_arrays_f = []
         sim_arrays_b = []
         sim_arrays = []
-        for i, pairs in tqdm(enumerate(batch_pairs)):
+        rng = enumerate(batch_pairs)
+        if self.progress:
+            rng = tqdm(rng, total=len(batch_pairs))
+        for i, pairs in rng:
             pairs_b = [(b, a) for a, b in pairs]
             sim_scores_f = self.crossencoder.predict(pairs, batch_size=self.batch_size)
             sim_scores_b = self.crossencoder.predict(
@@ -88,7 +83,65 @@ class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
         sim_arrays = np.stack(sim_arrays)
 
         return {
-            "greedy_sentence_similarity_forward": sim_arrays_f,
-            "greedy_sentence_similarity_backward": sim_arrays_b,
-            "greedy_sentence_similarity": sim_arrays,
+            f"greedy_{self.sample_source}_sentence_similarity_forward": sim_arrays_f,
+            f"greedy_{self.sample_source}_sentence_similarity_backward": sim_arrays_b,
+            f"greedy_{self.sample_source}_sentence_similarity": sim_arrays,
         }
+
+
+class GreedyCrossEncoderSimilarityMatrixCalculator(GreedyCrossEncoderSimilarityMatrixCalculatorBase):
+    """
+    Calculates the cross-encoder similarity between greedy sequence and sampled sequences.
+    """
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return (
+            [
+                "greedy_sample_sentence_similarity_forward",
+                "greedy_sample_sentence_similarity_backward",
+                "greedy_sample_sentence_similarity",
+            ],
+            ["input_texts", "sample_texts", "greedy_texts"],
+        )
+
+    def __init__(
+            self,
+            batch_size: int = 10,
+            cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+            progress: bool = True,
+    ):
+        super().__init__(batch_size, cross_encoder_name, sample_source="sample", progress=progress)
+
+
+class GreedyBeamCrossEncoderSimilarityMatrixCalculator(GreedyCrossEncoderSimilarityMatrixCalculatorBase):
+    """
+    Calculates the cross-encoder similarity between greedy sequence and sampled sequences.
+    """
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return (
+            [
+                "greedy_beamsearch_sentence_similarity_forward",
+                "greedy_beamsearch_sentence_similarity_backward",
+                "greedy_beamsearch_sentence_similarity",
+            ],
+            ["input_texts", "beamsearch_texts", "greedy_texts"],
+        )
+
+    def __init__(
+            self,
+            batch_size: int = 10,
+            cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+            progress: bool = True,
+    ):
+        super().__init__(batch_size, cross_encoder_name, sample_source="beamsearch", progress=progress)

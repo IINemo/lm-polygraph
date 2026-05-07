@@ -11,13 +11,19 @@ class AttentionScoreClaim(Estimator):
     def __init__(
         self,
         model_name: str = None,
+        layer: int | None = None,
     ):
         super().__init__(
             ["forwardpass_attention_weights", "greedy_tokens", "claims"], "claim"
         )
         if model_name is not None:
             config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
-            self.layer = config.num_hidden_layers // 2  # middle layer
+            try:
+                self.layer = config.num_hidden_layers // 2  # middle layer
+            except AttributeError:
+                self.layer = config.text_config.num_hidden_layers // 2
+            if layer is not None:
+                self.layer = layer
         else:
             raise ValueError("model_name must be provided to initialize self.layer")
 

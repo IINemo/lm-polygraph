@@ -15,6 +15,7 @@ from .greedy_lm_visual_probs import GreedyLMProbsVisualCalculator
 from .cross_encoder_visual_similarity import (
     CrossEncoderSimilarityMatrixVisualCalculator,
 )
+from .concat_greedy_with_samples import ConcatGreedyWithSamples, ConcatGreedyWithBeam
 from .prompt_visual import (
     PromptVisualCalculator,
     SamplingPromptVisualCalculator,
@@ -38,6 +39,7 @@ from .sample import (
     SamplingGenerationCalculator,
     BlackboxSamplingGenerationCalculator,
 )
+from .beamsearch import BeamSearchGenerationCalculator
 from .greedy_alternatives_nli import (
     GreedyAlternativesNLICalculator,
     GreedyAlternativesFactPrefNLICalculator,
@@ -47,16 +49,27 @@ from .model_score import ModelScoreCalculator
 from .embeddings import EmbeddingsCalculator
 from .statistic_extraction import TrainingStatisticExtractionCalculator
 from .ensemble_token_data import EnsembleTokenLevelDataCalculator
-from .semantic_matrix import SemanticMatrixCalculator
+from .semantic_matrix import (
+    SemanticMatrixCalculator,
+    BeamSemanticMatrixCalculator,
+    GreedyPlusSampleSemanticMatrixCalculator,
+    GreedyPlusBeamSemanticMatrixCalculator,
+)
 from .raw_input import RawInputCalculator
 from .greedy_semantic_matrix import (
     GreedySemanticMatrixCalculator,
     ConcatGreedySemanticMatrixCalculator,
+    GreedyBeamSemanticMatrixCalculator,
+    ConcatGreedyBeamSemanticMatrixCalculator,
 )
-from .cross_encoder_similarity import CrossEncoderSimilarityMatrixCalculator
+from .cross_encoder_similarity import (
+    CrossEncoderSimilarityMatrixCalculator,
+    CrossEncoderBeamSimilarityMatrixCalculator,
+)
 from .greedy_cross_encoder_similarity import (
     GreedyCrossEncoderSimilarityMatrixCalculator,
+    GreedyBeamCrossEncoderSimilarityMatrixCalculator,
 )
 from .extract_claims import ClaimsExtractor
 from .infer_causal_lm_calculator import InferCausalLMCalculator
-from .semantic_classes import SemanticClassesCalculator
+from .semantic_classes import SemanticClassesCalculator, BeamSemanticClassesCalculator

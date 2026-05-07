@@ -33,6 +33,8 @@ from .monte_carlo_normalized_sequence_entropy import MonteCarloNormalizedSequenc
 from .lexical_similarity import LexicalSimilarity
 from .deg_mat import DegMat
 from .eccentricity import Eccentricity
+from .eccentricity_confidence import EccentricityConf, EccentricityConfP
+from .eigenvec_dissim import EigVecDissimilarity, EigVecDissimilarityP
 from .eig_val_laplacian import EigValLaplacian
 from .num_sem_sets import NumSemSets
 from .semantic_entropy import SemanticEntropy
@@ -83,7 +85,8 @@ from .focus import Focus
 from .kernel_language_entropy import KernelLanguageEntropy
 from .luq import LUQ
 from .eigenscore import EigenScore
-from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE
+from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE, Dissimilarity
+from .cocoa import CocoaMSPP, CocoaPPLP, CocoaMTEP, DissimilarityP
 from .rauq import RAUQ
 from .csl import CSL
 from .semantic_density import SemanticDensity

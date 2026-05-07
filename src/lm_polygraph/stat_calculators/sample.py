@@ -3,6 +3,7 @@ import numpy as np
 
 from typing import Dict, List, Tuple, Union
 
+from .normalize_texts import normalize
 from .stat_calculator import StatCalculator
 from .embeddings import get_embeddings_from_output
 from lm_polygraph.model_adapters import WhiteboxModel, BlackboxModel, WhiteboxModelvLLM
@@ -32,11 +33,11 @@ class BlackboxSamplingGenerationCalculator(StatCalculator):
         self.samples_n = samples_n
 
     def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: BlackboxModel,
-        max_new_tokens: int = 100,
+            self,
+            dependencies: Dict[str, np.array],
+            texts: List[str],
+            model: BlackboxModel,
+            max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates sampled texts for Blackbox model on the input batch.
@@ -99,7 +100,11 @@ def _gen_samples(n_samples, model, batch, **kwargs):
     )
     with torch.no_grad():
         for k in range(n_samples):
-            out = model.generate(**batch, **kwargs)
+            out = model.generate(
+                **batch,
+                **kwargs,
+                num_return_sequences=1,
+            )
             cur_logits = torch.stack(out.scores, dim=1)
             if model.model_type == "vLLMCausalLM":
                 cur_logits = cur_logits.transpose(1, 0)
@@ -121,6 +126,48 @@ def _gen_samples(n_samples, model, batch, **kwargs):
                 logits[i].append(cur_logits[i])
     sequences = [s for sample_seqs in sequences for s in sample_seqs]
     return sequences, sum(logits, []), embeddings
+
+
+def _gen_samples_batched(n_samples, model, batch, **kwargs):
+    batch_size = len(batch["input_ids"])
+
+    # Generate in one batched call with num_return_sequences = n_samples
+    with torch.no_grad():
+        out = model.generate(
+            **batch,
+            **kwargs,
+            num_return_sequences=n_samples,
+        )
+
+    # Get logits
+    logits = torch.stack(out.scores, dim=1)
+    if model.model_type == "vLLMCausalLM":
+        logits = logits.transpose(1, 0)
+
+    # Reshape output sequences and logits
+    all_sequences = out.sequences.view(batch_size, n_samples, -1)
+    all_logits = logits.view(batch_size, n_samples, logits.shape[1], logits.shape[2])
+
+    # Convert to list of list of tensors for consistency with original
+    sequences = [[all_sequences[i, j] for j in range(n_samples)] for i in range(batch_size)]
+    logits = [[all_logits[i, j] for j in range(n_samples)] for i in range(batch_size)]
+
+    # Process embeddings
+    embeddings = []
+    for i in range(n_samples):
+        sample_embedding = {}
+        if model.model_type == "CausalLM":
+            sample_embedding["sample_embeddings_all_decoder"] = out.hidden_states
+        elif model.model_type == "Seq2SeqLM":
+            sample_embedding["sample_embeddings_all_encoder"] = out.encoder_hidden_states
+            sample_embedding["sample_embeddings_all_decoder"] = out.decoder_hidden_states
+        embeddings.append(sample_embedding)
+
+    # Flatten sequences and logits to match expected output shape
+    flat_sequences = [seq for sublist in sequences for seq in sublist]
+    flat_logits = [logit for sublist in logits for logit in sublist]
+
+    return flat_sequences, flat_logits, embeddings
 
 
 class SamplingGenerationCalculator(StatCalculator):
@@ -145,16 +192,23 @@ class SamplingGenerationCalculator(StatCalculator):
             "sample_embeddings",
         ], []
 
-    def __init__(self, samples_n: int = 10):
+    def __init__(
+            self,
+            batched: bool = True,
+            samples_n: int = 10,
+            temperature: float | None = None,
+    ):
         super().__init__()
         self.samples_n = samples_n
+        self.batched = batched
+        self.temperature = temperature
 
     def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: Union[WhiteboxModel, WhiteboxModelvLLM],
-        max_new_tokens: int = 100,
+            self,
+            dependencies: Dict[str, np.array],
+            texts: List[str],
+            model: Union[WhiteboxModel, WhiteboxModelvLLM],
+            max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         """
         Calculates the statistics of sampling texts.
@@ -174,7 +228,10 @@ class SamplingGenerationCalculator(StatCalculator):
         """
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
-        sequences, logits, embeddings = _gen_samples(
+        args = {}
+        if self.temperature is not None:
+            args["temperature"] = self.temperature
+        sequences, logits, embeddings = (_gen_samples_batched if self.batched else _gen_samples)(
             self.samples_n,
             model,
             batch,
@@ -185,7 +242,6 @@ class SamplingGenerationCalculator(StatCalculator):
             min_new_tokens=2,
             do_sample=True,
             num_beams=1,
-            num_return_sequences=1,
             suppress_tokens=(
                 []
                 if model.generation_parameters.allow_newlines
@@ -195,6 +251,7 @@ class SamplingGenerationCalculator(StatCalculator):
                     if "\n" in model.tokenizer.decode([t])
                 ]
             ),
+            **args,
         )
 
         log_probs = [[] for _ in range(len(texts))]
@@ -221,7 +278,7 @@ class SamplingGenerationCalculator(StatCalculator):
             log_likelihoods[int(i / self.samples_n)].append(ll)
             log_probs[int(i / self.samples_n)].append(log_prob)
             tokens[int(i / self.samples_n)].append(toks)
-            texts[int(i / self.samples_n)].append(model.tokenizer.decode(toks))
+            texts[int(i / self.samples_n)].append(normalize(model.tokenizer.decode(toks)))
 
         result_dict = {
             "sample_log_likelihoods": log_likelihoods,

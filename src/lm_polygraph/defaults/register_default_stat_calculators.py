@@ -1,11 +1,14 @@
 from typing import List, Optional
 from omegaconf import OmegaConf
 from pathlib import Path
+import logging
 
 from lm_polygraph.stat_calculators import *
 from lm_polygraph.utils.factory_stat_calculator import (
     StatCalculatorContainer,
 )
+
+log = logging.getLogger("lm_polygraph")
 
 
 def register_default_stat_calculators(
@@ -16,6 +19,10 @@ def register_default_stat_calculators(
     output_attentions: bool = True,
     output_hidden_states: bool = True,
     deberta_batch_size: int = 10,
+    samples_n: int = 10,
+    temperature: float | None = None,
+    num_beam_groups: int | None = None,
+    diversity_penalty: float | None = None,
 ) -> List[StatCalculatorContainer]:
     """
     Specifies the list of the default stat_calculators that could be used in the evaluation scripts and
@@ -64,8 +71,28 @@ def register_default_stat_calculators(
         {"nli_model": nli_model_cfg},
     )
     _register(
+        BeamSemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_BeamSemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        GreedyPlusSampleSemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyPlusSampleSemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        GreedyPlusBeamSemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyPlusBeamSemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
         GreedySemanticMatrixCalculator,
         "lm_polygraph.defaults.stat_calculator_builders.default_GreedySemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
+    _register(
+        GreedyBeamSemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_GreedyBeamSemanticMatrixCalculator",
         {"nli_model": nli_model_cfg},
     )
     _register(
@@ -73,7 +100,13 @@ def register_default_stat_calculators(
         "lm_polygraph.defaults.stat_calculator_builders.default_ConcatGreedySemanticMatrixCalculator",
         {"nli_model": nli_model_cfg},
     )
+    _register(
+        ConcatGreedyBeamSemanticMatrixCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_ConcatGreedyBeamSemanticMatrixCalculator",
+        {"nli_model": nli_model_cfg},
+    )
     _register(SemanticClassesCalculator)
+    _register(BeamSemanticClassesCalculator)
 
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
@@ -99,7 +132,18 @@ def register_default_stat_calculators(
         _register(EntropyCalculator)
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)
-        _register(SamplingGenerationCalculator)
+        _register(
+            SamplingGenerationCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_SamplingGenerationCalculator",
+            {"samples_n": samples_n, "temperature": temperature},
+        )
+        _register(
+            BeamSearchGenerationCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_BeamSearchGenerationCalculator",
+            {"beams_n": samples_n, "num_beam_groups": num_beam_groups, "diversity_penalty": diversity_penalty},
+        )
+        _register(ConcatGreedyWithSamples)
+        _register(ConcatGreedyWithBeam)
         _register(BartScoreCalculator)
         _register(ModelScoreCalculator)
         _register(EnsembleTokenLevelDataCalculator)
@@ -116,8 +160,24 @@ def register_default_stat_calculators(
             },
         )
         _register(
+            CrossEncoderBeamSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderBeamSimilarityMatrixCalculator",
+            {
+                "batch_size": deberta_batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
             GreedyCrossEncoderSimilarityMatrixCalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyCrossEncoderSimilarityMatrixCalculator",
+            {
+                "batch_size": 10,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
+            GreedyBeamCrossEncoderSimilarityMatrixCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_GreedyBeamCrossEncoderSimilarityMatrixCalculator",
             {
                 "batch_size": 10,
                 "cross_encoder_name": "cross-encoder/stsb-roberta-large",

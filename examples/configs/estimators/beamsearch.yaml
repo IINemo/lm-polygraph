@@ -1,0 +1,109 @@
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: MeanPointwiseMutualInformation
+- name: SelfCertainty
+- name: MeanConditionalPointwiseMutualInformation
+- name: ClaimConditionedProbability
+- name: PTrue
+- name: PTrueSampling
+- name: MonteCarloSequenceEntropy
+- name: MonteCarloNormalizedSequenceEntropy
+- name: NumSemSets
+- name: SemanticEntropy
+- name: SAR
+- name: TokenSAR
+- name: SentenceSAR
+- name: LUQ
+- name: KernelLanguageEntropy
+- name: EigenScore
+- name: RenyiNeg
+- name: FisherRao
+- name: CSL
+- name: SemanticDensity
+- name: Focus
+  cfg:
+    model_name: '${model.path}'
+    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
+    gamma: 0.9
+    p: 0.01
+    idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+    trust_remote_code: True
+    idf_seed: 42
+    idf_dataset_size: -1
+    spacy_path: "en_core_web_sm"
+- name: AttentionScore
+  cfg:
+    gen_only: False
+- name: RAUQ
+  cfg:
+    alpha: 0.2
+    use_entropy: False
+- name: RAUQ
+  cfg:
+    alpha: 0.8
+    use_entropy: True
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge1"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge2"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rougeL"
+- name: LexicalSimilarity
+  cfg:
+    metric: "BLEU"
+- name: EigValLaplacian
+  cfg:
+    affinity: "entail"
+- name: EigValLaplacian
+  cfg:
+    affinity: "contra"
+- name: DegMat
+  cfg:
+    affinity: "entail"
+- name: DegMat
+  cfg:
+    affinity: "contra"
+- name: Eccentricity
+  cfg:
+    affinity: "entail"
+- name: Eccentricity
+  cfg:
+    affinity: "contra"
+- name: Eccentricity
+  cfg:
+    affinity: "entail"
+    confidence: true
+- name: Eccentricity
+  cfg:
+    affinity: "contra"
+    confidence: true
+- name: EccentricityP
+  cfg:
+    affinity: "entail"
+    confidence: true
+    samples_source: beamsearch
+- name: EccentricityP
+  cfg:
+    affinity: "contra"
+    confidence: true
+    samples_source: beamsearch
+- name: CocoaMSP
+- name: CocoaMSPP
+  cfg:
+    samples_source: beamsearch
+- name: CocoaPPL
+- name: CocoaPPLP
+  cfg:
+    samples_source: beamsearch
+- name: CocoaMTE
+- name: CocoaMTEP
+  cfg:
+    samples_source: beamsearch
+- name: Dissimilarity
+- name: DissimilarityP
+  cfg:
+    samples_source: beamsearch

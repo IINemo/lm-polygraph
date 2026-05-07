@@ -7,43 +7,25 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import WhiteboxModel
 
 
-class SemanticClassesCalculator(StatCalculator):
-    """
-    Paritions samples into semantic classes based on semantic matrix.
-    """
-
-    @staticmethod
-    def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
-
-        return [
-            "semantic_classes_entail",
-        ], [
-            "sample_texts",
-            "semantic_matrix_entail",
-            "semantic_matrix_classes",
-            "entailment_id",
-        ]
-
-    def __init__(self):
+class SemanticClassesCalculatorBase(StatCalculator):
+    def __init__(self, sample_source: str):
         super().__init__()
+        self.sample_source = sample_source
 
     def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: WhiteboxModel,
-        max_new_tokens: int = 100,
+            self,
+            dependencies: Dict[str, np.array],
+            texts: List[str],
+            model: WhiteboxModel,
+            max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
         self._is_entailment = (
-            dependencies["semantic_matrix_classes"] == dependencies["entailment_id"]
+                dependencies[f"{self.sample_source}_semantic_matrix_classes"] == dependencies["entailment_id"]
         )
-        self.get_classes(dependencies["sample_texts"])
+        self.get_classes(dependencies[f"{self.sample_source}_texts"])
 
         return {
-            "semantic_classes_entail": {
+            f"{self.sample_source}_semantic_classes_entail": {
                 "sample_to_class": self._sample_to_class,
                 "class_to_sample": self._class_to_sample,
             }
@@ -86,3 +68,43 @@ class SemanticClassesCalculator(StatCalculator):
         self._class_to_sample[idx].append([i])
 
         return new_class_id
+
+
+class SemanticClassesCalculator(SemanticClassesCalculatorBase):
+    def __init__(self, ):
+        super().__init__("sample")
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "sample_semantic_classes_entail",
+        ], [
+            "sample_texts",
+            "sample_semantic_matrix_entail",
+            "sample_semantic_matrix_classes",
+            "entailment_id",
+        ]
+
+
+class BeamSemanticClassesCalculator(SemanticClassesCalculatorBase):
+    def __init__(self, ):
+        super().__init__("beamsearch")
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "beamsearch_semantic_classes_entail",
+        ], [
+            "beamsearch_texts",
+            "beamsearch_semantic_matrix_entail",
+            "beamsearch_semantic_matrix_classes",
+            "entailment_id",
+        ]

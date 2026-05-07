@@ -32,16 +32,16 @@ class FocusClaim(Estimator):
     """
 
     def __init__(
-        self,
-        gamma: float,
-        p: float,
-        model_name: str,
-        path: str,
-        idf_dataset: str,
-        trust_remote_code: bool,
-        idf_seed: int,
-        idf_dataset_size: int,
-        spacy_path: str,
+            self,
+            gamma: float,
+            p: float,
+            model_name: str,
+            path: str,
+            idf_dataset: str,
+            trust_remote_code: bool,
+            idf_seed: int,
+            idf_dataset_size: int,
+            spacy_path: str,
     ):
         super().__init__(
             [
@@ -56,7 +56,8 @@ class FocusClaim(Estimator):
         )
         self.p = p
         self.gamma = gamma
-        self.idf_stats = load_idf(
+        self.idf_stats = None
+        self._idf_args = [
             model_name,
             path,
             idf_dataset,
@@ -64,10 +65,15 @@ class FocusClaim(Estimator):
             idf_seed,
             idf_dataset_size,
             spacy_path,
-        )
+        ]
 
     def __str__(self):
         return f"FocusClaim (gamma={self.gamma})"
+
+    def _setup(self):
+        if self.idf_stats is not None:
+            return
+        self.idf_stats = load_idf(*self._idf_args)
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> List[List[float]]:
         """
@@ -82,6 +88,7 @@ class FocusClaim(Estimator):
             List[List[float]]: Nested list of uncertainty scores, where each inner list
                 corresponds to the scores of claims in a single sequence.
         """
+        self._setup()
         claims = stats["claims"]
 
         all_token_focus, all_kw_mask = token_level_focus_scores(

@@ -6,6 +6,7 @@ defaults:
   - model: bloomz-560m
   - estimators: default_estimators
   - stat_calculators: default_calculators
+  - base_processing_triviaqa
   - _self_
 
 cache_path: ./workdir/output
@@ -13,16 +14,16 @@ save_path: '${hydra:run.dir}'
 instruct: false
 task: qa
 
-dataset: ['rediska0123/truthfulqa_short', 'continuation']
+dataset: ['rediska0123/hotpotqa_lmpoly', 'base']
 text_column: input
 label_column: output
 train_split: train
 eval_split: test
-max_new_tokens: 128
+max_new_tokens: 20
 load_from_disk: false
 multiref: true
 trust_remote_code: false
-size: 10000
+size: 2000
 generation_params:
   generate_until:
     - "\n"

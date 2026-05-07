@@ -499,20 +499,6 @@ class WhiteboxModel(Model):
                     self.done_tracker[i] = self.sequence in lookback_tokens_batch[i]
             return False not in self.done_tracker
 
-    def get_stopping_criteria(self, input_ids: torch.Tensor):
-        eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
-        stop_sequences = self.generation_parameters.generate_until + [eos]
-        return StoppingCriteriaList(
-            [
-                *[
-                    self._MultiTokenEOSCriteria(
-                        sequence, self.tokenizer, input_ids.shape[1], input_ids.shape[0]
-                    )
-                    for sequence in stop_sequences
-                ],
-            ]
-        )
-
     def generate(self, **args):
         """
         Generates the model output with scores from batch formed by HF Tokenizer.
@@ -525,6 +511,7 @@ class WhiteboxModel(Model):
         default_params = asdict(self.generation_parameters)
 
         if len(self.generation_parameters.generate_until) > 0:
+            # args["stop_strings"] = self.generation_parameters.generate_until
             args["stopping_criteria"] = self.get_stopping_criteria(args["input_ids"])
 
         # add ScoresProcessor to collect original scores
@@ -549,6 +536,20 @@ class WhiteboxModel(Model):
         generation.scores = processor.scores
 
         return generation
+
+    def get_stopping_criteria(self, input_ids: torch.Tensor):
+        eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
+        stop_sequences = self.generation_parameters.generate_until + [eos]
+        return StoppingCriteriaList(
+            [
+                *[
+                    self._MultiTokenEOSCriteria(
+                        sequence, self.tokenizer, input_ids.shape[1], input_ids.shape[0]
+                    )
+                    for sequence in stop_sequences
+                ],
+            ]
+        )
 
     def generate_texts(self, input_texts: List[str], **args) -> List[str]:
         """
@@ -697,8 +698,11 @@ class WhiteboxModel(Model):
             for chat in texts:
                 if isinstance(chat, str):
                     chat = [{"role": "user", "content": chat}]
+                args = {"add_generation_prompt": True, "tokenize": False}
+                if "Qwen3" in self.model_path:
+                    args["enable_thinking"] = False
                 formatted_chat = self.tokenizer.apply_chat_template(
-                    chat, add_generation_prompt=True, tokenize=False
+                    chat, **args
                 )
                 formatted_texts.append(formatted_chat)
             texts = formatted_texts

@@ -47,7 +47,11 @@ class OpenAIChat:
         cache_settings["eviction_policy"] = "none"
         cache_settings["size_limit"] = int(1e12)
         cache_settings["cull_limit"] = 0
-        openai_responses = dc.Cache(self.cache_path, **cache_settings)
+        try:
+            openai_responses = dc.Cache(self.cache_path, **cache_settings)
+        except Exception as e:
+            log.error(e)
+            openai_responses = {}
 
         if (self.openai_model, message) in openai_responses and not self.rewrite_cache:
             reply = openai_responses[(self.openai_model, message)]
@@ -65,9 +69,11 @@ class OpenAIChat:
             ]
             chat = self._send_request(messages)
             reply = chat.choices[0].message.content
-
-            openai_responses[(self.openai_model, message)] = reply
-            openai_responses.close()
+            try:
+                openai_responses[(self.openai_model, message)] = reply
+                openai_responses.close()
+            except Exception as e:
+                log.error(e)
 
         if "please provide" in reply.lower():
             return ""
@@ -87,7 +93,7 @@ class OpenAIChat:
                 ).chat.completions.create(
                     model=self.openai_model,
                     messages=messages,
-                    temperature=0,  # for deterministic outputs
+                    # temperature=0,  # for deterministic outputs
                     max_tokens=self.max_tokens,
                 )
             except Exception as e:
@@ -102,6 +108,6 @@ class OpenAIChat:
         ).chat.completions.create(
             model=self.openai_model,
             messages=messages,
-            temperature=0,  # for deterministic outputs
+            # temperature=0,  # for deterministic outputs
             max_tokens=self.max_tokens,
         )

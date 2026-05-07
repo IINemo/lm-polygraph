@@ -7,34 +7,25 @@ from .stat_calculator import StatCalculator
 from lm_polygraph.utils.model import Model
 import torch.nn as nn
 import torch
+from tqdm import tqdm
 
 softmax = nn.Softmax(dim=1)
 
 
-class SemanticMatrixCalculator(StatCalculator):
+class SemanticMatrixCalculatorBase(StatCalculator):
     """
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
-
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
+        return [], []
 
-        return [
-            "semantic_matrix_entail",
-            "semantic_matrix_contra",
-            "semantic_matrix_classes",
-            "semantic_matrix_entail_logits",
-            "semantic_matrix_contra_logits",
-            "entailment_id",
-        ], ["sample_texts"]
-
-    def __init__(self, nli_model):
+    def __init__(self, nli_model, sample_source: str, progress=True):
         super().__init__()
         self.is_deberta_setup = False
         self.nli_model = nli_model
+        self.sample_source = sample_source
+        self.progress = progress
 
     def __call__(
         self,
@@ -55,21 +46,21 @@ class SemanticMatrixCalculator(StatCalculator):
             max_new_tokens (int): Maximum number of new tokens at model generation. Default: 100.
         Returns:
             Dict[str, np.ndarray]: dictionary with the following items:
-                - 'semantic_matrix_entail' (List[np.array]): for each input text: quadratic matrix of size
+                - 'sample_semantic_matrix_entail' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with probabilities of 'ENTAILMENT' output of DeBERTa.
-                - 'semantic_matrix_contra' (List[np.array]): for each input text: quadratic matrix of size
+                - 'sample_semantic_matrix_contra' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with probabilities of 'CONTRADICTION' output of DeBERTa.
-                - 'semantic_matrix_entail_logits' (List[np.array]): for each input text: quadratic matrix of size
+                - 'sample_semantic_matrix_entail_logits' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with logits of 'ENTAILMENT' output of DeBERTa.
-                - 'semantic_matrix_contra_logits' (List[np.array]): for each input text: quadratic matrix of size
+                - 'sample_semantic_matrix_contra_logits' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with logits of 'CONTRADICTION' output of DeBERTa.
-                - 'semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
+                - 'sample_semantic_matrix_classes' (List[np.array]): for each input text: quadratic matrix of size
                     n_samples x n_samples, with the NLI label id corresponding to the DeBERTa prediction.
         """
 
         deberta = self.nli_model
         deberta_batch_size = deberta.batch_size
-        batch_texts = dependencies["sample_texts"]
+        batch_texts = dependencies[f"{self.sample_source}_texts"]
 
         batch_pairs = []
         batch_invs = []
@@ -96,7 +87,10 @@ class SemanticMatrixCalculator(StatCalculator):
         P_tensors = []
 
         with torch.no_grad():
-            for i, pairs in enumerate(batch_pairs):
+            rng = enumerate(batch_pairs)
+            if self.progress:
+                rng = tqdm(rng, total=len(batch_pairs))
+            for i, pairs in rng:
                 dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
                 probs = []
                 logits_all = []
@@ -151,10 +145,90 @@ class SemanticMatrixCalculator(StatCalculator):
         P = P.cpu().numpy()
 
         return {
-            "semantic_matrix_entail": E,
-            "semantic_matrix_contra": C,
-            "semantic_matrix_entail_logits": E_logits,
-            "semantic_matrix_contra_logits": C_logits,
-            "semantic_matrix_classes": P,
+            f"{self.sample_source}_semantic_matrix_entail": E,
+            f"{self.sample_source}_semantic_matrix_contra": C,
+            f"{self.sample_source}_semantic_matrix_entail_logits": E_logits,
+            f"{self.sample_source}_semantic_matrix_contra_logits": C_logits,
+            f"{self.sample_source}_semantic_matrix_classes": P,
             "entailment_id": ent_id,
         }
+
+
+class SemanticMatrixCalculator(SemanticMatrixCalculatorBase):
+    def __init__(self, nli_model, progress=True):
+        super().__init__(nli_model, "sample", progress=progress)
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "sample_semantic_matrix_entail",
+            "sample_semantic_matrix_contra",
+            "sample_semantic_matrix_classes",
+            "sample_semantic_matrix_entail_logits",
+            "sample_semantic_matrix_contra_logits",
+            "entailment_id",
+        ], ["sample_texts"]
+
+
+class BeamSemanticMatrixCalculator(SemanticMatrixCalculatorBase):
+    def __init__(self, nli_model, progress=True):
+        super().__init__(nli_model, "beamsearch", progress=progress)
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "beamsearch_semantic_matrix_entail",
+            "beamsearch_semantic_matrix_contra",
+            "beamsearch_semantic_matrix_classes",
+            "beamsearch_semantic_matrix_entail_logits",
+            "beamsearch_semantic_matrix_contra_logits",
+            "entailment_id",
+        ], ["beamsearch_texts"]
+
+
+class GreedyPlusSampleSemanticMatrixCalculator(SemanticMatrixCalculatorBase):
+    def __init__(self, nli_model, progress=True):
+        super().__init__(nli_model, "greedy+sample", progress=progress)
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "greedy+sample_semantic_matrix_entail",
+            "greedy+sample_semantic_matrix_contra",
+            "greedy+sample_semantic_matrix_classes",
+            "greedy+sample_semantic_matrix_entail_logits",
+            "greedy+sample_semantic_matrix_contra_logits",
+            "entailment_id",
+        ], ["greedy+sample_texts"]
+
+
+class GreedyPlusBeamSemanticMatrixCalculator(SemanticMatrixCalculatorBase):
+    def __init__(self, nli_model, progress=True):
+        super().__init__(nli_model, "greedy+beamsearch", progress=progress)
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "greedy+beamsearch_semantic_matrix_entail",
+            "greedy+beamsearch_semantic_matrix_contra",
+            "greedy+beamsearch_semantic_matrix_classes",
+            "greedy+beamsearch_semantic_matrix_entail_logits",
+            "greedy+beamsearch_semantic_matrix_contra_logits",
+            "entailment_id",
+        ], ["greedy+beamsearch_texts"]

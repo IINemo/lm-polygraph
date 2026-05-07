@@ -13,7 +13,7 @@ save_path: '${hydra:run.dir}'
 instruct: false
 task: qa
 
-dataset: ['LM-Polygraph/mmlu', 'continuation']
+dataset: ['rediska0123/mmlu_lmpoly', 'base']
 text_column: input
 label_column: output
 train_split: train

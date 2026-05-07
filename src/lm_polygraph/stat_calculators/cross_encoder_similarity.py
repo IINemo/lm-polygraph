@@ -8,32 +8,22 @@ from sentence_transformers import CrossEncoder
 from lm_polygraph.utils.model import WhiteboxModel
 
 
-class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
+class CrossEncoderSimilarityMatrixCalculatorBase(StatCalculator):
     """
     Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
     """
-
-    @staticmethod
-    def meta_info() -> Tuple[List[str], List[str]]:
-        """
-        Returns the statistics and dependencies for the calculator.
-        """
-
-        return [
-            "sample_sentence_similarity",
-            "sample_token_similarity",
-            "token_similarity",
-        ], ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"]
 
     def __init__(
         self,
         batch_size: int = 10,
         cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+        sample_source: str = "sample",
     ):
         super().__init__()
         self.crossencoder_setup = False
         self.batch_size = batch_size
         self.cross_encoder_name = cross_encoder_name
+        self.sample_source = sample_source
 
     def _setup(self, device="cuda"):
         self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
@@ -52,8 +42,8 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
             self._setup(device=device)
             self.crossencoder_setup = True
 
-        batch_sample_tokens = dependencies["sample_tokens"]
-        batch_texts = dependencies["sample_texts"]
+        batch_sample_tokens = dependencies[f"{self.sample_source}_tokens"]
+        batch_texts = dependencies[f"{self.sample_source}_texts"]
         batch_input_texts = dependencies["input_texts"]
         batch_greedy_tokens = dependencies["greedy_tokens"]
 
@@ -144,8 +134,60 @@ class CrossEncoderSimilarityMatrixCalculator(StatCalculator):
                 samples_token_scores.append(token_scores)
             batch_samples_token_scores.append(samples_token_scores)
 
-        return {
-            "sample_sentence_similarity": sim_matrices,
-            "sample_token_similarity": batch_samples_token_scores,
+        res = {
+            f"{self.sample_source}_sentence_similarity": sim_matrices,
+            f"{self.sample_source}_token_similarity": batch_samples_token_scores,
             "token_similarity": batch_token_scores,
         }
+        if self.sample_source != "sample":
+            del res["token_similarity"]
+        return res
+
+
+class CrossEncoderSimilarityMatrixCalculator(CrossEncoderSimilarityMatrixCalculatorBase):
+    """
+    Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
+    """
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "sample_sentence_similarity",
+            "sample_token_similarity",
+            "token_similarity",
+        ], ["input_texts", "sample_tokens", "sample_texts", "greedy_tokens"]
+
+    def __init__(
+        self,
+        batch_size: int = 10,
+        cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+    ):
+        super().__init__(batch_size, cross_encoder_name, "sample")
+
+
+class CrossEncoderBeamSimilarityMatrixCalculator(CrossEncoderSimilarityMatrixCalculatorBase):
+    """
+    Calculates the cross-encoder similarity matrix for generation samples using RoBERTa model.
+    """
+
+    @staticmethod
+    def meta_info() -> Tuple[List[str], List[str]]:
+        """
+        Returns the statistics and dependencies for the calculator.
+        """
+
+        return [
+            "beamsearch_sentence_similarity",
+            "beamsearch_token_similarity",
+        ], ["input_texts", "beamsearch_tokens", "beamsearch_texts", "greedy_tokens"]
+
+    def __init__(
+        self,
+        batch_size: int = 10,
+        cross_encoder_name: str = "cross-encoder/stsb-roberta-large",
+    ):
+        super().__init__(batch_size, cross_encoder_name, "beamsearch")

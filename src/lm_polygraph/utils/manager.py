@@ -1,9 +1,11 @@
 import time
+import sys
 import traceback
 import numpy as np
 import torch
 import sys
 import gc
+from pympler import asizeof
 
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple
@@ -41,6 +43,7 @@ def _check_unique_names(xs):
     names = set()
     for x in xs:
         if str(x) in names:
+            print('all names:', [str(x) for x in xs])
             raise Exception(f"Got multiple __str__ values for {x}")
         names.add(str(x))
 
@@ -59,9 +62,9 @@ def _delete_nans(ue, metric):
 
 
 def order_calculators(
-    stats: List[str],
-    stat_calculators: Dict[str, StatCalculator],
-    stat_dependencies: Dict[str, List[str]],
+        stats: List[str],
+        stat_calculators: Dict[str, StatCalculator],
+        stat_dependencies: Dict[str, List[str]],
 ) -> Tuple[List[str], Set[str]]:
     ordered: List[str] = []
     have_stats: Set[str] = set()
@@ -123,19 +126,20 @@ class UEManager:
     """
 
     def __init__(
-        self,
-        data: Dataset,
-        model: Model,
-        estimators: List[Estimator],
-        builder_env_stat_calc: BuilderEnvironmentStatCalculator,
-        available_stat_calculators: List[StatCalculatorContainer],
-        generation_metrics: List[GenerationMetric],
-        ue_metrics: List[UEMetric],
-        processors: List[Processor],
-        ignore_exceptions: bool = True,
-        verbose: bool = True,
-        max_new_tokens: int = 100,
-        log_time: bool = False,
+            self,
+            data: Dataset,
+            model: Model,
+            estimators: List[Estimator],
+            builder_env_stat_calc: BuilderEnvironmentStatCalculator,
+            available_stat_calculators: List[StatCalculatorContainer],
+            generation_metrics: List[GenerationMetric],
+            ue_metrics: List[UEMetric],
+            processors: List[Processor],
+            ignore_exceptions: bool = True,
+            verbose: bool = True,
+            max_new_tokens: int = 100,
+            log_time: bool = False,
+            save_stats: list[str] | str = [],
     ):
         """
         Parameters:
@@ -171,6 +175,7 @@ class UEManager:
         self.metrics: Dict[Tuple[str, str, str, str], float] = {}
         self.total_bad_estimators: Dict[Estimator, float] = {}
         self.stats: Dict[str, List] = defaultdict(list)
+        self.save_stats = save_stats
 
         self.processors = processors
         self.ignore_exceptions = ignore_exceptions
@@ -203,33 +208,61 @@ class UEManager:
             greedy += ["greedy_tokens"]
 
         stats = (
-            [s for e in self.estimators for s in e.stats_dependencies]
-            + [s for m in self.generation_metrics for s in m.stats_dependencies]
-            + greedy
+                [s for e in self.estimators for s in e.stats_dependencies]
+                + [s for m in self.generation_metrics for s in m.stats_dependencies]
+                + greedy
         )
 
-        stats, have_stats = order_calculators(
-            stats,
-            self.stat_calculators_dict,
-            stat_dependencies_dict,
-        )
+        try:
+            stats, have_stats = order_calculators(
+                stats,
+                self.stat_calculators_dict,
+                stat_dependencies_dict,
+            )
+        except Exception as e:
+            print('Estimator stat dependencies:', [{str(e): e.stats_dependencies} for e in self.estimators])
+            print('GenMetrics stat dependencies:', [{str(m): m.stats_dependencies} for m in self.generation_metrics])
+            print('Other:', greedy)
+            print('stat_calculators_dict:', self.stat_calculators_dict)
+            print('stat_dependencies_dict:', stat_dependencies_dict)
+            raise e
 
         self.stats_names = stats
         stats = [
             s
             for s in stats
             if not (str(s).startswith("ensemble_"))
-            and not (
+               and not (
                 (
-                    str(s).startswith("blackbox_")
-                    and s[len("blackbox_") :] in have_stats
-                )  # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
+                        str(s).startswith("blackbox_")
+                        and s[len("blackbox_"):] in have_stats
+                )
+            # remove blackbox_X from stats only if X is already in stats to remove duplicated run of stat calculator
             )
         ]  # below in calculate() we copy X in blackbox_X
 
         self.stat_calculators = self.factory_stat_calc(
             [self.stat_calculators_dict[c] for c in stats]
         )
+
+        if self.save_stats == "all":
+            self.save_stats = list(set([
+                s
+                for sc in self.stat_calculators
+                for s in sc.stats
+                if not any(x in s for x in [
+                    'log_probs',
+                    'attention',
+                    'embeddings',
+                    'tokenizer',
+                    'entailment_id',
+                ])
+            ]))
+        for s in ["greedy_texts", "greedy_tokens", "input_texts", "target_texts"]:
+            if s not in self.save_stats:
+                self.save_stats.append(s)
+        log.info(f'Will save following stats: {self.save_stats}')
+
         self.state = "Initialized"
 
         if self.verbose:
@@ -263,7 +296,7 @@ class UEManager:
                         continue
                     batch_stats[stat] = stat_value
                     if (f"blackbox_{stat}" in self.stat_calculators_dict.keys()) and (
-                        f"blackbox_{stat}" in self.stats_names
+                            f"blackbox_{stat}" in self.stats_names
                     ):
                         batch_stats[f"blackbox_{stat}"] = stat_value
             except Exception as e:
@@ -280,7 +313,7 @@ class UEManager:
         return batch_stats
 
     def estimate(
-        self, batch_stats: dict, estimators: list
+            self, batch_stats: dict, estimators: list
     ) -> Dict[Tuple[str, str], List[float]]:
         """
         Runs stat calculators and handles errors if any occur. Returns updated batch stats
@@ -306,6 +339,7 @@ class UEManager:
                     e = e.tolist()
                 if estimator.level == "claim":
                     e = flatten_results(e, estimator)
+                print('estimator: {}, uq: {}'.format(str(estimator), e))
                 self.estimations[estimator.level, str(estimator)] += e
                 batch_estimations[estimator.level, str(estimator)] += e
             except Exception as e:
@@ -324,13 +358,18 @@ class UEManager:
 
     def _process(self, iterable_data, batch_callback):
         iterable_data = tqdm(self.data) if self.verbose else self.data
-        for batch_i, (inp_texts, target_texts) in enumerate(iterable_data):
+        for batch_i, data_sample in enumerate(iterable_data):
+            if len(data_sample) == 2:
+                inp_texts, target_texts = data_sample
+                hyp_tokens = None
+            else:
+                inp_texts, target_texts, hyp_tokens = data_sample
             batch_stats: Dict[str, np.ndarray] = {}
             for key, val in [
                 ("input_texts", inp_texts),
                 ("target_texts", target_texts),
+                ("hyp_tokens", hyp_tokens),
             ]:
-                self.stats[key] += val
                 batch_stats[key] = val
             batch_stats["model"] = self.model
 
@@ -370,7 +409,7 @@ class UEManager:
         iterable_data = tqdm(self.data) if self.verbose else self.data
 
         def fn_on_batch_callback(
-            batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
+                batch_i, target_texts, batch_stats, batch_estimations, bad_estimators
         ):
             for bad_estimator in bad_estimators:
                 key = (bad_estimator.level, str(bad_estimator))
@@ -395,9 +434,22 @@ class UEManager:
                 self.gen_metrics[generation_metric.level, str(generation_metric)] += m
                 batch_gen_metrics[generation_metric.level, str(generation_metric)] += m
 
-            for key in ["greedy_texts", "greedy_tokens"]:
-                if key in batch_stats.keys():
-                    self.stats[key] += batch_stats[key]
+            for key in self.save_stats:
+                if key not in batch_stats.keys():
+                    continue
+                try:
+                    log.info('Saving {} of {} bytes'.format(key, asizeof.asizeof(batch_stats[key])))
+                except Exception as e:
+                    log.error(f'Unable to calculate bytes in {key}: {e}')
+                try:
+                    if isinstance(batch_stats[key], dict):
+                        self.stats[key].append(batch_stats[key])
+                    else:
+                        for x in batch_stats[key]:  # stupid np arrays keep getting summed up instead of list concatenation
+                            self.stats[key].append(x)
+                except Exception as e:
+                    traceback.print_exc()
+                    log.error(f'Will not save {key} due to the following error: {e}')
             for processor in self.processors:
                 processor.on_batch(batch_stats, batch_gen_metrics, batch_estimations)
 
@@ -477,9 +529,9 @@ class UEManager:
 
     @staticmethod
     def load(
-        load_path: str,
-        builder_env_stat_calc: BuilderEnvironmentStatCalculator = None,
-        available_stat_calculators: List[StatCalculatorContainer] = None,
+            load_path: str,
+            builder_env_stat_calc: BuilderEnvironmentStatCalculator = None,
+            available_stat_calculators: List[StatCalculatorContainer] = None,
     ) -> "UEManager":
         """
         Loads UEManager from the specified path. To save the calculated manager results, see UEManager.save().

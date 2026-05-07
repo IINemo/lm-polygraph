@@ -41,11 +41,11 @@ class BaseGreedySemanticMatrixCalculator(StatCalculator):
         C_b_tensors = []
         C_tensors = []
         with torch.no_grad():
-            for i, pairs in enumerate(batch_pairs):
+            for i, pairs in tqdm(enumerate(batch_pairs), total=len(batch_pairs)):
                 dl = torch.utils.data.DataLoader(pairs, batch_size=deberta_batch_size)
                 probs_f = []
                 probs_b = []
-                for first_texts, second_texts in tqdm(dl):
+                for first_texts, second_texts in dl:
                     batch = list(zip(first_texts, second_texts))
                     encoded = tokenizer.batch_encode_plus(
                         batch, padding=True, return_tensors="pt"
@@ -96,38 +96,23 @@ class BaseGreedySemanticMatrixCalculator(StatCalculator):
         return (E_f, E_b, E, N_f, N_b, N, C_f, C_b, C)
 
 
-class GreedySemanticMatrixCalculator(BaseGreedySemanticMatrixCalculator):
+class GreedySemanticMatrixCalculatorBase(BaseGreedySemanticMatrixCalculator):
     """
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
 
-    @staticmethod
-    def meta_info():
-        stats = [
-            "greedy_semantic_matrix_entail_forward",
-            "greedy_semantic_matrix_entail_backward",
-            "greedy_semantic_matrix_entail",
-            "greedy_semantic_matrix_neutral_forward",
-            "greedy_semantic_matrix_neutral_backward",
-            "greedy_semantic_matrix_neutral",
-            "greedy_semantic_matrix_contra_forward",
-            "greedy_semantic_matrix_contra_backward",
-            "greedy_semantic_matrix_contra",
-        ]
-        dependencies = ["greedy_texts", "sample_texts"]
-        return stats, dependencies
-
-    def __init__(self, nli_model):
+    def __init__(self, nli_model, sample_source: str):
         super().__init__(nli_model)
+        self.sample_source = sample_source
 
     def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: WhiteboxModel,
-        max_new_tokens: int = 100,
+            self,
+            dependencies: Dict[str, np.array],
+            texts: List[str],
+            model: WhiteboxModel,
+            max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        batch_texts = dependencies["sample_texts"]
+        batch_texts = dependencies[f"{self.sample_source}_texts"]
         batch_greedy_texts = dependencies["greedy_texts"]
 
         batch_pairs = []
@@ -144,19 +129,19 @@ class GreedySemanticMatrixCalculator(BaseGreedySemanticMatrixCalculator):
         )
 
         return {
-            "greedy_semantic_matrix_entail_forward": E_f,
-            "greedy_semantic_matrix_entail_backward": E_b,
-            "greedy_semantic_matrix_entail": E,
-            "greedy_semantic_matrix_neutral_forward": N_f,
-            "greedy_semantic_matrix_neutral_backward": N_b,
-            "greedy_semantic_matrix_neutral": N,
-            "greedy_semantic_matrix_contra_forward": C_f,
-            "greedy_semantic_matrix_contra_backward": C_b,
-            "greedy_semantic_matrix_contra": C,
+            f"greedy_{self.sample_source}_semantic_matrix_entail_forward": E_f,
+            f"greedy_{self.sample_source}_semantic_matrix_entail_backward": E_b,
+            f"greedy_{self.sample_source}_semantic_matrix_entail": E,
+            f"greedy_{self.sample_source}_semantic_matrix_neutral_forward": N_f,
+            f"greedy_{self.sample_source}_semantic_matrix_neutral_backward": N_b,
+            f"greedy_{self.sample_source}_semantic_matrix_neutral": N,
+            f"greedy_{self.sample_source}_semantic_matrix_contra_forward": C_f,
+            f"greedy_{self.sample_source}_semantic_matrix_contra_backward": C_b,
+            f"greedy_{self.sample_source}_semantic_matrix_contra": C,
         }
 
 
-class ConcatGreedySemanticMatrixCalculator(BaseGreedySemanticMatrixCalculator):
+class GreedySemanticMatrixCalculator(GreedySemanticMatrixCalculatorBase):
     """
     Calculates the NLI semantic matrix for generation samples using DeBERTa model.
     """
@@ -164,37 +149,72 @@ class ConcatGreedySemanticMatrixCalculator(BaseGreedySemanticMatrixCalculator):
     @staticmethod
     def meta_info():
         stats = [
-            "concat_greedy_semantic_matrix_entail_forward",
-            "concat_greedy_semantic_matrix_entail_backward",
-            "concat_greedy_semantic_matrix_entail",
-            "concat_greedy_semantic_matrix_neutral_forward",
-            "concat_greedy_semantic_matrix_neutral_backward",
-            "concat_greedy_semantic_matrix_neutral",
-            "concat_greedy_semantic_matrix_contra_forward",
-            "concat_greedy_semantic_matrix_contra_backward",
-            "concat_greedy_semantic_matrix_contra",
+            "greedy_sample_semantic_matrix_entail_forward",
+            "greedy_sample_semantic_matrix_entail_backward",
+            "greedy_sample_semantic_matrix_entail",
+            "greedy_sample_semantic_matrix_neutral_forward",
+            "greedy_sample_semantic_matrix_neutral_backward",
+            "greedy_sample_semantic_matrix_neutral",
+            "greedy_sample_semantic_matrix_contra_forward",
+            "greedy_sample_semantic_matrix_contra_backward",
+            "greedy_sample_semantic_matrix_contra",
         ]
-        dependencies = ["greedy_texts", "no_fewshot_input_texts", "sample_texts"]
+        dependencies = ["greedy_texts", "sample_texts"]
         return stats, dependencies
 
     def __init__(self, nli_model):
+        super().__init__(nli_model, "sample")
+
+
+class GreedyBeamSemanticMatrixCalculator(GreedySemanticMatrixCalculatorBase):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    """
+
+    @staticmethod
+    def meta_info():
+        stats = [
+            "greedy_beamsearch_semantic_matrix_entail_forward",
+            "greedy_beamsearch_semantic_matrix_entail_backward",
+            "greedy_beamsearch_semantic_matrix_entail",
+            "greedy_beamsearch_semantic_matrix_neutral_forward",
+            "greedy_beamsearch_semantic_matrix_neutral_backward",
+            "greedy_beamsearch_semantic_matrix_neutral",
+            "greedy_beamsearch_semantic_matrix_contra_forward",
+            "greedy_beamsearch_semantic_matrix_contra_backward",
+            "greedy_beamsearch_semantic_matrix_contra",
+        ]
+        dependencies = ["greedy_texts", "beamsearch_texts"]
+        return stats, dependencies
+
+    def __init__(self, nli_model):
+        super().__init__(nli_model, "beamsearch")
+
+
+class ConcatGreedySemanticMatrixCalculatorBase(BaseGreedySemanticMatrixCalculator):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    """
+
+    def __init__(self, nli_model, sample_source: str):
         super().__init__(nli_model)
+        self.sample_source = sample_source
 
     def __call__(
-        self,
-        dependencies: Dict[str, np.array],
-        texts: List[str],
-        model: WhiteboxModel,
-        max_new_tokens: int = 100,
+            self,
+            dependencies: Dict[str, np.array],
+            texts: List[str],
+            model: WhiteboxModel,
+            max_new_tokens: int = 100,
     ) -> Dict[str, np.ndarray]:
-        batch_texts = dependencies["sample_texts"]
+        batch_texts = dependencies[f"{self.sample_source}_texts"]
         batch_greedy_texts = dependencies["greedy_texts"]
         input_texts = dependencies["no_fewshot_input_texts"]
 
         batch_pairs = []
         batch_invs = []
         for texts, greedy_text, input_text in zip(
-            batch_texts, batch_greedy_texts, input_texts
+                batch_texts, batch_greedy_texts, input_texts
         ):
             texts = [input_text + text for text in texts]
             # Sampling from LLM often produces significant number of identical
@@ -210,13 +230,63 @@ class ConcatGreedySemanticMatrixCalculator(BaseGreedySemanticMatrixCalculator):
         )
 
         return {
-            "concat_greedy_semantic_matrix_entail_forward": E_f,
-            "concat_greedy_semantic_matrix_entail_backward": E_b,
-            "concat_greedy_semantic_matrix_entail": E,
-            "concat_greedy_semantic_matrix_neutral_forward": N_f,
-            "concat_greedy_semantic_matrix_neutral_backward": N_b,
-            "concat_greedy_semantic_matrix_neutral": N,
-            "concat_greedy_semantic_matrix_contra_forward": C_f,
-            "concat_greedy_semantic_matrix_contra_backward": C_b,
-            "concat_greedy_semantic_matrix_contra": C,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_entail_forward": E_f,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_entail_backward": E_b,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_entail": E,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_neutral_forward": N_f,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_neutral_backward": N_b,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_neutral": N,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_contra_forward": C_f,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_contra_backward": C_b,
+            f"concat_greedy_{self.sample_source}_semantic_matrix_contra": C,
         }
+
+
+class ConcatGreedySemanticMatrixCalculator(ConcatGreedySemanticMatrixCalculatorBase):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    """
+
+    @staticmethod
+    def meta_info():
+        stats = [
+            "concat_greedy_sample_semantic_matrix_entail_forward",
+            "concat_greedy_sample_semantic_matrix_entail_backward",
+            "concat_greedy_sample_semantic_matrix_entail",
+            "concat_greedy_sample_semantic_matrix_neutral_forward",
+            "concat_greedy_sample_semantic_matrix_neutral_backward",
+            "concat_greedy_sample_semantic_matrix_neutral",
+            "concat_greedy_sample_semantic_matrix_contra_forward",
+            "concat_greedy_sample_semantic_matrix_contra_backward",
+            "concat_greedy_sample_semantic_matrix_contra",
+        ]
+        dependencies = ["greedy_texts", "no_fewshot_input_texts", "sample_texts"]
+        return stats, dependencies
+
+    def __init__(self, nli_model):
+        super().__init__(nli_model, "sample")
+
+
+class ConcatGreedyBeamSemanticMatrixCalculator(ConcatGreedySemanticMatrixCalculatorBase):
+    """
+    Calculates the NLI semantic matrix for generation samples using DeBERTa model.
+    """
+
+    @staticmethod
+    def meta_info():
+        stats = [
+            "concat_greedy_beamsearch_semantic_matrix_entail_forward",
+            "concat_greedy_beamsearch_semantic_matrix_entail_backward",
+            "concat_greedy_beamsearch_semantic_matrix_entail",
+            "concat_greedy_beamsearch_semantic_matrix_neutral_forward",
+            "concat_greedy_beamsearch_semantic_matrix_neutral_backward",
+            "concat_greedy_beamsearch_semantic_matrix_neutral",
+            "concat_greedy_beamsearch_semantic_matrix_contra_forward",
+            "concat_greedy_beamsearch_semantic_matrix_contra_backward",
+            "concat_greedy_beamsearch_semantic_matrix_contra",
+        ]
+        dependencies = ["greedy_texts", "no_fewshot_input_texts", "beamsearch_texts"]
+        return stats, dependencies
+
+    def __init__(self, nli_model):
+        super().__init__(nli_model, "beamsearch")

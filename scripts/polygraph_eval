@@ -62,7 +62,7 @@ def main(args):
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         import wandb
         wandb.config = OmegaConf.to_container(
-        args, resolve=True, throw_on_missing=True
+            args, resolve=True, throw_on_missing=True
         )
         wandb.init(dir=save_path, tags=["polygraph_eval"], group=f"experiment_{uuid.uuid4().hex[:8]}")
 
@@ -113,7 +113,7 @@ def main(args):
         log.info("Done loading UE estimators")
 
         if args.subsample_eval_dataset != -1:
-            dataset.subsample(args.subsample_eval_dataset, seed=seed)
+            dataset.subsample(args.subsample_eval_dataset, seed=1)
 
         generation_metrics = get_generation_metrics(args)
 
@@ -136,6 +136,7 @@ def main(args):
             ignore_exceptions=args.ignore_exceptions,
             max_new_tokens=args.max_new_tokens,
             log_time=getattr(args, "log_time", False),
+            save_stats=getattr(args, "save_stats", "all"),
         )
 
         try:
@@ -147,12 +148,11 @@ def main(args):
             man.save(save_path + f"/ue_manager_seed{seed}")
 
         if hasattr(args, "report_to_wandb") and args.report_to_wandb:
-            wandb.log({str(k) : v for k, v in man.gen_metrics})
-            wandb.log({str(k) : v for k, v in man.metrics.items()})
-    
+            wandb.log({str(k): v for k, v in man.gen_metrics})
+            wandb.log({str(k): v for k, v in man.metrics.items()})
+
     if hasattr(args, "report_to_wandb") and args.report_to_wandb:
         wandb.finish()
-        
 
 
 def get_ue_metrics(args):
@@ -171,13 +171,18 @@ def get_ue_metrics(args):
 def get_stat_calculator_names(config):
     model_type = "Whitebox" if getattr(config.model, "type", "Whitebox") != "Blackbox" else "Blackbox"
     language = getattr(config, "language", "en")
-    output_attentions = getattr(config, "output_attentions", True) and (getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
+    output_attentions = getattr(config, "output_attentions", True) and (
+                getattr(config.model, "type", "Whitebox") != "vLLMCausalLM")
     output_hidden_states = False if getattr(config.model, "type", "Whitebox") == "vLLMCausalLM" else True
     hf_cache = getattr(config, "hf_cache", None)
     deberta_batch_size = getattr(config, "deberta_batch_size", 10)
     blackbox_supports_logprobs = model_type == "Blackbox" and getattr(
         config.model, "supports_logprobs", False
     )
+    samples_n = getattr(config, "samples_n", 10)
+    temperature = getattr(config, "temperature", None)
+    num_beam_groups = getattr(config, "num_beam_groups", None)
+    diversity_penalty = getattr(config, "diversity_penalty", None)
 
     all_stat_calculators = []
     if "auto" in config.stat_calculators:
@@ -185,10 +190,14 @@ def get_stat_calculator_names(config):
             model_type,
             language,
             hf_cache,
-            output_attentions=output_attentions, 
+            output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             blackbox_supports_logprobs=blackbox_supports_logprobs,
             deberta_batch_size=deberta_batch_size,
+            samples_n=samples_n,
+            temperature=temperature,
+            num_beam_groups=num_beam_groups,
+            diversity_penalty=diversity_penalty,
         )
 
     for stat_calculator in config.stat_calculators:
@@ -264,9 +273,9 @@ def get_generation_metrics(args):
     process_target_fn = getattr(args, "process_target_fn", None)
     if process_target_fn or process_output_fn:
         if (
-            getattr(args, "target_ignore_regex", None)
-            or getattr(args, "output_ignore_regex", None)
-            or getattr(args, "normalize", False)
+                getattr(args, "target_ignore_regex", None)
+                or getattr(args, "output_ignore_regex", None)
+                or getattr(args, "normalize", False)
         ):
             raise ValueError(
                 "Specifying ignore_regex or normalize simultaneously with process scripts is not allowed."
@@ -370,27 +379,28 @@ def get_whitebox_model(args, cache_kwargs={}):
     )
 
     model = WhiteboxModel(
-        base_model, tokenizer, args.model.path, args.model.type, generation_params, instruct=getattr(args, "instruct", False)
+        base_model, tokenizer, args.model.path, args.model.type, generation_params,
+        instruct=getattr(args, "instruct", False)
     )
 
     return model
 
+
 def get_vllm_model(args):
-    
     path_to_load_script = get_abs_path_from_hydra_config(
-            args.model.path_to_load_script
-        )
+        args.model.path_to_load_script
+    )
     load_module = load_external_module(path_to_load_script)
 
-    load_model_args = {'model_path': args.model.path, 
-                       'max_new_tokens': args.max_new_tokens, 
+    load_model_args = {'model_path': args.model.path,
+                       'max_new_tokens': args.max_new_tokens,
                        'logprobs': args.model.logprobs}
 
     load_model_args.update(args.model.load_model_args)
     base_model, sampling_params = load_module.load_model(**load_model_args)
     generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
 
-    model = WhiteboxModelvLLM(model=base_model, 
+    model = WhiteboxModelvLLM(model=base_model,
                               sampling_params=sampling_params,
                               generation_parameters=generation_parameters,
                               device=args.model.device)

@@ -1,11 +1,97 @@
 import torch
 import numpy as np
+import logging
 
 from typing import Dict, List, Tuple, Union
 
 from .embeddings import get_embeddings_from_output
 from .stat_calculator import StatCalculator
 from lm_polygraph.model_adapters import WhiteboxModel, WhiteboxModelvLLM
+
+log = logging.getLogger("lm_polygraph")
+
+
+def proxy_call(
+        dependencies: Dict[str, np.array],
+        texts: List[str],
+        model: WhiteboxModel,
+        n_alternatives: int,
+) -> Dict[str, np.ndarray]:
+    if 'hyp_tokens' not in dependencies.keys():
+        raise Exception(
+            "No 'hyp_texts' found in depencendies. "
+            "Only proxy-model generations are supported."
+        )
+    hyp_texts = dependencies['hyp_tokens']
+    assert len(texts) == len(hyp_texts)
+
+    input_tokens = [model.tokenizer(t)["input_ids"] for t in texts]
+
+    # Tokenizer hyp_texts but make sure tokens begin with input_batch tokens
+    if isinstance(hyp_texts[0], str):
+        hyp_tokens = [
+            model.tokenizer(h, add_special_tokens=False)["input_ids"] for h in hyp_texts
+        ]
+    else:
+        hyp_tokens = hyp_texts
+        hyp_texts = [model.tokenizer.decode(t) for t in hyp_tokens]
+    combined_tokens = [it + ht for it, ht in zip(input_tokens, hyp_tokens)]
+    combined_batch = model.tokenizer.pad(
+        {"input_ids": combined_tokens},
+        padding=True,
+        return_tensors="pt",
+    )
+    combined_batch = {k: v.to(model.device()) for k, v in combined_batch.items()}
+
+    with torch.no_grad():
+        out = model(**combined_batch, output_attentions=True)
+        logits = out.logits.log_softmax(-1)
+
+    cut_logits = []
+    cut_sequences = []
+    cut_texts = []
+    cut_alternatives = []
+    for i in range(len(texts)):
+        begin_pos = len(input_tokens[i])
+        end_pos = begin_pos + len(hyp_tokens[i])
+        cut_sequences.append(hyp_tokens[i])
+        cut_texts.append(hyp_texts[i])
+        cut_logits.append(logits[i][begin_pos - 1:end_pos - 1].cpu().numpy())
+        cut_alternatives.append([[] for _ in range(begin_pos, end_pos)])
+
+        for j in range(begin_pos, end_pos):
+            lt = logits[i, j - 1, :].cpu().numpy()
+            best_tokens = np.argpartition(lt, -n_alternatives)[-n_alternatives:]
+            best_tokens = best_tokens[np.argsort(-lt[best_tokens])].tolist()
+
+            # as hyp_texts are not necessarily greedy, so
+            # need to make sure that first token is from hyp_texts
+            cur_token = hyp_tokens[i][j - begin_pos]
+            if cur_token not in best_tokens:
+                best_tokens = [cur_token] + best_tokens[:-1]
+            else:
+                best_tokens = [cur_token] + [t for t in best_tokens if t != cur_token]
+
+            for t in best_tokens:
+                cut_alternatives[-1][j - begin_pos].append((t, lt[t].item()))
+
+    ll = []
+    for i in range(len(texts)):
+        log_probs = cut_logits[i]
+        tokens = cut_sequences[i]
+        assert len(tokens) == len(log_probs)
+        ll.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
+
+    result_dict = {
+        "input_tokens": input_tokens,
+        "greedy_log_probs": cut_logits,
+        "greedy_tokens": cut_sequences,
+        "greedy_tokens_alternatives": cut_alternatives,
+        "greedy_texts": cut_texts,
+        "greedy_log_likelihoods": ll,
+    }
+
+    return result_dict
 
 
 class GreedyProbsCalculator(StatCalculator):
@@ -113,6 +199,11 @@ class GreedyProbsCalculator(StatCalculator):
                 - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
+        if dependencies.get('hyp_tokens', None) is not None:
+            log.info('Evaluating LLM as proxy...')
+            return proxy_call(dependencies, texts, model, self.n_alternatives)
+        log.info('Evaluating LLM with greedy decoding...')
+
         batch: Dict[str, torch.Tensor] = model.tokenize(texts)
         batch = {k: v.to(model.device()) for k, v in batch.items()}
         with torch.no_grad():

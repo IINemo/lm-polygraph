@@ -13,7 +13,7 @@ class Dataset:
     Seq2seq dataset for calculating quality of uncertainty estimation method.
     """
 
-    def __init__(self, x: List[str], y: List[str], batch_size: int):
+    def __init__(self, x: List[str], y: List[str], batch_size: int, hyp = None):
         """
         Parameters:
             x (List[str]): a list of input texts.
@@ -23,6 +23,7 @@ class Dataset:
         self.x = x
         self.y = y
         self.batch_size = batch_size
+        self.hyp = hyp
 
     def __iter__(self) -> Iterable[Tuple[List[str], List[str]]]:
         """
@@ -31,10 +32,17 @@ class Dataset:
                 returns list of input texts and list of corresponding output texts.
         """
         for i in range(0, len(self.x), self.batch_size):
-            yield (
-                self.x[i : i + self.batch_size],
-                self.y[i : i + self.batch_size],
-            )
+            if self.hyp is None:
+                yield (
+                    self.x[i : i + self.batch_size],
+                    self.y[i : i + self.batch_size],
+                )
+            else:
+                yield (
+                    self.x[i : i + self.batch_size],
+                    self.y[i : i + self.batch_size],
+                    self.hyp[i : i + self.batch_size],
+                )
 
     def __len__(self) -> int:
         """
@@ -52,6 +60,8 @@ class Dataset:
         """
         self.x = [self.x[i] for i in indices]
         self.y = [self.y[i] for i in indices]
+        if self.hyp is not None:
+            self.hyp = [self.hyp[i] for i in indices]
         return self
 
     def train_test_split(self, test_size: int, seed: int, split: str = "train"):
@@ -167,6 +177,7 @@ class Dataset:
         instruct: bool = False,
         split: str = "test",
         size: int = None,
+        hyp_column: str = None,
         **kwargs,
     ):
         """
@@ -199,8 +210,11 @@ class Dataset:
                 y = dataset[y_column]
             else:
                 y = ["" for _ in range(len(x))]
+        hyp = None
+        if hyp_column is not None:
+            hyp = dataset[hyp_column]
 
-        return Dataset(x, y, batch_size)
+        return Dataset(x, y, batch_size, hyp)
 
     @staticmethod
     def load(path_or_path_and_files: Union[str, List[str]], *args, **kwargs):
