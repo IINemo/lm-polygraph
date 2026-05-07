@@ -23,8 +23,8 @@ class NumSemSets(Estimator):
     ):
         super().__init__(
             [
-                "semantic_matrix_entail",
-                "semantic_matrix_contra",
+                "sample_semantic_matrix_entail",
+                "sample_semantic_matrix_contra",
                 "sample_texts",
             ],
             "sequence",
@@ -57,8 +57,8 @@ class NumSemSets(Estimator):
     def U_NumSemSets(self, i, stats):
         # We have forward upper triangular and backward in lower triangular
         # parts of the semantic matrices
-        W_entail = stats["semantic_matrix_entail"][i, :, :]
-        W_contra = stats["semantic_matrix_contra"][i, :, :]
+        W_entail = stats["sample_semantic_matrix_entail"][i, :, :]
+        W_contra = stats["sample_semantic_matrix_contra"][i, :, :]
 
         # We check that for every pairing (both forward and backward)
         # the condition satisfies
@@ -102,7 +102,7 @@ class NumSemSets(Estimator):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * generated samples in 'sample_texts',
                 * matrix with corresponding semantic similarities in
-                  'semantic_matrix_entail' and 'semantic_matrix_contra'
+                  'sample_semantic_matrix_entail' and 'sample_semantic_matrix_contra'
         Returns:
             np.ndarray: number of semantic sets for each sample in input statistics.
                 Higher values indicate more uncertain samples.

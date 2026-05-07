@@ -1,3 +1,13 @@
+import numpy as np
+import logging
+from typing import Dict, Literal
+from .estimator import Estimator
+from .common import compute_sim_score
+from scipy.linalg import eigh
+from .process_probs import process_probs
+
+log = logging.getLogger(__name__)
+
 class EigVecDissimilarity(Estimator):
     def __init__(
             self,
@@ -82,7 +92,7 @@ class EigVecDissimilarity(Estimator):
         return np.array(res)
 
 
-class EigVecDissimilarityP(Estimator):
+class EigVecDissimilarityBeamsearch(Estimator):
     def __init__(
             self,
             similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
@@ -121,7 +131,7 @@ class EigVecDissimilarityP(Estimator):
         self.process_probs_args = process_probs_args
 
     def __str__(self):
-        base = "EigVecDissimilarityP"
+        base = "EigVecDissimilarityBeamsearch"
         if self.samples_source != "sample":
             base += f'_{self.samples_source}'
         if self.similarity_score == "NLI_score":

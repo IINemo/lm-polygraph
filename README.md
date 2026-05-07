@@ -43,18 +43,19 @@ Figure: Beam Search vs Multinomial Sampling. Sampling produces multiple identica
 
 The table below reports average **PRR ↑** over six QA datasets. Beam-search variants consistently improve over their multinomial-sampling counterparts.
 
-| Method | Llama 3.1 8B Base | Llama 3.1 8B Instruct | Gemma 3 4B Base | Gemma 3 4B Instruct | Qwen3 8B Base | Qwen3 8B Instruct |
-|---|---:|---:|---:|---:|---:|---:|
-| Dissimilarity | .505 | .379 | .630 | .206 | .477 | .327 |
-| **Dissimilarity + Beam Search** | **.543 ↑** | **.417 ↑** | **.650 ↑** | **.252 ↑** | **.478 ↑** | **.355 ↑** |
-| Eccentricity | .453 | .368 | .563 | .231 | .396 | .251 |
-| **Eccentricity + Beam Search** | **.505 ↑** | **.397 ↑** | **.603 ↑** | **.285 ↑** | **.410 ↑** | **.345 ↑** |
-| EigVecDissimilarity | .463 | .370 | .561 | .236 | .425 | .256 |
-| **EigVecDissimilarity + Beam Search** | **.510 ↑** | **.414 ↑** | **.598 ↑** | **.301 ↑** | **.450 ↑** | **.376 ↑** |
-| CoCoA-MSP | .505 | .404 | .587 | .314 | .461 | .334 |
-| **CoCoA-MSP + Beam Search** | **.521 ↑** | **.426 ↑** | **.615 ↑** | **.345 ↑** | **.473 ↑** | **.347 ↑** |
-| CoCoA-PPL | .523 | .397 | .628 | .312 | .461 | .327 |
-| **CoCoA-PPL + Beam Search** | **.536 ↑** | **.412 ↑** | **.649 ↑** | **.339 ↑** | .461 | **.337 ↑** |
+| Method                            | Llama 3.1 8B Base | Llama 3.1 8B Instruct | Gemma 3 4B Base | Gemma 3 4B Instruct | Qwen3 8B Base | Qwen3 8B Instruct |
+| --------------------------------- | ----------------: | --------------------: | --------------: | ------------------: | ------------: | ----------------: |
+| Dissimilarity                     |              .505 |                  .379 |        **.630** |                .206 |          .477 |              .327 |
+| Dissimilarity + Beam Search       |        **.543 ↑** |            **.417 ↑** |      **.650 ↑** |              .252 ↑ |    **.478 ↑** |        **.355 ↑** |
+| Eccentricity                      |              .453 |                  .368 |            .563 |                .231 |          .396 |              .251 |
+| Eccentricity + Beam Search        |            .505 ↑ |                .397 ↑ |          .603 ↑ |              .285 ↑ |        .410 ↑ |            .345 ↑ |
+| EigVecDissimilarity               |              .463 |                  .370 |            .561 |                .236 |          .425 |              .256 |
+| EigVecDissimilarity + Beam Search |            .510 ↑ |            **.414 ↑** |          .598 ↑ |              .301 ↑ |        .450 ↑ |        **.376 ↑** |
+| CoCoA-MSP                         |              .505 |                  .404 |            .587 |            **.314** |          .461 |              .334 |
+| CoCoA-MSP + Beam Search           |            .521 ↑ |            **.426 ↑** |          .615 ↑ |          **.345 ↑** |    **.473 ↑** |        **.347 ↑** |
+| CoCoA-PPL                         |          **.523** |                  .397 |            .628 |                .312 |          .461 |              .327 |
+| CoCoA-PPL + Beam Search           |        **.536 ↑** |                .412 ↑ |      **.649 ↑** |          **.339 ↑** |          .461 |            .337 ↑ |
+
 
 ---
 
@@ -119,10 +120,10 @@ This branch implements beam-search variants of several consistency-based uncerta
 
 | Method | Import |
 |---|---|
-| Dissimilarity + Beam Search | `from lm_polygraph.estimators import DissimilarityP` |
-| Eccentricity + Beam Search | `from lm_polygraph.estimators import EccentricityPConf` |
-| EigVecDissimilarity + Beam Search | `from lm_polygraph.estimators import EigVecDissimilarityP` |
-| CoCoA + Beam Search | `from lm_polygraph.estimators import CocoaMSPP, CocoaPPLP, CocoaMTEP` |
+| Dissimilarity + Beam Search | `from lm_polygraph.estimators import DissimilarityBeamsearch` |
+| Eccentricity + Beam Search | `from lm_polygraph.estimators import EccentricityConfBeamsearch` |
+| EigVecDissimilarity + Beam Search | `from lm_polygraph.estimators import EigVecDissimilarityBeamsearch` |
+| CoCoA + Beam Search | `from lm_polygraph.estimators import CocoaMSPBeamsearch, CocoaPPLBeamsearch, CocoaMTEBeamsearch` |
 
 This implementation also supports LM-Polygraph baselines, including:
 

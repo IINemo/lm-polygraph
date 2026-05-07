@@ -39,9 +39,9 @@ class EigValLaplacian(Estimator):
         """
         if similarity_score == "NLI_score":
             if affinity == "entail":
-                super().__init__(["semantic_matrix_entail", "sample_texts"], "sequence")
+                super().__init__(["sample_semantic_matrix_entail", "sample_texts"], "sequence")
             else:
-                super().__init__(["semantic_matrix_contra", "sample_texts"], "sequence")
+                super().__init__(["sample_semantic_matrix_contra", "sample_texts"], "sequence")
         else:
             super().__init__(["sample_texts"], "sequence")
 
@@ -59,9 +59,9 @@ class EigValLaplacian(Estimator):
 
         if self.similarity_score == "NLI_score":
             if self.affinity == "entail":
-                W = stats["semantic_matrix_entail"][i, :, :]
+                W = stats["sample_semantic_matrix_entail"][i, :, :]
             else:
-                W = 1 - stats["semantic_matrix_contra"][i, :, :]
+                W = 1 - stats["sample_semantic_matrix_contra"][i, :, :]
             W = (W + np.transpose(W)) / 2
         else:
             W = compute_sim_score(
@@ -83,7 +83,7 @@ class EigValLaplacian(Estimator):
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * generated samples in 'sample_texts',
-                * matrix with semantic similarities in 'semantic_matrix_entail'/'semantic_matrix_contra'
+                * matrix with semantic similarities in 'sample_semantic_matrix_entail'/'sample_semantic_matrix_contra'
         """
         res = []
         for i, answers in enumerate(stats["sample_texts"]):

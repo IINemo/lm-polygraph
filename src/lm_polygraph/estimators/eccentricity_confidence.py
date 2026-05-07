@@ -92,7 +92,7 @@ class EccentricityConf(Estimator):
         return np.array(res)
 
 
-class EccentricityPConf(Estimator):
+class EccentricityConfBeamsearch(Estimator):
     def __init__(
             self,
             similarity_score: Literal["NLI_score", "Jaccard_score"] = "NLI_score",
@@ -131,7 +131,7 @@ class EccentricityPConf(Estimator):
         self.process_probs_args = process_probs_args
 
     def __str__(self):
-        base = "EccentricityPConf"
+        base = "EccentricityConfBeamsearch"
         if self.samples_source != "sample":
             base += f'_{self.samples_source}'
         if self.similarity_score == "NLI_score":

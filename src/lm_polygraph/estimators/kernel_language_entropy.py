@@ -74,7 +74,7 @@ class KernelLanguageEntropy(Estimator):
         """
 
         super().__init__(
-            ["semantic_matrix_entail", "semantic_matrix_contra"], "sequence"
+            ["sample_semantic_matrix_entail", "sample_semantic_matrix_contra"], "sequence"
         )
         self.t = t
         self.normalize = normalize
@@ -95,12 +95,12 @@ class KernelLanguageEntropy(Estimator):
         5. Let Kheat = heat kernel of W, i.e. Kheat = expm(-t * L), where t is a hyperparameter.
         6. Finally, KLE(x) = VNE(Kheat), where VNE(A) = -Tr(A log A).
         """
-        semantic_matrix_neutral = (
-            np.ones(stats["semantic_matrix_entail"].shape)
-            - stats["semantic_matrix_entail"]
-            - stats["semantic_matrix_contra"]
+        sample_semantic_matrix_neutral = (
+            np.ones(stats["sample_semantic_matrix_entail"].shape)
+            - stats["sample_semantic_matrix_entail"]
+            - stats["sample_semantic_matrix_contra"]
         )
-        weighted_graph = stats["semantic_matrix_entail"] + 0.5 * semantic_matrix_neutral
+        weighted_graph = stats["sample_semantic_matrix_entail"] + 0.5 * sample_semantic_matrix_neutral
         laplacian = laplacian_matrix(weighted_graph)
         heat_kernels = heat_kernel(laplacian, self.t)
         return [

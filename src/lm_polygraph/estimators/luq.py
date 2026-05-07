@@ -14,7 +14,7 @@ class LUQ(Estimator):
 
     def __init__(self):
         super().__init__(
-            ["semantic_matrix_entail_logits", "semantic_matrix_contra_logits"],
+            ["sample_semantic_matrix_entail_logits", "sample_semantic_matrix_contra_logits"],
             "sequence",
         )
 
@@ -27,14 +27,14 @@ class LUQ(Estimator):
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
-                * matrix with the logits of "entailment" class from the NLI model in 'semantic_matrix_entail_logits'
-                * matrix with the logits of "contradiction" class from the NLI model in 'semantic_matrix_contra_logits'
+                * matrix with the logits of "entailment" class from the NLI model in 'sample_semantic_matrix_entail_logits'
+                * matrix with the logits of "contradiction" class from the NLI model in 'sample_semantic_matrix_contra_logits'
         Returns:
             np.ndarray: float LUQ score for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
-        entail_logits = stats["semantic_matrix_entail_logits"]
-        contra_logits = stats["semantic_matrix_contra_logits"]
+        entail_logits = stats["sample_semantic_matrix_entail_logits"]
+        contra_logits = stats["sample_semantic_matrix_contra_logits"]
 
         luq = []
         for j in range(len(entail_logits)):

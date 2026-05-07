@@ -21,17 +21,6 @@
 - name: FisherRao
 - name: CSL
 - name: SemanticDensity
-- name: Focus
-  cfg:
-    model_name: '${model.path}'
-    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
-    gamma: 0.9
-    p: 0.01
-    idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
-    trust_remote_code: True
-    idf_seed: 42
-    idf_dataset_size: -1
-    spacy_path: "en_core_web_sm"
 - name: AttentionScore
   cfg:
     gen_only: False
@@ -73,37 +62,33 @@
 - name: Eccentricity
   cfg:
     affinity: "contra"
-- name: Eccentricity
+- name: EccentricityConf
   cfg:
     affinity: "entail"
-    confidence: true
-- name: Eccentricity
+- name: EccentricityConf
   cfg:
     affinity: "contra"
-    confidence: true
-- name: EccentricityP
+- name: EccentricityConfBeamsearch
   cfg:
     affinity: "entail"
-    confidence: true
     samples_source: beamsearch
-- name: EccentricityP
+- name: EccentricityConfBeamsearch
   cfg:
     affinity: "contra"
-    confidence: true
     samples_source: beamsearch
 - name: CocoaMSP
-- name: CocoaMSPP
+- name: CocoaMSPBeamsearch
   cfg:
     samples_source: beamsearch
 - name: CocoaPPL
-- name: CocoaPPLP
+- name: CocoaPPLBeamsearch
   cfg:
     samples_source: beamsearch
 - name: CocoaMTE
-- name: CocoaMTEP
+- name: CocoaMTEBeamsearch
   cfg:
     samples_source: beamsearch
 - name: Dissimilarity
-- name: DissimilarityP
+- name: DissimilarityBeamsearch
   cfg:
     samples_source: beamsearch

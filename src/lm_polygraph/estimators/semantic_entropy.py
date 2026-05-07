@@ -21,9 +21,9 @@ class SemanticEntropy(Estimator):
     ):
         self.class_probability_estimation = class_probability_estimation
         if self.class_probability_estimation == "sum":
-            deps = ["sample_log_probs", "sample_texts", "semantic_classes_entail"]
+            deps = ["sample_log_probs", "sample_texts", "sample_semantic_classes_entail"]
         elif self.class_probability_estimation == "frequency":
-            deps = ["sample_texts", "semantic_classes_entail"]
+            deps = ["sample_texts", "sample_semantic_classes_entail"]
         else:
             raise ValueError(
                 f"Unknown class_probability_estimation: {self.class_probability_estimation}. Use 'sum' or 'frequency'."
@@ -58,8 +58,8 @@ class SemanticEntropy(Estimator):
             loglikelihoods_list = None
             hyps_list = stats["sample_texts"]
 
-        self._class_to_sample = stats["semantic_classes_entail"]["class_to_sample"]
-        self._sample_to_class = stats["semantic_classes_entail"]["sample_to_class"]
+        self._class_to_sample = stats["sample_semantic_classes_entail"]["class_to_sample"]
+        self._sample_to_class = stats["sample_semantic_classes_entail"]["sample_to_class"]
 
         return self.batched_call(hyps_list, loglikelihoods_list)
 

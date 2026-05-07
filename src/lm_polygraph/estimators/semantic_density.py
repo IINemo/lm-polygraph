@@ -17,15 +17,15 @@ class SemanticDensity(Estimator):
         if concat_input:
             deps.extend(
                 [
-                    "concat_greedy_semantic_matrix_contra_forward",
-                    "concat_greedy_semantic_matrix_neutral_forward",
+                    "concat_greedy_sample_semantic_matrix_contra_forward",
+                    "concat_greedy_sample_semantic_matrix_neutral_forward",
                 ]
             )
         else:
             deps.extend(
                 [
-                    "greedy_semantic_matrix_contra_forward",
-                    "greedy_semantic_matrix_neutral_forward",
+                    "greedy_sample_semantic_matrix_contra_forward",
+                    "greedy_sample_semantic_matrix_neutral_forward",
                 ]
             )
         super().__init__(deps, "sequence")
@@ -46,17 +46,17 @@ class SemanticDensity(Estimator):
 
         if self.concat_input:
             batch_semantic_matrix_contra = stats[
-                "concat_greedy_semantic_matrix_contra_forward"
+                "concat_greedy_sample_semantic_matrix_contra_forward"
             ]
             batch_semantic_matrix_neutral = stats[
-                "concat_greedy_semantic_matrix_neutral_forward"
+                "concat_greedy_sample_semantic_matrix_neutral_forward"
             ]
         else:
             batch_semantic_matrix_contra = stats[
-                "greedy_semantic_matrix_contra_forward"
+                "greedy_sample_semantic_matrix_contra_forward"
             ]
             batch_semantic_matrix_neutral = stats[
-                "greedy_semantic_matrix_neutral_forward"
+                "greedy_sample_semantic_matrix_neutral_forward"
             ]
 
         semantic_density = []

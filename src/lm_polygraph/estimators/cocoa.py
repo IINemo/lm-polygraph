@@ -47,7 +47,7 @@ class CocoaMSP(Estimator):
         return np.array(enriched_metrics)
 
 
-class CocoaMSPP(Estimator):
+class CocoaMSPBeamsearch(Estimator):
     def __init__(
         self,
         samples_source: str = "sample",
@@ -64,7 +64,7 @@ class CocoaMSPP(Estimator):
         self.process_probs_args = process_probs_args
 
     def __str__(self):
-        base = "CocoaMSPP"
+        base = "CocoaMSPBeamsearch"
         if self.samples_source != "sample":
             base += f'_{self.samples_source}'
         return base
@@ -136,7 +136,7 @@ class CocoaPPL(Estimator):
         return np.array(enriched_ppl)
 
 
-class CocoaPPLP(Estimator):
+class CocoaPPLBeamsearch(Estimator):
     def __init__(
         self,
         samples_source: str = "sample",
@@ -153,7 +153,7 @@ class CocoaPPLP(Estimator):
         self.process_probs_args = process_probs_args
 
     def __str__(self):
-        base = "CocoaPPLP"
+        base = "CocoaPPLBeamsearch"
         if self.samples_source != "sample":
             base += f'_{self.samples_source}'
         return base
@@ -216,7 +216,7 @@ class CocoaMTE(Estimator):
         return np.array(enriched_entropy)
 
 
-class CocoaMTEP(Estimator):
+class CocoaMTEBeamsearch(Estimator):
     def __init__(
         self,
         samples_source: str = "beamsearch",
@@ -231,7 +231,7 @@ class CocoaMTEP(Estimator):
         self.process_probs_args = process_probs_args
 
     def __str__(self):
-        base = "CocoaMTEP"
+        base = "CocoaMTEBeamsearch"
         if self.samples_source != "sample":
             base += f'_{self.samples_source}'
         return base
@@ -284,7 +284,7 @@ class Dissimilarity(Estimator):
         return np.array(dissims)
 
 
-class DissimilarityP(Estimator):
+class DissimilarityBeamsearch(Estimator):
     def __init__(
             self,
             samples_source: str = "beamsearch",
@@ -298,7 +298,7 @@ class DissimilarityP(Estimator):
         self.process_probs_args = process_probs_args
 
     def __str__(self):
-        base = "DissimilarityP"
+        base = "DissimilarityBeamsearch"
         if self.samples_source != "sample":
             base += f'_{self.samples_source}'
         return base
