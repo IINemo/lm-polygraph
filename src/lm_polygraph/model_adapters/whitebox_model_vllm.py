@@ -68,7 +68,12 @@ class WhiteboxModelvLLM(Model):
                     },
                 ]
                 chats.append(chat)
-            output = self.model.chat(*args, chats, sampling_params)
+            output = self.model.chat(
+                *args,
+                chats,
+                sampling_params,
+                chat_template_kwargs={"enable_thinking": False},
+            )
         else:
             output = self.model.generate(*args, texts, sampling_params)
         return self.post_processing(output)
