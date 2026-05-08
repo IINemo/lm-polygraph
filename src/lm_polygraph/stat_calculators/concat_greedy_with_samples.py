@@ -75,9 +75,9 @@ class ConcatGreedyWithBeam(ConcatGreedyWithSamplesBase):
             "greedy_log_likelihoods",
             "greedy_texts",
             "greedy_tokens",
-            "sample_log_likelihoods",
-            "sample_texts",
-            "sample_tokens",
+            "beamsearch_log_likelihoods",
+            "beamsearch_texts",
+            "beamsearch_tokens",
         ]
 
     def __init__(self):
