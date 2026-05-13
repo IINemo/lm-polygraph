@@ -7,7 +7,7 @@ from .estimator import Estimator
 
 class Perplexity(Estimator):
     def __init__(self):
-        super().__init__(["greedy_log_likelihoods"], "sequence")
+        super().__init__(["greedy_log_likelihoods", "attention_all", "attention_selected"], "sequence")
 
     def __str__(self):
         return "Perplexity"

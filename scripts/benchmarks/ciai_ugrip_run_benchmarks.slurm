@@ -20,6 +20,7 @@ hostname
 
 mkdir -p slurm_logs
 cd ~/workspace/lm-polygraph
+source .venv/bin/activate
 
 
 # # llama
@@ -124,25 +125,36 @@ cd ~/workspace/lm-polygraph
 
 # tokensar gemma
 # gsm8k
-scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
-generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-estimators=ugrip_benchmark_tokensar_estimator.yaml \
-subsample_eval_dataset=1000 batch_size=1 eval_split=test
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
+# model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
+# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
+# estimators=ugrip_benchmark_tokensar_estimator.yaml \
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
+
+uv run --python 3.11 scripts/polygraph_eval \
+  --config-dir=./examples/configs \
+  --config-name=polygraph_eval_ugrip.yaml \
+  model=ugrip_gemma_instruct_vllm \
+  dataset=UGRIP-LM-Polygraph/gsm8k-reasoning \
+  generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
+  estimators=ugrip_benchmark_tokensar_estimator.yaml \
+  subsample_eval_dataset=1000 \
+  batch_size=1 \
+  eval_split=test
 
 # mmlu
-scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
-generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-estimators=ugrip_benchmark_tokensar_estimator.yaml \
-subsample_eval_dataset=1000 batch_size=1 eval_split=test
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
+# model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/mmlu-reasoning \
+# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
+# estimators=ugrip_benchmark_tokensar_estimator.yaml \
+# subsample_eval_dataset=1000 batch_size=1 eval_split=test
 
-# medmcqa
-scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
-model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
-generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-estimators=ugrip_benchmark_tokensar_estimator.yaml \
-subsample_eval_dataset=1000 batch_size=1 eval_split=validation
+# # medmcqa
+# scripts/polygraph_eval --config-dir=./examples/configs --config-name=polygraph_eval_ugrip.yaml \
+# model=ugrip_gemma_instruct_vllm dataset=UGRIP-LM-Polygraph/medmcqa-reasoning \
+# generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
+# estimators=ugrip_benchmark_tokensar_estimator.yaml \
+# subsample_eval_dataset=1000 batch_size=1 eval_split=validation
 
 
 

@@ -492,8 +492,25 @@ class WhiteboxModel(Model):
             return False not in self.done_tracker
 
     def get_stopping_criteria(self, input_ids: torch.Tensor):
-        eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
-        stop_sequences = self.generation_parameters.generate_until + [eos]
+        # eos = self.tokenizer.decode(self.tokenizer.eos_token_id)
+
+        eos_ids_tokenizer = self.tokenizer.eos_token_id
+        eos_ids_model_config = self.model.config.eos_token_id
+
+        if isinstance(eos_ids_tokenizer, int):
+            eos_ids_tokenizer = [eos_ids_tokenizer]
+
+        if isinstance(eos_ids_model_config, int):
+            eos_ids_model_config = [eos_ids_model_config]
+
+        # Add None guards before the union
+        eos_ids_tokenizer = eos_ids_tokenizer or []
+        eos_ids_model_config = eos_ids_model_config or []
+
+        eos_ids = list(set(eos_ids_tokenizer) | set(eos_ids_model_config))
+                
+        eos_strings = tuple([self.tokenizer.decode([eid]) for eid in eos_ids])
+        stop_sequences = self.generation_parameters.generate_until + eos_strings # [eos]
         return StoppingCriteriaList(
             [
                 *[
