@@ -171,6 +171,24 @@ class GreedyProbsCalculator(StatCalculator):
                 self.answer_marker, add_special_tokens=False
             ).input_ids
 
+        eos_ids_tokenizer = getattr(model.tokenizer, "eos_token_id", None)
+        if isinstance(eos_ids_tokenizer, int):
+            eos_ids_tokenizer = [eos_ids_tokenizer]
+        elif eos_ids_tokenizer is None:
+            eos_ids_tokenizer = []
+
+        eos_ids_model_config = None
+        if getattr(model, "model", None) is not None:
+            eos_ids_model_config = getattr(
+                getattr(model.model, "config", None), "eos_token_id", None
+            )
+        if isinstance(eos_ids_model_config, int):
+            eos_ids_model_config = [eos_ids_model_config]
+        elif eos_ids_model_config is None:
+            eos_ids_model_config = []
+
+        eos_ids = list(set(eos_ids_tokenizer) | set(eos_ids_model_config))
+
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
                 idx = batch["input_ids"].shape[1]

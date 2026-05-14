@@ -9,4 +9,5 @@ instruct: true
 
 load_model_args:
   device_map: auto
+  attn_implementation: eager
 load_tokenizer_args: {}
