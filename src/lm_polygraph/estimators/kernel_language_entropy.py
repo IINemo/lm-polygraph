@@ -52,13 +52,15 @@ def vn_entropy(
 
 class KernelLanguageEntropy(Estimator):
     """
-    Estimates the sequence-level uncertainty of a language model following the method of
-    "Kernel Language Entropy" as provided in the paper https://arxiv.org/pdf/2405.20003
+    Estimates the sequence-level uncertainty of a language model following
+    the method of "Kernel Language Entropy" as provided in the paper
+    https://arxiv.org/pdf/2405.20003
     Works with both whitebox and blackbox models (initialized using
     lm_polygraph.utils.model.BlackboxModel/WhiteboxModel).
 
-    This method calculates KLE(Kheat) = VNE(Kheat), where VNE is von Neumann entropy and
-    Kheat is a heat kernel of a semantic graph over language model's outputs.
+    This method calculates KLE(Kheat) = VNE(Kheat), where VNE is
+    von Neumann entropy and Kheat is a heat kernel of a semantic graph
+    over language model's outputs.
     """
 
     def __init__(
@@ -71,9 +73,12 @@ class KernelLanguageEntropy(Estimator):
         """
         Parameters:
             t (float): temperature for method; default is taken from the paper
-            normalize (bool): whether VNE should be calculated on normalized kernel or not
-            scale (bool): whether VNE should scale the result by amount of samples
-            jitter (float): calculate VNE not on kernel, but kernel + jitter * I
+            normalize (bool): whether VNE should be calculated on normalized
+                kernel or not
+            scale (bool): whether VNE should scale the result by amount
+                of samples
+            jitter (float): calculate VNE not on kernel,
+                but kernel + jitter * I
         """
 
         super().__init__(
@@ -91,11 +96,15 @@ class KernelLanguageEntropy(Estimator):
         """
         Calculates KLE(Kheat) uncertainty of a language model.
         1. Let S1, ..., Sn be a set of LLM generations.
-        2. Let NLI'(Si, Sj) = one-hot prediction over (entailment, neutral class, contradiction)
+        2. Let NLI'(Si, Sj) = one-hot prediction over (entailment,
+           neutral class, contradiction)
         Note that NLI'(Si, Sj) is calculated in stats
-        3. Let W be a matrix, such that Wij = wNLI'(Si, Sj), where w = (1, 0.5, 0)
-        4. Let L be a laplacian matrix of W, i.e. L = W - D, where Dii = sum(Wij) over j.
-        5. Let Kheat = heat kernel of W, i.e. Kheat = expm(-t * L), where t is a hyperparameter.
+        3. Let W be a matrix, such that Wij = wNLI'(Si, Sj),
+           where w = (1, 0.5, 0)
+        4. Let L be a laplacian matrix of W, i.e. L = D - W,
+           where Dii = sum(Wij) over j.
+        5. Let Kheat = heat kernel of W, i.e. Kheat = expm(-t * L),
+           where t is a hyperparameter.
         6. Finally, KLE(x) = VNE(Kheat), where VNE(A) = -Tr(A log A).
         """
         semantic_matrix_entail = stats["semantic_matrix_entail"]
@@ -105,11 +114,11 @@ class KernelLanguageEntropy(Estimator):
         for matrix_entail, matrix_contra in zip(
             semantic_matrix_entail, semantic_matrix_contra
         ):
-            matrix_entail = (matrix_entail + matrix_entail.T) / 2
-            matrix_contra = (matrix_contra + matrix_contra.T) / 2
+            matrix_entail = matrix_entail + matrix_entail.T
+            matrix_contra = matrix_contra + matrix_contra.T
 
             matrix_neutral = (
-                np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
+                2 * np.ones(matrix_entail.shape) - matrix_entail - matrix_contra
             )
             weighted_graph = matrix_entail + 0.5 * matrix_neutral
 

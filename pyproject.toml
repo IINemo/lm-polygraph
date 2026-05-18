@@ -37,6 +37,9 @@ classifiers = [
 "Repository" = "https://github.com/IINemo/lm-polygraph"
 "Documentation" = "https://lm-polygraph.readthedocs.io"
 
+[project.optional-dependencies]
+comet = ["unbabel-comet<3"]
+
 [tool.setuptools]
 script-files = [
   "scripts/polygraph_eval",

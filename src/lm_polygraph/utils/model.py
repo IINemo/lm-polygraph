@@ -455,6 +455,37 @@ class WhiteboxModel(Model):
             self.scores.append(scores.log_softmax(-1))
             return scores
 
+    class _SanitizeLogitsProcessor:
+        # Replaces inf/nan in logits with finite values to prevent
+        # RuntimeError in torch.multinomial during sampling.
+        # Uses per-row max/min of finite values to preserve distribution shape.
+        def __call__(self, input_ids=None, scores=None):
+            if torch.isfinite(scores).all():
+                return scores
+            finite_mask = torch.isfinite(scores)
+            scores_for_max = torch.where(
+                finite_mask,
+                scores,
+                torch.tensor(float("-inf"), dtype=scores.dtype, device=scores.device),
+            )
+            scores_for_min = torch.where(
+                finite_mask,
+                scores,
+                torch.tensor(float("inf"), dtype=scores.dtype, device=scores.device),
+            )
+            row_max = scores_for_max.max(dim=-1, keepdim=True).values
+            row_min = scores_for_min.min(dim=-1, keepdim=True).values
+            row_max = torch.where(
+                torch.isfinite(row_max), row_max, torch.zeros_like(row_max)
+            )
+            row_min = torch.where(
+                torch.isfinite(row_min), row_min, torch.zeros_like(row_min)
+            )
+            scores = torch.where(torch.isposinf(scores), row_max, scores)
+            scores = torch.where(torch.isneginf(scores), row_min, scores)
+            scores = torch.nan_to_num(scores, nan=0.0)
+            return scores
+
     def generate(self, **args):
         """
         Generates the model output with scores from batch formed by HF Tokenizer.
@@ -466,22 +497,35 @@ class WhiteboxModel(Model):
         """
         default_params = asdict(self.generation_parameters)
 
-        # add ScoresProcessor to collect original scores
+        # add ScoresProcessor and SanitizeLogitsProcessor
         processor = self._ScoresProcessor()
+        sanitizer = self._SanitizeLogitsProcessor()
         if "logits_processor" in args.keys():
             logits_processor = LogitsProcessorList(
-                [processor, args["logits_processor"]]
+                [sanitizer, processor, args["logits_processor"]]
             )
         else:
-            logits_processor = LogitsProcessorList([processor])
+            logits_processor = LogitsProcessorList([sanitizer, processor])
         args["logits_processor"] = logits_processor
 
         # update default parameters with passed arguments
         default_params.update(args)
         args = default_params
 
-        if "stop_strings" in args:
-            args["tokenizer"] = self.tokenizer
+        # Handle stop_strings via stopping_criteria to avoid passing tokenizer
+        # as a kwarg (breaks with transformers>=4.51 + Bloom-like models)
+        stop_strings = args.pop("stop_strings", None)
+        if stop_strings:
+            from transformers import StoppingCriteriaList
+            from transformers.generation.stopping_criteria import StopStringCriteria
+
+            stop_criteria = StopStringCriteria(
+                stop_strings=stop_strings, tokenizer=self.tokenizer
+            )
+            if "stopping_criteria" in args and args["stopping_criteria"]:
+                args["stopping_criteria"].append(stop_criteria)
+            else:
+                args["stopping_criteria"] = StoppingCriteriaList([stop_criteria])
 
         args = self._validate_args(args)
         generation = self.model.generate(**args)

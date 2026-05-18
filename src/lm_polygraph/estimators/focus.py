@@ -26,7 +26,13 @@ log = logging.getLogger(__name__)
 
 
 def calcu_idf(
-    tokenizer_path, path, idf_dataset, trust_remote_code, idf_seed, idf_dataset_size
+    tokenizer_path,
+    path,
+    idf_dataset,
+    trust_remote_code,
+    idf_seed,
+    idf_dataset_size,
+    idf_dataset_text_column="text",
 ):
     """
     Calculate inverse document frequency (IDF) scores for each token using a Hugging Face tokenizer
@@ -39,6 +45,7 @@ def calcu_idf(
        trust_remote_code (bool): Whether to trust remote code when loading the dataset.
        idf_seed (int): Random seed for dataset shuffling.
        idf_dataset_size (int): Max number of documents to use (-1 for all).
+       idf_dataset_text_column (str): Name of the text column in the dataset (default: "text").
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     dataset = load_dataset(idf_dataset, trust_remote_code=trust_remote_code)
@@ -53,7 +60,7 @@ def calcu_idf(
     document_frequency = defaultdict(int)
     offset = 1 if "facebook" in tokenizer_path else 0
     for doc in tqdm(data):
-        tokenized_doc = tokenizer(doc["text"])["input_ids"][offset:]
+        tokenized_doc = tokenizer(doc[idf_dataset_text_column])["input_ids"][offset:]
         unique_tokens = set(tokenized_doc)
         for token in unique_tokens:
             document_frequency[token] += 1
@@ -96,6 +103,7 @@ def load_idf(
     idf_seed: int,
     idf_dataset_size: int,
     spacy_path: str,
+    idf_dataset_text_column: str = "text",
 ) -> IDFStats:
     """
     Load IDF statistics and spaCy model, computing IDF values if not already saved.
@@ -108,6 +116,7 @@ def load_idf(
         idf_seed (int): Random seed for sampling.
         idf_dataset_size (int): Max number of samples to use for IDF.
         spacy_path (str): Name or path of the spaCy language model.
+        idf_dataset_text_column (str): Name of the text column in the dataset (default: "text").
 
     Returns:
         IDFStats: Loaded or computed IDF statistics.
@@ -123,6 +132,7 @@ def load_idf(
             trust_remote_code,
             idf_seed,
             idf_dataset_size,
+            idf_dataset_text_column,
         )
     return IDFStats(
         token_idf=pickle.load(open(path, "rb")),
@@ -293,6 +303,7 @@ class Focus(Estimator):
         idf_seed (int): Random seed used to shuffle or sample dataset.
         idf_dataset_size (int): Number of examples to use for IDF computation (-1 for all).
         spacy_path (str): Name or path of spaCy language model to use for POS/NER parsing.
+        idf_dataset_text_column (str): Name of the text column in the dataset (default: "text").
     """
 
     def __init__(
@@ -306,6 +317,7 @@ class Focus(Estimator):
         idf_seed: int,
         idf_dataset_size: int,
         spacy_path: str,
+        idf_dataset_text_column: str = "text",
     ):
         super().__init__(
             [
@@ -328,6 +340,7 @@ class Focus(Estimator):
             idf_seed,
             idf_dataset_size,
             spacy_path,
+            idf_dataset_text_column,
         )
 
     def __str__(self):

@@ -26,13 +26,15 @@ result = {}
 
 
 def run_eval(dataset):
-    command = f"HYDRA_CONFIG={pwd()}/../../../examples/configs/polygraph_eval_{dataset}.yaml \
+    command = (
+        f"HYDRA_CONFIG={pwd()}/../../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
                 save_path={pwd()} \
                 use_density_based_ue=false"
+    )
 
     return subprocess.run(command, shell=True)
 
@@ -124,12 +126,14 @@ datasets = [
 
 
 def run_claim_eval(dataset):
-    command = f"HYDRA_CONFIG={pwd()}/../../../examples/configs/polygraph_eval_{dataset}.yaml \
+    command = (
+        f"HYDRA_CONFIG={pwd()}/../../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
                 save_path={pwd()}"
+    )
 
     return subprocess.run(command, shell=True)
 

@@ -15,11 +15,19 @@ from transformers.generation.stopping_criteria import (
     validate_stopping_criteria,
 )
 from transformers.generation.streamers import BaseStreamer
-from transformers.generation.utils import (
-    GreedySearchOutput,
-    GreedySearchDecoderOnlyOutput,
-    ModelOutput,
-)
+from transformers.generation.utils import ModelOutput
+
+try:
+    from transformers.generation.utils import (
+        GreedySearchOutput,
+        GreedySearchDecoderOnlyOutput,
+    )
+except ImportError:
+    # transformers >= 5.0 renamed these classes
+    from transformers.generation.utils import (
+        GenerateNonBeamOutput as GreedySearchOutput,
+        GenerateDecoderOnlyOutput as GreedySearchDecoderOnlyOutput,
+    )
 
 
 class EnsembleGreedyMixin(GenerationMixin):

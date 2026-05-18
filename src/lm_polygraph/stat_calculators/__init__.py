@@ -66,3 +66,4 @@ from .attention import (
     AttentionFeaturesCalculator,
 )
 from .attention_forward_pass_visual import AttentionForwardPassCalculatorVisual
+from .vllm_logprobs_extraction import VLLMLogprobsExtractionCalculator

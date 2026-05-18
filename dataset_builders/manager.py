@@ -102,7 +102,11 @@ def main():
         path, subset = get_dataset_path(args.dataset, args.namespace)
         print(f"Publishing dataset to path {path} with subset {subset}")
         dataset.push_to_hub(
-            path, subset, set_default=False, token=os.environ["HF_TOKEN"]
+            path,
+            subset,
+            set_default=False,
+            token=os.environ["HF_TOKEN"],
+            max_shard_size="1GB",  # Limit shard size to avoid issues with large datasets
         )
 
 

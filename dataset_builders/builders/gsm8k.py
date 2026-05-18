@@ -1,4 +1,6 @@
 from functools import partial
+from .stripped_formatters import qa_stripped
+import datasets
 
 base_few_shot_prompt_gsm8k = """Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?
 A: There are 15 trees originally. Then there were 21 trees after some more were planted. So there must have been 21 - 15 = 6. The answer is 6.
@@ -34,11 +36,12 @@ def prepare_gsm8k(
     prompt,
     few_shot_prompt,
 ):
-    x, y = [], []
+    x, y, s = [], [], []
     for inst in dataset:
         x.append(few_shot_prompt + prompt.format(question=inst["question"]))
         y.append(inst["answer"])
-    return x, y
+        s.append(qa_stripped(inst["question"]))
+    return x, y, s
 
 
 CONFIG = {
@@ -53,6 +56,13 @@ CONFIG = {
         ),
         "dataset": "gsm8k",
         "subset": "continuation",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
     "gsm8k_simple_instruct": {
         "name": ["gsm8k", "main"],
@@ -65,5 +75,12 @@ CONFIG = {
         ),
         "dataset": "gsm8k",
         "subset": "simple_instruct",
+        "features": datasets.Features(
+            {
+                "input": datasets.Value("string"),
+                "output": datasets.Value("string"),
+                "stripped_input": datasets.Value("string"),
+            }
+        ),
     },
 }

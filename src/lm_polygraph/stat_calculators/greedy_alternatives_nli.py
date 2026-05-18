@@ -22,7 +22,7 @@ def eval_nli_model(
     with torch.no_grad():
         for k in range(0, len(nli_set), deberta.batch_size):
             batch = nli_set[k : k + deberta.batch_size]
-            encoded = deberta.deberta_tokenizer.batch_encode_plus(
+            encoded = deberta.deberta_tokenizer(
                 batch, padding=True, return_tensors="pt"
             ).to(deberta.device)
             logits = deberta.deberta(**encoded).logits.detach()
