@@ -114,7 +114,6 @@ class MIND(Estimator):
             np.ndarray: Array of uncertainty scores.
         """
         if not self.is_fitted:
-
             train_metrics = stats["train_metrics"]
             train_greedy_tokens = stats["train_greedy_tokens"]
 

@@ -59,7 +59,6 @@ class TokenMahalanobisDistance(Estimator):
     def __call__(
         self, stats: Dict[str, np.ndarray], save_data: bool = True
     ) -> np.ndarray:
-
         embeddings = create_cuda_tensor_from_numpy(
             stats[f"token_embeddings_{self.embeddings_type}{self.layer_name}"]
         )

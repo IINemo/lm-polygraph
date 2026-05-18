@@ -339,14 +339,15 @@ class TokenEmbeddingsCalculator(StatCalculator):
             results = {}
             for layer in dependencies["layers"]:
                 layer_name = "" if layer == -1 else f"_{layer}"
-                token_embeddings_encoder, token_embeddings_decoder = (
-                    get_embeddings_from_output(
-                        out,
-                        batch,
-                        model.model_type,
-                        level="token",
-                        hidden_layer=layer,
-                    )
+                (
+                    token_embeddings_encoder,
+                    token_embeddings_decoder,
+                ) = get_embeddings_from_output(
+                    out,
+                    batch,
+                    model.model_type,
+                    level="token",
+                    hidden_layer=layer,
                 )
                 if token_embeddings_decoder is None:
                     token_embeddings_decoder = torch.empty(

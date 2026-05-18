@@ -6,7 +6,6 @@ from .estimator import Estimator
 
 
 class SemanticDensity(Estimator):
-
     def __init__(self, verbose: bool = False, concat_input: bool = True):
         deps = [
             "greedy_log_probs",

@@ -131,12 +131,12 @@ class PPLMDSeq(Estimator):
                 if any(k.startswith(stat) for stat in self.stats_dependencies)
             }
             stats_copy = copy.deepcopy(stats_copy)
-            stats_copy[f"train_embeddings_{self.embeddings_type}{self.layer_name}"] = (
-                train_embeds
-            )
-            stats_copy[f"embeddings_{self.embeddings_type}{self.layer_name}"] = (
-                val_embeds
-            )
+            stats_copy[
+                f"train_embeddings_{self.embeddings_type}{self.layer_name}"
+            ] = train_embeds
+            stats_copy[
+                f"embeddings_{self.embeddings_type}{self.layer_name}"
+            ] = val_embeds
             self.train_md = self.MD_val(stats_copy)
             if self.parameters_path is not None:
                 save_array(

@@ -136,7 +136,6 @@ class SATRMD(Estimator):
         return f"SAT{MD}_{self.embeddings_type}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
-
         if not self.is_fitted:
             train_metrics = stats["train_metrics"]
             train_greedy_texts = stats["train_greedy_texts"]

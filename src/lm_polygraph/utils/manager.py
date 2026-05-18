@@ -473,9 +473,9 @@ class UEManager:
                         self.metrics[e_level, e_name, gen_name, str(ue_metric)] = np.nan
                     else:
                         ue_metric_val = ue_metric(ue, metric)
-                        self.metrics[e_level, e_name, gen_name, str(ue_metric)] = (
-                            ue_metric_val
-                        )
+                        self.metrics[
+                            e_level, e_name, gen_name, str(ue_metric)
+                        ] = ue_metric_val
 
                         if "prr" in str(ue_metric):
                             if len(ue) != len(estimator_values):

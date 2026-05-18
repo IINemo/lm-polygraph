@@ -733,7 +733,6 @@ class VLLMWithUncertainty:
         prompts: Union[str, List[str]],
         sampling_params: Optional[SamplingParams] = None,
     ):
-
         prompts_list = self._normalize_prompts(prompts)
 
         if sampling_params is None:
@@ -980,7 +979,6 @@ class VLLMWithUncertainty:
         context_lengths,
         compute_uncertainty: bool = True,
     ) -> List[RequestOutputWithUncertainty]:
-
         results: List[RequestOutputWithUncertainty] = []
 
         for i, request_output in tqdm(

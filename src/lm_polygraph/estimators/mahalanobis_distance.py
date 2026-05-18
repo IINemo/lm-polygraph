@@ -110,7 +110,6 @@ class MahalanobisDistanceSeq(Estimator):
         normalize: bool = False,
         layer: int = -1,
     ):
-
         super().__init__(["embeddings", "train_embeddings"], "sequence")
         self.layer_name = f"_{layer}" if layer != -1 else ""
         self.layer = layer
