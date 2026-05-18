@@ -36,11 +36,14 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         embeddings_type: str = "decoder",
         parameters_path: str = None,
         normalize: bool = False,
+        layer: int = -1,
     ):
         super().__init__(
             ["embeddings", "train_embeddings", "background_train_embeddings"],
             "sequence",
         )
+        self.layer = layer
+        self.layer_name = f"_{layer}" if layer != -1 else ""
         self.centroid_0 = None
         self.sigma_inv_0 = None
         self.parameters_path = parameters_path
@@ -49,27 +52,31 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         self.min = 1e100
         self.max = -1e100
         self.MD = MahalanobisDistanceSeq(
-            embeddings_type, parameters_path, normalize=False
+            embeddings_type, parameters_path, normalize=False, layer=layer
         )
         self.is_fitted = False
 
         if self.parameters_path is not None:
             self.full_path = f"{self.parameters_path}/rmd_{self.embeddings_type}"
             os.makedirs(self.full_path, exist_ok=True)
-            if os.path.exists(f"{self.full_path}/centroid_0.pt"):
-                self.centroid_0 = torch.load(f"{self.full_path}/centroid_0.pt")
-                self.sigma_inv_0 = torch.load(f"{self.full_path}/sigma_inv_0.pt")
-                self.max = load_array(f"{self.full_path}/max_0.npy")
-                self.min = load_array(f"{self.full_path}/min_0.npy")
+            if os.path.exists(f"{self.full_path}/centroid_0{self.layer_name}.pt"):
+                self.centroid_0 = torch.load(
+                    f"{self.full_path}/centroid_0{self.layer_name}.pt"
+                )
+                self.sigma_inv_0 = torch.load(
+                    f"{self.full_path}/sigma_inv_0{self.layer_name}.pt"
+                )
+                self.max = load_array(f"{self.full_path}/max_0{self.layer_name}.npy")
+                self.min = load_array(f"{self.full_path}/min_0{self.layer_name}.npy")
                 self.is_fitted = True
 
     def __str__(self):
-        return f"RelativeMahalanobisDistanceSeq_{self.embeddings_type}"
+        return f"RelativeMahalanobisDistanceSeq_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         # take the embeddings
         embeddings = create_cuda_tensor_from_numpy(
-            stats[f"embeddings_{self.embeddings_type}"]
+            stats[f"embeddings_{self.embeddings_type}{self.layer_name}"]
         )
 
         # since we want to adjust resulting reasure on baseline MD on train part
@@ -78,21 +85,30 @@ class RelativeMahalanobisDistanceSeq(Estimator):
 
         if not self.is_fitted:
             background_train_embeddings = create_cuda_tensor_from_numpy(
-                stats[f"background_train_embeddings_{self.embeddings_type}"]
+                stats[
+                    f"background_train_embeddings_{self.embeddings_type}{self.layer_name}"
+                ]
             )
             self.centroid_0 = background_train_embeddings.mean(axis=0)
             if self.parameters_path is not None:
-                torch.save(self.centroid_0, f"{self.full_path}/centroid_0.pt")
+                torch.save(
+                    self.centroid_0, f"{self.full_path}/centroid_0{self.layer_name}.pt"
+                )
 
         if not self.is_fitted:
             background_train_embeddings = create_cuda_tensor_from_numpy(
-                stats[f"background_train_embeddings_{self.embeddings_type}"]
+                stats[
+                    f"background_train_embeddings_{self.embeddings_type}{self.layer_name}"
+                ]
             )
             self.sigma_inv_0, _ = compute_inv_covariance(
                 self.centroid_0.unsqueeze(0), background_train_embeddings
             )
             if self.parameters_path is not None:
-                torch.save(self.sigma_inv_0, f"{self.full_path}/sigma_inv_0.pt")
+                torch.save(
+                    self.sigma_inv_0,
+                    f"{self.full_path}/sigma_inv_0{self.layer_name}.pt",
+                )
             self.is_fitted = True
 
         if torch.cuda.is_available():
@@ -125,11 +141,11 @@ class RelativeMahalanobisDistanceSeq(Estimator):
         if self.max < dists.max():
             self.max = dists.max()
             if self.parameters_path is not None:
-                save_array(self.max, f"{self.full_path}/max_0.npy")
+                save_array(self.max, f"{self.full_path}/max_0{self.layer_name}.npy")
         if self.min > dists.min():
             self.min = dists.min()
             if self.parameters_path is not None:
-                save_array(self.min, f"{self.full_path}/min_0.npy")
+                save_array(self.min, f"{self.full_path}/min_0{self.layer_name}.npy")
 
         if self.normalize:
             dists = np.clip(

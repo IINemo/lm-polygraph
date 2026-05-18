@@ -120,7 +120,6 @@ class BaseAttentionPromptCalculator(StatCalculator):
 
 
 class AttentionElicitingPromptCalculator(BaseAttentionPromptCalculator):
-
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """

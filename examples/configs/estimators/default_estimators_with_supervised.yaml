@@ -1,0 +1,125 @@
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: MeanPointwiseMutualInformation
+- name: SelfCertainty
+- name: MeanConditionalPointwiseMutualInformation 
+- name: ClaimConditionedProbability
+- name: PTrue
+- name: PTrueSampling
+- name: MonteCarloSequenceEntropy
+- name: MonteCarloNormalizedSequenceEntropy
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge1"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rouge2"
+- name: LexicalSimilarity
+  cfg:
+    metric: "rougeL"
+- name: LexicalSimilarity
+  cfg:
+    metric: "BLEU"
+- name: NumSemSets
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: EigValLaplacian
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: DegMat
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: DegMat
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "entail"
+- name: Eccentricity
+  cfg:
+    similarity_score: "NLI_score"
+    affinity: "contra"
+- name: Eccentricity
+  cfg:
+    similarity_score: "Jaccard_score"
+- name: SemanticEntropy
+- name: SemanticEntropy
+  cfg:
+    entropy_estimation: "direct"
+- name: SAR
+- name: TokenSAR
+- name: SentenceSAR
+- name: LUQ
+- name: KernelLanguageEntropy
+- name: EigenScore
+- name: RenyiNeg
+- name: FisherRao
+- name: MahalanobisDistanceSeq
+- name: RelativeMahalanobisDistanceSeq
+- name: RDESeq
+- name: PPLMDSeq
+  cfg:
+    md_type: "MD"
+- name: PPLMDSeq
+  cfg:
+    md_type: "RMD"
+- name: Focus
+  cfg:
+    model_name: '${model.path}'
+    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
+    gamma: 0.9
+    p: 0.01
+    idf_dataset: "togethercomputer/RedPajama-Data-1T-Sample"
+    trust_remote_code: True
+    idf_seed: 42
+    idf_dataset_size: -1
+    spacy_path: "en_core_web_sm"
+- name: AttentionScore
+  cfg:
+    gen_only: False
+- name: RAUQ
+  cfg:
+    alpha: 0.2
+    use_entropy: False
+- name: RAUQ
+  cfg:
+    alpha: 0.8
+    use_entropy: True
+- name: CSL
+- name: CocoaMSP
+- name: CocoaPPL
+- name: CocoaMTE
+- name: SemanticDensity
+- name: BoostedProbSequence
+- name: SAPLMA
+  cfg:
+    model_name: '${model.path}'
+- name: MIND
+  cfg:
+    metric_thr: 0.3
+- name: Sheeps
+  cfg:
+    metric_thr: 0.3
+    model_name: '${model.path}'
+- name: SATRMD
+  cfg:
+    metric_thr: 0.3
+    model_name: '${model.path}'
+    base_method: "RelativeTokenMahalanobis"
+- name: LookBackLens
+  cfg:
+    metric_thr: 0.3
+- name: TAD

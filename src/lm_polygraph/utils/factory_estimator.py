@@ -59,6 +59,14 @@ def load_simple_estimators(name: str, config):
         RAUQ,
         CSL,
         SemanticDensity,
+        SAPLMA,
+        MIND,
+        Sheeps,
+        TokenMahalanobisDistance,
+        RelativeTokenMahalanobisDistance,
+        SATRMD,
+        LookBackLens,
+        TAD,
         BoostedProbSequence,
     ]
 

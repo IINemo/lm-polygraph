@@ -35,7 +35,6 @@ def _to_device(
 
 
 class VisualWhiteboxModel(Model):
-
     def __init__(
         self,
         model: AutoModelForVision2Seq,

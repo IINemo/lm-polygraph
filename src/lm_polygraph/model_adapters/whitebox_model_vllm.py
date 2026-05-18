@@ -107,9 +107,7 @@ class WhiteboxModelvLLM(Model):
             ]
         )
         for sample_output in outputs:
-
             for output in sample_output.outputs:
-
                 log_prob = torch.zeros((max_seq_len, vocab_size)).fill_(-torch.inf)
                 sequence = (
                     torch.zeros(max_seq_len).fill_(self.tokenizer.eos_token_id).long()

@@ -109,7 +109,6 @@ class BasePromptCalculator(StatCalculator):
 
 
 class PromptCalculator(BasePromptCalculator):
-
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
@@ -128,7 +127,6 @@ class PromptCalculator(BasePromptCalculator):
 
 
 class SamplingPromptCalculator(BasePromptCalculator):
-
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """
@@ -148,7 +146,6 @@ class SamplingPromptCalculator(BasePromptCalculator):
 
 
 class ClaimPromptCalculator(BasePromptCalculator):
-
     @staticmethod
     def meta_info() -> Tuple[List[str], List[str]]:
         """

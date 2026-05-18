@@ -66,8 +66,11 @@ class RDESeq(Estimator):
         embeddings_type: str = "decoder",
         parameters_path: str = None,
         normalize: bool = False,
+        layer: int = -1,
     ):
         super().__init__(["embeddings", "train_embeddings"], "sequence")
+        self.layer = layer
+        self.layer_name = f"_{layer}" if layer != -1 else ""
         self.pca = None
         self.MCD = None
         self.parameters_path = parameters_path
@@ -80,19 +83,19 @@ class RDESeq(Estimator):
         if self.parameters_path is not None:
             self.full_path = f"{self.parameters_path}/rde_{self.embeddings_type}"
             os.makedirs(self.full_path, exist_ok=True)
-            if os.path.exists(f"{self.full_path}/covariance.npy"):
+            if os.path.exists(f"{self.full_path}/covariance{self.layer_name}.npy"):
                 self.pca = self.load_pca()
                 self.MCD = self.load_mcd()
-                self.max = load_array(f"{self.full_path}/max.npy")
-                self.min = load_array(f"{self.full_path}/min.npy")
+                self.max = load_array(f"{self.full_path}/max{self.layer_name}.npy")
+                self.min = load_array(f"{self.full_path}/min{self.layer_name}.npy")
                 self.is_fitted = True
 
     def __str__(self):
-        return f"RDESeq_{self.embeddings_type}"
+        return f"RDESeq_{self.embeddings_type}{self.layer_name}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         # take embeddings
-        embeddings = stats[f"embeddings_{self.embeddings_type}"]
+        embeddings = stats[f"embeddings_{self.embeddings_type}{self.layer_name}"]
 
         # define PCA with rbf kernel and n_components equal 100
         if not self.is_fitted:
@@ -100,7 +103,7 @@ class RDESeq(Estimator):
                 n_components=100, kernel="rbf", random_state=42, gamma=None
             )
             X_pca_train = self.pca.fit_transform(
-                stats[f"train_embeddings_{self.embeddings_type}"]
+                stats[f"train_embeddings_{self.embeddings_type}{self.layer_name}"]
             )
             if self.parameters_path is not None:
                 self.save_pca()
@@ -121,11 +124,11 @@ class RDESeq(Estimator):
         if self.max < dists.max():
             self.max = dists.max()
             if self.parameters_path is not None:
-                save_array(self.max, f"{self.full_path}/max.npy")
+                save_array(self.max, f"{self.full_path}/max{self.layer_name}.npy")
         if self.min > dists.min():
             self.min = dists.min()
             if self.parameters_path is not None:
-                save_array(self.min, f"{self.full_path}/min.npy")
+                save_array(self.min, f"{self.full_path}/min{self.layer_name}.npy")
 
         if self.normalize:
             dists = np.clip(
@@ -135,22 +138,45 @@ class RDESeq(Estimator):
         return dists
 
     def save_mcd(self):
-        save_array(self.MCD.covariance_, f"{self.full_path}/covariance.npy")
-        save_array(self.MCD.location_, f"{self.full_path}/location.npy")
-        save_array(self.MCD.precision_, f"{self.full_path}/precision.npy")
+        save_array(
+            self.MCD.covariance_, f"{self.full_path}/covariance{self.layer_name}.npy"
+        )
+        save_array(
+            self.MCD.location_, f"{self.full_path}/location{self.layer_name}.npy"
+        )
+        save_array(
+            self.MCD.precision_, f"{self.full_path}/precision{self.layer_name}.npy"
+        )
 
     def save_pca(self):
-        save_array(self.pca.eigenvalues_, f"{self.full_path}/eigenvalues.npy")
-        save_array(self.pca.eigenvectors_, f"{self.full_path}/eigenvectors.npy")
-        save_array(self.pca.X_fit_, f"{self.full_path}/X_fit.npy")
-        save_array(self.pca._centerer.K_fit_rows_, f"{self.full_path}/K_fit_rows.npy")
-        save_array(self.pca._centerer.K_fit_all_, f"{self.full_path}/K_fit_all.npy")
+        save_array(
+            self.pca.eigenvalues_, f"{self.full_path}/eigenvalues{self.layer_name}.npy"
+        )
+        save_array(
+            self.pca.eigenvectors_,
+            f"{self.full_path}/eigenvectors{self.layer_name}.npy",
+        )
+        save_array(self.pca.X_fit_, f"{self.full_path}/X_fit{self.layer_name}.npy")
+        save_array(
+            self.pca._centerer.K_fit_rows_,
+            f"{self.full_path}/K_fit_rows{self.layer_name}.npy",
+        )
+        save_array(
+            self.pca._centerer.K_fit_all_,
+            f"{self.full_path}/K_fit_all{self.layer_name}.npy",
+        )
 
     def load_mcd(self):
         self.MCD = MinCovDet(random_state=42)
-        self.MCD.covariance_ = load_array(f"{self.full_path}/covariance.npy")
-        self.MCD.location_ = load_array(f"{self.full_path}/location.npy")
-        self.MCD.precision_ = load_array(f"{self.full_path}/precision.npy")
+        self.MCD.covariance_ = load_array(
+            f"{self.full_path}/covariance{self.layer_name}.npy"
+        )
+        self.MCD.location_ = load_array(
+            f"{self.full_path}/location{self.layer_name}.npy"
+        )
+        self.MCD.precision_ = load_array(
+            f"{self.full_path}/precision{self.layer_name}.npy"
+        )
         return self.MCD
 
     def load_pca(self):
@@ -158,10 +184,18 @@ class RDESeq(Estimator):
             n_components=100, kernel="rbf", random_state=42, gamma=None
         )
         self.pca._centerer = KernelCenterer()
-        self.pca.eigenvalues_ = load_array(f"{self.full_path}/eigenvalues.npy")
-        self.pca.eigenvectors_ = load_array(f"{self.full_path}/eigenvectors.npy")
-        self.pca.X_fit_ = load_array(f"{self.full_path}/X_fit.npy")
-        self.pca._centerer.K_fit_rows_ = load_array(f"{self.full_path}/K_fit_rows.npy")
-        self.pca._centerer.K_fit_all_ = load_array(f"{self.full_path}/K_fit_all.npy")
+        self.pca.eigenvalues_ = load_array(
+            f"{self.full_path}/eigenvalues{self.layer_name}.npy"
+        )
+        self.pca.eigenvectors_ = load_array(
+            f"{self.full_path}/eigenvectors{self.layer_name}.npy"
+        )
+        self.pca.X_fit_ = load_array(f"{self.full_path}/X_fit{self.layer_name}.npy")
+        self.pca._centerer.K_fit_rows_ = load_array(
+            f"{self.full_path}/K_fit_rows{self.layer_name}.npy"
+        )
+        self.pca._centerer.K_fit_all_ = load_array(
+            f"{self.full_path}/K_fit_all{self.layer_name}.npy"
+        )
         self.pca.gamma_ = None
         return self.pca

@@ -66,8 +66,7 @@ def check_result(dataset, exec_result, reference, method=None):
 
 
 def run_eval(dataset):
-    command = (
-        f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
+    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=4 \
                 model.path=bigscience/bloomz-560m \
@@ -75,7 +74,6 @@ def run_eval(dataset):
                 save_path={pwd()} \
                 stat_calculators.1.cfg.size=10 \
                 stat_calculators.1.cfg.bg_size=20"
-    )
 
     return subprocess.run(command, shell=True)
 
@@ -169,14 +167,12 @@ def run_claim_eval(dataset):
         for k in fixed_cache:
             cache[k] = fixed_cache[k]
 
-    command = (
-        f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
+    command = f"HYDRA_CONFIG={pwd()}/../../examples/configs/polygraph_eval_{dataset}.yaml \
                 polygraph_eval \
                 subsample_eval_dataset=2 \
                 model.path=bigscience/bloomz-560m \
                 model.load_model_args.device_map={get_device()} \
                 save_path={pwd()}"
-    )
 
     return subprocess.run(command, shell=True)
 
