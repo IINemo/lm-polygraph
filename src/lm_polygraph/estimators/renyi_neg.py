@@ -35,7 +35,7 @@ class RenyiNeg(Estimator):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * logarithms of autoregressive probability distributions at each token in 'greedy_log_probs',
         Returns:
-            np.ndarray: float Rényi divergence for each sample in input statistics.
+            np.ndarray: float negative mean token-level Rényi divergence for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
 
@@ -59,4 +59,5 @@ class RenyiNeg(Estimator):
                 per_step_scores *= 1 / (self.alpha - 1)
             scores.append(per_step_scores.mean(-1))
 
-        return np.array(scores)
+        # Divergence to uniform increases when p_t is peaked; negate for UE convention.
+        return -np.array(scores)
