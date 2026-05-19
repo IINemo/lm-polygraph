@@ -32,7 +32,7 @@ class FisherRao(Estimator):
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * logarithms of autoregressive probability distributions at each token in 'greedy_log_probs',
         Returns:
-            np.ndarray: float Fisher-Rao distance for each sample in input statistics.
+            np.ndarray: float negative mean token-level Fisher-Rao distance for each sample in input statistics.
                 Higher values indicate more uncertain samples.
         """
 
@@ -51,4 +51,5 @@ class FisherRao(Estimator):
             )
             scores.append(per_step_scores.mean(-1))
 
-        return np.array(scores)
+        # Distance to uniform decreases when p_t is peaked; negate for UE convention.
+        return -np.array(scores)
