@@ -1,9 +1,12 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 
-def load_model(model_path: str, device_map: str):
+def load_model(model_path: str, device_map: str, **kwargs):
     model = AutoModelForSeq2SeqLM.from_pretrained(
-        model_path, trust_remote_code=True, device_map=device_map
+        model_path,
+        trust_remote_code=True,
+        device_map=device_map,
+        **kwargs,
     )
     model.eval()
 

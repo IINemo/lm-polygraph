@@ -58,13 +58,13 @@ def load_simple_estimators(name: str, config):
         AttentionScoreClaim,
     ]
 
+    simple_estimators = {e.__name__: e for e in SIMPLE_ESTIMATORS}
     try:
-        simple_estimators = {e.__name__: e for e in SIMPLE_ESTIMATORS}
-        est = simple_estimators[name](**config)
-        return est
-
+        est_class = simple_estimators[name]
     except KeyError:
         return None
+
+    return est_class(**config)
 
 
 class FactoryEstimator:

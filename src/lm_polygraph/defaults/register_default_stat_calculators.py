@@ -114,6 +114,22 @@ def register_default_stat_calculators(
             },
         )
         _register(
+            CrossEncoderTokenSimilarityCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderTokenSimilarityCalculator",
+            {
+                "batch_size": batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
+            CrossEncoderSampleSimilarityCalculator,
+            "lm_polygraph.defaults.stat_calculator_builders.default_CrossEncoderSampleSimilarityCalculator",
+            {
+                "batch_size": batch_size,
+                "cross_encoder_name": "cross-encoder/stsb-roberta-large",
+            },
+        )
+        _register(
             GreedyAlternativesNLICalculator,
             "lm_polygraph.defaults.stat_calculator_builders.default_GreedyAlternativesNLICalculator",
             {

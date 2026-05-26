@@ -143,31 +143,6 @@ class GreedyProbsCalculator(StatCalculator):
             ),
         }
 
-        # Method (1): specify EOS token id on generation
-        if model.model_type == "vLLMCausalLM":
-            eos_ids = [model.tokenizer.eos_token_id]
-            generate_kwargs["sampling_params"] = SamplingParams(
-                stop_token_ids=eos_ids
-            )
-        else:
-            
-            # List of EOS
-            eos_ids_tokenizer = model.tokenizer.eos_token_id
-            eos_ids_model_config = model.model.config.eos_token_id
-
-            if isinstance(eos_ids_tokenizer, int):
-                eos_ids_tokenizer = [eos_ids_tokenizer]
-
-            if isinstance(eos_ids_model_config, int):
-                eos_ids_model_config = [eos_ids_model_config]
-
-            eos_ids_tokenizer = eos_ids_tokenizer or []
-            eos_ids_model_config = eos_ids_model_config or []
-
-            eos_ids = list(set(eos_ids_tokenizer) | set(eos_ids_model_config))
-
-            generate_kwargs["eos_token_id"] = eos_ids
-
         with torch.no_grad():
             out = model.generate(**batch, **generate_kwargs)
             logits = torch.stack(out.scores, dim=1)
@@ -195,6 +170,24 @@ class GreedyProbsCalculator(StatCalculator):
             marker_tokens = model.tokenizer(
                 self.answer_marker, add_special_tokens=False
             ).input_ids
+
+        eos_ids_tokenizer = getattr(model.tokenizer, "eos_token_id", None)
+        if isinstance(eos_ids_tokenizer, int):
+            eos_ids_tokenizer = [eos_ids_tokenizer]
+        elif eos_ids_tokenizer is None:
+            eos_ids_tokenizer = []
+
+        eos_ids_model_config = None
+        if getattr(model, "model", None) is not None:
+            eos_ids_model_config = getattr(
+                getattr(model.model, "config", None), "eos_token_id", None
+            )
+        if isinstance(eos_ids_model_config, int):
+            eos_ids_model_config = [eos_ids_model_config]
+        elif eos_ids_model_config is None:
+            eos_ids_model_config = []
+
+        eos_ids = list(set(eos_ids_tokenizer) | set(eos_ids_model_config))
 
         for i in range(len(texts)):
             if model.model_type == "CausalLM":
@@ -265,13 +258,7 @@ class GreedyProbsCalculator(StatCalculator):
                     reverse=True,
                 )
 
-        # 3 Methods to handle inf:
-        # (1) Simplest: replace all inf/nan into 0
-        # (2) Little tweak: exclude all padding tokens
-        # (3) Experimental: add eos token to the .generate() argument`
-
         lls = []
-        pad_id = getattr(model.tokenizer, "pad_token_id", None)
         for i in range(len(texts)):
             log_probs = cut_logits[i]
             tokens = cut_sequences[i]
@@ -280,13 +267,6 @@ class GreedyProbsCalculator(StatCalculator):
                 continue
             assert len(tokens) == len(log_probs)
 
-            # Method (2): skip padding steps entirely so they never enter downstream stats
-            # 'filtered = [
-            #     log_probs[j, tokens[j]]
-            #     for j in range(len(log_probs))
-            #     if pad_id is None or tokens[j] != pad_id
-            # ]
-            # lls.append(filtered)
             lls.append([log_probs[j, tokens[j]] for j in range(len(log_probs))])
 
         attention_all = []
@@ -372,12 +352,6 @@ class GreedyProbsCalculator(StatCalculator):
         else:
             raise NotImplementedError
         
-        # Method (1): replace nan and inf into 0 proba
-        # lls = [
-        #     np.nan_to_num(np.asarray(ll, float), nan=0.0, posinf=0.0, neginf=0.0)
-        #     for ll in lls    
-        # ]
-
         result_dict = {
             "input_tokens": batch["input_ids"].to("cpu").tolist(),
             "greedy_log_probs": cut_logits,
