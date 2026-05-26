@@ -1,0 +1,9 @@
+defaults:
+  - polygraph_eval_ugrip
+  - override /model: ugrip_falcon_instruct
+  - _self_
+
+generation_params:
+  generate_until:
+    - "\nUser"
+    - "\n\nUser:"
