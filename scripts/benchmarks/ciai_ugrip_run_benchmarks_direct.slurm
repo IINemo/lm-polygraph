@@ -27,48 +27,24 @@ source .venv/bin/activate
 # HF whitebox (CausalLM) so attention saving on this branch works.
 
 
-# llama
-for DATASET in UGRIP-LM-Polygraph/gsm8k-direct UGRIP-LM-Polygraph/mmlu-direct UGRIP-LM-Polygraph/medmcqa-direct; do
-  SPLIT=test
-  [[ "$DATASET" == *medmcqa* ]] && SPLIT=validation
-  uv run --python 3.11 scripts/polygraph_eval \
-    --config-dir=./examples/configs \
-    --config-name=polygraph_eval_ugrip.yaml \
-    model=ugrip_llama_instruct \
-    dataset=$DATASET \
-    generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-    estimators=ugrip_benchmark_estimators_lite.yaml \
-    subsample_eval_dataset=1000 batch_size=1 eval_split=$SPLIT
-done
-
-
-# qwen2.5
-for DATASET in UGRIP-LM-Polygraph/gsm8k-direct UGRIP-LM-Polygraph/mmlu-direct UGRIP-LM-Polygraph/medmcqa-direct; do
-  SPLIT=test
-  [[ "$DATASET" == *medmcqa* ]] && SPLIT=validation
-  uv run --python 3.11 scripts/polygraph_eval \
-    --config-dir=./examples/configs \
-    --config-name=polygraph_eval_ugrip.yaml \
-    model=ugrip_qwen25_instruct \
-    dataset=$DATASET \
-    generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-    estimators=ugrip_benchmark_estimators_lite.yaml \
-    subsample_eval_dataset=1000 batch_size=1 eval_split=$SPLIT
-done
-
-
-# falcon3
-for DATASET in UGRIP-LM-Polygraph/gsm8k-direct UGRIP-LM-Polygraph/mmlu-direct UGRIP-LM-Polygraph/medmcqa-direct; do
-  SPLIT=test
-  [[ "$DATASET" == *medmcqa* ]] && SPLIT=validation
-  uv run --python 3.11 scripts/polygraph_eval \
-    --config-dir=./examples/configs \
-    --config-name=polygraph_eval_ugrip.yaml \
-    model=ugrip_falcon3_instruct \
-    dataset=$DATASET \
-    generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
-    estimators=ugrip_benchmark_estimators_lite.yaml \
-    subsample_eval_dataset=1000 batch_size=1 eval_split=$SPLIT
+for MODEL in ugrip_llama_instruct ugrip_qwen25_instruct ugrip_falcon3_instruct; do
+  for DATASET in UGRIP-LM-Polygraph/gsm8k-direct UGRIP-LM-Polygraph/mmlu-direct UGRIP-LM-Polygraph/medmcqa-direct; do
+    SPLIT=test
+    FN=process_output_mcq
+    [[ "$DATASET" == *medmcqa* ]] && SPLIT=validation
+    [[ "$DATASET" == *gsm8k* ]] && FN=process_output_number
+    uv run --python 3.11 scripts/polygraph_eval \
+      --config-dir=./examples/configs \
+      --config-name=polygraph_eval_ugrip.yaml \
+      model=$MODEL \
+      dataset=$DATASET \
+      generation_metrics=ugrip_benchmark_generation_metrics_acc.yaml \
+      estimators=ugrip_benchmark_estimators_lite.yaml \
+      process_output_fn.fn_name=$FN \
+      use_claim_ue=false \
+      +output_attentions=false \
+      subsample_eval_dataset=1000 batch_size=1 eval_split=$SPLIT
+  done
 done
 
 

@@ -1,12 +1,15 @@
 - name: MaximumSequenceProbability
 - name: Perplexity
-# note: tokensar takes a long time, ignore focus for now
-# - name: TokenSAR
-# - name: Focus
 - name: MeanTokenEntropy
-- name: CumulativeMaxSequenceProbability
-- name: CumulativePerplexity
-- name: CumulativeMeanTokenEntropy
-- name: SortedCumulativeMaxSequenceProbability
-- name: SortedCumulativePerplexity
-- name: SortedCumulativeMeanTokenEntropy
+- name: TokenSAR
+- name: Focus
+  cfg:
+    model_name: '${model.path}'
+    path: "${cache_path}/focus/${model.path}/token_idf.pkl"
+    gamma: 0.9
+    p: 0.01
+    idf_dataset: "ZengXiangyu/RedPajama-Data-1T-Sample"
+    trust_remote_code: True
+    idf_seed: 42
+    idf_dataset_size: -1
+    spacy_path: "en_core_web_sm"
