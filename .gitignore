@@ -179,3 +179,6 @@ cython_debug/
 
 # Agent instructions
 **/AGENTS.md
+
+#vscode
+.vscode/
