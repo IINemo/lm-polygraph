@@ -9,6 +9,7 @@
 - name: PTrueSampling
 - name: MonteCarloSequenceEntropy
 - name: MonteCarloNormalizedSequenceEntropy
+- name: PredictiveKernelEntropy
 - name: LexicalSimilarity
   cfg:
     metric: "rouge1"

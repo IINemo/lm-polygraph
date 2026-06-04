@@ -56,6 +56,19 @@ def register_default_stat_calculators(
         "device": None,
     }
 
+    # Shared sentence embedding model defaultconfig
+    sentence_embedding_model_cfg = {
+        "model_name": "all-mpnet-base-v2",
+        "device": None,
+        "cache_folder": None,
+        "encoding_arguments": {
+            "batch_size": 256,
+            "convert_to_numpy": True,
+            "convert_to_tensor": False,
+            "show_progress_bar": False,
+        },
+    }
+
     _register(InitialStateCalculator)
     _register(RawInputCalculator)
     _register(
@@ -74,7 +87,11 @@ def register_default_stat_calculators(
         {"nli_model": nli_model_cfg},
     )
     _register(SemanticClassesCalculator)
-
+    _register(
+        SampleSentenceEmbeddingsCalculator,
+        "lm_polygraph.defaults.stat_calculator_builders.default_SampleSentenceEmbeddingsCalculator",
+        {"sentence_embedding_model": sentence_embedding_model_cfg},
+    )
     if model_type == "Blackbox":
         _register(BlackboxGreedyTextsCalculator)
         _register(BlackboxSamplingGenerationCalculator)

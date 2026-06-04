@@ -1,8 +1,13 @@
 import torch
 import pytest
 
-from transformers import AutoModelForVision2Seq, AutoProcessor
+from transformers import AutoProcessor
 
+try:
+    from transformers import AutoModelForVision2Seq
+except ImportError:
+    # transformers >= 5.0 renamed AutoModelForVision2Seq → AutoModelForImageTextToText
+    from transformers import AutoModelForImageTextToText as AutoModelForVision2Seq
 from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
@@ -174,6 +179,12 @@ def test_luq(model):
 
 def test_eigenscore(model):
     estimator = EigenScore()
+    ue = estimate_uncertainty(model, estimator, INPUT, IMAGES)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_predictive_kernel_entropy(model):
+    estimator = PredictiveKernelEntropy()
     ue = estimate_uncertainty(model, estimator, INPUT, IMAGES)
     assert isinstance(ue.uncertainty, float)
 

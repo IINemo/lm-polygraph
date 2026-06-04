@@ -1,4 +1,10 @@
-from transformers import AutoModelForVision2Seq, AutoProcessor
+from transformers import AutoProcessor
+
+try:
+    from transformers import AutoModelForVision2Seq
+except ImportError:
+    # transformers >= 5.0 renamed AutoModelForVision2Seq → AutoModelForImageTextToText
+    from transformers import AutoModelForImageTextToText as AutoModelForVision2Seq
 
 
 def load_model(model_path: str, device_map: str):
