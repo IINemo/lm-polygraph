@@ -304,3 +304,9 @@ def test_boostedprob_sequence(model):
     estimator = BoostedProbSequence()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
+
+
+def test_spectral_uncertainty(model):
+    estimator = SpectralUncertainty()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)

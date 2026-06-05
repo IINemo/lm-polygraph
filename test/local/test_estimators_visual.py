@@ -189,6 +189,12 @@ def test_predictive_kernel_entropy(model):
     assert isinstance(ue.uncertainty, float)
 
 
+def test_spectral_uncertainty(model):
+    estimator = SpectralUncertainty()
+    ue = estimate_uncertainty(model, estimator, INPUT, IMAGES)
+    assert isinstance(ue.uncertainty, float)
+
+
 def test_focus(model):
     model_name = model.model.config._name_or_path
     estimator = Focus(

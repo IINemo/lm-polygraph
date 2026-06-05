@@ -11,6 +11,7 @@ estimators:
   - name: MonteCarloSequenceEntropy
   - name: MonteCarloNormalizedSequenceEntropy
   - name: PredictiveKernelEntropy
+  - name: SpectralUncertainty
   - name: LexicalSimilarity
     cfg:
       metric: "rouge1"

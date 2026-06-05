@@ -21,7 +21,7 @@ class PredictiveKernelEntropy(Estimator):
 
     Parameters:
         kernel (str): Kernel function — one of "rbf", "laplacian", "cosine". Default "rbf".
-        gamma (float): Gamma parameter for the RBF kernel. Ignored for other kernels.
+        gamma (float): Gamma parameter for the RBF and the laplacian kernels. Ignored for the cosine kernel.
     """
 
     def __init__(self, kernel: str = "rbf", gamma: float = 1.0):

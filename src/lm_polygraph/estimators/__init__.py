@@ -91,3 +91,4 @@ from .rauq import RAUQ
 from .csl import CSL
 from .semantic_density import SemanticDensity
 from .predictive_kernel_entropy import PredictiveKernelEntropy
+from .spectral_uncertainty import SpectralUncertainty
