@@ -36,6 +36,36 @@ def unpad_attentions(forwardpass_attention_weights_original):
     return forwardpass_attention_weights
 
 
+def get_attention_layer_ids(config, n_attention_layers):
+    """Return original model layer ids represented by attention tensors."""
+    config = getattr(config, "text_config", config)
+    if n_attention_layers == config.num_hidden_layers:
+        return list(range(n_attention_layers))
+
+    layer_types = getattr(config, "layer_types", None)
+    attention_layer_ids = (
+        [
+            i
+            for i, layer_type in enumerate(layer_types)
+            if layer_type == "full_attention"
+        ]
+        if layer_types
+        else []
+    )
+    if len(attention_layer_ids) != n_attention_layers:
+        raise ValueError("Cannot map returned attentions to model layers")
+    return attention_layer_ids
+
+
+def resolve_attention_layer(layer, config, n_attention_layers):
+    """Map a model layer number to its index in returned attention tensors."""
+    config = getattr(config, "text_config", config)
+    requested_layer = config.num_hidden_layers // 2 if layer is None else layer
+    attention_layer_ids = get_attention_layer_ids(config, n_attention_layers)
+    closest_layer = min(attention_layer_ids, key=lambda i: abs(i - requested_layer))
+    return attention_layer_ids.index(closest_layer)
+
+
 class AttentionScore(Estimator):
     """
     Estimates uncertainty based on model's attention weights as in
@@ -57,10 +87,10 @@ class AttentionScore(Estimator):
         return f"AttentionScore (layer={self.layer})"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
+        _cfg = getattr(
+            stats["model"].model.config, "text_config", stats["model"].model.config
+        )
         if self.layer is None:
-            _cfg = getattr(
-                stats["model"].model.config, "text_config", stats["model"].model.config
-            )
             self.layer = _cfg.num_hidden_layers // 2
 
         forwardpass_attention_weights_original = stats["forwardpass_attention_weights"]
@@ -73,10 +103,11 @@ class AttentionScore(Estimator):
 
         for k, attention_weight in enumerate(forwardpass_attention_weights):
             ue_i = 0
+            layer = resolve_attention_layer(self.layer, _cfg, attention_weight.shape[0])
             # Handle different attention weight shapes
             if attention_weight.ndim == 4:
                 # Standard shape: (layers, heads, seq_len, seq_len)
-                layer_attention = attention_weight[self.layer]
+                layer_attention = attention_weight[layer]
                 num_heads = layer_attention.shape[0]
 
                 for head_idx in range(num_heads):
@@ -105,7 +136,7 @@ class AttentionScore(Estimator):
             elif attention_weight.ndim == 5:
                 # Visual model shape: (layers, batch=1, heads, seq_len, seq_len)
                 # Take the first (and only) batch element
-                layer_attention = attention_weight[self.layer, 0, :, :, :]
+                layer_attention = attention_weight[layer, 0, :, :, :]
                 num_heads = layer_attention.shape[0]
 
                 for head_idx in range(num_heads):

@@ -2,6 +2,7 @@ import numpy as np
 from typing import Dict, List, Optional
 
 from .estimator import Estimator
+from .attention_score import get_attention_layer_ids
 
 
 class RAUQ(Estimator):
@@ -106,19 +107,29 @@ class RAUQ(Estimator):
         Returns:
             np.ndarray: Uncertainty scores for each sequence
         """
-        if self.n_layers is None:
-            _cfg = getattr(
-                stats["model"].model.config, "text_config", stats["model"].model.config
-            )
-            self.n_layers = _cfg.num_hidden_layers
-            self.layers = list(
-                range(self.n_layers // 3, int(np.ceil(self.n_layers / 3 * 2) + 1))
-            )
+        _cfg = getattr(
+            stats["model"].model.config, "text_config", stats["model"].model.config
+        )
         if self.n_heads is None:
-            _cfg = getattr(
-                stats["model"].model.config, "text_config", stats["model"].model.config
-            )
             self.n_heads = _cfg.num_attention_heads
+
+        if self.n_layers is None:
+            n_attention_rows = stats["attention_all"][0].shape[0]
+            if n_attention_rows % self.n_heads:
+                raise ValueError(
+                    "Attention rows are not divisible by the number of heads"
+                )
+            self.n_layers = n_attention_rows // self.n_heads
+            attention_layer_ids = get_attention_layer_ids(_cfg, self.n_layers)
+            middle_layers = range(
+                _cfg.num_hidden_layers // 3,
+                int(np.ceil(_cfg.num_hidden_layers / 3 * 2) + 1),
+            )
+            self.layers = [
+                i
+                for i, original_layer in enumerate(attention_layer_ids)
+                if original_layer in middle_layers
+            ]
 
         # Extract diagonal attention patterns for each sequence
         attentions = []
