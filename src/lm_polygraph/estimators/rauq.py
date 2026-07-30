@@ -120,9 +120,7 @@ class RAUQ(Estimator):
                     "Attention rows are not divisible by the number of heads"
                 )
             self.n_layers = n_attention_rows // self.n_heads
-            attention_layer_ids = get_attention_layer_ids(
-                _cfg, self.n_layers
-            )
+            attention_layer_ids = get_attention_layer_ids(_cfg, self.n_layers)
             middle_layers = range(
                 _cfg.num_hidden_layers // 3,
                 int(np.ceil(_cfg.num_hidden_layers / 3 * 2) + 1),

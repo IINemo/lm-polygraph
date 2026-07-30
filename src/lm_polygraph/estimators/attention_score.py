@@ -103,9 +103,7 @@ class AttentionScore(Estimator):
 
         for k, attention_weight in enumerate(forwardpass_attention_weights):
             ue_i = 0
-            layer = resolve_attention_layer(
-                self.layer, _cfg, attention_weight.shape[0]
-            )
+            layer = resolve_attention_layer(self.layer, _cfg, attention_weight.shape[0])
             # Handle different attention weight shapes
             if attention_weight.ndim == 4:
                 # Standard shape: (layers, heads, seq_len, seq_len)
