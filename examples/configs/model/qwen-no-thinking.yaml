@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+path: Qwen/Qwen3.5-4B
+type: CausalLM
+path_to_load_script: model/qwen_no_thinking.py
+
+load_model_args:
+  device_map: auto
+load_tokenizer_args: {}
