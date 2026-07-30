@@ -57,6 +57,6 @@ class RenyiNeg(Estimator):
                     np.ones_like(per_step_scores) * probabilities.shape[-1]
                 )
                 per_step_scores *= 1 / (self.alpha - 1)
-            scores.append(per_step_scores.mean(-1))
+            scores.append(-per_step_scores.mean(-1))
 
         return np.array(scores)

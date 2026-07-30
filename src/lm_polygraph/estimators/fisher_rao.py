@@ -49,6 +49,6 @@ class FisherRao(Estimator):
                     * np.sqrt(1 / probabilities.shape[-1])
                 )
             )
-            scores.append(per_step_scores.mean(-1))
+            scores.append(1.0 - per_step_scores.mean(-1))
 
         return np.array(scores)
