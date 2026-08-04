@@ -288,6 +288,12 @@ def test_semantic_density_concat(model):
     assert isinstance(ue.uncertainty, float)
 
 
+def test_predictive_kernel_entropy(model):
+    estimator = PredictiveKernelEntropy()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
 def test_semantic_density(model):
     estimator = SemanticDensity(concat_input=False)
     ue = estimate_uncertainty(model, estimator, INPUT)
@@ -296,5 +302,11 @@ def test_semantic_density(model):
 
 def test_boostedprob_sequence(model):
     estimator = BoostedProbSequence()
+    ue = estimate_uncertainty(model, estimator, INPUT)
+    assert isinstance(ue.uncertainty, float)
+
+
+def test_spectral_uncertainty(model):
+    estimator = SpectralUncertainty()
     ue = estimate_uncertainty(model, estimator, INPUT)
     assert isinstance(ue.uncertainty, float)
