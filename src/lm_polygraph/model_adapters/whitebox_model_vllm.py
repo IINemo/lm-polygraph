@@ -17,6 +17,7 @@ class WhiteboxModelvLLM(Model):
         generation_parameters: GenerationParameters = GenerationParameters(),
         device: str = "cuda",
         instruct: bool = False,
+        enable_thinking: bool = False,
         model_path: str = None,
     ):
         super().__init__(model_path or getattr(model, "model_name", ""), "vLLMCausalLM")
@@ -26,6 +27,7 @@ class WhiteboxModelvLLM(Model):
         self.sampling_params = sampling_params
         self.generation_parameters = generation_parameters
         self.instruct = instruct
+        self.enable_thinking = enable_thinking
 
         stop_strings = getattr(self.generation_parameters, "stop_strings", None)
         if stop_strings is None:
@@ -69,7 +71,12 @@ class WhiteboxModelvLLM(Model):
                     },
                 ]
                 chats.append(chat)
-            output = self.model.chat(*args, chats, sampling_params)
+            output = self.model.chat(
+                *args,
+                chats,
+                sampling_params,
+                chat_template_kwargs={"enable_thinking": self.enable_thinking},
+            )
         else:
             output = self.model.generate(*args, texts, sampling_params)
         return self.post_processing(output)
