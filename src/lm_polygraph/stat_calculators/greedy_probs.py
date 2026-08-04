@@ -197,10 +197,14 @@ class GreedyProbsCalculator(StatCalculator):
             prompt_len = batch["input_ids"].shape[1]
             for i in range(len(texts)):
                 c = len(cut_sequences[i])
-                _cfg = getattr(model.model.config, "text_config", model.model.config)
+                n_attention_rows = sum(
+                    layer_attention.shape[1]
+                    for layer_attention in attentions[0]
+                    if layer_attention is not None
+                )
                 attn_mask = np.zeros(
                     shape=(
-                        _cfg.num_attention_heads * _cfg.num_hidden_layers,
+                        n_attention_rows,
                         c,
                         c,
                     )
