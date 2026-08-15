@@ -19,6 +19,7 @@ from .max_probability import (
 from .attention_score import AttentionScore
 from .claim_conditioned_probability import ClaimConditionedProbability
 from .self_certainty import SelfCertainty
+from .spilled_energy import SpilledEnergy
 from .token_entropy import MeanTokenEntropy, TokenEntropy
 from .pointwise_mutual_information import (
     MeanPointwiseMutualInformation,

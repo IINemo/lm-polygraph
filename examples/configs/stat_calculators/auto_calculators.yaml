@@ -1,0 +1,12 @@
+# Auto-registered stat calculators only, without the training-statistics extras.
+#
+# "auto" expands to register_default_stat_calculators("Whitebox", ...), which
+# includes GreedyProbsCalculator (produces greedy_log_probs / greedy_tokens /
+# greedy_log_likelihoods), EntropyCalculator, EnergyCalculator,
+# GreedyLMProbsCalculator and the prompt calculators.
+#
+# This group exists because default_calculators additionally registers
+# TrainingStatisticExtractionCalculator, which downloads an allenai/c4 background
+# shard and builds train embeddings. Those are needed only by Mahalanobis / RDE /
+# Density, and none of the training-free estimators used here depend on them.
+- auto

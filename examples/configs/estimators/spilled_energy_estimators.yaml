@@ -1,0 +1,101 @@
+# PRIMARY baseline set + Spilled Energy, evaluated in ONE UEManager run.
+#
+# The baselines are NOT hand-picked. Every one of the 50 rows of
+# examples/configs/estimators/default_estimators.yaml was classified by
+# predicates over its resolved transitive dependency set, and the two tiers that
+# require neither supervised training nor sampling -- "single pass" and "single
+# pass plus one auxiliary model" -- are taken whole. The report carries the full
+# table and the exclusion reason for every omitted method.
+#
+# forward passes per row (also derived, by inspecting each calculator's MRO):
+#   1 pass : MSP, Perplexity, MeanTokenEntropy, SelfCertainty, RenyiNeg,
+#            FisherRao, BoostedProbSequence, RAUQ x2, CSL, CCP
+#   2 passes: PTrue, MeanPMI, MeanConditionalPMI, AttentionScore
+# So "matched single-pass budget" does not cover the whole table; the 2-pass rows
+# are marked here and must be qualified in the report.
+
+# --- 1 forward pass --------------------------------------------------------
+- name: MaximumSequenceProbability
+- name: Perplexity
+- name: MeanTokenEntropy
+- name: SelfCertainty
+- name: RenyiNeg
+- name: FisherRao
+- name: BoostedProbSequence
+
+# --- 2 forward passes (NOT a matched single-pass comparison) ---------------
+- name: PTrue
+- name: MeanPointwiseMutualInformation
+- name: MeanConditionalPointwiseMutualInformation
+
+# --- MOVED OUT, not dropped -------------------------------------------------
+# RAUQ x2, CSL and AttentionScore need output_attentions=True, which disables
+# transformers' left-padding NaN guard and re-introduces the fp16 overflow.
+# They run at batch_size=1 with eager (no padding => no fully-masked row) in
+# polygraph_eval_triviaqa_spilled_energy_attention.yaml, reported as a secondary
+# table.
+
+# --- 1 pass + a second neural model (DeBERTa-large-MNLI), no sampling ------
+- name: ClaimConditionedProbability
+
+# --- Spilled Energy: PRIMARY = terminator EXCLUDED --------------------------
+# Decided from an n=150 A/B, reported in full. The excluded window is
+# the faithful one: the terminator is not part of the answer, and the paper's
+# construct is defined on the answer span. It was chosen DESPITE favouring the
+# baselines -- excluding costs marginal_mean 0.8678 -> 0.7575 and lifts
+# Pooled_log_likelihood_mean 0.0541 -> 0.7931. Picking the included window would
+# have been picking the window that flatters the method.
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: min, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: max, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: mean, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: min, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: max, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: mean, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: min, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: max, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: mean, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: scaled_spilled, pooling: min, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: scaled_spilled, pooling: max, exclude_terminator: true}
+- name: SpilledEnergy
+  cfg: {variant: scaled_spilled, pooling: mean, exclude_terminator: true}
+
+# --- SECONDARY: terminator INCLUDED, retained deliberately ------------------
+# Kept so the delta survives into the n=1000 tables. The window definition
+# decides which method tops the table -- with the terminator marginal_mean wins,
+# without it a pooled-log-likelihood baseline does -- so the pair IS a finding
+# and both columns belong in the report.
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: min}
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: max}
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: mean}
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: min}
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: max}
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: mean}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: min}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: max}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: mean}
+- name: SpilledEnergy
+  cfg: {variant: scaled_spilled, pooling: min}
+- name: SpilledEnergy
+  cfg: {variant: scaled_spilled, pooling: max}
+- name: SpilledEnergy
+  cfg: {variant: scaled_spilled, pooling: mean}
