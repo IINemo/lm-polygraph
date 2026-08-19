@@ -60,7 +60,7 @@ def register_default_stat_calculators(
     sentence_embedding_model_cfg = {
         "model_name": "all-mpnet-base-v2",
         "device": None,
-        "cache_folder": None,
+        "cache_folder": hf_cache,
         "encoding_arguments": {
             "batch_size": 256,
             "convert_to_numpy": True,

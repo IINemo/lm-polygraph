@@ -41,7 +41,7 @@ class PredictiveKernelEntropy(Estimator):
                 x, gamma=gamma
             )
         elif kernel == "cosine":
-            self.kernel_function = sklearn.metrics.pairwise.linear_kernel
+            self.kernel_function = sklearn.metrics.pairwise.cosine_similarity
 
     def __str__(self) -> str:
         return f"PredictiveKernelEntropy(kernel={self.kernel}, gamma={self.gamma})"

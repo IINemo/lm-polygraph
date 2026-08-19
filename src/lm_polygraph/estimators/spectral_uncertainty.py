@@ -48,10 +48,13 @@ class SpectralUncertainty(Estimator):
                 x, gamma=gamma
             )
         elif kernel == "cosine":
-            self.kernel_function = sklearn.metrics.pairwise.linear_kernel
+            self.kernel_function = sklearn.metrics.pairwise.cosine_similarity
 
     def __str__(self) -> str:
-        return f"SpectralUncertainty(kernel={self.kernel}, gamma={self.gamma})"
+        return (
+            f"SpectralUncertainty(kernel={self.kernel}, gamma={self.gamma}, "
+            f"eps={self.eps})"
+        )
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         scores = []
@@ -72,10 +75,9 @@ class SpectralUncertainty(Estimator):
                 try:
                     eigenvalues, _ = np.linalg.eigh(K)
                 except np.linalg.LinAlgError:
-                    epsilon = 1e-6  # You can tune this
-                    K += epsilon * np.eye(K.shape[0])
+                    K += self.eps * np.eye(K.shape[0])
                     print(
-                        f"Numy function failed. Adding {epsilon} to the diagonal. New condition is {np.linalg.cond(K)}"
+                        f"NumPy function failed. Adding {self.eps} to the diagonal. New condition is {np.linalg.cond(K)}"
                     )
                     eigenvalues, _ = scipy.linalg.eigh(K)
             # Due to numerical issues, sometimes negative eigenvalues appear (although theoretically impossible because PSD). These are very marginal and are clipped to 0.
