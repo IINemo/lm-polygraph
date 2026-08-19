@@ -86,7 +86,7 @@
     p: 0.01
     idf_dataset: "krisbailey/RedPajama-Data-V2-100M"
     idf_dataset_text_column: "raw_content"
-    trust_remote_code: True
+    trust_remote_code: False
     idf_seed: 42
     idf_dataset_size: -1
     spacy_path: "en_core_web_sm"
