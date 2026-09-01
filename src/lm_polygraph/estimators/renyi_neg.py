@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Dict
+from typing import Dict, Literal
 
 from .estimator import Estimator
 from scipy.special import softmax
@@ -13,30 +13,47 @@ class RenyiNeg(Estimator):
     Works only with whitebox models (initialized using lm_polygraph.utils.model.WhiteboxModel).
 
     This method calculates the generation Rényi divergence between probability distribution for each token and uniform distribution.
+    By default, the divergence is negated to follow the LM-Polygraph convention that
+    higher scores indicate greater uncertainty. Set ``score_type="rainproof"`` to
+    return the original RAINPROOF anomaly-score orientation, where higher scores
+    indicate a distribution farther from uniform.
     Code adapted from https://github.com/icannos/Todd/blob/master/Todd/itscorers.py
     """
 
     def __init__(
-        self, verbose: bool = False, alpha: float = 0.5, temperature: float = 2
+        self,
+        verbose: bool = False,
+        alpha: float = 0.5,
+        temperature: float = 2,
+        score_type: Literal["rainproof", "uncertainty"] = "uncertainty",
     ):
+        if score_type not in ("rainproof", "uncertainty"):
+            raise ValueError(
+                "score_type must be either 'rainproof' or 'uncertainty', "
+                f"got {score_type!r}"
+            )
         super().__init__(["greedy_log_probs"], "sequence")
         self.verbose = verbose
         self.alpha = alpha
         self.temperature = temperature
+        self.score_type = score_type
 
     def __str__(self):
-        return "RenyiNeg"
+        return f"RenyiNeg_{self.score_type}"
 
     def __call__(self, stats: Dict[str, np.ndarray]) -> np.ndarray:
         """
-        Estimates the Rényi divergence for each sample in the input statistics.
+        Estimates a Rényi-based score for each sample in the input statistics.
 
         Parameters:
             stats (Dict[str, np.ndarray]): input statistics, which for multiple samples includes:
                 * logarithms of autoregressive probability distributions at each token in 'greedy_log_probs',
         Returns:
-            np.ndarray: float Rényi divergence for each sample in input statistics.
-                Higher values indicate more uncertain samples.
+            np.ndarray: mean token-level score for each sample in input statistics.
+                With ``score_type="uncertainty"``, returns the negative Rényi
+                divergence, so higher values indicate more uncertain samples.
+                With ``score_type="rainproof"``, returns the Rényi divergence,
+                so higher values indicate distributions farther from uniform.
         """
 
         batch_logits = stats["greedy_log_probs"]
@@ -53,10 +70,13 @@ class RenyiNeg(Estimator):
                 )
             else:
                 per_step_scores = np.log((probabilities**self.alpha).sum(-1))
-                per_step_scores -= (self.alpha - 1) * np.log(
+                per_step_scores += (self.alpha - 1) * np.log(
                     np.ones_like(per_step_scores) * probabilities.shape[-1]
                 )
                 per_step_scores *= 1 / (self.alpha - 1)
             scores.append(per_step_scores.mean(-1))
 
-        return np.array(scores)
+        scores = np.array(scores)
+        if self.score_type == "rainproof":
+            return scores
+        return -scores
