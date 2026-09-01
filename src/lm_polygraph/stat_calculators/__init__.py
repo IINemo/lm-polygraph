@@ -34,6 +34,7 @@ from .claim_level_prompts import (
     OPENAI_FACT_CHECK_PROMPTS,
 )
 from .entropy import EntropyCalculator
+from .energy import EnergyCalculator
 from .sample import (
     SamplingGenerationCalculator,
     BlackboxSamplingGenerationCalculator,

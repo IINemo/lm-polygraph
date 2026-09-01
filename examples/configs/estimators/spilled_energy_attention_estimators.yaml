@@ -1,0 +1,45 @@
+# The four attention-based baselines, plus a Spilled Energy cross-check.
+#
+# These need output_attentions=True, which disables transformers'
+# left-padding NaN guard (AttentionMaskConverter._unmask_unattended runs only
+# when _attn_implementation == "sdpa" AND output_attentions is False). Under
+# fp16 that re-introduces the overflow that collapsed 108/150 generations.
+#
+# They are therefore run at batch_size=1 with eager attention: with one sequence
+# per batch there is NO padding, hence no fully-masked attention row, hence no
+# overflow. The cost is paid by these four methods rather than by the whole
+# experiment.
+#
+# SpilledEnergy_spilled_max is included ONLY as a cross-check anchor: it also
+# appears in the primary table, so the two tables can be tied together. With the
+# padding bug fixed, batch size must not change generations at all; on the real
+# data this was verified by comparing the two runs' generation hashes.
+- name: RAUQ
+  cfg: {alpha: 0.2, use_entropy: False}
+- name: RAUQ
+  cfg: {alpha: 0.8, use_entropy: True}
+- name: CSL
+- name: AttentionScore
+  cfg: {gen_only: False}
+
+# --- anchors shared with run A ----------------------------------------------
+# FOUR anchors, not one. With a single shared estimator the A-vs-C disagreement
+# could only be speculated about. These separate the two candidate explanations:
+#
+#   * marginal_mean / logit_mean use MEAN pooling, which has no selection effect,
+#     and marginal is a raw log-partition with no cancellation. If these agree
+#     across runs, the energy pass itself is stable.
+#   * spilled_mean isolates the cancelling difference WITHOUT max selection.
+#   * spilled_max adds max selection on top.
+#
+# So marginal_mean agreeing while spilled_max does not localises the instability
+# to dE and to max pooling, rather than to the teacher-forced pass -- which is
+# the distinction the report has to make.
+- name: SpilledEnergy
+  cfg: {variant: marginal, pooling: mean}
+- name: SpilledEnergy
+  cfg: {variant: logit, pooling: mean}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: mean}
+- name: SpilledEnergy
+  cfg: {variant: spilled, pooling: max}
