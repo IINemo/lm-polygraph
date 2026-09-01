@@ -62,3 +62,4 @@ from .infer_causal_lm_calculator import InferCausalLMCalculator
 from .semantic_classes import SemanticClassesCalculator
 from .attention_forward_pass_visual import AttentionForwardPassCalculatorVisual
 from .vllm_logprobs_extraction import VLLMLogprobsExtractionCalculator
+from .sample_sentence_embeddings import SampleSentenceEmbeddingsCalculator
