@@ -19,8 +19,9 @@ class IsotonicPCCNormalizer(BaseUENormalizer):
         )
         self.scaler = scaler.fit(ues, gen_metrics)
 
-    def transform(self, ues: np.ndarray) -> np.ndarray:
+    def transform(self, ues: list) -> np.ndarray:
         """Transforms the ues data using the fitted CenteredIsotonicRegression."""
+        ues = np.array(ues)
         return self.scaler(ues)
 
     def dumps(self) -> str:

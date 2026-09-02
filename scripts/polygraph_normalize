@@ -3,7 +3,6 @@
 import os
 import sys
 import pickle
-import json
 import hydra
 from typing import Dict, List
 from pathlib import Path
@@ -60,9 +59,9 @@ def fit(args):
                 str_normalizer = normalizer.dumps()
 
                 fitted_normalizers[(metric_name, ue_method_name, normalization_method)] = str_normalizer
-    
+
     Path(args.save_path).mkdir(parents=True, exist_ok=True)
-    with open(args.save_path + '/fitted_normalizers.json', "wb") as f:
+    with open(args.save_path + '/fitted_normalizers.pickle', "wb") as f:
         pickle.dump(fitted_normalizers, f)
 
 
