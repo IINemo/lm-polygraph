@@ -19,6 +19,7 @@ class WhiteboxModelvLLM(Model):
         instruct: bool = False,
         enable_thinking: bool = False,
         model_path: str = None,
+        use_system_prompt: bool = True,
     ):
         super().__init__(model_path or getattr(model, "model_name", ""), "vLLMCausalLM")
         self.model = model
@@ -28,6 +29,7 @@ class WhiteboxModelvLLM(Model):
         self.generation_parameters = generation_parameters
         self.instruct = instruct
         self.enable_thinking = enable_thinking
+        self.use_system_prompt = use_system_prompt
 
         stop_strings = getattr(self.generation_parameters, "stop_strings", None)
         if stop_strings is None:
@@ -47,6 +49,11 @@ class WhiteboxModelvLLM(Model):
                 getattr(self.generation_parameters, param, None),
             )
 
+        # vLLM represents greedy decoding with temperature=0 and does not
+        # expose the Transformers-compatible do_sample parameter.
+        if not self.generation_parameters.do_sample:
+            self.sampling_params.temperature = 0
+
         self.base_device = device
 
     def generate(self, *args, **kwargs):
@@ -62,14 +69,18 @@ class WhiteboxModelvLLM(Model):
             for text in texts:
                 chat = [
                     {
-                        "role": "system",
-                        "content": "You are a knowledgeable assistant who answers questions concisely and accurately and strictly follows output formatting instructions.",
-                    },
-                    {
                         "role": "user",
                         "content": text,
-                    },
+                    }
                 ]
+                if self.use_system_prompt:
+                    chat.insert(
+                        0,
+                        {
+                            "role": "system",
+                            "content": "You are a knowledgeable assistant who answers questions concisely and accurately and strictly follows output formatting instructions.",
+                        },
+                    )
                 chats.append(chat)
             output = self.model.chat(
                 *args,
