@@ -479,11 +479,14 @@ def get_vllm_model(args):
     base_model, sampling_params = load_module.load_model(**load_model_args)
     generation_parameters = GenerationParameters(**getattr(args, "generation_params", {}))
 
-    model = WhiteboxModelvLLM(model=base_model, 
-                              sampling_params=sampling_params,
-                              generation_parameters=generation_parameters,
-                              device=args.model.device,
-                              instruct= getattr(args.model, "instruct", False))
+    model = WhiteboxModelvLLM(
+        model=base_model,
+        sampling_params=sampling_params,
+        generation_parameters=generation_parameters,
+        device=args.model.device,
+        instruct=getattr(args.model, "instruct", False),
+        use_system_prompt=getattr(args.model, "use_system_prompt", True),
+    )
 
     return model
 
