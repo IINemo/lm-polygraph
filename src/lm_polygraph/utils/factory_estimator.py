@@ -8,6 +8,7 @@ def load_simple_estimators(name: str, config):
         Perplexity,
         MeanTokenEntropy,
         SelfCertainty,
+        SpilledEnergy,
         MeanPointwiseMutualInformation,
         MeanConditionalPointwiseMutualInformation,
         ClaimConditionedProbability,
