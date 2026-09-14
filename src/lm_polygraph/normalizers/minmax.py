@@ -18,9 +18,9 @@ class MinMaxNormalizer(BaseUENormalizer):
         conf = -ues
         self.scaler.fit(conf[:, None])
 
-    def transform(self, ues: np.ndarray) -> np.ndarray:
+    def transform(self, ues: list) -> np.ndarray:
         """Transforms the ues data using the fitted MinMaxScaler."""
-        conf = -ues
+        conf = -np.array(ues)
         return self.scaler.transform(conf[:, None]).squeeze()
 
     def dumps(self) -> str:
