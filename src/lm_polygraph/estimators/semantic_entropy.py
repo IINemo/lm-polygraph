@@ -18,7 +18,7 @@ class SemanticEntropy(Estimator):
     The entropy_estimation parameter supports two methods:
     - "mean": Mean entropy estimation from the original paper (https://arxiv.org/abs/2302.09664).
     - "direct": Direct entropy estimation from the proper estimator in the SDLG paper
-      (https://arxiv.org/pdf/2406.04306).
+      (https://arxiv.org/pdf/2406.04306), summing -p * log(p) once per semantic class.
     """
 
     def __init__(
@@ -125,11 +125,7 @@ class SemanticEntropy(Estimator):
                 )
             elif self.entropy_estimation == "direct":
                 semantic_logits[i] = -np.sum(
-                    [
-                        class_lp[self._sample_to_class[i][j]]
-                        * np.exp(class_lp[self._sample_to_class[i][j]])
-                        for j in range(len(hyps_list[i]))
-                    ]
+                    [log_p * np.exp(log_p) for log_p in class_lp]
                 )
             else:
                 raise ValueError(
