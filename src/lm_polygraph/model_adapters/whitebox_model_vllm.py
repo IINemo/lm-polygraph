@@ -49,11 +49,6 @@ class WhiteboxModelvLLM(Model):
                 getattr(self.generation_parameters, param, None),
             )
 
-        # vLLM represents greedy decoding with temperature=0 and does not
-        # expose the Transformers-compatible do_sample parameter.
-        if not self.generation_parameters.do_sample:
-            self.sampling_params.temperature = 0
-
         self.base_device = device
 
     def generate(self, *args, **kwargs):
@@ -61,6 +56,12 @@ class WhiteboxModelvLLM(Model):
         sampling_params.n = kwargs.get("num_return_sequences", 1)
         if "max_new_tokens" in kwargs:
             sampling_params.max_tokens = kwargs["max_new_tokens"]
+
+        # vLLM represents greedy decoding with temperature=0 and has no direct equivalent of
+        # HuggingFace's per-call `do_sample` argument, so it's set per generation call here.
+        if not kwargs.get("do_sample", self.generation_parameters.do_sample):
+            sampling_params.temperature = 0
+
         texts = self.tokenizer.batch_decode(
             kwargs["input_ids"], skip_special_tokens=True
         )
