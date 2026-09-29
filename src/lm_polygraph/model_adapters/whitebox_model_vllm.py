@@ -143,6 +143,11 @@ class WhiteboxModelvLLM(Model):
                     log_prob[i, top_tokens] = top_values
                     sequence[i] = output.token_ids[i]
 
+                # Some completions do not end with the tokenizer's default eos_token_id.
+                true_length = len(output.logprobs)
+                if true_length < max_seq_len:
+                    log_prob[true_length:, self.tokenizer.eos_token_id] = 0.0
+
                 logits.append(log_prob)
                 sequences.append(sequence)
 
