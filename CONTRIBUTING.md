@@ -14,3 +14,17 @@
 8. Run tests with `pytest` and make sure they pass
 9. Commit and push your changes
 10. Create a pull request to the main branch of the original repository
+
+## Deterministic numerical tests
+
+Run the estimator and high-level generation tests without model downloads:
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 pytest test/test_estimator_numerics.py test/test_high_level_api.py
+```
+
+These tests use hand-calculated statistics and a tiny local model with uniform
+token probabilities. When adding estimator tests, assert expected scores and
+output shapes, and include empty or EOS-only generations where applicable.
+The existing `test/test_estimators.py` and benchmark tests additionally exercise
+pretrained models and may require downloads.
