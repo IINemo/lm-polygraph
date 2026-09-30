@@ -14,6 +14,8 @@ from lm_polygraph.defaults.register_default_stat_calculators import (
     register_default_stat_calculators,
 )
 
+pytestmark = pytest.mark.model
+
 # ================= TEST HELPERS ==================
 
 

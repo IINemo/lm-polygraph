@@ -5,6 +5,8 @@ import time
 from openai import OpenAI
 from lm_polygraph.utils.manager import UEManager
 
+pytestmark = pytest.mark.api
+
 
 def exec_bash(s):
     return subprocess.run(s, shell=True)
