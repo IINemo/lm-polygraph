@@ -1,94 +1,128 @@
-from .estimator import Estimator
-from .claim.claim_conditioned_probability import ClaimConditionedProbabilityClaim
-from .claim.max_probability import MaximumClaimProbability
-from .claim.p_true import PTrueClaim
-from .claim.attention_score import AttentionScoreClaim
-from .claim.perplexity import PerplexityClaim
-from .claim.token_entropy import MaxTokenEntropyClaim
-from .claim.pointwise_mutual_information import PointwiseMutualInformationClaim
-from .claim.focus import FocusClaim
-from .claim.frequency_scoring import FrequencyScoringClaim
-from .claim.token_sar import TokenSARClaim
-from .claim.self_certainty import SelfCertaintyClaim
-from .claim.boostedprob_score import BoostedProbClaim
+"""Public API, imported on demand to keep optional dependencies optional."""
 
-from .max_probability import (
-    MaximumSequenceProbability,
-    MaximumTokenProbability,
-)
-from .attention_score import AttentionScore
-from .claim_conditioned_probability import ClaimConditionedProbability
-from .self_certainty import SelfCertainty
-from .token_entropy import MeanTokenEntropy, TokenEntropy
-from .pointwise_mutual_information import (
-    MeanPointwiseMutualInformation,
-    PointwiseMutualInformation,
-)
-from .conditional_pointwise_mutual_information import (
-    MeanConditionalPointwiseMutualInformation,
-    ConditionalPointwiseMutualInformation,
-)
-from .p_true import PTrue
-from .p_true_sampling import PTrueSampling
-from .monte_carlo_sequence_entropy import MonteCarloSequenceEntropy
-from .monte_carlo_normalized_sequence_entropy import MonteCarloNormalizedSequenceEntropy
-from .lexical_similarity import LexicalSimilarity
-from .deg_mat import DegMat
-from .eccentricity import Eccentricity
-from .eig_val_laplacian import EigValLaplacian
-from .num_sem_sets import NumSemSets
-from .semantic_entropy import SemanticEntropy
-from .semantic_entropy_token import SemanticEntropyToken
-from .perplexity import Perplexity
-from .mahalanobis_distance import MahalanobisDistanceSeq
-from .relative_mahalanobis_distance import RelativeMahalanobisDistanceSeq
-from .rde import RDESeq
-from .ppl_md import PPLMDSeq
-from .boostedprob_score import BoostedProbSequence
-from .ensemble_token_measures import (
-    EPTtu,
-    EPTdu,
-    EPTmi,
-    EPTrmi,
-    EPTepkl,
-    EPTent5,
-    EPTent10,
-    EPTent15,
-    PETtu,
-    PETdu,
-    PETmi,
-    PETrmi,
-    PETepkl,
-    PETent5,
-    PETent10,
-    PETent15,
-)
-from .ensemble_sequence_measures import (
-    EPStu,
-    EPSrmi,
-    EPSrmiabs,
-    PEStu,
-    PESrmi,
-    PESrmiabs,
-)
-from .token_sar import TokenSAR
-from .sentence_sar import SentenceSAR
-from .sar import SAR
-from .renyi_neg import RenyiNeg
-from .fisher_rao import FisherRao
-from .verbalized_1s import Verbalized1S
-from .verbalized_2s import Verbalized2S
-from .linguistic_1s import Linguistic1S
-from .claim.random_baseline import RandomBaselineClaim
-from .label_prob import LabelProb
-from .p_true_empirical import PTrueEmpirical
-from .focus import Focus
-from .kernel_language_entropy import KernelLanguageEntropy
-from .luq import LUQ
-from .eigenscore import EigenScore
-from .cocoa import CocoaMSP, CocoaPPL, CocoaMTE
-from .rauq import RAUQ
-from .csl import CSL
-from .semantic_density import SemanticDensity
-from .predictive_kernel_entropy import PredictiveKernelEntropy
-from .spectral_uncertainty import SpectralUncertainty
+from lm_polygraph._optional import lazy_exports
+
+_EXPORTS = {
+    "Estimator": (".estimator", "Estimator"),
+    "ClaimConditionedProbabilityClaim": (
+        ".claim.claim_conditioned_probability",
+        "ClaimConditionedProbabilityClaim",
+    ),
+    "MaximumClaimProbability": (".claim.max_probability", "MaximumClaimProbability"),
+    "PTrueClaim": (".claim.p_true", "PTrueClaim"),
+    "AttentionScoreClaim": (".claim.attention_score", "AttentionScoreClaim"),
+    "PerplexityClaim": (".claim.perplexity", "PerplexityClaim"),
+    "MaxTokenEntropyClaim": (".claim.token_entropy", "MaxTokenEntropyClaim"),
+    "PointwiseMutualInformationClaim": (
+        ".claim.pointwise_mutual_information",
+        "PointwiseMutualInformationClaim",
+    ),
+    "FocusClaim": (".claim.focus", "FocusClaim"),
+    "FrequencyScoringClaim": (".claim.frequency_scoring", "FrequencyScoringClaim"),
+    "TokenSARClaim": (".claim.token_sar", "TokenSARClaim"),
+    "SelfCertaintyClaim": (".claim.self_certainty", "SelfCertaintyClaim"),
+    "BoostedProbClaim": (".claim.boostedprob_score", "BoostedProbClaim"),
+    "MaximumSequenceProbability": (".max_probability", "MaximumSequenceProbability"),
+    "MaximumTokenProbability": (".max_probability", "MaximumTokenProbability"),
+    "AttentionScore": (".attention_score", "AttentionScore"),
+    "ClaimConditionedProbability": (
+        ".claim_conditioned_probability",
+        "ClaimConditionedProbability",
+    ),
+    "SelfCertainty": (".self_certainty", "SelfCertainty"),
+    "MeanTokenEntropy": (".token_entropy", "MeanTokenEntropy"),
+    "TokenEntropy": (".token_entropy", "TokenEntropy"),
+    "MeanPointwiseMutualInformation": (
+        ".pointwise_mutual_information",
+        "MeanPointwiseMutualInformation",
+    ),
+    "PointwiseMutualInformation": (
+        ".pointwise_mutual_information",
+        "PointwiseMutualInformation",
+    ),
+    "MeanConditionalPointwiseMutualInformation": (
+        ".conditional_pointwise_mutual_information",
+        "MeanConditionalPointwiseMutualInformation",
+    ),
+    "ConditionalPointwiseMutualInformation": (
+        ".conditional_pointwise_mutual_information",
+        "ConditionalPointwiseMutualInformation",
+    ),
+    "PTrue": (".p_true", "PTrue"),
+    "PTrueSampling": (".p_true_sampling", "PTrueSampling"),
+    "MonteCarloSequenceEntropy": (
+        ".monte_carlo_sequence_entropy",
+        "MonteCarloSequenceEntropy",
+    ),
+    "MonteCarloNormalizedSequenceEntropy": (
+        ".monte_carlo_normalized_sequence_entropy",
+        "MonteCarloNormalizedSequenceEntropy",
+    ),
+    "LexicalSimilarity": (".lexical_similarity", "LexicalSimilarity"),
+    "DegMat": (".deg_mat", "DegMat"),
+    "Eccentricity": (".eccentricity", "Eccentricity"),
+    "EigValLaplacian": (".eig_val_laplacian", "EigValLaplacian"),
+    "NumSemSets": (".num_sem_sets", "NumSemSets"),
+    "SemanticEntropy": (".semantic_entropy", "SemanticEntropy"),
+    "SemanticEntropyToken": (".semantic_entropy_token", "SemanticEntropyToken"),
+    "Perplexity": (".perplexity", "Perplexity"),
+    "MahalanobisDistanceSeq": (".mahalanobis_distance", "MahalanobisDistanceSeq"),
+    "RelativeMahalanobisDistanceSeq": (
+        ".relative_mahalanobis_distance",
+        "RelativeMahalanobisDistanceSeq",
+    ),
+    "RDESeq": (".rde", "RDESeq"),
+    "PPLMDSeq": (".ppl_md", "PPLMDSeq"),
+    "BoostedProbSequence": (".boostedprob_score", "BoostedProbSequence"),
+    "EPTtu": (".ensemble_token_measures", "EPTtu"),
+    "EPTdu": (".ensemble_token_measures", "EPTdu"),
+    "EPTmi": (".ensemble_token_measures", "EPTmi"),
+    "EPTrmi": (".ensemble_token_measures", "EPTrmi"),
+    "EPTepkl": (".ensemble_token_measures", "EPTepkl"),
+    "EPTent5": (".ensemble_token_measures", "EPTent5"),
+    "EPTent10": (".ensemble_token_measures", "EPTent10"),
+    "EPTent15": (".ensemble_token_measures", "EPTent15"),
+    "PETtu": (".ensemble_token_measures", "PETtu"),
+    "PETdu": (".ensemble_token_measures", "PETdu"),
+    "PETmi": (".ensemble_token_measures", "PETmi"),
+    "PETrmi": (".ensemble_token_measures", "PETrmi"),
+    "PETepkl": (".ensemble_token_measures", "PETepkl"),
+    "PETent5": (".ensemble_token_measures", "PETent5"),
+    "PETent10": (".ensemble_token_measures", "PETent10"),
+    "PETent15": (".ensemble_token_measures", "PETent15"),
+    "EPStu": (".ensemble_sequence_measures", "EPStu"),
+    "EPSrmi": (".ensemble_sequence_measures", "EPSrmi"),
+    "EPSrmiabs": (".ensemble_sequence_measures", "EPSrmiabs"),
+    "PEStu": (".ensemble_sequence_measures", "PEStu"),
+    "PESrmi": (".ensemble_sequence_measures", "PESrmi"),
+    "PESrmiabs": (".ensemble_sequence_measures", "PESrmiabs"),
+    "TokenSAR": (".token_sar", "TokenSAR"),
+    "SentenceSAR": (".sentence_sar", "SentenceSAR"),
+    "SAR": (".sar", "SAR"),
+    "RenyiNeg": (".renyi_neg", "RenyiNeg"),
+    "FisherRao": (".fisher_rao", "FisherRao"),
+    "Verbalized1S": (".verbalized_1s", "Verbalized1S"),
+    "Verbalized2S": (".verbalized_2s", "Verbalized2S"),
+    "Linguistic1S": (".linguistic_1s", "Linguistic1S"),
+    "RandomBaselineClaim": (".claim.random_baseline", "RandomBaselineClaim"),
+    "LabelProb": (".label_prob", "LabelProb"),
+    "PTrueEmpirical": (".p_true_empirical", "PTrueEmpirical"),
+    "Focus": (".focus", "Focus"),
+    "KernelLanguageEntropy": (".kernel_language_entropy", "KernelLanguageEntropy"),
+    "LUQ": (".luq", "LUQ"),
+    "EigenScore": (".eigenscore", "EigenScore"),
+    "CocoaMSP": (".cocoa", "CocoaMSP"),
+    "CocoaPPL": (".cocoa", "CocoaPPL"),
+    "CocoaMTE": (".cocoa", "CocoaMTE"),
+    "RAUQ": (".rauq", "RAUQ"),
+    "CSL": (".csl", "CSL"),
+    "SemanticDensity": (".semantic_density", "SemanticDensity"),
+    "PredictiveKernelEntropy": (
+        ".predictive_kernel_entropy",
+        "PredictiveKernelEntropy",
+    ),
+    "SpectralUncertainty": (".spectral_uncertainty", "SpectralUncertainty"),
+}
+
+__all__ = list(_EXPORTS)
+__getattr__, __dir__ = lazy_exports(__name__, _EXPORTS, globals())

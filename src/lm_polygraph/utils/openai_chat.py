@@ -1,8 +1,7 @@
-import openai
+from lm_polygraph._optional import require_optional
 import os
 import time
 import logging
-import diskcache as dc
 
 log = logging.getLogger()
 
@@ -27,9 +26,11 @@ class OpenAIChat:
         openai_model: str
             the model to use in OpenAI to chat.
         """
+        self._openai = require_optional("openai", "openai")
+        self._diskcache = require_optional("diskcache", "openai")
         api_key = os.environ.get("OPENAI_API_KEY", None)
         if api_key is not None:
-            openai.api_key = api_key
+            self._openai.api_key = api_key
         self.openai_model = openai_model
 
         self.cache_path = os.path.join(cache_path, "openai_chat_cache.diskcache")
@@ -42,18 +43,18 @@ class OpenAIChat:
         self.rewrite_cache = rewrite_cache
 
     def ask(self, message: str) -> str:
-        cache_settings = dc.DEFAULT_SETTINGS.copy()
+        cache_settings = self._diskcache.DEFAULT_SETTINGS.copy()
         cache_settings["eviction_policy"] = "none"
         cache_settings["size_limit"] = int(1e12)
         cache_settings["cull_limit"] = 0
-        openai_responses = dc.Cache(self.cache_path, **cache_settings)
+        openai_responses = self._diskcache.Cache(self.cache_path, **cache_settings)
 
         if (self.openai_model, message) in openai_responses and not self.rewrite_cache:
             reply = openai_responses[(self.openai_model, message)]
 
         else:
             # Ask openai
-            if openai.api_key is None:
+            if self._openai.api_key is None:
                 raise Exception(
                     "Cant ask openAI without token. "
                     "Please specify OPENAI_API_KEY in environment parameters."
@@ -81,7 +82,7 @@ class OpenAIChat:
         sleep_time_values = (5, 10, 30, 60, 120)
         for i in range(len(sleep_time_values)):
             try:
-                return openai.OpenAI(
+                return self._openai.OpenAI(
                     base_url=self.base_url, timeout=self.timeout
                 ).chat.completions.create(
                     model=self.openai_model,
@@ -96,7 +97,7 @@ class OpenAIChat:
                 )
                 time.sleep(sleep_time)
 
-        return openai.OpenAI(
+        return self._openai.OpenAI(
             base_url=self.base_url, timeout=self.timeout
         ).chat.completions.create(
             model=self.openai_model,

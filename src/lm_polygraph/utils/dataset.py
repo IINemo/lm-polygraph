@@ -1,12 +1,11 @@
 import os
-import pandas as pd
+from lm_polygraph._optional import require_optional
 import numpy as np
 import logging
 import requests
 import io
 
 from sklearn.model_selection import train_test_split
-from datasets import load_dataset, Dataset as hf_dataset
 
 from typing import Iterable, Tuple, List, Union, Optional
 from PIL import Image
@@ -151,6 +150,7 @@ class Dataset:
             y_column (str): name of column to take target texts from,
             batch_size (int): the size of the texts batch.
         """
+        pd = require_optional("pandas", "evaluation")
         csv = pd.read_csv(csv_path)
         x = csv[x_column].tolist()
         y = csv[y_column].tolist()
@@ -166,6 +166,8 @@ class Dataset:
         split: str,
         **kwargs,
     ):
+        datasets = require_optional("datasets", "evaluation")
+        load_dataset, hf_dataset = datasets.load_dataset, datasets.Dataset
         load_from_disk = kwargs.pop("load_from_disk", False)
         if load_from_disk:
             dataset_name = path
