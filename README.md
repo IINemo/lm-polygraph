@@ -13,7 +13,7 @@
 
 <p align="left">
   <a href="https://github.com/IINemo/lm-polygraph/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
-  <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12"/>
+  <img src="https://img.shields.io/badge/python-3.10%2B-blue.svg" alt="Python 3.10+"/>
   <a href="https://huggingface.co/LM-Polygraph"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Benchmark-yellow" alt="Hugging Face Benchmark"/></a>
   <a href="https://aclanthology.org/2023.emnlp-demo.41/"><img src="https://img.shields.io/badge/EMNLP-2023-red?logo=bookstack&logoColor=white" alt="EMNLP 2023"/></a>
   <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737/128713/Benchmarking-Uncertainty-Quantification-Methods"><img src="https://img.shields.io/badge/TACL-2025-blue?logo=bookstack&logoColor=white" alt="TACL 2025"/></a>
@@ -29,8 +29,10 @@ LM-Polygraph is also one of the most widely used benchmarks for the consistent e
 
 ## Installation
 
+Requires Python 3.10 or newer. Use a virtual environment to keep dependencies isolated.
+
 ### From GitHub
-The latest stable version is available in the main branch, it is recommended to use a virtual environment:
+Install the development version from the default branch:
 
 ```shell
 python -m venv env # Substitute this with your virtual environment creation command
@@ -38,7 +40,7 @@ source env/bin/activate
 pip install git+https://github.com/IINemo/lm-polygraph.git
 ```
 
-You can also use tags:
+To install a specific release, use a tag (for example, `v0.5.0`):
 
 ```shell
 pip install git+https://github.com/IINemo/lm-polygraph.git@v0.5.0
@@ -57,73 +59,75 @@ Some features require additional packages that are not installed by default:
 
 - **COMET metric** (translation evaluation): `unbabel-comet` pins `numpy<2.0` which may conflict with packages like vLLM. Install via extras:
   ```shell
-  pip install lm-polygraph[comet]
+  pip install "lm-polygraph[comet]"
   ```
-  If you need numpy 2.x (e.g., for vLLM), install without the extra and add comet manually:
-  ```shell
-  pip install lm-polygraph
-  pip install unbabel-comet --no-deps
-  ```
+  If another inference package requires NumPy 2.x, use a separate environment for COMET evaluation to avoid conflicting dependencies.
 
 ## <a name="basic_usage"></a>Basic usage
-1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation:
+Load a Hugging Face causal language model and wrap it with `WhiteboxModel`. This example uses CUDA when available and otherwise runs on CPU (which is slower).
+
 ```python
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from lm_polygraph.utils.model import WhiteboxModel
+from lm_polygraph import WhiteboxModel, estimate_uncertainty
+from lm_polygraph.estimators import MeanTokenEntropy
+from lm_polygraph.utils.generation_parameters import GenerationParameters
 
 model_path = "Qwen/Qwen2.5-0.5B-Instruct"
-base_model = AutoModelForCausalLM.from_pretrained(model_path, device_map="cuda:0")
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+base_model = AutoModelForCausalLM.from_pretrained(model_path).to(device)
+base_model.eval()
 tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = WhiteboxModel(
+    base_model,
+    tokenizer,
+    model_path=model_path,
+    generation_parameters=GenerationParameters(max_new_tokens=32),
+    instruct=True,
+)
 
-model = WhiteboxModel(base_model, tokenizer, model_path=model_path)
+result = estimate_uncertainty(
+    model, MeanTokenEntropy(), input_text="What is the capital of France?"
+)
+print(result.generation_text)
+print(result.uncertainty)
 ```
 
-2. Specify the UE method:
-```python
-from lm_polygraph.estimators import *
+The first run downloads model weights and requires enough memory to load them. `instruct=True` applies the tokenizer's chat template; use `False` for a base completion model. For encoder-decoder models, load with `AutoModelForSeq2SeqLM` and set `model_type="Seq2SeqLM"` on the wrapper.
 
-ue_method = MeanTokenEntropy()
-```
-
-3. Get predictions and their uncertainty scores:
-```python
-from lm_polygraph.utils import estimate_uncertainty
-
-input_text = "Who is George Bush?"
-ue = estimate_uncertainty(model, ue_method, input_text=input_text)
-print(ue)
-# UncertaintyOutput(uncertainty=-6.504108926902215, input_text='Who is George Bush?', generation_text=' President of the United States', model_path='Qwen/Qwen2.5-0.5B-Instruct')
-```
-
-4. More examples: [basic_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb)
-5. See also a low-level example for efficient integration into your code: [low_level_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_example.ipynb)
+`estimate_uncertainty` generates a response and scores that response. Higher scores indicate greater uncertainty, but raw scores are **not probabilities of being incorrect** and are not directly comparable across methods or models. Some methods return negative values. `MeanTokenEntropy` averages token entropies; its scores are nonnegative apart from numerical error. See the [usage guide](https://lm-polygraph.readthedocs.io/en/latest/usage.html) for output fields, model requirements, and troubleshooting, and [normalization](https://lm-polygraph.readthedocs.io/en/latest/normalization/index.html) for converting raw scores into confidence values.
 
 ## Using with LLMs deployed as a service
 
-LM-Polygraph can work with any OpenAI-compatible API services:
+For an OpenAI model that returns generated-token log probabilities, set `OPENAI_API_KEY` in your environment and run:
 
 ```python
-from lm_polygraph import BlackboxModel
-from lm_polygraph.estimators import Perplexity, MaximumSequenceProbability
+import os
+from lm_polygraph import BlackboxModel, estimate_uncertainty
+from lm_polygraph.estimators import Perplexity
 
 model = BlackboxModel.from_openai(
-    openai_api_key='YOUR_API_KEY',
-    model_path='gpt-4o',
-    supports_logprobs=True  # Enable for deployments
+    openai_api_key=os.environ["OPENAI_API_KEY"],
+    model_path="gpt-4o",
+    supports_logprobs=True,
 )
-
-ue_method = Perplexity()  # or MeanTokenEntropy(), EigValLaplacian(), etc.
-estimate_uncertainty(model, ue_method, input_text='What has a head and a tail but no body?')
+result = estimate_uncertainty(
+    model, Perplexity(), input_text="What has a head and a tail but no body?"
+)
+print(result.generation_text)
+print(result.uncertainty)
 ```
 
-UE methods such as `EigValLaplacian()` support fully blackbox LLMs that do not provide logits.
+`supports_logprobs=True` declares a capability of the endpoint; it does not add support to the service. LM-Polygraph's `Perplexity` estimator returns the mean negative token log probability (log perplexity). The single-input helper does not register entropy statistics for API models, so `MeanTokenEntropy` cannot be substituted into this example. For text-only services, use a black-box method such as `LexicalSimilarity` or `EigValLaplacian`; these sample multiple responses and can increase API usage. Semantic methods may also download an auxiliary model.
+
+For compatible third-party endpoints, configure the OpenAI SDK's `OPENAI_BASE_URL` environment variable before constructing the model. Compatibility depends on the endpoint supporting the chat-completion parameters used by the selected estimator.
 
 ## More examples:
 
 * [basic_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example.ipynb): simple examples of scoring individual queries
 * [low_level_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_example.ipynb): low-level integration into inference and claim-level UE
 * [low_level_vllm_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/low_level_vllm_example.ipynb): low-level example using vLLM for faster inference
-* [basic_visual_llm_example.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_visual_llm_example.ipynb): examples for visual LLMs
+* [basic_example_visual.ipynb](https://github.com/IINemo/lm-polygraph/blob/main/examples/basic_example_visual.ipynb): examples for visual LLMs
 
 ## <a name="overview_of_methods"></a>Overview of methods
 
@@ -194,7 +198,9 @@ UE methods such as `EigValLaplacian()` support fully blackbox LLMs that do not p
 
 ## Benchmark
 
-To evaluate the performance of uncertainty estimation methods consider a quick example:
+Run the following from a repository checkout: the example configurations and notebooks are not included in the PyPI package. The default configuration evaluates many methods and may download auxiliary models. Access to the gated Llama model requires Hugging Face authorization.
+
+To evaluate uncertainty estimation methods:
 
 ```
 CUDA_VISIBLE_DEVICES=0 polygraph_eval \
