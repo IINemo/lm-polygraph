@@ -81,12 +81,16 @@ class BinnedPCCNormalizer(BaseUENormalizer):
         self.params = {"binned_metric": binned_metric, "bin_edges": bin_edges}
 
     def transform(self, ues: np.ndarray) -> np.ndarray:
-        """Transforms the ues data using the fitted BinnedPCCNormalizer."""
+        """Calibrates UEs using the fitted bins, clipping out-of-range values.
+
+        Bins are left-inclusive and right-exclusive, except for the final bin,
+        which includes its right edge, matching the binning used during fit.
+        """
         bins = np.array(self.params["bin_edges"])
         calibrated_ues = []
         for ue in ues:
-            # Find the bin in which the uncertainty estimate falls
-            calibration_bin = np.argmax(bins >= ue) - 1
+            calibration_bin = np.searchsorted(bins, ue, side="right") - 1
+            calibration_bin = np.clip(calibration_bin, 0, len(bins) - 2)
             # Calibrated confidence value is the average metric value in the bin
             calibrated_ues.append(self.params["binned_metric"][calibration_bin])
 
