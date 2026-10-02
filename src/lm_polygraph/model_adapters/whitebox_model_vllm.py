@@ -49,11 +49,6 @@ class WhiteboxModelvLLM(Model):
                 getattr(self.generation_parameters, param, None),
             )
 
-        # vLLM represents greedy decoding with temperature=0 and does not
-        # expose the Transformers-compatible do_sample parameter.
-        if not self.generation_parameters.do_sample:
-            self.sampling_params.temperature = 0
-
         self.base_device = device
 
     def generate(self, *args, **kwargs):
@@ -61,6 +56,12 @@ class WhiteboxModelvLLM(Model):
         sampling_params.n = kwargs.get("num_return_sequences", 1)
         if "max_new_tokens" in kwargs:
             sampling_params.max_tokens = kwargs["max_new_tokens"]
+
+        # vLLM represents greedy decoding with temperature=0 and has no direct equivalent of
+        # HuggingFace's per-call `do_sample` argument, so it's set per generation call here.
+        if not kwargs.get("do_sample", self.generation_parameters.do_sample):
+            sampling_params.temperature = 0
+
         texts = self.tokenizer.batch_decode(
             kwargs["input_ids"], skip_special_tokens=True
         )
@@ -142,6 +143,11 @@ class WhiteboxModelvLLM(Model):
                     top_values = torch.tensor([lp.logprob for lp in probs.values()])
                     log_prob[i, top_tokens] = top_values
                     sequence[i] = output.token_ids[i]
+
+                # Some completions do not end with the tokenizer's default eos_token_id.
+                true_length = len(output.logprobs)
+                if true_length < max_seq_len:
+                    log_prob[true_length:, self.tokenizer.eos_token_id] = 0.0
 
                 logits.append(log_prob)
                 sequences.append(sequence)
