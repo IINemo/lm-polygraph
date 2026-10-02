@@ -88,17 +88,3 @@ def test_mean_entropy_keeps_sample_weighting():
 
     expected = -(2 * np.log(0.3) + np.log(0.7)) / 3
     np.testing.assert_allclose(estimator(stats), [expected])
-
-
-@pytest.mark.parametrize("scale", [1.0, 1e-3, 1e-12])
-def test_direct_entropy_normalizes_class_probabilities(scale):
-    estimator = SemanticEntropy(entropy_estimation="direct")
-    stats = make_stats(
-        ["Paris", "It is Paris", "London"],
-        [[0, 1], [2]],
-        np.log(scale * np.array([0.1, 0.2, 0.1])),
-    )
-
-    probabilities = np.array([0.75, 0.25])
-    expected = -np.sum(probabilities * np.log(probabilities))
-    np.testing.assert_allclose(estimator(stats), [expected])

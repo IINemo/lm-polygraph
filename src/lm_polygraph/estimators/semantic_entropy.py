@@ -126,8 +126,8 @@ class SemanticEntropy(Estimator):
                 )
             elif self.entropy_estimation == "direct":
                 # normalize class probabilities over the observed classes
-                log_p = np.asarray(class_lp) - np.logaddexp.reduce(class_lp)
-                semantic_logits[i] = -np.sum(log_p * np.exp(log_p))
+                log_p_norm = np.asarray(class_lp) - np.logaddexp.reduce(class_lp)
+                semantic_logits[i] = -np.sum(log_p_norm * np.exp(log_p_norm))
             else:
                 raise ValueError(
                     f"Unknown entropy_estimation: {self.entropy_estimation}"
