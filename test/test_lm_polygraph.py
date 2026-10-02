@@ -1,7 +1,10 @@
+import pytest
 import subprocess
 import pathlib
 
 from lm_polygraph.utils.manager import UEManager
+
+pytestmark = pytest.mark.model
 
 # from lm_polygraph.estimators.ensemble_token_measures import all_token_estimators
 # from lm_polygraph.estimators.ensemble_sequence_measures import (
