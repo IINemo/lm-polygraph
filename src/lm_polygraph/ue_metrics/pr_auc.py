@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import rankdata
 from sklearn.metrics import average_precision_score
 
 from typing import List
@@ -15,18 +16,14 @@ class PRAUC(UEMetric):
     def __str__(self):
         return "pr-auc"
 
-    def preprocess_inf(self, x, array):
-        if not np.isinf(x):
-            return x
-        elif x > 0:
-            return array.max() + 1
-        else:
-            return array.min() - 1
-
     def __call__(self, estimator: List[float], target: List[int]) -> float:
-        estimator = [self.preprocess_inf(x, estimator) for x in estimator]
         # nans in the target might correspond to non-labeled claims
         t, e = skip_target_nans(target, estimator)
+        if np.isinf(e).any():
+            # Average precision depends only on ordering and ties. Finite ranks
+            # preserve both, even for all-infinite scores or float extrema where
+            # adding/subtracting one cannot produce a distinct finite sentinel.
+            e = rankdata(e, method="dense")
         assert all(x in [self.positive_class, self.negative_class] for x in t)
         if self.positive_class < self.negative_class:
             # swap classes
