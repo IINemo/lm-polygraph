@@ -15,10 +15,14 @@ class ROCAUC(UEMetric):
     def preprocess_inf(self, x, array):
         if not np.isinf(x):
             return x
+        finite = np.asarray(array, dtype=float)
+        finite = finite[np.isfinite(finite)]
+        if len(finite) == 0:
+            return 0.0
         elif x > 0:
-            return array.max() + 1
+            return finite.max() + 1
         else:
-            return array.min() - 1
+            return finite.min() - 1
 
     def __call__(self, estimator: List[float], target: List[int]) -> float:
         estimator = [self.preprocess_inf(x, estimator) for x in estimator]
