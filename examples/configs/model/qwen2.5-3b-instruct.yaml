@@ -1,0 +1,17 @@
+defaults:
+  - default
+
+path: Qwen/Qwen2.5-3B-Instruct
+type: CausalLM
+path_to_load_script: model/load_qwen_fp16.py
+
+# add_bos_token=false: Qwen2.5 tokenizer has no BOS and its chat template /
+# few-shot prompt already handles special tokens; forcing a BOS can shift offsets.
+add_bos_token: false
+
+load_model_args:
+  device_map: cuda
+  # sdpa, not eager: see load_qwen_fp16.py. Required for correctness under
+  # fp16 + left padding, and NOT FlashAttention-2.
+  attn_implementation: sdpa
+load_tokenizer_args: {}
