@@ -1,3 +1,4 @@
+import pytest
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from lm_polygraph.estimators import MeanTokenEntropy
@@ -5,6 +6,8 @@ from lm_polygraph.stat_calculators import InferCausalLMCalculator, EntropyCalcul
 from lm_polygraph.utils.causal_lm_with_uncertainty import CausalLMWithUncertainty
 
 import torch
+
+pytestmark = pytest.mark.model
 
 
 def test_CausalLMWithUncertainty():
