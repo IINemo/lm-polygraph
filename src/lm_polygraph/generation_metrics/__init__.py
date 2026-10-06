@@ -1,17 +1,22 @@
-from .rouge import RougeMetric
-from .bleu import BLEUMetric
-from .model_score import ModelScoreSeqMetric, ModelScoreTokenwiseMetric
-from .bart_score import BartScoreSeqMetric
-from .accuracy import AccuracyMetric
+"""Public API, imported on demand to keep optional dependencies optional."""
 
-try:
-    from .comet import Comet
-except ImportError:
-    Comet = None
+from lm_polygraph._optional import lazy_exports
 
-from .alignscore import AlignScore
-from .openai_fact_check import OpenAIFactCheck
-from .bert_score import BertScoreMetric
-from .sbert import SbertMetric
-from .aggregated_metric import AggregatedMetric
-from .preprocess_output_target import PreprocessOutputTarget
+_EXPORTS = {
+    "RougeMetric": (".rouge", "RougeMetric"),
+    "BLEUMetric": (".bleu", "BLEUMetric"),
+    "ModelScoreSeqMetric": (".model_score", "ModelScoreSeqMetric"),
+    "ModelScoreTokenwiseMetric": (".model_score", "ModelScoreTokenwiseMetric"),
+    "BartScoreSeqMetric": (".bart_score", "BartScoreSeqMetric"),
+    "AccuracyMetric": (".accuracy", "AccuracyMetric"),
+    "AlignScore": (".alignscore", "AlignScore"),
+    "OpenAIFactCheck": (".openai_fact_check", "OpenAIFactCheck"),
+    "BertScoreMetric": (".bert_score", "BertScoreMetric"),
+    "SbertMetric": (".sbert", "SbertMetric"),
+    "AggregatedMetric": (".aggregated_metric", "AggregatedMetric"),
+    "PreprocessOutputTarget": (".preprocess_output_target", "PreprocessOutputTarget"),
+    "Comet": (".comet", "Comet"),
+}
+
+__all__ = list(_EXPORTS)
+__getattr__, __dir__ = lazy_exports(__name__, _EXPORTS, globals())
