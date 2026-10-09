@@ -12,6 +12,10 @@ class RAUQ(Estimator):
     This estimator quantifies uncertainty in LLM outputs by combining
     attention patterns with token probabilities in a recurrent manner.
 
+    For token y_i, the attention weight (a_{i,i-1} in the paper) is y_{i-1}'s attention
+    to itself, taken from the decode step that generates y_i (attention_all[:, i, i-1];
+    see GreedyProbsCalculator).
+
     Args:
         alpha: Weight parameter for combining attention and probability scores
         model_name: Name or path of the model to load configuration from
@@ -141,7 +145,8 @@ class RAUQ(Estimator):
                 attention_weight.shape[-2],
                 attention_weight.shape[-1],
             )
-            # Extract attention weights for previous token with offset -1
+            # Entry [j, j-1]: attention of y_{j-1} to itself, from the decode step
+            # that generates y_j (row j of attention_all has query y_{j-1}).
             attenion_prev_token = np.diagonal(
                 reshaped_weights, offset=-1, axis1=2, axis2=3
             )

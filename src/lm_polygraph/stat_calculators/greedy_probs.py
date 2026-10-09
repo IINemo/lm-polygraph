@@ -110,7 +110,9 @@ class GreedyProbsCalculator(StatCalculator):
                         probability distributions at each token,
                 - 'greedy_texts' (List[str]): model generations corresponding to the inputs,
                 - 'greedy_tokens' (List[List[int]]): tokenized model generations,
-                - 'attention' (List[List[np.array]]): attention maps at each token, if applicable to the model,
+                - 'attention_all' (List[np.ndarray]): per-input attention among generated tokens y_0..y_{c-1},
+                        shape (n_layers * n_heads, c, c). Row j comes from the decode step that generates y_j,
+                        so its query is y_{j-1}; attention_all[:, j, j-1] is y_{j-1}'s attention to itself,
                 - 'greedy_log_likelihoods' (List[List[float]]): log-probabilities of the generated tokens.
         """
         is_vllm = model.model_type == "vLLMCausalLM"
