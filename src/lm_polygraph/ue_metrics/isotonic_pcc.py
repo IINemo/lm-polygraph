@@ -2,7 +2,6 @@ import numpy as np
 from typing import List
 
 from .ue_metric import UEMetric
-from lm_polygraph.normalizers.isotonic_pcc import IsotonicPCCNormalizer
 
 
 class IsotonicPCC(UEMetric):
@@ -15,6 +14,9 @@ class IsotonicPCC(UEMetric):
         return "isotonic-pcc"
 
     def __call__(self, estimator: List[float], target: List[float]) -> float:
+        # The normalizer imports model utilities; defer them until needed.
+        from lm_polygraph.normalizers.isotonic_pcc import IsotonicPCCNormalizer
+
         if len(estimator) != len(target):
             raise ValueError("Estimator and target must have the same length.")
         estimator = np.asarray(estimator)

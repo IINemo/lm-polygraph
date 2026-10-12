@@ -12,6 +12,8 @@ from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 
+pytestmark = pytest.mark.model
+
 INPUT = "<grounding>An image of?"
 IMAGES = (
     "https://huggingface.co/microsoft/kosmos-2-patch14-224/resolve/main/snowman.png"

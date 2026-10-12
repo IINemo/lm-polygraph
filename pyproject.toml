@@ -49,3 +49,13 @@ script-files = [
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["test/unit"]
+addopts = "--strict-markers"
+markers = [
+  "model: integration tests requiring model weights and datasets",
+  "vllm: integration tests requiring vLLM and a CUDA GPU",
+  "api: integration tests exercising an HTTP API",
+]

@@ -1,6 +1,9 @@
+import pytest
 import subprocess
 import pathlib
 import multiprocessing
+
+pytestmark = pytest.mark.vllm
 
 multiprocessing.set_start_method("spawn", force=True)
 

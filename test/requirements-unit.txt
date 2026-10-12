@@ -1,0 +1,6 @@
+# Install the package separately with --no-deps to avoid model dependencies.
+pytest>=7,<9
+pytest-socket>=0.7,<1
+numpy>=1.23.5
+scipy>=1.11
+scikit-learn>=1.5.1

@@ -7,6 +7,8 @@ from lm_polygraph import estimate_uncertainty
 from lm_polygraph.estimators import *
 from lm_polygraph.utils.model import WhiteboxModel
 
+pytestmark = pytest.mark.model
+
 INPUT = "When was Julius Caesar born?"
 
 
