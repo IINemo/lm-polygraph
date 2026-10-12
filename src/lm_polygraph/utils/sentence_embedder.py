@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from typing import Dict, List, Optional
-from sentence_transformers import SentenceTransformer
+from lm_polygraph._optional import require_optional
 
 
 class SentenceEmbedder:
@@ -43,6 +43,9 @@ class SentenceEmbedder:
         if self._model is not None:
             return
 
+        SentenceTransformer = require_optional(
+            "sentence_transformers", "semantic"
+        ).SentenceTransformer
         self._model = SentenceTransformer(
             self.model_name,
             device=self.device,

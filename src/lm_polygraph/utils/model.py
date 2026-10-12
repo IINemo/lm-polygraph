@@ -1,5 +1,5 @@
 import torch
-import openai
+from lm_polygraph._optional import require_optional
 import time
 import logging
 import json
@@ -118,6 +118,7 @@ class BlackboxModel(Model):
         self.supports_logprobs = supports_logprobs
 
         if openai_api_key is not None:
+            openai = require_optional("openai", "openai")
             self.openai_api = openai.OpenAI(api_key=openai_api_key)
 
         self.hf_api_token = hf_api_token

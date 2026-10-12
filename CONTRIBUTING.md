@@ -1,5 +1,12 @@
 # Creating a Pull Request
 
+Install the development tools with `pip install -e '.[dev]'`. Run the offline
+packaging tests with `pytest test/unit`. For the existing model integration suite,
+install `pip install -e '.[dev,evaluation,openai,boostedprob,comet]'` and run
+`pytest --ignore=test/local`; these tests download models and datasets.
+Hardware-specific tests additionally need `vllm` or `quantization`.
+See [constraints/README.md](constraints/README.md) for the pinned CPU test profile.
+
 1. Fork the repository
 2. Clone the repository to your local machine
 3. Create a new branch for your changes

@@ -1,0 +1,44 @@
+name: Installation profiles
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile: [minimal, experiments]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned CPU profile
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'torch' -c constraints/cpu-py312.txt --extra-index-url https://download.pytorch.org/whl/cpu
+          if [ '${{ matrix.profile }}' = experiments ]; then
+            python -m pip install '.[evaluation,openai,dev]' -c constraints/cpu-py312.txt
+          else
+            python -m pip install '.[dev]' -c constraints/cpu-py312.txt
+          fi
+          python -m pip check
+      - name: Verify minimal dependency footprint
+        if: matrix.profile == 'minimal'
+        run: |
+          python - <<'PY'
+          from importlib.util import find_spec
+          optional = ['openai', 'bitsandbytes', 'flask', 'spacy', 'datasets',
+                      'pandas', 'rouge_score', 'sentence_transformers']
+          assert all(find_spec(name) is None for name in optional)
+          PY
+      - name: Run offline installation tests
+        run: python -m pytest test/unit -q

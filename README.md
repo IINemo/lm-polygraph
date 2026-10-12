@@ -53,17 +53,42 @@ pip install lm-polygraph
 
 ### Optional dependencies
 
-Some features require additional packages that are not installed by default:
+The default install includes the core PyTorch/Transformers inference and uncertainty
+estimation stack. Install only the extra features you need:
 
-- **COMET metric** (translation evaluation): `unbabel-comet` pins `numpy<2.0` which may conflict with packages like vLLM. Install via extras:
-  ```shell
-  pip install lm-polygraph[comet]
-  ```
-  If you need numpy 2.x (e.g., for vLLM), install without the extra and add comet manually:
-  ```shell
-  pip install lm-polygraph
-  pip install unbabel-comet --no-deps
-  ```
+| Extra | Features |
+| --- | --- |
+| `openai` | OpenAI-compatible backends, cached chat, and API-based claim extraction |
+| `vllm` | vLLM inference (requires a supported platform and accelerator) |
+| `quantization` | bitsandbytes quantization |
+| `semantic` | SentenceTransformer embeddings and cross-encoder similarity |
+| `nlp` | spaCy/NLTK-based estimators, including Focus and claim-level methods |
+| `boostedprob` | BoostedProb estimators |
+| `evaluation` | Dataset loading, CSV input, ROUGE/BLEU/BERTScore, semantic metrics, AlignScore, and plotting |
+| `demo` | Dependencies for the legacy Flask/FastChat demo |
+| `dev` | Tests, formatting, linting, package builds, and dependency locking |
+| `comet` | COMET translation evaluation |
+
+```bash
+pip install 'lm-polygraph[openai]'
+pip install 'lm-polygraph[evaluation,openai,boostedprob]'
+```
+
+Existing benchmark installations should use `evaluation` plus any backend or
+estimator extras required by their configuration. Model weights and spaCy/NLTK
+language resources are still separate downloads. Use explicit imports such as
+`from lm_polygraph.estimators import MeanTokenEntropy`: wildcard imports request
+every exported feature and therefore require their optional dependencies.
+Missing dependencies now raise an installation hint when the feature is accessed,
+rather than preventing unrelated core features from loading. In particular,
+unavailable COMET/vLLM exports raise `ImportError` instead of returning `None`.
+
+For repeatable Python 3.12 CPU experiments, see the pinned dependency profile and
+validation commands in [constraints/README.md](constraints/README.md).
+
+COMET has its own dependency constraints (including NumPy restrictions in some
+releases). Use a separate environment if these conflict with your GPU backend;
+install `lm-polygraph[comet]` so its required dependencies are resolved.
 
 ## <a name="basic_usage"></a>Basic usage
 1. Initialize the base model (encoder-decoder or decoder-only) and tokenizer from HuggingFace or a local file, and use them to initialize the WhiteboxModel for evaluation:

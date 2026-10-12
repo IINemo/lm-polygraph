@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 from tqdm import tqdm
 
 from .stat_calculator import StatCalculator
-from sentence_transformers import CrossEncoder
+from lm_polygraph._optional import require_optional
 from lm_polygraph.utils.model import WhiteboxModel
 
 
@@ -40,6 +40,9 @@ class GreedyCrossEncoderSimilarityMatrixCalculator(StatCalculator):
         self.cross_encoder_name = cross_encoder_name
 
     def _setup(self, device="cuda"):
+        CrossEncoder = require_optional(
+            "sentence_transformers", "semantic"
+        ).CrossEncoder
         self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
 
     def __call__(

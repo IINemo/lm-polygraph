@@ -4,7 +4,7 @@ import itertools
 from typing import Dict, List, Tuple
 
 from .stat_calculator import StatCalculator
-from sentence_transformers import CrossEncoder
+from lm_polygraph._optional import require_optional
 from lm_polygraph.model_adapters.visual_whitebox_model import VisualWhiteboxModel
 
 
@@ -36,6 +36,9 @@ class CrossEncoderSimilarityMatrixVisualCalculator(StatCalculator):
         self.cross_encoder_name = cross_encoder_name
 
     def _setup(self, device="cuda"):
+        CrossEncoder = require_optional(
+            "sentence_transformers", "semantic"
+        ).CrossEncoder
         self.crossencoder = CrossEncoder(self.cross_encoder_name, device=device)
 
     def __call__(
