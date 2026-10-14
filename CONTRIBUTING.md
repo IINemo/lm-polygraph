@@ -14,3 +14,21 @@
 8. Run tests with `pytest` and make sure they pass
 9. Commit and push your changes
 10. Create a pull request to the main branch of the original repository
+
+## Building the documentation
+
+The user guide lives in `docs/` as reStructuredText; the landing-page quick start
+also appears in `README.md`. Keep both examples consistent when changing the API.
+Sphinx generates the API reference from `src/lm_polygraph` during the build.
+
+From the repository root, with your virtual environment active:
+
+```bash
+python -m pip install -e .
+python -m pip install -r docs/requirements.txt
+python -m sphinx -b html docs docs/_build/html
+```
+
+Open `docs/_build/html/index.html` to preview the result. Review build warnings,
+check links to example notebooks, and verify code examples against the current
+API. Generated files under `docs/api/` and `docs/_build/` should not be committed.
