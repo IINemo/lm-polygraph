@@ -114,6 +114,7 @@ def register_default_stat_calculators(
             },
         )
         _register(EntropyCalculator)
+        _register(EnergyCalculator)
         _register(GreedyLMProbsCalculator)
         _register(PromptCalculator)
         _register(SamplingGenerationCalculator)

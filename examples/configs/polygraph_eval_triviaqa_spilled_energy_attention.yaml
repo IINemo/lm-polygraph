@@ -1,0 +1,102 @@
+# =============================================================================
+# Spilled Energy vs. the attention-based baselines on TriviaQA. SECONDARY config.
+#
+# Run with:
+#   HYDRA_CONFIG=$(pwd)/examples/configs/polygraph_eval_triviaqa_spilled_energy_attention.yaml \
+#     polygraph_eval
+#
+# The four attention-based baselines need output_attentions=True, which disables
+# transformers' left-padding NaN guard and, under fp16, re-introduces an overflow
+# that collapses generations. They therefore run at batch_size=1 with eager
+# attention: one sequence per batch means no padding, hence no fully-masked
+# attention row. Everything else -- model, dataset, decoding, seed -- matches the
+# primary config, so the generations must be identical for the samples the two
+# runs share; SpilledEnergy anchors are included here to tie the tables together.
+#
+# n is 300 rather than 1000: batch_size=1 is roughly 2x slower per sample.
+#
+# Model:    Qwen/Qwen2.5-3B-Instruct, fp16, EAGER attention (see note above)
+# Dataset:  LM-Polygraph/triviaqa (continuation subset), test split
+# Decoding: greedy (do_sample=false), max_new_tokens=20, stop on newline, 5-shot
+# Quality:  AccuracyMetric = normalized exact match
+# Metric:   normalized PRR@0.5 -> results key "prr_0.5_normalized"
+# Seed:     1 (greedy decoding => deterministic given the seed)
+# =============================================================================
+
+hydra:
+  run:
+    dir: ${cache_path}/${task}/${model.path}/${dataset}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+defaults:
+  - model: qwen2.5-3b-instruct
+  - estimators: spilled_energy_attention_estimators
+  - stat_calculators: auto_calculators
+  - base_processing_triviaqa
+  - _self_
+
+cache_path: ./workdir/spilled_energy
+save_path: '${hydra:run.dir}'
+
+task: qa
+instruct: false            # continuation-style few-shot, matching lm-polygraph's published TriviaQA protocol
+
+# --- dataset ---------------------------------------------------------------
+dataset: ['LM-Polygraph/triviaqa', 'continuation']
+text_column: input
+label_column: output
+train_split: train
+eval_split: test
+few_shot_split: train
+n_shot: 5
+load_from_disk: false
+trust_remote_code: false
+multiref: true             # TriviaQA has multiple gold answers -> AggregatedMetric(max)
+size: 10000                  # cap rows loaded before subsampling
+subsample_eval_dataset: 300 # n>=1000: at n=300 the PRR spread (~+-0.05) cannot
+                             # support a baseline-vs-method claim. Override with
+                             # --samples for quick debugging only, never for
+                             # reported numbers.
+
+# --- generation (frozen) ---------------------------------------------------
+max_new_tokens: 20
+generation_params:
+  do_sample: false
+  num_beams: 1
+  temperature: 1.0
+  stop_strings:
+    - "\n"
+
+# --- quality / correctness function ---------------------------------------
+generation_metrics:
+  - name: AccuracyMetric   # normalized exact match (with base_processing_triviaqa)
+
+# --- caching: persist greedy generations so Stage 2 need not re-run the LLM --
+save_stats:
+  - greedy_texts
+  - greedy_tokens
+  - greedy_log_likelihoods
+  # Persisted so the WITHIN-PASS invariant can be checked on real data:
+  # tok - lse is a log-probability and must be <= 0 for every token. That one is
+  # exact by construction, unlike the cross-pass identity against
+  # greedy_log_likelihoods, which legitimately diverges in fp16 because the two
+  # sides come from different forward passes.
+  - energy_token_logits
+  - energy_lse
+
+# TRUE here, unlike the primary config: these estimators consume attention maps.
+# That disables transformers' left-padding NaN guard, which is safe ONLY because
+# batch_size is 1 below -- with a single sequence per batch there is no padding,
+# so no attention row is ever fully masked and the fp16 overflow cannot occur.
+# Do NOT raise batch_size in this config.
+output_attentions: true
+
+# Override the model group's sdpa: these estimators need eager attention maps.
+# Safe ONLY at batch_size=1 (no padding => no fully-masked row => no fp16 overflow).
+model:
+  load_model_args:
+    attn_implementation: eager
+
+ignore_exceptions: false
+batch_size: 1
+seed:
+  - 1
