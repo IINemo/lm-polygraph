@@ -4,7 +4,7 @@ import os
 import torch
 import json
 import pytest
-import diskcache as dc
+import diskcache_community as dc
 
 from lm_polygraph.utils.manager import UEManager
 from lm_polygraph.utils.builder_enviroment_stat_calculator import (

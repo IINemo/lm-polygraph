@@ -33,5 +33,5 @@ nltk>=3.7,<4
 evaluate>=0.4.2
 spacy>=3.4.0
 fastchat
-diskcache>=5.6.3
+diskcache-community>=5.8.3
 boostedprob

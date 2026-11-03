@@ -2,7 +2,7 @@ import openai
 import os
 import time
 import logging
-import diskcache as dc
+import diskcache_community as dc
 
 log = logging.getLogger()
 
@@ -46,12 +46,17 @@ class OpenAIChat:
         cache_settings["eviction_policy"] = "none"
         cache_settings["size_limit"] = int(1e12)
         cache_settings["cull_limit"] = 0
-        openai_responses = dc.Cache(self.cache_path, **cache_settings)
+        openai_responses = dc.Cache(
+            self.cache_path,
+            disk=dc.SafeDisk.with_options(on_error="miss"),
+            **cache_settings,
+        )
 
-        if (self.openai_model, message) in openai_responses and not self.rewrite_cache:
-            reply = openai_responses[(self.openai_model, message)]
+        reply = None
+        if not self.rewrite_cache:
+            reply = openai_responses.get((self.openai_model, message))
 
-        else:
+        if reply is None:
             # Ask openai
             if openai.api_key is None:
                 raise Exception(
